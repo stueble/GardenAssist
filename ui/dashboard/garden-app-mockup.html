@@ -1,0 +1,1596 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GardenAssist – Mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green-deep: #2d4a2d;
+    --green-mid: #4a7c4a;
+    --green-light: #7aab6a;
+    --green-pale: #c8dfc0;
+    --green-mist: #eef4eb;
+    --cream: #f8f4ee;
+    --warm-white: #fdfbf8;
+    --bark: #8b6f47;
+    --bark-light: #c4a882;
+    --red-warn: #c0392b;
+    --red-soft: #fdf0ee;
+    --yellow-warn: #d4850a;
+    --yellow-soft: #fef9ee;
+    --blue-soft: #e8f0fb;
+    --blue-mid: #4a78c0;
+    --text-dark: #1e2e1e;
+    --text-mid: #4a5e4a;
+    --text-light: #8a9e8a;
+    --border: #dde8d8;
+    --shadow: 0 2px 12px rgba(45,74,45,0.10);
+    --shadow-lg: 0 8px 32px rgba(45,74,45,0.15);
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--text-dark);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    font-size: 13px;
+  }
+
+  /* ── WEATHER SIDEBAR ── */
+  .weather-sidebar {
+    padding: 14px 18px 10px;
+  }
+
+  .weather-main {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .weather-icon { font-size: 26px; }
+
+  .weather-temp {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--green-deep);
+    line-height: 1;
+  }
+
+  .weather-desc {
+    font-size: 11px;
+    color: var(--text-light);
+    margin-top: 2px;
+  }
+
+  .weather-meta {
+    margin-left: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+  }
+
+  .weather-meta-item {
+    font-size: 10px;
+    color: var(--text-light);
+  }
+
+  .weather-forecast {
+    display: flex;
+    gap: 4px;
+  }
+
+  .weather-day {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    background: var(--green-mist);
+    border-radius: 7px;
+    padding: 5px 2px;
+    font-size: 11px;
+  }
+
+  .weather-day.warn {
+    background: var(--red-soft);
+    outline: 1px solid #f5c0b8;
+  }
+
+  .weather-day-name {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-light);
+    letter-spacing: 0.3px;
+  }
+
+  .weather-day-temp {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-mid);
+  }
+
+  .weather-day-rain {
+    font-size: 10px;
+    color: var(--text-light);
+  }
+
+  /* ── TOP NAV ── */
+  nav {
+    background: var(--green-deep);
+    display: flex;
+    align-items: center;
+    height: 52px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+
+  .nav-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    color: var(--green-pale);
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 280px;
+    flex-shrink: 0;
+    padding: 0 20px;
+    border-right: 1px solid rgba(255,255,255,0.1);
+    height: 100%;
+  }
+  .nav-logo span { font-size: 22px; }
+
+  .nav-links {
+    display: flex;
+    gap: 2px;
+    flex: 1;
+    padding: 0 12px;
+  }
+
+  .nav-link {
+    color: var(--green-pale);
+    text-decoration: none;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 400;
+    opacity: 0.75;
+    transition: all 0.2s;
+    cursor: pointer;
+    border: none;
+    background: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .nav-link:hover { opacity: 1; background: rgba(255,255,255,0.1); }
+  .nav-link.active { opacity: 1; background: rgba(255,255,255,0.15); font-weight: 500; }
+
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .weather-pill {
+    background: rgba(255,255,255,0.12);
+    border-radius: 20px;
+    padding: 4px 12px;
+    color: var(--green-pale);
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .nav-icon-btn {
+    color: var(--green-pale);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    opacity: 0.75;
+    padding: 4px;
+    transition: opacity 0.2s;
+  }
+  .nav-icon-btn:hover { opacity: 1; }
+
+  /* ── MAIN LAYOUT ── */
+  .main {
+    display: grid;
+    grid-template-columns: 280px 1fr auto;
+    grid-template-rows: 1fr 90px;
+    flex: 1;
+    overflow: hidden;
+    gap: 0;
+  }
+
+  /* ── LEFT: TODOS ── */
+  .sidebar {
+    grid-row: 1 / 3;
+    background: var(--warm-white);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .sidebar-header {
+    padding: 16px 18px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .sidebar-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 15px;
+    color: var(--green-deep);
+    font-weight: 600;
+  }
+
+  .badge {
+    background: var(--red-warn);
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    border-radius: 10px;
+    padding: 2px 7px;
+    min-width: 20px;
+    text-align: center;
+  }
+
+  .todo-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px 0;
+  }
+
+  .todo-section-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-light);
+    padding: 8px 18px 4px;
+  }
+
+  .todo-item {
+    padding: 10px 14px 10px 18px;
+    border-left: 3px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+  }
+  .todo-item:hover { background: var(--green-mist); }
+  .todo-item.overdue { border-left-color: var(--red-warn); background: var(--red-soft); }
+  .todo-item.overdue:hover { background: #fce8e6; }
+  .todo-item.current { border-left-color: var(--yellow-warn); }
+  .todo-item.upcoming { border-left-color: var(--blue-mid); }
+  .todo-item.warning { border-left-color: var(--red-warn); background: var(--red-soft); }
+
+  .todo-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .todo-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-top: 3px;
+    flex-shrink: 0;
+  }
+  .dot-red { background: var(--red-warn); }
+  .dot-yellow { background: var(--yellow-warn); }
+  .dot-blue { background: var(--blue-mid); }
+  .dot-orange { background: #e67e22; }
+
+  .todo-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-dark);
+    line-height: 1.35;
+    flex: 1;
+  }
+
+  .todo-sub {
+    font-size: 11px;
+    color: var(--text-light);
+    margin-left: 16px;
+    margin-bottom: 6px;
+  }
+
+  .todo-actions {
+    display: flex;
+    gap: 5px;
+    margin-left: 16px;
+  }
+
+  .btn-done {
+    background: var(--green-pale);
+    color: var(--green-deep);
+    border: none;
+    border-radius: 5px;
+    padding: 3px 9px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .btn-done:hover { background: var(--green-mid); color: white; }
+
+  .btn-skip {
+    background: none;
+    color: var(--text-light);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 3px 9px;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.15s;
+  }
+  .btn-skip:hover { background: var(--border); color: var(--text-mid); }
+
+  .todo-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 6px 18px;
+  }
+
+  /* ── CENTER: GARTENPLAN ── */
+  .garden-area {
+    grid-column: 2;
+    grid-row: 1;
+    position: relative;
+    overflow: hidden;
+    background: #dde8d5;
+    cursor: grab;
+    user-select: none;
+  }
+  .garden-area:active { cursor: grabbing; }
+
+  /* The transformable layer – sized to image natural ratio */
+  .garden-plan {
+    position: absolute;
+    transform-origin: 0 0;
+    /* width/height set by JS based on container */
+  }
+
+  .garden-plan-img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: fill;
+    pointer-events: none;
+    border-radius: 4px;
+  }
+
+  /* Zoom controls */
+  .zoom-controls {
+    position: absolute;
+    bottom: 14px;
+    right: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 50;
+  }
+
+  .zoom-btn {
+    width: 32px; height: 32px;
+    background: rgba(255,255,255,0.9);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow);
+    transition: background 0.15s;
+    backdrop-filter: blur(4px);
+    color: var(--green-deep);
+    font-weight: 700;
+  }
+  .zoom-btn:hover { background: white; }
+
+  /* Plant pin – positions are % of the plan image */
+  .plant-pin {
+    position: absolute;
+    cursor: pointer;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    /* counter-scale applied via JS so pins stay same visual size */
+  }
+
+  .plant-pin-inner {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    position: relative;
+    transition: box-shadow 0.2s;
+  }
+  .plant-pin:hover .plant-pin-inner {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  }
+
+  .plant-pin.has-task .plant-pin-inner::after {
+    content: '';
+    position: absolute;
+    top: -2px; right: -2px;
+    width: 11px; height: 11px;
+    border-radius: 50%;
+    background: var(--red-warn);
+    border: 2px solid white;
+  }
+
+  .plant-pin-label {
+    position: absolute;
+    top: calc(100% + 3px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--green-deep);
+    color: white;
+    font-size: 9px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 8px;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.15s;
+    pointer-events: none;
+  }
+  .plant-pin:hover .plant-pin-label { opacity: 1; }
+
+  /* Tooltip – always screen-space, positioned via JS */
+  .plant-tooltip {
+    position: fixed;
+    background: white;
+    border-radius: 10px;
+    padding: 12px 14px;
+    box-shadow: var(--shadow-lg);
+    width: 200px;
+    z-index: 200;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    border: 1px solid var(--border);
+  }
+  .plant-pin:hover .plant-tooltip { opacity: 1; }
+
+  .tooltip-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--green-deep);
+    margin-bottom: 4px;
+  }
+  .tooltip-detail {
+    font-size: 11px;
+    color: var(--text-mid);
+    line-height: 1.5;
+  }
+  .tooltip-task {
+    margin-top: 8px;
+    background: var(--red-soft);
+    border-radius: 6px;
+    padding: 5px 8px;
+    font-size: 11px;
+    color: var(--red-warn);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /* Garden overlay label */
+  .garden-label {
+    position: absolute;
+    top: 12px;
+    left: 14px;
+    font-family: 'Playfair Display', serif;
+    font-size: 13px;
+    font-style: italic;
+    color: var(--green-deep);
+    opacity: 0.5;
+  }
+
+  /* compass */
+  .compass {
+    position: absolute;
+    bottom: 12px;
+    right: 14px;
+    width: 36px;
+    height: 36px;
+    background: rgba(255,255,255,0.7);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(4px);
+  }
+
+  /* ── BOTTOM: MONATSÜBERSICHT ── */
+  .month-bar {
+    grid-column: 2;
+    grid-row: 2;
+    background: var(--warm-white);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: stretch;
+    padding: 0 12px;
+    gap: 4px;
+    overflow: visible;
+    position: relative;
+    z-index: 50;
+  }
+
+  .month-bar-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--text-light);
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+    padding: 8px 0;
+    margin-right: 4px;
+    flex-shrink: 0;
+  }
+
+  .month-cell {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    padding: 6px 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    gap: 4px;
+  }
+  .month-cell:hover { background: var(--green-mist); }
+  .month-cell.current-month {
+    background: var(--green-deep);
+    box-shadow: var(--shadow);
+  }
+
+  .month-name {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-mid);
+    letter-spacing: 0.3px;
+  }
+  .current-month .month-name { color: var(--green-pale); }
+
+  .month-dots {
+    display: flex;
+    gap: 3px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .month-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+  }
+
+  /* Month tooltip */
+  .month-tooltip {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--green-deep);
+    color: white;
+    border-radius: 8px;
+    padding: 10px 12px;
+    min-width: 160px;
+    max-width: 220px;
+    z-index: 100;
+    box-shadow: var(--shadow-lg);
+    font-size: 11px;
+    line-height: 1.6;
+  }
+  .month-cell:hover .month-tooltip { display: block; }
+
+  .month-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: var(--green-deep);
+  }
+
+  .month-tooltip-title {
+    font-weight: 600;
+    font-size: 12px;
+    margin-bottom: 8px;
+    color: var(--green-pale);
+    border-bottom: 1px solid rgba(255,255,255,0.15);
+    padding-bottom: 5px;
+  }
+
+  .month-tooltip-category {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.5);
+    margin-top: 7px;
+    margin-bottom: 2px;
+  }
+
+  .month-tooltip-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 1px 0;
+    font-size: 11.5px;
+    color: rgba(255,255,255,0.92);
+  }
+
+  .month-tooltip-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: rgba(255,255,255,0.6);
+  }
+
+  .month-tooltip-empty {
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    font-style: italic;
+  }
+
+  /* ── RIGHT: CHAT ── */
+  .chat-panel {
+    grid-column: 3;
+    grid-row: 1 / 3;
+    width: 0;
+    overflow: hidden;
+    background: var(--warm-white);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    transition: width 0.3s ease;
+    flex-shrink: 0;
+  }
+  .chat-panel.open { width: 300px; }
+
+  .chat-header {
+    padding: 16px 16px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .chat-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 15px;
+    color: var(--green-deep);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+  }
+
+  .chat-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-light);
+    font-size: 16px;
+    padding: 2px;
+    transition: color 0.15s;
+    flex-shrink: 0;
+  }
+  .chat-close:hover { color: var(--text-dark); }
+
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .chat-msg {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .chat-bubble {
+    padding: 9px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    line-height: 1.5;
+    max-width: 90%;
+  }
+
+  .chat-bubble.bot {
+    background: var(--green-mist);
+    color: var(--text-dark);
+    border-radius: 4px 12px 12px 12px;
+    align-self: flex-start;
+    border: 1px solid var(--border);
+  }
+  .chat-bubble.user {
+    background: var(--green-deep);
+    color: var(--green-pale);
+    border-radius: 12px 4px 12px 12px;
+    align-self: flex-end;
+  }
+
+  .chat-sender {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text-light);
+    padding: 0 4px;
+  }
+  .chat-sender.right { text-align: right; }
+
+  .chat-context-pill {
+    background: var(--green-pale);
+    color: var(--green-deep);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 10px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    align-self: flex-start;
+    margin-bottom: 2px;
+  }
+
+  .chat-input-area {
+    padding: 12px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .chat-input {
+    flex: 1;
+    background: var(--green-mist);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 8px 14px;
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text-dark);
+    outline: none;
+    transition: border-color 0.2s;
+    white-space: nowrap;
+  }
+  .chat-input:focus { border-color: var(--green-mid); }
+
+  .chat-send {
+    background: var(--green-deep);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 34px;
+    height: 34px;
+    cursor: pointer;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+  .chat-send:hover { background: var(--green-mid); }
+
+  /* ── CHAT TOGGLE BUTTON ── */
+  .chat-toggle {
+    position: fixed;
+    top: 60px;
+    right: 12px;
+    background: var(--green-deep);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 8px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 200;
+    transition: all 0.2s;
+  }
+  .chat-toggle:hover { background: var(--green-mid); transform: translateY(-1px); }
+  .chat-toggle.hidden { display: none; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--green-pale); border-radius: 3px; }
+
+  /* ── LEGEND ── */
+  .legend {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    background: rgba(255,255,255,0.85);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 10px;
+    color: var(--text-mid);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.6);
+    box-shadow: var(--shadow);
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav>
+  <div class="nav-logo"><span>🌿</span> GardenAssist</div>
+  <div class="nav-links">
+    <button class="nav-link active">🏠 Dashboard</button>
+    <button class="nav-link">🌱 Pflanzen</button>
+    <button class="nav-link">🗓 Kalender</button>
+    <button class="nav-link">📔 Tagebuch</button>
+  </div>
+  <div class="nav-right">
+    <button class="nav-icon-btn">⚙️</button>
+  </div>
+</nav>
+
+<!-- MAIN GRID -->
+<div class="main">
+
+  <!-- LEFT: TODOS & WARNUNGEN -->
+  <div class="sidebar">
+    <div class="todo-list">
+
+      <!-- WETTER -->
+      <div class="weather-sidebar">
+        <div class="weather-main">
+          <span class="weather-icon">☀️</span>
+          <div>
+            <div class="weather-temp">18°C</div>
+            <div class="weather-desc">Sonnig · Köln</div>
+          </div>
+          <div class="weather-meta">
+            <div class="weather-meta-item">💧 0 mm</div>
+            <div class="weather-meta-item">💨 12 km/h</div>
+          </div>
+        </div>
+        <div class="weather-forecast">
+          <div class="weather-day">
+            <div class="weather-day-name">Mo</div>
+            <div>🌤</div>
+            <div class="weather-day-temp">16°</div>
+            <div class="weather-day-rain">2mm</div>
+          </div>
+          <div class="weather-day">
+            <div class="weather-day-name">Di</div>
+            <div>🌧</div>
+            <div class="weather-day-temp">12°</div>
+            <div class="weather-day-rain" style="color:var(--blue-mid)">14mm</div>
+          </div>
+          <div class="weather-day warn">
+            <div class="weather-day-name">Mi</div>
+            <div>🌨</div>
+            <div class="weather-day-temp" style="color:var(--red-warn)">−3°</div>
+            <div class="weather-day-rain">❄️</div>
+          </div>
+          <div class="weather-day">
+            <div class="weather-day-name">Do</div>
+            <div>☁️</div>
+            <div class="weather-day-temp">8°</div>
+            <div class="weather-day-rain">1mm</div>
+          </div>
+          <div class="weather-day">
+            <div class="weather-day-name">Fr</div>
+            <div>☀️</div>
+            <div class="weather-day-temp">14°</div>
+            <div class="weather-day-rain">0mm</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="todo-divider"></div>
+
+      <!-- WARNUNGEN -->
+      <div class="todo-section-label">⚠️ Warnungen</div>
+
+      <div class="todo-item warning">
+        <div class="todo-top">
+          <div class="todo-dot dot-orange"></div>
+          <div class="todo-name">Frost erwartet – Mi. −3°C</div>
+        </div>
+        <div class="todo-sub">Empfindliche Pflanzen schützen</div>
+        <div class="todo-actions">
+          <button class="btn-skip">→ Ignorieren</button>
+        </div>
+      </div>
+
+      <div class="todo-divider"></div>
+
+      <!-- ÜBERFÄLLIG -->
+      <div class="todo-section-label">🔴 Überfällig</div>
+
+      <div class="todo-item overdue">
+        <div class="todo-top">
+          <div class="todo-dot dot-red"></div>
+          <div class="todo-name">Rosen schneiden</div>
+        </div>
+        <div class="todo-sub">Seit 3 Wochen fällig · Hochbeet Süd</div>
+        <div class="todo-actions">
+          <button class="btn-done">✓ Erledigt</button>
+          <button class="btn-skip">→ Überspringen</button>
+        </div>
+      </div>
+
+      <div class="todo-divider"></div>
+
+      <!-- AKTUELL -->
+      <div class="todo-section-label">🟡 Diese Woche</div>
+
+      <div class="todo-item current">
+        <div class="todo-top">
+          <div class="todo-dot dot-yellow"></div>
+          <div class="todo-name">Hortensien düngen</div>
+        </div>
+        <div class="todo-sub">Zuletzt: 15. Feb · Terrasse West</div>
+        <div class="todo-actions">
+          <button class="btn-done">✓ Erledigt</button>
+          <button class="btn-skip">→ Überspringen</button>
+        </div>
+      </div>
+
+      <div class="todo-item current">
+        <div class="todo-top">
+          <div class="todo-dot dot-yellow"></div>
+          <div class="todo-name">Tomaten aufbinden</div>
+        </div>
+        <div class="todo-sub">Gemüsebeet Nord</div>
+        <div class="todo-actions">
+          <button class="btn-done">✓ Erledigt</button>
+          <button class="btn-skip">→ Überspringen</button>
+        </div>
+      </div>
+
+      <div class="todo-divider"></div>
+
+      <!-- DEMNÄCHST -->
+      <div class="todo-section-label">🔵 Demnächst</div>
+
+      <div class="todo-item upcoming">
+        <div class="todo-top">
+          <div class="todo-dot dot-blue"></div>
+          <div class="todo-name">Lavendel umpflanzen</div>
+        </div>
+        <div class="todo-sub">In ~2 Wochen · Eingang</div>
+        <div class="todo-actions">
+          <button class="btn-done">✓ Erledigt</button>
+          <button class="btn-skip">→ Überspringen</button>
+        </div>
+      </div>
+
+      <div class="todo-item upcoming">
+        <div class="todo-top">
+          <div class="todo-dot dot-blue"></div>
+          <div class="todo-name">Stauden mulchen</div>
+        </div>
+        <div class="todo-sub">In ~3 Wochen · Nordbeet</div>
+        <div class="todo-actions">
+          <button class="btn-done">✓ Erledigt</button>
+          <button class="btn-skip">→ Überspringen</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- CENTER: GARTENPLAN -->
+  <div class="garden-area" id="gardenArea">
+    <div class="garden-plan" id="gartenplan">
+
+      <img src="gartenplan.png" class="garden-plan-img" id="gartenplanImg" alt="Gartenplan" />
+
+      <!-- Legende -->
+      <div class="legend" style="position:absolute;bottom:12px;left:12px">
+        <div style="font-weight:600;font-size:10px;margin-bottom:2px;color:var(--text-dark)">Legende</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#e74c3c"></div> Aufgabe fällig</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#f39c12"></div> Aufgabe diese Woche</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#27ae60"></div> Alles gut</div>
+      </div>
+
+      <!-- Pflanzenpins -->
+
+      <div class="plant-pin" style="left:25%;top:2.5%">
+        <div class="plant-pin-inner" style="background:#f0fff0;width:32px;height:32px;font-size:15px">🌲</div>
+        <div class="plant-pin-label">Thujas</div>
+        <div class="plant-tooltip"><div class="tooltip-name">🌲 Thujas (Reihe)</div><div class="tooltip-detail">Nördliche Grenze · 10 Stück<br>Heckenschnitt Aug</div></div>
+      </div>
+
+      <div class="plant-pin" style="left:75%;top:2.5%">
+        <div class="plant-pin-inner" style="background:#f0fff0;width:32px;height:32px;font-size:15px">🌲</div>
+        <div class="plant-pin-label">Thujas</div>
+        <div class="plant-tooltip"><div class="tooltip-name">🌲 Thujas (Reihe)</div><div class="tooltip-detail">Nördliche Grenze · 10 Stück<br>Heckenschnitt Aug</div></div>
+      </div>
+
+      <div class="plant-pin" style="left:9%;top:12%">
+        <div class="plant-pin-inner" style="background:#fff0f8;font-size:18px">🌸</div>
+        <div class="plant-pin-label">Magnolia</div>
+        <div class="plant-tooltip"><div class="tooltip-name">🌸 Magnolia Grandiflora</div><div class="tooltip-detail">Nordwest · Blüte Apr–Mai<br>Weiß/Creme</div></div>
+      </div>
+
+      <div class="plant-pin" style="left:88%;top:10%">
+        <div class="plant-pin-inner" style="background:#f0fffe;font-size:18px">🌳</div>
+        <div class="plant-pin-label">Bantaut</div>
+        <div class="plant-tooltip"><div class="tooltip-name">🌳 Bantaut</div><div class="tooltip-detail">Nordost-Ecke</div></div>
+      </div>
+
+      <div class="plant-pin" style="left:8%;top:21%">
+        <div class="plant-pin-inner" style="background:#fff0f0;font-size:18px">🌺</div>
+        <div class="plant-pin-label">Hibiscus</div>
+        <div class="plant-tooltip"><div class="tooltip-name">🌺 Hibiscus</div><div class="tooltip-detail">Westseite · Blüte Jul–Sep<br>2× vorhanden</div></div>
+      </div>
+
+      <div class="plant-pin" style="left:88%;top:22%">
+        <div class="plant-pin-inner" style="background:#f5fff0;font-size:18px">🎋</div>
+        <div class="plant-pin-label">Bambus</div>
+        <div class="plant-tooltip"><div class="tooltip-name">🎋 Bambus</div><div class="tooltip-detail">Ostseite</div></div>
+      </div>
+
+      <div class="plant-pin" style="left:10%;top:29%">
+        <div class="plant-pin-inner" style="background:#f0fff0;font-size:18px">🌲</div>
+        <div class="plant-pin-label">Konifere</div>
+        <div class="plant-tooltip"><div class="tooltip-name">🌲 Konifere</div><div class="tooltip-detail">Westseite Mitte</div></div>
+      </div>
+
+      <div class="plant-pin has-task" style="left:8%;top:34%">
+        <div class="plant-pin-inner" style="background:#fff0f0;font-size:18px">🌹</div>
+        <div class="plant-pin-label">Rose</div>
+        <div class="plant-tooltip"><div class="tooltip-name">🌹 Rose</div><div class="tooltip-detail">Westbeet · Blüte Mai–Sep</div><div class="tooltip-task">🔴 Schneiden überfällig!</div></div>
+      </div>
+
+      <div class="plant-pin" style="left:13%;top:37%">
+        <div class="plant-pin-inner" style="background:#fff5f5;font-size:18px">🌷</div>
+        <div class="plant-pin-label">Camellie</div>
+        <div class="plant-tooltip"><div class="tooltip-name">🌷 Camellie</div><div class="tooltip-detail">Westbeet · Blüte Feb–Apr<br>Rosa/Rot</div></div>
+      </div>
+
+      <div class="plant-pin has-task" style="left:47%;top:41%">
+        <div class="plant-pin-inner" style="background:#fdf0ff;font-size:18px">💐</div>
+        <div class="plant-pin-label">Rhododendron</div>
+        <div class="plant-tooltip"><div class="tooltip-name">💐 Rhododendron</div><div class="tooltip-detail">Vor Terrasse · Blüte Apr–Jun</div><div class="tooltip-task">🟡 Düngen fällig</div></div>
+      </div>
+
+      <div class="plant-pin" style="left:7%;top:50%">
+        <div class="plant-pin-inner" style="background:#f0fff4;font-size:18px">🎋</div>
+        <div class="plant-pin-label">Bambus</div>
+        <div class="plant-tooltip"><div class="tooltip-name">🎋 Bambus</div><div class="tooltip-detail">Terrasse West</div></div>
+      </div>
+
+      <div class="plant-pin" style="left:88%;top:50%">
+        <div class="plant-pin-inner" style="background:#e8ffe8;font-size:18px">🌳</div>
+        <div class="plant-pin-label">Dach</div>
+        <div class="plant-tooltip"><div class="tooltip-name">🌳 Dach (Baum)</div><div class="tooltip-detail">Terrasse Ost</div></div>
+      </div>
+
+      <div class="plant-pin has-task" style="left:30%;top:76%">
+        <div class="plant-pin-inner" style="background:#fff0f0;font-size:18px">🌹</div>
+        <div class="plant-pin-label">Rosen</div>
+        <div class="plant-tooltip"><div class="tooltip-name">🌹 Rosen</div><div class="tooltip-detail">Veranda links · 3 Stück</div><div class="tooltip-task">🔴 Schneiden überfällig!</div></div>
+      </div>
+
+      <div class="plant-pin" style="left:70%;top:76%">
+        <div class="plant-pin-inner" style="background:#fff0f0;font-size:18px">🌹</div>
+        <div class="plant-pin-label">Rose</div>
+        <div class="plant-tooltip"><div class="tooltip-name">🌹 Rose</div><div class="tooltip-detail">Veranda rechts</div></div>
+      </div>
+
+      <div class="plant-pin" style="left:30%;top:88%">
+        <div class="plant-pin-inner" style="background:#f0fff0;font-size:18px">🌲</div>
+        <div class="plant-pin-label">Thuja</div>
+        <div class="plant-tooltip"><div class="tooltip-name">🌲 Thuja</div><div class="tooltip-detail">Einfahrt links</div></div>
+      </div>
+
+      <div class="plant-pin" style="left:30%;top:95%">
+        <div class="plant-pin-inner" style="background:#fffff0;font-size:18px">🍂</div>
+        <div class="plant-pin-label">Gingko</div>
+        <div class="plant-tooltip"><div class="tooltip-name">🍂 Gingko</div><div class="tooltip-detail">Einfahrt links · Goldgelb im Herbst</div></div>
+      </div>
+
+      <div class="plant-pin" style="left:68%;top:88%">
+        <div class="plant-pin-inner" style="background:#f0fff0;font-size:18px">🌲</div>
+        <div class="plant-pin-label">Thuja</div>
+        <div class="plant-tooltip"><div class="tooltip-name">🌲 Thuja</div><div class="tooltip-detail">Einfahrt rechts</div></div>
+      </div>
+
+      <div class="plant-pin" style="left:68%;top:95%">
+        <div class="plant-pin-inner" style="background:#fffff0;font-size:18px">🍂</div>
+        <div class="plant-pin-label">Gingko</div>
+        <div class="plant-tooltip"><div class="tooltip-name">🍂 Gingko</div><div class="tooltip-detail">Einfahrt rechts · Goldgelb im Herbst</div></div>
+      </div>
+
+    </div>
+
+    <!-- Zoom controls (screen-fixed overlay) -->
+    <div class="zoom-controls">
+      <button class="zoom-btn" id="zoomIn" title="Hineinzoomen">+</button>
+      <button class="zoom-btn" id="zoomReset" title="Zurücksetzen" style="font-size:12px">⌂</button>
+      <button class="zoom-btn" id="zoomOut" title="Herauszoomen">−</button>
+    </div>
+
+    <!-- Compass -->
+    <div class="compass" style="position:absolute;bottom:12px;right:52px">🧭</div>
+
+  </div>
+
+  <!-- BOTTOM: MONATSÜBERSICHT -->
+  <div class="month-bar">
+    <div class="month-bar-label">Überblick</div>
+
+    <!-- Monate mit Daten -->
+    <div class="month-cell">
+      <div class="month-name">Jan</div>
+      <div class="month-dots"><div class="month-dot" style="background:#ddd"></div></div>
+      <div class="month-tooltip">
+        <div class="month-tooltip-title">Januar</div>
+        <div class="month-tooltip-empty">Keine Aufgaben</div>
+      </div>
+    </div>
+
+    <div class="month-cell">
+      <div class="month-name">Feb</div>
+      <div class="month-dots"><div class="month-dot" style="background:#e74c3c"></div></div>
+      <div class="month-tooltip">
+        <div class="month-tooltip-title">Februar</div>
+        <div class="month-tooltip-category">✂️ Schneiden</div>
+        <div class="month-tooltip-item"><div class="month-tooltip-dot"></div>Rosen (Vorschnitt)</div>
+        <div class="month-tooltip-item"><div class="month-tooltip-dot"></div>Obstbäume</div>
+      </div>
+    </div>
+
+    <div class="month-cell">
+      <div class="month-name">Mär</div>
+      <div class="month-dots">
+        <div class="month-dot" style="background:#e74c3c"></div>
+        <div class="month-dot" style="background:#27ae60"></div>
+      </div>
+      <div class="month-tooltip">
+        <div class="month-tooltip-title">März</div>
+        <div class="month-tooltip-category">✂️ Schneiden</div>
+        <div class="month-tooltip-item"><div class="month-tooltip-dot"></div>Rosen, Lavendel</div>
+        <div class="month-tooltip-category">🌱 Sonstiges</div>
+        <div class="month-tooltip-item"><div class="month-tooltip-dot"></div>Rasenkante schneiden</div>
+        <div class="month-tooltip-item"><div class="month-tooltip-dot"></div>Rasen lüften</div>
+      </div>
+    </div>
+
+    <div class="month-cell">
+      <div class="month-name">Apr</div>
+      <div class="month-dots">
+        <div class="month-dot" style="background:#e74c3c"></div>
+        <div class="month-dot" style="background:#f39c12"></div>
+        <div class="month-dot" style="background:#27ae60"></div>
+      </div>
+      <div class="month-tooltip">
+        <div class="month-tooltip-title">April</div>
+        <div class="month-tooltip-category">✂️ Schneiden</div>
+        <div class="month-tooltip-item"><div class="month-tooltip-dot"></div>Buchsbaum</div>
+        <div class="month-tooltip-category">💧 Düngen</div>
+        <div class="month-tooltip-item"><div class="month-tooltip-dot"></div>Rasen, Thujas</div>
+        <div class="month-tooltip-category">🌱 Sonstiges</div>
+        <div class="month-tooltip-item"><div class="month-tooltip-dot"></div>Tomaten vorziehen</div>
+      </div>
+    </div>
+
+    <div class="month-cell current-month">
+      <div class="month-name">Mai</div>
+      <div class="month-dots">
+        <div class="month-dot" style="background:#e74c3c"></div>
+        <div class="month-dot" style="background:#f39c12"></div>
+        <div class="month-dot" style="background:#27ae60"></div>
+      </div>
+      <div class="month-tooltip">
+        <div class="month-tooltip-title">Mai – Aktueller Monat</div>
+        <div class="month-tooltip-category">✂️ Schneiden</div>
+        <div class="month-tooltip-item"><div class="month-tooltip-dot"></div>Rosen, Lavendel</div>
+        <div class="month-tooltip-category">💧 Düngen</div>
+        <div class="month-tooltip-item"><div class="month-tooltip-dot"></div>Hortensien, Rasen</div>
+        <div class="month-tooltip-category">🌱 Sonstiges</div>
+        <div class="month-tooltip-item"><div class="month-tooltip-dot"></div>Tomaten auspflanzen</div>
+        <div class="month-tooltip-item"><div class="month-tooltip-dot"></div>Rasenkante schneiden</div>
+      </div>
+    </div>
+
+    <div class="month-cell">
+      <div class="month-name">Jun</div>
+      <div class="month-dots">
+        <div class="month-dot" style="background:#f39c12"></div>
+        <div class="month-dot" style="background:#27ae60"></div>
+      </div>
+      <div class="month-tooltip">
+        <div class="month-tooltip-title">Juni</div>
+        <div class="month-tooltip-category">💧 Düngen</div>
+        <div class="month-tooltip-item"><div class="month-tooltip-dot"></div>Rosen, Thujas</div>
+        <div class="month-tooltip-category">🌱 Sonstiges</div>
+        <div class="month-tooltip-item"><div class="month-tooltip-dot"></div>Tomaten aufbinden</div>
+        <div class="month-tooltip-item"><div class="month-tooltip-dot"></div>Rasen lüften</div>
+      </div>
+    </div>
+
+    <div class="month-cell">
+      <div class="month-name">Jul</div>
+      <div class="month-dots">
+        <div class="month-dot" style="background:#e74c3c"></div>
+        <div class="month-dot" style="background:#f39c12"></div>
+      </div>
+      <div class="month-tooltip">
+        <div class="month-tooltip-title">Juli</div>
+        <div class="month-tooltip-category">✂️ Schneiden</div>
+        <div class="month-tooltip-item"><div class="month-tooltip-dot"></div>Lavendel (nach Blüte)</div>
+        <div class="month-tooltip-category">💧 Düngen</div>
+        <div class="month-tooltip-item"><div class="month-tooltip-dot"></div>Rasen, Hortensien</div>
+      </div>
+    </div>
+
+    <div class="month-cell">
+      <div class="month-name">Aug</div>
+      <div class="month-dots">
+        <div class="month-dot" style="background:#e74c3c"></div>
+        <div class="month-dot" style="background:#f39c12"></div>
+        <div class="month-dot" style="background:#27ae60"></div>
+      </div>
+      <div class="month-tooltip">
+        <div class="month-tooltip-title">August</div>
+        <div class="month-tooltip-category">✂️ Schneiden</div>
+        <div class="month-tooltip-item"><div class="month-tooltip-dot"></div>Buchsbaum, Thujas</div>
+        <div class="month-tooltip-category">💧 Düngen</div>
+        <div class="month-tooltip-item"><div class="month-tooltip-dot"></div>Rosen (letzte Düngung)</div>
+        <div class="month-tooltip-category">🌱 Sonstiges</div>
+        <div class="month-tooltip-item"><div class="month-tooltip-dot"></div>Rasenkante schneiden</div>
+      </div>
+    </div>
+
+    <div class="month-cell">
+      <div class="month-name">Sep</div>
+      <div class="month-dots">
+        <div class="month-dot" style="background:#e74c3c"></div>
+        <div class="month-dot" style="background:#27ae60"></div>
+      </div>
+      <div class="month-tooltip">
+        <div class="month-tooltip-title">September</div>
+        <div class="month-tooltip-category">✂️ Schneiden</div>
+        <div class="month-tooltip-item"><div class="month-tooltip-dot"></div>Rosen (Herbstschnitt)</div>
+        <div class="month-tooltip-category">🌱 Sonstiges</div>
+        <div class="month-tooltip-item"><div class="month-tooltip-dot"></div>Äpfel ernten</div>
+        <div class="month-tooltip-item"><div class="month-tooltip-dot"></div>Rasen lüften</div>
+      </div>
+    </div>
+
+    <div class="month-cell">
+      <div class="month-name">Okt</div>
+      <div class="month-dots">
+        <div class="month-dot" style="background:#27ae60"></div>
+      </div>
+      <div class="month-tooltip">
+        <div class="month-tooltip-title">Oktober</div>
+        <div class="month-tooltip-category">🌱 Sonstiges</div>
+        <div class="month-tooltip-item"><div class="month-tooltip-dot"></div>Stauden einwintern</div>
+        <div class="month-tooltip-item"><div class="month-tooltip-dot"></div>Rasenkante schneiden</div>
+      </div>
+    </div>
+
+    <div class="month-cell">
+      <div class="month-name">Nov</div>
+      <div class="month-dots"><div class="month-dot" style="background:#ddd"></div></div>
+      <div class="month-tooltip">
+        <div class="month-tooltip-title">November</div>
+        <div class="month-tooltip-empty">Keine Aufgaben</div>
+      </div>
+    </div>
+
+    <div class="month-cell">
+      <div class="month-name">Dez</div>
+      <div class="month-dots"><div class="month-dot" style="background:#ddd"></div></div>
+      <div class="month-tooltip">
+        <div class="month-tooltip-title">Dezember</div>
+        <div class="month-tooltip-empty">Keine Aufgaben</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: CHAT PANEL -->
+  <div class="chat-panel" id="chatPanel">
+    <div class="chat-header">
+      <div class="chat-title">🤖 Garten-Assistent</div>
+      <button class="chat-close" onclick="toggleChat()">✕</button>
+    </div>
+
+    <div class="chat-messages">
+      <div class="chat-msg">
+        <div class="chat-sender">Assistent</div>
+        <div class="chat-bubble bot">Hallo! Ich sehe, die Rosen stehen schon länger auf der Liste. Soll ich erklären, warum der Schnitt jetzt besonders wichtig ist?</div>
+      </div>
+
+      <div class="chat-msg">
+        <div class="chat-context-pill">🌹 Rosen · Hochbeet Süd</div>
+        <div class="chat-sender">Du</div>
+        <div class="chat-bubble user">Ja, warum muss ich jetzt schneiden?</div>
+      </div>
+
+      <div class="chat-msg">
+        <div class="chat-sender">Assistent</div>
+        <div class="chat-bubble bot">Im Mai beginnt die erste Wachstumsphase. Ein Rückschnitt jetzt lenkt die Energie in neue Triebe statt in alte Holzteile. Ideal: 20–30 cm über dem Boden, schräg über einem Auge. Deine Rosen haben zuletzt am <strong>14. März 2024</strong> einen Schnitt bekommen – das ist etwas lang!</div>
+      </div>
+    </div>
+
+    <div class="chat-input-area">
+      <input class="chat-input" type="text" placeholder="Frage stellen …" />
+      <button class="chat-send">↑</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- CHAT TOGGLE BUTTON -->
+<button class="chat-toggle" id="chatToggle" onclick="toggleChat()">
+  💬 Assistent öffnen
+</button>
+
+<script>
+  // ── PAN & ZOOM ──
+  const area    = document.getElementById('gardenArea');
+  const plan    = document.getElementById('gartenplan');
+  const img     = document.getElementById('gartenplanImg');
+
+  // Image natural ratio: 706 × 1554
+  const IMG_W = 706, IMG_H = 1554;
+  const RATIO = IMG_H / IMG_W; // ~2.2
+
+  let scale = 1, minScale = 0.3;
+  let tx = 0, ty = 0;
+  let dragging = false, startX, startY, startTx, startTy;
+
+  function getAreaSize() {
+    return { w: area.clientWidth, h: area.clientHeight };
+  }
+
+  function initPlan() {
+    const { w, h } = getAreaSize();
+    // Fit full width, center vertically if smaller
+    const fitByWidth  = { s: w / IMG_W, tx: 0, ty: Math.max(0, (h - w * RATIO) / 2) };
+    const fitByHeight = { s: h / IMG_H, tx: Math.max(0, (w - h / RATIO) / 2), ty: 0 };
+    // Use fit-by-width as default (shows top of garden, allows panning down)
+    const fit = fitByWidth;
+    minScale = Math.min(fitByWidth.s, fitByHeight.s) * 0.9;
+    scale = fit.s;
+    tx = fit.tx;
+    ty = fit.ty;
+    plan.style.width  = IMG_W + 'px';
+    plan.style.height = IMG_H + 'px';
+    applyTransform(false);
+  }
+
+  function applyTransform(animate) {
+    plan.style.transition = animate ? 'transform 0.3s ease' : 'none';
+    plan.style.transform  = `translate(${tx}px, ${ty}px) scale(${scale})`;
+    // Counter-scale pins so they stay same visual size
+    const inv = 1 / scale;
+    document.querySelectorAll('.plant-pin-inner').forEach(el => {
+      el.style.transform = `scale(${inv})`;
+    });
+  }
+
+  function clamp() {
+    const { w, h } = getAreaSize();
+    const planW = IMG_W * scale;
+    const planH = IMG_H * scale;
+    // Allow panning but keep at least 40px of plan visible on each side
+    const margin = 40;
+    tx = Math.min(tx, w - margin);
+    tx = Math.max(tx, margin - planW);
+    ty = Math.min(ty, h - margin);
+    ty = Math.max(ty, margin - planH);
+  }
+
+  function zoomAt(cx, cy, factor) {
+    const newScale = Math.min(Math.max(scale * factor, minScale), 5);
+    const ratio = newScale / scale;
+    tx = cx - ratio * (cx - tx);
+    ty = cy - ratio * (cy - ty);
+    scale = newScale;
+    clamp();
+    applyTransform(false);
+  }
+
+  // Wheel zoom
+  area.addEventListener('wheel', e => {
+    e.preventDefault();
+    const rect = area.getBoundingClientRect();
+    const cx = e.clientX - rect.left;
+    const cy = e.clientY - rect.top;
+    const factor = e.deltaY < 0 ? 1.12 : 0.89;
+    zoomAt(cx, cy, factor);
+  }, { passive: false });
+
+  // Mouse drag
+  area.addEventListener('mousedown', e => {
+    if (e.button !== 0) return;
+    dragging = true;
+    startX = e.clientX; startY = e.clientY;
+    startTx = tx; startTy = ty;
+    area.style.cursor = 'grabbing';
+  });
+  window.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    tx = startTx + (e.clientX - startX);
+    ty = startTy + (e.clientY - startY);
+    clamp();
+    applyTransform(false);
+  });
+  window.addEventListener('mouseup', () => {
+    dragging = false;
+    area.style.cursor = 'grab';
+  });
+
+  // Touch pan & pinch
+  let lastTouches = null, lastPinchDist = null;
+  area.addEventListener('touchstart', e => {
+    lastTouches = e.touches;
+    if (e.touches.length === 1) {
+      startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+      startTx = tx; startTy = ty;
+    }
+    if (e.touches.length === 2) {
+      lastPinchDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+    }
+  }, { passive: true });
+
+  area.addEventListener('touchmove', e => {
+    e.preventDefault();
+    if (e.touches.length === 1) {
+      tx = startTx + (e.touches[0].clientX - startX);
+      ty = startTy + (e.touches[0].clientY - startY);
+      clamp();
+      applyTransform(false);
+    }
+    if (e.touches.length === 2) {
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const rect = area.getBoundingClientRect();
+      const cx = ((e.touches[0].clientX + e.touches[1].clientX) / 2) - rect.left;
+      const cy = ((e.touches[0].clientY + e.touches[1].clientY) / 2) - rect.top;
+      zoomAt(cx, cy, dist / lastPinchDist);
+      lastPinchDist = dist;
+    }
+  }, { passive: false });
+
+  // Zoom buttons
+  document.getElementById('zoomIn').addEventListener('click', () => {
+    const { w, h } = getAreaSize();
+    zoomAt(w / 2, h / 2, 1.3);
+    applyTransform(true);
+  });
+  document.getElementById('zoomOut').addEventListener('click', () => {
+    const { w, h } = getAreaSize();
+    zoomAt(w / 2, h / 2, 0.77);
+    applyTransform(true);
+  });
+  document.getElementById('zoomReset').addEventListener('click', () => {
+    initPlan();
+    applyTransform(true);
+  });
+
+  // Init on load
+  img.addEventListener('load', initPlan);
+  window.addEventListener('resize', initPlan);
+  if (img.complete) initPlan();
+
+  // ── CHAT TOGGLE ──
+  function toggleChat() {
+    const panel = document.getElementById('chatPanel');
+    const toggle = document.getElementById('chatToggle');
+    const isOpen = panel.classList.contains('open');
+    if (isOpen) {
+      panel.classList.remove('open');
+      toggle.classList.remove('hidden');
+    } else {
+      panel.classList.add('open');
+      toggle.classList.add('hidden');
+    }
+  }
+
+  // Todo: click text opens chat
+  document.querySelectorAll('.todo-name').forEach(el => {
+    el.addEventListener('click', () => {
+      document.getElementById('chatPanel').classList.add('open');
+      document.getElementById('chatToggle').classList.add('hidden');
+    });
+  });
+
+  // Done / Skip with animation
+  document.querySelectorAll('.btn-done').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const item = btn.closest('.todo-item');
+      item.style.transition = 'all 0.3s';
+      item.style.opacity = '0';
+      item.style.transform = 'translateX(-20px)';
+      setTimeout(() => { item.style.display = 'none'; }, 300);
+    });
+  });
+  document.querySelectorAll('.btn-skip').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const item = btn.closest('.todo-item');
+      item.style.transition = 'all 0.3s';
+      item.style.opacity = '0';
+      item.style.transform = 'translateX(20px)';
+      setTimeout(() => { item.style.display = 'none'; }, 300);
+    });
+  });
+</script>
+
+</body>
+</html>
