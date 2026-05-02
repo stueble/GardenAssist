@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GardenAssist – Kalender</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --green-deep:#2d4a2d;--green-mid:#4a7c4a;--green-light:#7aab6a;
+  --green-pale:#c8dfc0;--green-mist:#eef4eb;--cream:#f8f4ee;
+  --warm-white:#fdfbf8;--red-warn:#c0392b;--red-soft:#fdf0ee;
+  --yellow-warn:#d4850a;--yellow-soft:#fef9ee;--blue-soft:#e8f0fb;--blue-mid:#4a78c0;
+  --text-dark:#1e2e1e;--text-mid:#4a5e4a;--text-light:#8a9e8a;
+  --border:#dde8d8;--shadow:0 2px 12px rgba(45,74,45,.10);--shadow-lg:0 8px 32px rgba(45,74,45,.15);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text-dark);height:100vh;display:flex;flex-direction:column;overflow:hidden;font-size:13px}
+
+/* NAV */
+nav{background:var(--green-deep);display:flex;align-items:center;height:52px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.nav-logo{font-family:'Playfair Display',serif;font-size:20px;color:var(--green-pale);letter-spacing:.5px;display:flex;align-items:center;gap:8px;width:240px;flex-shrink:0;padding:0 20px;border-right:1px solid rgba(255,255,255,.1);height:100%}
+.nav-links{display:flex;gap:2px;flex:1;padding:0 12px}
+.nav-link{color:var(--green-pale);padding:6px 14px;border-radius:6px;font-size:13px;opacity:.75;transition:all .2s;cursor:pointer;border:none;background:none;display:flex;align-items:center;gap:6px}
+.nav-link:hover{opacity:1;background:rgba(255,255,255,.1)}
+.nav-link.active{opacity:1;background:rgba(255,255,255,.15);font-weight:500}
+.nav-right{padding-right:16px}
+.nav-icon-btn{color:var(--green-pale);background:none;border:none;cursor:pointer;font-size:18px;opacity:.75}
+
+/* BODY WRAP */
+.body-wrap{display:flex;flex:1;overflow:hidden;position:relative}
+.content-col{display:flex;flex-direction:column;flex:1;overflow:hidden;min-width:0}
+
+/* SUBHEADER */
+.subheader{background:var(--warm-white);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.search-wrap{position:relative;width:260px;flex-shrink:0}
+.search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text-light);pointer-events:none}
+.search-input{width:100%;background:var(--green-mist);border:1.5px solid var(--border);border-radius:24px;padding:7px 14px 7px 32px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text-dark);outline:none;transition:border-color .2s}
+.search-input:focus{border-color:var(--green-mid);background:white}
+
+/* VIEW TOGGLES */
+.view-tabs{display:flex;gap:4px;margin-left:4px}
+.view-tab{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;border:1.5px solid var(--border);background:none;color:var(--text-mid);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;display:flex;align-items:center;gap:5px;white-space:nowrap}
+.view-tab:hover{border-color:var(--green-mid);color:var(--green-deep)}
+.view-tab.active{background:var(--green-deep);border-color:var(--green-deep);color:white}
+
+/* GANTT WRAPPER */
+.gantt-wrap{flex:1;overflow:auto;padding:0}
+
+/* GANTT TABLE */
+.gantt{width:100%;border-collapse:collapse;min-width:800px}
+
+/* HEADER ROW */
+.gantt thead th{background:var(--warm-white);position:sticky;top:0;z-index:20;border-bottom:2px solid var(--border)}
+.gantt .th-plant{width:220px;min-width:220px;padding:10px 16px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text-light)}
+.gantt .th-month{padding:8px 0;text-align:center;font-size:11px;font-weight:600;color:var(--text-mid);letter-spacing:.3px;border-left:1px solid var(--border)}
+.gantt .th-month.current{background:var(--green-mist);color:var(--green-deep)}
+
+/* PLANT ROWS */
+.gantt tbody tr{border-bottom:1px solid var(--border);transition:background .12s}
+.gantt tbody tr:hover{background:var(--green-mist)}
+.gantt tbody tr:hover .td-months{background:rgba(238,244,235,.5)}
+
+.td-plant{padding:10px 16px;vertical-align:middle;width:220px;min-width:220px;border-right:2px solid var(--border)}
+.plant-row-inner{display:flex;align-items:center;gap:10px}
+.plant-thumb{width:36px;height:36px;border-radius:8px;background:var(--green-mist);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.plant-name{font-weight:600;font-size:13px;color:var(--text-dark)}
+.plant-latin{font-size:10px;color:var(--text-light);font-style:italic;margin-top:1px}
+
+/* MONTHS AREA */
+.td-months{position:relative;padding:0;vertical-align:middle;overflow:visible}
+.months-grid{display:grid;grid-template-columns:repeat(12,1fr);height:100%;position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none}
+.month-col{border-left:1px solid var(--border)}
+.month-col.current{background:rgba(238,244,235,.5)}
+.bars-area{position:relative;height:56px;padding:8px 0;overflow:visible}
+
+/* GANTT BARS */
+.bar{position:absolute;height:28px;top:50%;transform:translateY(-50%);border-radius:6px;display:flex;align-items:center;padding:0 8px;font-size:10px;font-weight:600;color:white;cursor:pointer;transition:filter .15s;box-shadow:0 1px 4px rgba(0,0,0,.15);z-index:10}
+.bar:hover{filter:brightness(1.1);z-index:30}
+.bar-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 1px 2px rgba(0,0,0,.2)}
+
+/* BAR TOOLTIP */
+.bar-tooltip{display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--green-deep);color:white;border-radius:8px;padding:8px 12px;min-width:140px;z-index:100;box-shadow:var(--shadow-lg);font-size:11px;line-height:1.6;pointer-events:none;white-space:nowrap}
+.bar:hover .bar-tooltip{display:block}
+.bar-tooltip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--green-deep)}
+
+/* EMPTY BAR ROW */
+.bar-empty{height:28px;display:flex;align-items:center;padding:0 4px;font-size:11px;color:var(--text-light);font-style:italic}
+
+/* CHAT TOGGLE STRIP */
+.chat-toggle{background:var(--green-mid);color:var(--green-pale);border:none;border-left:1px solid rgba(255,255,255,.15);padding:24px 11px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:10px;flex-shrink:0;transition:background .2s}
+.chat-toggle-icon{font-size:20px;line-height:1}
+.chat-toggle-label{writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);letter-spacing:.8px}
+.chat-toggle:hover{background:var(--green-light)}
+.chat-toggle.hidden{display:none}
+
+/* CHAT PANEL */
+.chat-panel{width:0;overflow:hidden;background:var(--warm-white);border-left:1px solid var(--border);display:flex;flex-direction:column;transition:width .3s ease;flex-shrink:0}
+.chat-panel.open{width:300px}
+.chat-header{padding:16px 16px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.chat-title{font-family:'Playfair Display',serif;font-size:15px;color:var(--green-deep);font-weight:600;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.chat-close{background:none;border:none;cursor:pointer;color:var(--text-light);font-size:16px;transition:color .15s}
+.chat-close:hover{color:var(--text-dark)}
+.chat-messages{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px}
+.chat-msg{display:flex;flex-direction:column;gap:4px}
+.chat-bubble{padding:9px 12px;border-radius:12px;font-size:12px;line-height:1.5;max-width:90%}
+.chat-bubble.bot{background:var(--green-mist);color:var(--text-dark);border-radius:4px 12px 12px 12px;align-self:flex-start;border:1px solid var(--border)}
+.chat-sender{font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--text-light);padding:0 4px}
+.chat-input-area{padding:12px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0}
+.chat-input{flex:1;background:var(--green-mist);border:1px solid var(--border);border-radius:20px;padding:7px 12px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--text-dark);outline:none}
+.chat-input:focus{border-color:var(--green-mid)}
+.chat-send{background:var(--green-deep);color:white;border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.chat-send:hover{background:var(--green-mid)}
+
+/* DETAIL PANEL – overlays the gantt from the left */
+.detail-panel{display:none;position:absolute;top:0;left:0;bottom:0;width:300px;background:var(--warm-white);border-right:2px solid var(--border);flex-direction:column;flex-shrink:0;z-index:50;box-shadow:4px 0 20px rgba(45,74,45,.15)}
+.detail-panel.open{display:flex}
+.detail-body{flex:1;overflow-y:auto;min-height:0;padding:14px 16px;display:flex;flex-direction:column;gap:14px}
+.detail-header{padding:14px 16px 10px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;flex-shrink:0}
+.detail-close{background:none;border:none;cursor:pointer;color:var(--text-light);font-size:16px;transition:color .15s}
+.detail-close:hover{color:var(--text-dark)}
+.detail-plant-name{font-family:'Playfair Display',serif;font-size:17px;color:var(--green-deep);font-weight:600;line-height:1.2}
+.detail-latin{font-size:11px;color:var(--text-light);font-style:italic;margin-top:2px}
+.detail-body{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:14px}
+.detail-images{display:flex;gap:6px}
+.detail-img-box{flex:1;aspect-ratio:1;border-radius:8px;background:var(--green-mist);border:1.5px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:22px;cursor:pointer;transition:border-color .15s}
+.detail-img-box:hover{border-color:var(--green-mid)}
+.detail-img-label{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-light)}
+.detail-section-title{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text-light);margin-bottom:7px}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.detail-field{background:var(--green-mist);border-radius:7px;padding:7px 9px}
+.detail-field-label{font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-light);margin-bottom:2px}
+.detail-field-value{font-size:12px;font-weight:500;color:var(--text-dark)}
+.detail-task{display:flex;align-items:center;justify-content:space-between;padding:7px 9px;background:var(--green-mist);border-radius:7px;gap:8px}
+.detail-task-name{font-size:12px;font-weight:500;flex:1}
+.detail-task-date{font-size:11px;color:var(--text-light)}
+.detail-notes{background:var(--yellow-soft);border:1px solid #f0d9a0;border-radius:7px;padding:9px 11px;font-size:11.5px;color:var(--text-mid);line-height:1.5}
+.detail-actions{display:flex;gap:8px;padding:10px 16px;border-top:1px solid var(--border);flex-shrink:0}
+.detail-btn{flex:1;padding:7px;border-radius:8px;font-size:12px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;border:1.5px solid var(--border);background:none;color:var(--text-mid);transition:all .15s;display:flex;align-items:center;justify-content:center;gap:4px}
+.detail-btn:hover{border-color:var(--green-mid);color:var(--green-deep);background:var(--green-mist)}
+.detail-btn.primary{background:var(--green-deep);color:white;border-color:var(--green-deep)}
+.detail-btn.primary:hover{background:var(--green-mid)}
+
+/* selected row */
+.gantt tbody tr.selected{background:#e4f0e0}
+.gantt tbody tr.selected .td-months{background:rgba(228,240,224,.6)}
+
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--green-pale);border-radius:3px}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo"><span>🌿</span> GardenAssist</div>
+  <div class="nav-links">
+    <button class="nav-link">🏠 Dashboard</button>
+    <button class="nav-link">🌱 Pflanzen</button>
+    <button class="nav-link active">🗓 Kalender</button>
+    <button class="nav-link">📔 Tagebuch</button>
+  </div>
+  <div class="nav-right"><button class="nav-icon-btn">⚙️</button></div>
+</nav>
+
+<div class="body-wrap">
+
+<!-- PLANT DETAIL PANEL -->
+<div class="detail-panel" id="detailPanel">
+  <div class="detail-header">
+    <div>
+      <div class="detail-plant-name" id="detailName">–</div>
+      <div class="detail-latin" id="detailLatin">–</div>
+    </div>
+    <button class="detail-close" onclick="closeDetail()">✕</button>
+  </div>
+  <div class="detail-body">
+    <div>
+      <div class="detail-section-title">Bilder</div>
+      <div class="detail-images">
+        <div class="detail-img-box"><span id="detailEmoji">🌿</span><span class="detail-img-label">Pflanze</span></div>
+        <div class="detail-img-box"><span>🌸</span><span class="detail-img-label">Blüte</span></div>
+        <div class="detail-img-box"><span>🍃</span><span class="detail-img-label">Blatt</span></div>
+      </div>
+    </div>
+    <div>
+      <div class="detail-section-title">Steckbrief</div>
+      <div class="detail-grid">
+        <div class="detail-field"><div class="detail-field-label">Typ</div><div class="detail-field-value" id="detailTyp">–</div></div>
+        <div class="detail-field"><div class="detail-field-label">Standort</div><div class="detail-field-value" id="detailStandort">–</div></div>
+        <div class="detail-field"><div class="detail-field-label">Blütezeit</div><div class="detail-field-value" id="detailBluete">–</div></div>
+        <div class="detail-field"><div class="detail-field-label">Blütenfarbe</div><div class="detail-field-value" id="detailFarbe">–</div></div>
+        <div class="detail-field"><div class="detail-field-label">Alter</div><div class="detail-field-value" id="detailAlter">–</div></div>
+        <div class="detail-field"><div class="detail-field-label">Min. Temperatur</div><div class="detail-field-value" id="detailTemp">–</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="detail-section-title">Pflege-Historie</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div class="detail-task"><span>✂️</span><span class="detail-task-name">Letzter Schnitt</span><span class="detail-task-date" id="detailLastCut">–</span></div>
+        <div class="detail-task"><span>💧</span><span class="detail-task-name">Letzte Düngung</span><span class="detail-task-date" id="detailLastFert">–</span></div>
+      </div>
+    </div>
+    <div>
+      <div class="detail-section-title">Pflegehinweise</div>
+      <div class="detail-notes" id="detailNotes">–</div>
+    </div>
+  </div>
+  <div class="detail-actions">
+    <button class="detail-btn" onclick="openChat()">💬 Assistent fragen</button>
+    <button class="detail-btn primary">✏️ Bearbeiten</button>
+  </div>
+</div>
+
+<div class="content-col">
+
+  <div class="subheader">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" type="text" placeholder="Pflanze suchen …" id="searchInput">
+    </div>
+    <div class="view-tabs">
+      <button class="view-tab active" onclick="setView('bloom')">🌸 Blütezeit</button>
+      <button class="view-tab" onclick="setView('fertilize')">💧 Düngen</button>
+      <button class="view-tab" onclick="setView('prune')">✂️ Schnitt</button>
+      <button class="view-tab" onclick="setView('misc')">📋 Sonstiges</button>
+    </div>
+  </div>
+
+  <div class="gantt-wrap">
+    <table class="gantt" id="ganttTable">
+      <thead>
+        <tr id="headerRow">
+          <th class="th-plant">Pflanze</th>
+        </tr>
+      </thead>
+      <tbody id="ganttBody"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<button class="chat-toggle" id="chatToggle" onclick="toggleChat()">
+  <span class="chat-toggle-icon">💬</span>
+  <span class="chat-toggle-label">Assistent</span>
+</button>
+
+<div class="chat-panel" id="chatPanel">
+  <div class="chat-header">
+    <div class="chat-title">🤖 Garten-Assistent</div>
+    <button class="chat-close" onclick="toggleChat()">✕</button>
+  </div>
+  <div class="chat-messages">
+    <div class="chat-msg">
+      <div class="chat-sender">Assistent</div>
+      <div class="chat-bubble bot">Hallo! Im Kalender können Sie sehen, wann welche Pflanze blüht, geschnitten oder gedüngt werden sollte. Wie kann ich helfen?</div>
+    </div>
+  </div>
+  <div class="chat-input-area">
+    <input class="chat-input" type="text" placeholder="Frage stellen …">
+    <button class="chat-send">↑</button>
+  </div>
+</div>
+</div>
+
+<script>
+const MONTHS = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+const CURRENT_MONTH = 5; // Mai (1-based)
+
+// Plant data: intervals are { start, end } month numbers (1–12)
+const plants = [
+  { id:1,  emoji:'🌹', name:'Rose',              latin:'Rosa',                typ:'Strauch',   standort:'Westbeet',  bluete:'Mai–Sep', farbe:'Rot/Pink',   alter:'4 J.',  temp:'-15°C', lastCut:'14. Mär 2024', lastFert:'12. Apr 2024', notes:'Nach Blüte entblättern. Kein Stickstoff nach Aug.',
+    bloom:[{start:5,end:9,color:'#c0392b',label:'Rot/Pink'}], fertilize:[{start:4,end:4,color:'#2980b9',label:'Frühjahr'},{start:6,end:6,color:'#2980b9',label:'Sommer'}], prune:[{start:3,end:3,color:'#27ae60',label:'Frühjahrsschnitt'},{start:8,end:8,color:'#27ae60',label:'Sommersch.'}], misc:[] },
+  { id:2,  emoji:'💐', name:'Rhododendron',       latin:'Rhododendron hyb.',   typ:'Strauch',   standort:'Terrasse',  bluete:'Apr–Jun', farbe:'Lila/Pink',  alter:'6 J.',  temp:'-10°C', lastCut:'–',           lastFert:'02. Mär 2024', notes:'Kalkfreies Substrat wichtig. Rhododendron-Dünger verwenden.',
+    bloom:[{start:4,end:6,color:'#8e44ad',label:'Lila/Pink'}], fertilize:[{start:3,end:3,color:'#2980b9',label:'Rhodo-Dünger'},{start:5,end:5,color:'#2980b9',label:'Nachdüngen'}], prune:[], misc:[] },
+  { id:3,  emoji:'🌸', name:'Magnolia',           latin:'Magnolia grandiflora', typ:'Baum',     standort:'Nordwest',  bluete:'Apr–Mai', farbe:'Weiß/Creme', alter:'8 J.',  temp:'-20°C', lastCut:'–',           lastFert:'–',            notes:'Kein Rückschnitt nötig. Nicht vor dem Frost düngen.',
+    bloom:[{start:4,end:5,color:'#f0e0c0',label:'Weiß/Creme'}], fertilize:[], prune:[], misc:[{start:4,end:5,color:'#7f8c8d',label:'Beobachten'}] },
+  { id:4,  emoji:'🌻', name:'Sonnenblume',        latin:'Helianthus annuus',    typ:'Einjährig', standort:'Südbeet',  bluete:'Jul–Sep', farbe:'Gelb',       alter:'1 J.',  temp:'0°C',   lastCut:'–',           lastFert:'20. Mai 2024', notes:'Braucht viel Sonne und Wasser. Höhe bis 3m.',
+    bloom:[{start:7,end:9,color:'#f39c12',label:'Gelb'}], fertilize:[{start:5,end:8,color:'#2980b9',label:'Regelmäßig gießen'}], prune:[], misc:[{start:3,end:4,color:'#7f8c8d',label:'Aussäen'}] },
+  { id:5,  emoji:'🍎', name:'Apfelbaum',          latin:'Malus domestica',      typ:'Obstbaum',  standort:'Mitte',    bluete:'Apr–Mai', farbe:'Weiß/Rosa',  alter:'12 J.', temp:'-25°C', lastCut:'Feb 2024',    lastFert:'Mär 2024',     notes:'Schnitt im Winterschlaf. Ausdünnen der Früchte im Juni.',
+    bloom:[{start:4,end:5,color:'#f8c8d0',label:'Weiß/Rosa'}], fertilize:[{start:3,end:3,color:'#2980b9',label:'Frühjahr'}], prune:[{start:2,end:2,color:'#27ae60',label:'Winterschnitt'}], misc:[{start:6,end:6,color:'#7f8c8d',label:'Ausdünnen'},{start:9,end:10,color:'#e67e22',label:'Ernte'}] },
+  { id:6,  emoji:'🌿', name:'Hortensie',          latin:'Hydrangea macrophylla', typ:'Strauch',  standort:'Ostbeet',  bluete:'Jun–Sep', farbe:'Blau/Pink',  alter:'3 J.',  temp:'-15°C', lastCut:'Mär 2024',    lastFert:'Apr 2024',     notes:'pH-Wert bestimmt Blütenfarbe. Blau bei saurem Boden.',
+    bloom:[{start:6,end:9,color:'#3498db',label:'Blau/Pink'}], fertilize:[{start:4,end:4,color:'#2980b9',label:'Frühjahr'},{start:6,end:6,color:'#2980b9',label:'Sommer'}], prune:[{start:3,end:3,color:'#27ae60',label:'Frühjahrsschnitt'}], misc:[] },
+  { id:7,  emoji:'🌲', name:'Lebensbaum',         latin:'Thuja occidentalis',   typ:'Nadelbaum', standort:'Hecke',    bluete:'–',       farbe:'–',          alter:'7 J.',  temp:'-30°C', lastCut:'Jun 2023',    lastFert:'–',            notes:'Schnitt zweimal jährlich. Nicht zu stark zurückschneiden.',
+    bloom:[], fertilize:[], prune:[{start:6,end:6,color:'#27ae60',label:'Formschnitt'},{start:8,end:8,color:'#27ae60',label:'Nachschnitt'}], misc:[] },
+  { id:8,  emoji:'🍂', name:'Gingko',             latin:'Ginkgo biloba',        typ:'Baum',      standort:'Einfahrt', bluete:'–',       farbe:'Goldgelb',   alter:'10 J.', temp:'-30°C', lastCut:'–',           lastFert:'–',            notes:'Sehr pflegeleicht. Herbstlaub leuchtend goldgelb.',
+    bloom:[], fertilize:[], prune:[], misc:[{start:10,end:11,color:'#e67e22',label:'Herbstlaub'}] },
+  { id:9,  emoji:'🌺', name:'Päonie',             latin:'Paeonia lactiflora',   typ:'Staude',    standort:'Nordbeet', bluete:'Mai–Jun', farbe:'Rosa/Weiß',  alter:'5 J.',  temp:'-25°C', lastCut:'Nov 2023',    lastFert:'Mär 2024',     notes:'Schwere Blüten brauchen Stütze. Nicht zu tief pflanzen.',
+    bloom:[{start:5,end:6,color:'#e8a0b0',label:'Rosa/Weiß'}], fertilize:[{start:3,end:3,color:'#2980b9',label:'Frühjahr'}], prune:[{start:11,end:11,color:'#27ae60',label:'Rückschnitt'}], misc:[{start:4,end:5,color:'#7f8c8d',label:'Stützen'}] },
+];
+
+let currentView = 'bloom';
+let selectedId = null;
+
+function openDetail(id) {
+  if (selectedId === id) { closeDetail(); return; }
+  selectedId = id;
+  const p = plants.find(x => x.id === id);
+  document.getElementById('detailName').textContent     = p.name;
+  document.getElementById('detailLatin').textContent    = p.latin;
+  document.getElementById('detailEmoji').textContent    = p.emoji;
+  document.getElementById('detailTyp').textContent      = p.typ;
+  document.getElementById('detailStandort').textContent = p.standort;
+  document.getElementById('detailBluete').textContent   = p.bluete;
+  document.getElementById('detailFarbe').textContent    = p.farbe;
+  document.getElementById('detailAlter').textContent    = p.alter;
+  document.getElementById('detailTemp').textContent     = p.temp;
+  document.getElementById('detailLastCut').textContent  = p.lastCut;
+  document.getElementById('detailLastFert').textContent = p.lastFert;
+  document.getElementById('detailNotes').textContent    = p.notes;
+  document.getElementById('detailPanel').classList.add('open');
+  document.querySelectorAll('#ganttBody tr').forEach(tr =>
+    tr.classList.toggle('selected', parseInt(tr.dataset.pid) === id)
+  );
+}
+
+function closeDetail() {
+  selectedId = null;
+  document.getElementById('detailPanel').classList.remove('open');
+  document.querySelectorAll('#ganttBody tr').forEach(tr => tr.classList.remove('selected'));
+}
+
+function openChat() {
+  document.getElementById('chatPanel').classList.add('open');
+  document.getElementById('chatToggle').classList.add('hidden');
+}
+
+function setView(v) {
+  currentView = v;
+  document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  render();
+}
+
+function barLeft(start) { return ((start - 1) / 12 * 100).toFixed(3) + '%'; }
+function barWidth(start, end) { return ((end - start + 1) / 12 * 100).toFixed(3) + '%'; }
+
+function buildBar(interval) {
+  return `<div class="bar" style="left:${barLeft(interval.start)};width:${barWidth(interval.start,interval.end)};background:${interval.color}">
+    <span class="bar-label">${interval.label}</span>
+    <div class="bar-tooltip">${MONTHS[interval.start-1]}–${MONTHS[interval.end-1]}<br>${interval.label}</div>
+  </div>`;
+}
+
+function render() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  let filtered = plants.filter(p =>
+    !q || p.name.toLowerCase().includes(q) || p.latin.toLowerCase().includes(q)
+  );
+
+  // Sort: plants with bars in current view first, empty ones last
+  filtered = [
+    ...filtered.filter(p => (p[currentView] || []).length > 0),
+    ...filtered.filter(p => (p[currentView] || []).length === 0),
+  ];
+
+  // Build header months
+  document.getElementById('headerRow').innerHTML =
+    `<th class="th-plant">Pflanze</th>` +
+    MONTHS.map((m,i) => `<th class="th-month${i+1===CURRENT_MONTH?' current':''}">${m}</th>`).join('');
+
+  // Build rows
+  document.getElementById('ganttBody').innerHTML = filtered.map(p => {
+    const intervals = p[currentView] || [];
+    const bars = intervals.map(buildBar).join('');
+    const rowContent = bars
+      ? `<div class="bars-area">${buildMonthGrid()}${bars}</div>`
+      : `<div class="bars-area">${buildMonthGrid()}<div class="bar-empty">–</div></div>`;
+    const sel = p.id === selectedId ? ' selected' : '';
+    return `<tr class="${sel}" data-pid="${p.id}" onclick="openDetail(${p.id})" style="cursor:pointer">
+      <td class="td-plant">
+        <div class="plant-row-inner">
+          <div class="plant-thumb">${p.emoji}</div>
+          <div>
+            <div class="plant-name">${p.name}</div>
+            <div class="plant-latin">${p.latin}</div>
+          </div>
+        </div>
+      </td>
+      <td class="td-months" colspan="12">${rowContent}</td>
+    </tr>`;
+  }).join('');
+}
+
+function buildMonthGrid() {
+  return `<div class="months-grid">${MONTHS.map((_,i) =>
+    `<div class="month-col${i+1===CURRENT_MONTH?' current':''}"></div>`
+  ).join('')}</div>`;
+}
+
+document.getElementById('searchInput').addEventListener('input', render);
+
+function toggleChat() {
+  const panel = document.getElementById('chatPanel');
+  const toggle = document.getElementById('chatToggle');
+  const open = panel.classList.contains('open');
+  panel.classList.toggle('open');
+  toggle.classList.toggle('hidden', !open);
+}
+
+render();
+</script>
+</body>
+</html>

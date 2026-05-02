@@ -47,15 +47,15 @@ The Plants Overview is the central management view for all plants in the garden.
 │  🌿 GardenAssist  [ Dashboard ][ Plants ][ Calendar ][ Journal ] │
 ├──────────────────────────────────────────────────────────────────┤
 │  🔍 Search …   ➕ Pflanze hinzufügen        9 plants · 3 open  ☰ ⊞ │
-├──────────────────────────────────────────────┬───────────────┬───┤
-│                                              │               │   │
-│  Name       │ Type  │ Location │ Bloom │ … │  Detail       │ 💬 │
-│  ───────────┼───────┼──────────┼───────┼───│  Panel        │   │
-│  🌹 Rose    │ Shrub │ West bed │May–Sep│ … │  (opens on    │ver│
-│  💐 Rhodod. │ Shrub │ Terrace  │Apr–Jun│ … │  row click)   │ti-│
-│  🌸 Magnolia│ Tree  │ NW       │Apr–May│ … │               │cal│
-│  …                                          │               │   │
-└─────────────────────────────────────────────┴───────────────┴───┘
+├───────────────┬──────────────────────────────────────────────┬───┤
+│               │                                              │   │
+│  Detail       │  Name       │ Type  │ Location │ Bloom │ …  │ 💬 │
+│  Panel        │  ───────────┼───────┼──────────┼───────┼─── │   │
+│  (opens on    │  🌹 Rose    │ Shrub │ West bed │May–Sep│ …  │ver│
+│  row click,   │  💐 Rhodod. │ Shrub │ Terrace  │Apr–Jun│ …  │ti-│
+│  left side)   │  🌸 Magnolia│ Tree  │ NW       │Apr–May│ …  │cal│
+│               │  …                                           │   │
+└───────────────┴──────────────────────────────────────────────┴───┘
 ```
 
 ### Zones in Detail
@@ -64,8 +64,8 @@ The Plants Overview is the central management view for all plants in the garden.
 |---|---|---|
 | **Top navigation** | 100% | Same nav bar as all views |
 | **Subheader** | 100% | Search input → Add plant button → spacer → result count → view toggle |
+| **Detail panel** (left of table) | ~300px (when open) | Plant profile: images, fact sheet, care history, notes, action buttons |
 | **Table / Card area** | flex (shrinks when detail panel is open) | Scrollable plant list in table or card layout |
-| **Detail panel** (right of table) | ~300px (when open) | Plant profile: images, fact sheet, care history, notes, action buttons |
 | **Chat strip** (far right) | ~34px (collapsed) / ~300px (expanded) | AI assistant; same vertical strip pattern as dashboard |
 
 ### Mockup

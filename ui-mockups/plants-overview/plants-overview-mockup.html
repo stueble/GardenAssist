@@ -274,14 +274,16 @@
   .plant-name { font-weight: 600; color: var(--text-dark); font-size: 13px; }
   .plant-latin { font-size: 10px; color: var(--text-light); font-style: italic; }
 
-  .bloom-cell { display: flex; align-items: center; gap: 6px; }
+  .bloom-cell { display: flex; align-items: center; gap: 8px; }
   .bloom-swatch {
-    width: 12px; height: 12px;
-    border-radius: 3px;
-    border: 1px solid rgba(0,0,0,0.1);
+    width: 16px; height: 16px;
+    border-radius: 4px;
+    border: 1px solid rgba(0,0,0,0.12);
     flex-shrink: 0;
   }
-  .bloom-months { font-size: 11px; color: var(--text-mid); }
+  .bloom-text { display: flex; flex-direction: column; gap: 1px; }
+  .bloom-months { font-size: 11.5px; color: var(--text-mid); }
+  .bloom-color  { font-size: 11.5px; color: var(--text-light); }
 
   .task-pill {
     display: inline-flex;
@@ -767,15 +769,15 @@
 <script>
   // ── DATA ──
   const plants = [
-    { id:1,  emoji:'🌹', name:'Rose',               latin:'Rosa',                typ:'Strauch',   standort:'Westbeet',  bluete:'Mai–Sep',  farbe:'Rot/Pink',   blueSwatches:['#c0392b','#e91e8c'], alter:'4 J.',  temp:'-15°C', lastCut:'14. Mär 2024', lastFert:'12. Apr 2024', nextTask:'Schneiden',  nextStatus:'overdue', notes:'Nach Blüte entblättern. Kein Stickstoff nach Aug. Winterschutz ab Nov empfohlen.' },
-    { id:2,  emoji:'💐', name:'Rhododendron',        latin:'Rhododendron hyb.',   typ:'Strauch',   standort:'Terrasse',  bluete:'Apr–Jun',  farbe:'Lila/Pink',  blueSwatches:['#9b59b6','#e91e8c'], alter:'6 J.',  temp:'-10°C', lastCut:'–',           lastFert:'02. Mär 2024', nextTask:'Düngen',     nextStatus:'current', notes:'Kalkfreies Substrat wichtig. Rhododendron-Dünger verwenden. Kein Rückschnitt nötig.' },
-    { id:3,  emoji:'🌸', name:'Magnolia',            latin:'Magnolia grandiflora', typ:'Baum',      standort:'Nordwest',  bluete:'Apr–Mai',  farbe:'Weiß/Creme', blueSwatches:['#fff9e6'],           alter:'8 J.',  temp:'-20°C', lastCut:'–',           lastFert:'–',            nextTask:'Beobachten', nextStatus:'upcoming', notes:'Kein Rückschnitt nötig. Frühjahrsblüher – nicht vor dem Frost düngen.' },
-    { id:4,  emoji:'🌻', name:'Sonnenblume',         latin:'Helianthus annuus',    typ:'Einjährig', standort:'Südbeet',   bluete:'Jul–Sep',  farbe:'Gelb',       blueSwatches:['#f1c40f'],           alter:'1 J.',  temp:'0°C',   lastCut:'–',           lastFert:'20. Mai 2024', nextTask:'Gießen',     nextStatus:'current', notes:'Braucht viel Sonne und Wasser. Höhe bis 3m möglich.' },
-    { id:5,  emoji:'🍎', name:'Apfelbaum',           latin:'Malus domestica',      typ:'Obstbaum',  standort:'Mitte',     bluete:'Apr–Mai',  farbe:'Weiß/Rosa',  blueSwatches:['#fdf2f8','#f0b8cc'], alter:'12 J.', temp:'-25°C', lastCut:'Feb 2024',    lastFert:'Mär 2024',     nextTask:'Ernten',     nextStatus:'upcoming', notes:'Schnitt im Winterschlaf. Ausdünnen der Früchte im Juni empfohlen.' },
-    { id:6,  emoji:'🌿', name:'Hortensie',           latin:'Hydrangea macrophylla', typ:'Strauch',  standort:'Ostbeet',   bluete:'Jun–Sep',  farbe:'Blau/Pink',  blueSwatches:['#3498db','#e91e8c'], alter:'3 J.',  temp:'-15°C', lastCut:'Mär 2024',    lastFert:'Apr 2024',     nextTask:'Düngen',     nextStatus:'overdue', notes:'pH-Wert des Bodens bestimmt die Blütenfarbe. Blau bei saurem Boden.' },
-    { id:7,  emoji:'🌲', name:'Lebensbaum',          latin:'Thuja occidentalis',   typ:'Nadelbaum', standort:'Hecke',     bluete:'–',        farbe:'–',          blueSwatches:[],                    alter:'7 J.',  temp:'-30°C', lastCut:'Jun 2023',    lastFert:'–',            nextTask:'Schneiden',  nextStatus:'current', notes:'Schnitt zweimal jährlich. Nicht zu stark zurückschneiden.' },
-    { id:8,  emoji:'🍂', name:'Gingko',              latin:'Ginkgo biloba',        typ:'Baum',      standort:'Einfahrt',  bluete:'–',        farbe:'Goldgelb',   blueSwatches:['#f1c40f'],           alter:'10 J.', temp:'-30°C', lastCut:'–',           lastFert:'–',            nextTask:'–',          nextStatus:'ok',      notes:'Sehr pflegeleicht. Herbstlaub leuchtend goldgelb. Langsames Wachstum.' },
-    { id:9,  emoji:'🌺', name:'Päonie',              latin:'Paeonia lactiflora',   typ:'Staude',    standort:'Nordbeet',  bluete:'Mai–Jun',  farbe:'Rosa/Weiß',  blueSwatches:['#f7b7c8','#fff'],    alter:'5 J.',  temp:'-25°C', lastCut:'Nov 2023',    lastFert:'Mär 2024',     nextTask:'Stützen',    nextStatus:'upcoming', notes:'Schwere Blüten brauchen Stütze. Nicht zu tief pflanzen – max. 3cm.' },
+    { id:1,  emoji:'🌹', name:'Rose',               latin:'Rosa',                typ:'Strauch',   standort:'Westbeet',  bluete:'Mai–Sep',  farbe:'Rot/Pink',   blueSwatches:['#c0392b','#e91e8c'], alter:'4 J.',  temp:'-15°C', lastCut:'14. Mär 2024', lastFert:'12. Apr 2024', nextTask:'Schneiden',  nextMonths:'Mai–Jun',  nextStatus:'overdue',  notes:'Nach Blüte entblättern. Kein Stickstoff nach Aug. Winterschutz ab Nov empfohlen.' },
+    { id:2,  emoji:'💐', name:'Rhododendron',        latin:'Rhododendron hyb.',   typ:'Strauch',   standort:'Terrasse',  bluete:'Apr–Jun',  farbe:'Lila/Pink',  blueSwatches:['#9b59b6','#e91e8c'], alter:'6 J.',  temp:'-10°C', lastCut:'–',           lastFert:'02. Mär 2024', nextTask:'Düngen',     nextMonths:'Apr–Jun',  nextStatus:'current',  notes:'Kalkfreies Substrat wichtig. Rhododendron-Dünger verwenden. Kein Rückschnitt nötig.' },
+    { id:3,  emoji:'🌸', name:'Magnolia',            latin:'Magnolia grandiflora', typ:'Baum',      standort:'Nordwest',  bluete:'Apr–Mai',  farbe:'Weiß/Creme', blueSwatches:['#fff9e6'],           alter:'8 J.',  temp:'-20°C', lastCut:'–',           lastFert:'–',            nextTask:'Beobachten', nextMonths:'Apr–Mai',  nextStatus:'upcoming', notes:'Kein Rückschnitt nötig. Frühjahrsblüher – nicht vor dem Frost düngen.' },
+    { id:4,  emoji:'🌻', name:'Sonnenblume',         latin:'Helianthus annuus',    typ:'Einjährig', standort:'Südbeet',   bluete:'Jul–Sep',  farbe:'Gelb',       blueSwatches:['#f1c40f'],           alter:'1 J.',  temp:'0°C',   lastCut:'–',           lastFert:'20. Mai 2024', nextTask:'Gießen',     nextMonths:'Mai–Sep',  nextStatus:'current',  notes:'Braucht viel Sonne und Wasser. Höhe bis 3m möglich.' },
+    { id:5,  emoji:'🍎', name:'Apfelbaum',           latin:'Malus domestica',      typ:'Obstbaum',  standort:'Mitte',     bluete:'Apr–Mai',  farbe:'Weiß/Rosa',  blueSwatches:['#fdf2f8','#f0b8cc'], alter:'12 J.', temp:'-25°C', lastCut:'Feb 2024',    lastFert:'Mär 2024',     nextTask:'Ernten',     nextMonths:'Sep–Okt',  nextStatus:'upcoming', notes:'Schnitt im Winterschlaf. Ausdünnen der Früchte im Juni empfohlen.' },
+    { id:6,  emoji:'🌿', name:'Hortensie',           latin:'Hydrangea macrophylla', typ:'Strauch',  standort:'Ostbeet',   bluete:'Jun–Sep',  farbe:'Blau/Pink',  blueSwatches:['#3498db','#e91e8c'], alter:'3 J.',  temp:'-15°C', lastCut:'Mär 2024',    lastFert:'Apr 2024',     nextTask:'Düngen',     nextMonths:'Apr–Jun',  nextStatus:'overdue',  notes:'pH-Wert des Bodens bestimmt die Blütenfarbe. Blau bei saurem Boden.' },
+    { id:7,  emoji:'🌲', name:'Lebensbaum',          latin:'Thuja occidentalis',   typ:'Nadelbaum', standort:'Hecke',     bluete:'–',        farbe:'–',          blueSwatches:[],                    alter:'7 J.',  temp:'-30°C', lastCut:'Jun 2023',    lastFert:'–',            nextTask:'Schneiden',  nextMonths:'Jun–Aug',  nextStatus:'current',  notes:'Schnitt zweimal jährlich. Nicht zu stark zurückschneiden.' },
+    { id:8,  emoji:'🍂', name:'Gingko',              latin:'Ginkgo biloba',        typ:'Baum',      standort:'Einfahrt',  bluete:'–',        farbe:'Goldgelb',   blueSwatches:['#f1c40f'],           alter:'10 J.', temp:'-30°C', lastCut:'–',           lastFert:'–',            nextTask:'–',          nextMonths:'–',        nextStatus:'ok',       notes:'Sehr pflegeleicht. Herbstlaub leuchtend goldgelb. Langsames Wachstum.' },
+    { id:9,  emoji:'🌺', name:'Päonie',              latin:'Paeonia lactiflora',   typ:'Staude',    standort:'Nordbeet',  bluete:'Mai–Jun',  farbe:'Rosa/Weiß',  blueSwatches:['#f7b7c8','#fff'],    alter:'5 J.',  temp:'-25°C', lastCut:'Nov 2023',    lastFert:'Mär 2024',     nextTask:'Stützen',    nextMonths:'Apr–Mai',  nextStatus:'upcoming', notes:'Schwere Blüten brauchen Stütze. Nicht zu tief pflanzen – max. 3cm.' },
   ];
 
   function taskIcon(s) {
@@ -867,13 +869,20 @@
         <td>${p.standort}</td>
         <td>
           <div class="bloom-cell">
-            ${p.blueSwatches.map(c => `<div class="bloom-swatch" style="background:${c}"></div>`).join('')}
-            <span class="bloom-months">${p.bluete}</span>
+            ${p.blueSwatches.length ? `<div class="bloom-swatch" style="background:${p.blueSwatches[0]}"></div>` : '<div class="bloom-swatch" style="background:#e0e0e0"></div>'}
+            <div class="bloom-text">
+              <span class="bloom-months">${p.bluete}</span>
+              <span class="bloom-color">${p.farbe !== '–' ? p.farbe : ''}</span>
+            </div>
           </div>
         </td>
         <td><div class="date-cell">${p.lastCut}</div></td>
         <td><div class="date-cell">${p.lastFert}</div></td>
-        <td>${p.nextTask !== '–' ? `<span class="task-pill ${p.nextStatus}">${taskIcon(p.nextStatus)} ${p.nextTask}</span>` : '<span style="color:var(--text-light)">–</span>'}</td>
+        <td>${p.nextTask !== '–' ? `
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <span class="task-pill ${p.nextStatus}">${taskIcon(p.nextStatus)} ${p.nextTask}</span>
+            <span style="font-size:10px;color:var(--text-light);padding-left:4px">${p.nextMonths}</span>
+          </div>` : '<span style="color:var(--text-light)">–</span>'}</td>
         <td><span class="status-dot" style="background:${statusColor(p.nextStatus)}"></span></td>
       </tr>
     `).join('');

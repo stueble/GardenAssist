@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GardenAssist – Tagebuch</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --green-deep:#2d4a2d;--green-mid:#4a7c4a;--green-light:#7aab6a;
+  --green-pale:#c8dfc0;--green-mist:#eef4eb;--cream:#f8f4ee;
+  --warm-white:#fdfbf8;--red-warn:#c0392b;--red-soft:#fdf0ee;
+  --yellow-warn:#d4850a;--yellow-soft:#fef9ee;--blue-soft:#e8f0fb;--blue-mid:#4a78c0;
+  --text-dark:#1e2e1e;--text-mid:#4a5e4a;--text-light:#8a9e8a;
+  --border:#dde8d8;--shadow:0 2px 12px rgba(45,74,45,.10);--shadow-lg:0 8px 32px rgba(45,74,45,.15);
+  /* entry type colors */
+  --c-done:#27ae60;   --c-done-bg:#edfaf3;
+  --c-obs:#4a78c0;    --c-obs-bg:#eef3fb;
+  --c-problem:#c0392b;--c-problem-bg:#fdf0ee;
+  --c-milestone:#d4850a;--c-milestone-bg:#fef9ee;
+  --c-purchase:#7d3c98;--c-purchase-bg:#f5eef8;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text-dark);height:100vh;display:flex;flex-direction:column;overflow:hidden;font-size:13px}
+
+/* NAV */
+nav{background:var(--green-deep);display:flex;align-items:center;height:52px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.nav-logo{font-family:'Playfair Display',serif;font-size:20px;color:var(--green-pale);display:flex;align-items:center;gap:8px;width:240px;flex-shrink:0;padding:0 20px;border-right:1px solid rgba(255,255,255,.1);height:100%}
+.nav-links{display:flex;gap:2px;flex:1;padding:0 12px}
+.nav-link{color:var(--green-pale);padding:6px 14px;border-radius:6px;font-size:13px;opacity:.75;transition:all .2s;cursor:pointer;border:none;background:none;display:flex;align-items:center;gap:6px}
+.nav-link:hover{opacity:1;background:rgba(255,255,255,.1)}
+.nav-link.active{opacity:1;background:rgba(255,255,255,.15);font-weight:500}
+.nav-right{padding-right:16px}
+.nav-icon-btn{color:var(--green-pale);background:none;border:none;cursor:pointer;font-size:18px;opacity:.75}
+
+/* BODY */
+.body-wrap{display:flex;flex:1;overflow:hidden}
+.content-col{display:flex;flex-direction:column;flex:1;overflow:hidden;min-width:0}
+
+/* SUBHEADER */
+.subheader{background:var(--warm-white);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:10px;flex-shrink:0;flex-wrap:wrap}
+.search-wrap{position:relative;width:240px;flex-shrink:0}
+.search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text-light);pointer-events:none}
+.search-input{width:100%;background:var(--green-mist);border:1.5px solid var(--border);border-radius:24px;padding:7px 14px 7px 32px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text-dark);outline:none;transition:border-color .2s}
+.search-input:focus{border-color:var(--green-mid);background:white}
+.filter-chips{display:flex;gap:5px;flex:1;flex-wrap:wrap}
+.chip{padding:5px 12px;border-radius:20px;font-size:11.5px;font-weight:500;border:1.5px solid var(--border);background:none;color:var(--text-mid);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;white-space:nowrap}
+.chip:hover{border-color:var(--green-mid);color:var(--green-deep)}
+.chip.active{background:var(--green-deep);border-color:var(--green-deep);color:white}
+.btn-new{background:var(--green-deep);color:white;border:none;border-radius:8px;padding:7px 16px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:6px;white-space:nowrap;flex-shrink:0;transition:background .15s}
+.btn-new:hover{background:var(--green-mid)}
+.btn-new.active{background:var(--bark, #8b6f47)}
+
+/* TIMELINE */
+.timeline-wrap{flex:1;overflow-y:auto;padding:24px 32px 24px 48px;position:relative}
+
+/* month group */
+.month-group{margin-bottom:32px}
+.month-label{font-family:'Playfair Display',serif;font-size:15px;font-weight:600;color:var(--green-deep);margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.month-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* timeline connector */
+.timeline-entries{position:relative;padding-left:28px}
+.timeline-entries::before{content:'';position:absolute;left:7px;top:0;bottom:0;width:2px;background:var(--border);border-radius:2px}
+
+/* entry card */
+.entry{position:relative;margin-bottom:12px;cursor:pointer}
+.entry::before{content:'';position:absolute;left:-24px;top:18px;width:10px;height:10px;border-radius:50%;border:2px solid white;z-index:1}
+.entry.done::before{background:var(--c-done)}
+.entry.obs::before{background:var(--c-obs)}
+.entry.problem::before{background:var(--c-problem)}
+.entry.milestone::before{background:var(--c-milestone)}
+.entry.purchase::before{background:var(--c-purchase)}
+
+.entry-card{background:var(--warm-white);border:1.5px solid var(--border);border-radius:10px;border-left-width:4px;transition:box-shadow .15s,border-color .15s;overflow:hidden}
+.entry-card:hover{box-shadow:var(--shadow);border-color:var(--green-pale)}
+.entry.done .entry-card{border-left-color:var(--c-done)}
+.entry.obs .entry-card{border-left-color:var(--c-obs)}
+.entry.problem .entry-card{border-left-color:var(--c-problem)}
+.entry.milestone .entry-card{border-left-color:var(--c-milestone)}
+.entry.purchase .entry-card{border-left-color:var(--c-purchase)}
+
+.entry-header{padding:10px 14px;display:flex;align-items:center;gap:8px}
+.entry-type-badge{font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0}
+.entry.done .entry-type-badge{background:var(--c-done-bg);color:var(--c-done)}
+.entry.obs .entry-type-badge{background:var(--c-obs-bg);color:var(--c-obs)}
+.entry.problem .entry-type-badge{background:var(--c-problem-bg);color:var(--c-problem)}
+.entry.milestone .entry-type-badge{background:var(--c-milestone-bg);color:var(--c-milestone)}
+.entry.purchase .entry-type-badge{background:var(--c-purchase-bg);color:var(--c-purchase)}
+
+.entry-plant-tag{font-size:11px;color:var(--text-light);background:var(--green-mist);padding:2px 8px;border-radius:10px;display:flex;align-items:center;gap:4px}
+.entry-title{font-size:13px;font-weight:500;color:var(--text-dark);flex:1}
+.entry-date{font-size:11px;color:var(--text-light);flex-shrink:0;margin-left:auto}
+.entry-chevron{font-size:12px;color:var(--text-light);transition:transform .2s;flex-shrink:0}
+.entry.open .entry-chevron{transform:rotate(180deg)}
+
+/* expandable body */
+.entry-body{display:none;padding:0 14px 12px;border-top:1px solid var(--border)}
+.entry.open .entry-body{display:block}
+.entry-text{font-size:12.5px;color:var(--text-mid);line-height:1.6;padding:10px 0}
+.entry-photos{display:flex;gap:8px;margin-top:4px}
+.entry-photo{width:72px;height:72px;border-radius:8px;background:var(--green-mist);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;cursor:pointer;transition:border-color .15s}
+.entry-photo:hover{border-color:var(--green-mid)}
+.entry-photo.has-img{font-size:28px}
+
+/* NEW ENTRY PANEL */
+.new-entry-panel{width:0;overflow:hidden;background:var(--warm-white);border-left:1px solid var(--border);display:flex;flex-direction:column;transition:width .3s ease;flex-shrink:0}
+.new-entry-panel.open{width:320px}
+.nep-header{padding:16px 18px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.nep-title{font-family:'Playfair Display',serif;font-size:15px;color:var(--green-deep);font-weight:600}
+.nep-close{background:none;border:none;cursor:pointer;color:var(--text-light);font-size:16px;transition:color .15s}
+.nep-close:hover{color:var(--text-dark)}
+.nep-body{flex:1;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:16px;min-height:0}
+.nep-label{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text-light);margin-bottom:6px}
+.nep-type-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.nep-type-btn{padding:7px 8px;border-radius:8px;font-size:11.5px;font-weight:500;border:1.5px solid var(--border);background:none;color:var(--text-mid);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;display:flex;align-items:center;gap:5px}
+.nep-type-btn:hover{border-color:var(--green-mid)}
+.nep-type-btn.active{border-color:transparent}
+.nep-type-btn.active.t-done{background:var(--c-done-bg);color:var(--c-done);border-color:var(--c-done)}
+.nep-type-btn.active.t-obs{background:var(--c-obs-bg);color:var(--c-obs);border-color:var(--c-obs)}
+.nep-type-btn.active.t-problem{background:var(--c-problem-bg);color:var(--c-problem);border-color:var(--c-problem)}
+.nep-type-btn.active.t-milestone{background:var(--c-milestone-bg);color:var(--c-milestone);border-color:var(--c-milestone)}
+.nep-type-btn.active.t-purchase{background:var(--c-purchase-bg);color:var(--c-purchase);border-color:var(--c-purchase)}
+.nep-select,.nep-input,.nep-textarea{width:100%;background:var(--green-mist);border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text-dark);outline:none;transition:border-color .2s}
+.nep-select:focus,.nep-input:focus,.nep-textarea:focus{border-color:var(--green-mid);background:white}
+.nep-textarea{resize:vertical;min-height:90px;line-height:1.5}
+.nep-photo-row{display:flex;gap:8px}
+.nep-photo-slot{width:70px;height:70px;border-radius:8px;background:var(--green-mist);border:1.5px dashed var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;transition:border-color .15s;font-size:20px;color:var(--text-light)}
+.nep-photo-slot:hover{border-color:var(--green-mid);color:var(--green-mid)}
+.nep-photo-slot span{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.nep-actions{display:flex;gap:8px;padding:12px 18px;border-top:1px solid var(--border);flex-shrink:0}
+.nep-btn{flex:1;padding:9px;border-radius:8px;font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;border:1.5px solid var(--border);background:none;color:var(--text-mid);transition:all .15s}
+.nep-btn:hover{border-color:var(--green-mid);color:var(--green-deep)}
+.nep-btn.primary{background:var(--green-deep);color:white;border-color:var(--green-deep)}
+.nep-btn.primary:hover{background:var(--green-mid)}
+
+/* CHAT TOGGLE + PANEL */
+.chat-toggle{background:var(--green-mid);color:var(--green-pale);border:none;border-left:1px solid rgba(255,255,255,.15);padding:24px 11px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:10px;flex-shrink:0;transition:background .2s}
+.chat-toggle-icon{font-size:20px;line-height:1}
+.chat-toggle-label{writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);letter-spacing:.8px}
+.chat-toggle:hover{background:var(--green-light)}
+.chat-toggle.hidden{display:none}
+.chat-panel{width:0;overflow:hidden;background:var(--warm-white);border-left:1px solid var(--border);display:flex;flex-direction:column;transition:width .3s ease;flex-shrink:0}
+.chat-panel.open{width:300px}
+.chat-header{padding:16px 16px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.chat-title{font-family:'Playfair Display',serif;font-size:15px;color:var(--green-deep);font-weight:600;display:flex;align-items:center;gap:8px}
+.chat-close{background:none;border:none;cursor:pointer;color:var(--text-light);font-size:16px}
+.chat-messages{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px}
+.chat-msg{display:flex;flex-direction:column;gap:4px}
+.chat-bubble{padding:9px 12px;border-radius:12px;font-size:12px;line-height:1.5;max-width:90%}
+.chat-bubble.bot{background:var(--green-mist);color:var(--text-dark);border-radius:4px 12px 12px 12px;align-self:flex-start;border:1px solid var(--border)}
+.chat-sender{font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--text-light);padding:0 4px}
+.chat-input-area{padding:12px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0}
+.chat-input{flex:1;background:var(--green-mist);border:1px solid var(--border);border-radius:20px;padding:7px 12px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--text-dark);outline:none}
+.chat-input:focus{border-color:var(--green-mid)}
+.chat-send{background:var(--green-deep);color:white;border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.chat-send:hover{background:var(--green-mid)}
+
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--green-pale);border-radius:3px}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo"><span>🌿</span> GardenAssist</div>
+  <div class="nav-links">
+    <button class="nav-link">🏠 Dashboard</button>
+    <button class="nav-link">🌱 Pflanzen</button>
+    <button class="nav-link">🗓 Kalender</button>
+    <button class="nav-link active">📔 Tagebuch</button>
+  </div>
+  <div class="nav-right"><button class="nav-icon-btn">⚙️</button></div>
+</nav>
+
+<div class="body-wrap">
+<div class="content-col">
+
+  <div class="subheader">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" type="text" placeholder="Einträge suchen …" id="searchInput">
+    </div>
+    <div class="filter-chips">
+      <button class="chip active" onclick="setFilter('all',this)">Alle</button>
+      <button class="chip" onclick="setFilter('done',this)">✅ Erledigt</button>
+      <button class="chip" onclick="setFilter('obs',this)">👁 Beobachtung</button>
+      <button class="chip" onclick="setFilter('problem',this)">⚠️ Problem</button>
+      <button class="chip" onclick="setFilter('milestone',this)">🌟 Meilenstein</button>
+      <button class="chip" onclick="setFilter('purchase',this)">💰 Ausgabe/Kauf</button>
+    </div>
+    <button class="btn-new" id="btnNew" onclick="toggleNewEntry()">＋ Neuer Eintrag</button>
+  </div>
+
+  <div class="timeline-wrap" id="timelineWrap"></div>
+
+</div>
+
+<!-- NEW ENTRY PANEL -->
+<div class="new-entry-panel" id="newEntryPanel">
+  <div class="nep-header">
+    <div class="nep-title">Neuer Eintrag</div>
+    <button class="nep-close" onclick="toggleNewEntry()">✕</button>
+  </div>
+  <div class="nep-body">
+    <div>
+      <div class="nep-label">Typ</div>
+      <div class="nep-type-grid">
+        <button class="nep-type-btn t-done active" onclick="selectType(this)">✅ Erledigt</button>
+        <button class="nep-type-btn t-obs" onclick="selectType(this)">👁 Beobachtung</button>
+        <button class="nep-type-btn t-problem" onclick="selectType(this)">⚠️ Problem</button>
+        <button class="nep-type-btn t-milestone" onclick="selectType(this)">🌟 Meilenstein</button>
+        <button class="nep-type-btn t-purchase" onclick="selectType(this)" style="grid-column:1/-1">💰 Ausgabe / Kauf</button>
+      </div>
+    </div>
+    <div>
+      <div class="nep-label">Pflanze / Bezug</div>
+      <select class="nep-select">
+        <option>🌿 Garten (allgemein)</option>
+        <option>🌹 Rose</option>
+        <option>💐 Rhododendron</option>
+        <option>🌸 Magnolia</option>
+        <option>🌻 Sonnenblume</option>
+        <option>🍎 Apfelbaum</option>
+        <option>🌿 Hortensie</option>
+        <option>🌲 Lebensbaum</option>
+        <option>🍂 Gingko</option>
+        <option>🌺 Päonie</option>
+      </select>
+    </div>
+    <div>
+      <div class="nep-label">Datum</div>
+      <input class="nep-input" type="date" value="2026-05-03">
+    </div>
+    <div>
+      <div class="nep-label">Titel</div>
+      <input class="nep-input" type="text" placeholder="Kurze Beschreibung …">
+    </div>
+    <div>
+      <div class="nep-label">Notizen</div>
+      <textarea class="nep-textarea" placeholder="Details, Beobachtungen, Mengen, Preise …"></textarea>
+    </div>
+    <div>
+      <div class="nep-label">Fotos</div>
+      <div class="nep-photo-row">
+        <div class="nep-photo-slot">📷<span>Foto</span></div>
+        <div class="nep-photo-slot">📷<span>Foto</span></div>
+        <div class="nep-photo-slot">📷<span>Foto</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="nep-actions">
+    <button class="nep-btn" onclick="toggleNewEntry()">Abbrechen</button>
+    <button class="nep-btn primary" onclick="saveEntry()">Speichern</button>
+  </div>
+</div>
+
+<!-- CHAT TOGGLE + PANEL -->
+<button class="chat-toggle" id="chatToggle" onclick="toggleChat()">
+  <span class="chat-toggle-icon">💬</span>
+  <span class="chat-toggle-label">Assistent</span>
+</button>
+<div class="chat-panel" id="chatPanel">
+  <div class="chat-header">
+    <div class="chat-title">🤖 Garten-Assistent</div>
+    <button class="chat-close" onclick="toggleChat()">✕</button>
+  </div>
+  <div class="chat-messages">
+    <div class="chat-msg">
+      <div class="chat-sender">Assistent</div>
+      <div class="chat-bubble bot">Hallo! Ich kann Ihnen helfen, Tagebucheinträge zu erstellen oder Ihre Gartengeschichte zu durchsuchen. Was möchten Sie festhalten?</div>
+    </div>
+  </div>
+  <div class="chat-input-area">
+    <input class="chat-input" type="text" placeholder="Frage stellen …">
+    <button class="chat-send">↑</button>
+  </div>
+</div>
+</div>
+
+<script>
+const entries = [
+  { id:1,  type:'done',      plant:'🌹 Rose',           date:'2026-05-01', title:'Rosen geschnitten',                text:'Frühjahrsschnitt durchgeführt. Alle alten Triebe auf 3 Augen zurückgeschnitten. Danach mit Rosendünger versorgt.', photos:['🌹',''] },
+  { id:2,  type:'obs',       plant:'🌸 Magnolia',        date:'2026-05-01', title:'Erste Knospen sichtbar',           text:'Die Magnolia zeigt die ersten Knospen des Jahres. Etwa 12–15 Stück an der Hauptachse. Entwicklung verläuft normal.', photos:[] },
+  { id:3,  type:'problem',   plant:'🌿 Hortensie',       date:'2026-04-28', title:'Blattläuse entdeckt',              text:'An den Neutrieben starker Läusebefall. Behandlung mit Schmierseifenlösung. Nächste Woche kontrollieren.', photos:['🔍'] },
+  { id:4,  type:'done',      plant:'💐 Rhododendron',    date:'2026-04-15', title:'Rhododendron gedüngt',             text:'Rhododendron-Spezaldünger ausgebracht. 80g pro Pflanze, gleichmäßig verteilt.', photos:[] },
+  { id:5,  type:'purchase',  plant:'🌿 Garten (allgemein)', date:'2026-04-10', title:'Rosendünger & Mulch gekauft',   text:'Baumarkt: 2× Compo Rosendünger (je 2kg) à 8,99 €, 3 Säcke Rindenmulch à 4,99 €. Gesamt: 32,95 €.', photos:['🧾'] },
+  { id:6,  type:'milestone', plant:'🌹 Rose',            date:'2026-04-05', title:'Erste Blüte der Saison',           text:'Die erste Rose der Saison hat sich geöffnet! Sorte Feuerzauber, westliches Beet. Drei Wochen früher als letztes Jahr.', photos:['🌹','🌹'] },
+  { id:7,  type:'done',      plant:'🍎 Apfelbaum',       date:'2026-03-20', title:'Winterschnitt abgeschlossen',      text:'Totholz entfernt, Krone ausgelichtet. Ca. 30% der alten Triebe zurückgeschnitten. Schnittwunden mit Baumwachs versiegelt.', photos:['🪚'] },
+  { id:8,  type:'purchase',  plant:'🌸 Magnolia',        date:'2026-03-15', title:'Neue Pflanze gekauft',             text:'Magnolia grandiflora "Edith Bogue" beim Gartencenter Müller. Topfgröße 30L, Höhe ca. 120cm. Preis: 89,00 €.', photos:['🌱','🧾'] },
+  { id:9,  type:'obs',       plant:'🌿 Garten (allgemein)', date:'2026-03-10', title:'Frühjahrsbeginn beobachtet',    text:'Erste Schneeglöckchen, Krokusse in voller Blüte. Temperaturen tagsüber bis 12°C. Boden noch feucht.', photos:[] },
+  { id:10, type:'done',      plant:'🌲 Lebensbaum',      date:'2026-02-20', title:'Hecke zurückgeschnitten',          text:'Thuja-Hecke auf ca. 180cm Höhe zurückgeschnitten. Seiten begradigt. Schnittgut entsorgt.', photos:['✂️'] },
+];
+
+const typeLabels = { done:'✅ Erledigt', obs:'👁 Beobachtung', problem:'⚠️ Problem', milestone:'🌟 Meilenstein', purchase:'💰 Ausgabe/Kauf' };
+const monthNames = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+
+let activeFilter = 'all';
+let openEntryId = null;
+
+function setFilter(f, el) {
+  activeFilter = f;
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+function formatDate(d) {
+  const [y,m,day] = d.split('-');
+  return `${parseInt(day)}. ${monthNames[parseInt(m)-1].slice(0,3)} ${y}`;
+}
+
+function groupByMonth(list) {
+  const groups = {};
+  list.forEach(e => {
+    const [y,m] = e.date.split('-');
+    const key = `${y}-${m}`;
+    if (!groups[key]) groups[key] = { label: `${monthNames[parseInt(m)-1]} ${y}`, entries:[] };
+    groups[key].entries.push(e);
+  });
+  return groups;
+}
+
+function render() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  let filtered = entries.filter(e => {
+    const matchType = activeFilter === 'all' || e.type === activeFilter;
+    const matchQ = !q || e.title.toLowerCase().includes(q) || e.text.toLowerCase().includes(q) || e.plant.toLowerCase().includes(q);
+    return matchType && matchQ;
+  });
+
+  const groups = groupByMonth(filtered);
+  const wrap = document.getElementById('timelineWrap');
+
+  if (Object.keys(groups).length === 0) {
+    wrap.innerHTML = `<div style="text-align:center;color:var(--text-light);margin-top:60px;font-size:14px">Keine Einträge gefunden.</div>`;
+    return;
+  }
+
+  wrap.innerHTML = Object.values(groups).map(g => `
+    <div class="month-group">
+      <div class="month-label">${g.label}</div>
+      <div class="timeline-entries">
+        ${g.entries.map(e => `
+          <div class="entry ${e.type}${openEntryId===e.id?' open':''}" onclick="toggleEntry(${e.id})">
+            <div class="entry-card">
+              <div class="entry-header">
+                <span class="entry-type-badge">${typeLabels[e.type]}</span>
+                <span class="entry-plant-tag">${e.plant}</span>
+                <span class="entry-title">${e.title}</span>
+                <span class="entry-date">${formatDate(e.date)}</span>
+                <span class="entry-chevron">▾</span>
+              </div>
+              <div class="entry-body">
+                <div class="entry-text">${e.text}</div>
+                ${e.photos.length ? `<div class="entry-photos">${e.photos.map(p => p
+                  ? `<div class="entry-photo has-img">${p}</div>`
+                  : `<div class="entry-photo">📷</div>`
+                ).join('')}</div>` : ''}
+              </div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleEntry(id) {
+  openEntryId = openEntryId === id ? null : id;
+  render();
+}
+
+let newEntryOpen = false;
+function toggleNewEntry() {
+  newEntryOpen = !newEntryOpen;
+  document.getElementById('newEntryPanel').classList.toggle('open', newEntryOpen);
+  document.getElementById('btnNew').classList.toggle('active', newEntryOpen);
+  // close chat if open
+  if (newEntryOpen) {
+    document.getElementById('chatPanel').classList.remove('open');
+    document.getElementById('chatToggle').classList.remove('hidden');
+  }
+}
+
+function selectType(btn) {
+  document.querySelectorAll('.nep-type-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function saveEntry() {
+  toggleNewEntry();
+  // In a real app: save and re-render
+}
+
+function toggleChat() {
+  const panel = document.getElementById('chatPanel');
+  const toggle = document.getElementById('chatToggle');
+  const open = panel.classList.contains('open');
+  panel.classList.toggle('open');
+  toggle.classList.toggle('hidden', !open);
+  if (!open) {
+    // close new entry panel
+    document.getElementById('newEntryPanel').classList.remove('open');
+    document.getElementById('btnNew').classList.remove('active');
+    newEntryOpen = false;
+  }
+}
+
+document.getElementById('searchInput').addEventListener('input', render);
+render();
+</script>
+</body>
+</html>

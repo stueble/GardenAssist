@@ -3,6 +3,7 @@ id: doc-003
 title: Product Requirements
 type: other
 created_date: '2026-05-02 20:42'
+updated_date: '2026-05-02 23:27'
 ---
 # Product Requirements Document – GardenAssist
 
@@ -48,11 +49,50 @@ A single-user application for hobby gardeners who:
 A structured overview of all plants in the garden.
 
 Each plant record includes:
-- Name (common and botanical), type, and description
-- Care details: pruning schedule, fertilization cycle, bloom period, frost tolerance
-- Visual attributes: flower color, leaf color, growth habit
-- Current state: age, health status, last care activities (last pruning, last fertilization)
-- Images: general photo, flower photo, leaf photo
+- Name (common and botanical), 
+- Type: 
+    - Grass,
+    - Tree, 
+    - Shrub
+    - Flower
+- Description: Free text
+- Category
+    - Native
+    - Neophyt
+    - Invasive neophyt
+- Care details: 
+    - pruning schedule(s) (unit: weeks)
+    - fertilization cycle(s) (unit: weeks)
+    - pest control schedule(s) (unit: weeks)
+    - misc schedule(s) (unit: weeks) e.g., aerification, scarification, etc.
+    - bloom period(s) (unit: weeks)
+    - growth period(s) (unit: weeks)
+    - frost tolerance(s) (unit: temp °C)
+    - water demand
+    - sun demand: full, half, shady
+    - soil requirement(s)
+    - lifecycle: annual, biennial, perennial
+    - [x] tempeature protected/inside (bool)
+- Visual attributes: 
+    - flower color
+    - leaf color
+    - growth habit
+- Current state: 
+    - age, 
+    - health status,
+    - location
+    - watering section
+- Journal
+    - history of all care activities (pruning, fertilization, repotting, pest control, ...)
+- Images: 
+    - general photo, 
+    - flower photo, 
+    - leaf photo
+- Misc
+    - Position on map
+- Purchasing
+    - Date
+    - Price
 
 **Views:**
 - Table view with selectable visible columns
