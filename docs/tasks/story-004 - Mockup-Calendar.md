@@ -1,21 +1,20 @@
 ---
-id: STORY-001
-title: Setup git project and backlog.md environment
-status: Done
+id: STORY-004
+title: 'Mockup: Calendar'
+status: Ready
 assignee: []
-created_date: '2026-05-02 14:32'
-updated_date: '2026-05-02 22:16'
-labels: []
+created_date: '2026-05-02 22:19'
+updated_date: '2026-05-02 22:21'
+labels:
+  - mockup
 dependencies: []
 ordinal: 1000
 ---
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Git project created
-- [ ] #2 backlog.md initialized
-- [ ] #3 AGENTS.md available
-- [ ] #4 Contributing.md available
+- [ ] #1 Mockup created
+- [ ] #2 Mockup documented
 <!-- AC:END -->
 
 ## Definition of Done

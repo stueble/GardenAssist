@@ -51,6 +51,8 @@
     height: 52px;
     flex-shrink: 0;
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    position: relative;
+    z-index: 10;
   }
   .nav-logo {
     font-family: 'Playfair Display', serif;
@@ -86,35 +88,45 @@
   .nav-right { padding-right: 16px; }
   .nav-icon-btn { color: var(--green-pale); background: none; border: none; cursor: pointer; font-size: 18px; opacity: 0.75; }
 
+  /* ── BODY LAYOUT: content + chat panel side by side ── */
+  .body-wrap {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ── CONTENT COLUMN ── */
+  .content-col {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+    min-width: 0;
+  }
+
   /* ── SUBHEADER ── */
   .subheader {
     background: var(--warm-white);
     border-bottom: 1px solid var(--border);
-    padding: 12px 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    flex-shrink: 0;
-  }
-
-  .subheader-row {
+    padding: 10px 20px;
     display: flex;
     align-items: center;
     gap: 12px;
+    flex-shrink: 0;
   }
 
   /* Search */
   .search-wrap {
     position: relative;
-    flex: 1;
-    max-width: 420px;
+    width: 300px;
+    flex-shrink: 0;
   }
   .search-icon {
     position: absolute;
-    left: 12px;
+    left: 11px;
     top: 50%;
     transform: translateY(-50%);
-    font-size: 14px;
+    font-size: 13px;
     color: var(--text-light);
     pointer-events: none;
   }
@@ -123,7 +135,7 @@
     background: var(--green-mist);
     border: 1.5px solid var(--border);
     border-radius: 24px;
-    padding: 8px 14px 8px 36px;
+    padding: 7px 14px 7px 32px;
     font-size: 13px;
     font-family: 'DM Sans', sans-serif;
     color: var(--text-dark);
@@ -136,64 +148,7 @@
     background: white;
   }
 
-  /* Filter chips */
-  .filter-chips {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-    align-items: center;
-    flex: 1;
-  }
-  .chip-label {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text-light);
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    margin-right: 2px;
-  }
-  .chip {
-    background: var(--green-mist);
-    border: 1.5px solid var(--border);
-    border-radius: 20px;
-    padding: 4px 12px;
-    font-size: 11px;
-    font-weight: 500;
-    color: var(--text-mid);
-    cursor: pointer;
-    transition: all 0.15s;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    white-space: nowrap;
-  }
-  .chip:hover { border-color: var(--green-mid); color: var(--green-deep); }
-  .chip.active {
-    background: var(--green-deep);
-    border-color: var(--green-deep);
-    color: white;
-  }
-  .chip-x { font-size: 12px; opacity: 0.7; }
-
-  /* View toggle & add button */
-  .view-toggle {
-    display: flex;
-    background: var(--green-mist);
-    border: 1.5px solid var(--border);
-    border-radius: 8px;
-    overflow: hidden;
-  }
-  .view-btn {
-    padding: 6px 10px;
-    font-size: 14px;
-    border: none;
-    background: none;
-    cursor: pointer;
-    color: var(--text-light);
-    transition: all 0.15s;
-  }
-  .view-btn.active { background: var(--green-deep); color: white; }
-
+  /* Add button — right next to search */
   .btn-add {
     background: var(--green-deep);
     color: white;
@@ -209,15 +164,40 @@
     gap: 6px;
     transition: background 0.15s;
     white-space: nowrap;
+    flex-shrink: 0;
   }
   .btn-add:hover { background: var(--green-mid); }
 
+  /* Spacer pushes view toggle to the right */
+  .subheader-spacer { flex: 1; }
+
+  /* Count label */
   .count-label {
     font-size: 12px;
     color: var(--text-light);
-    margin-left: auto;
     white-space: nowrap;
+    flex-shrink: 0;
   }
+
+  /* View toggle */
+  .view-toggle {
+    display: flex;
+    background: var(--green-mist);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .view-btn {
+    padding: 6px 11px;
+    font-size: 15px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: var(--text-light);
+    transition: all 0.15s;
+  }
+  .view-btn.active { background: var(--green-deep); color: white; }
 
   /* ── MAIN AREA ── */
   .main-area {
@@ -265,25 +245,6 @@
   th.sorted { color: var(--green-deep); }
   th.sorted .sort-icon { opacity: 1; }
 
-  /* Column visibility toggle */
-  .col-toggle {
-    position: relative;
-  }
-  .col-toggle-btn {
-    background: var(--green-mist);
-    border: 1.5px solid var(--border);
-    border-radius: 8px;
-    padding: 6px 10px;
-    font-size: 12px;
-    cursor: pointer;
-    color: var(--text-mid);
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    transition: all 0.15s;
-  }
-  .col-toggle-btn:hover { border-color: var(--green-mid); }
-
   tbody tr {
     border-bottom: 1px solid var(--border);
     transition: background 0.12s;
@@ -297,12 +258,9 @@
     vertical-align: middle;
   }
 
-  /* Plant image cell */
   .plant-thumb {
-    width: 40px;
-    height: 40px;
+    width: 40px; height: 40px;
     border-radius: 8px;
-    object-fit: cover;
     border: 1.5px solid var(--border);
     font-size: 22px;
     display: flex;
@@ -316,15 +274,6 @@
   .plant-name { font-weight: 600; color: var(--text-dark); font-size: 13px; }
   .plant-latin { font-size: 10px; color: var(--text-light); font-style: italic; }
 
-  /* Status dot */
-  .status-dot {
-    width: 9px; height: 9px;
-    border-radius: 50%;
-    display: inline-block;
-    flex-shrink: 0;
-  }
-
-  /* Bloom color swatch */
   .bloom-cell { display: flex; align-items: center; gap: 6px; }
   .bloom-swatch {
     width: 12px; height: 12px;
@@ -334,7 +283,6 @@
   }
   .bloom-months { font-size: 11px; color: var(--text-mid); }
 
-  /* Task pill */
   .task-pill {
     display: inline-flex;
     align-items: center;
@@ -345,190 +293,28 @@
     font-weight: 500;
     white-space: nowrap;
   }
-  .task-pill.overdue { background: var(--red-soft); color: var(--red-warn); }
-  .task-pill.current { background: var(--yellow-soft); color: var(--yellow-warn); }
-  .task-pill.upcoming { background: var(--blue-soft); color: var(--blue-mid); }
-  .task-pill.ok { background: var(--green-mist); color: var(--green-mid); }
+  .task-pill.overdue  { background: var(--red-soft);    color: var(--red-warn); }
+  .task-pill.current  { background: var(--yellow-soft); color: var(--yellow-warn); }
+  .task-pill.upcoming { background: var(--blue-soft);   color: var(--blue-mid); }
+  .task-pill.ok       { background: var(--green-mist);  color: var(--green-mid); }
 
   .date-cell { font-size: 11.5px; color: var(--text-mid); white-space: nowrap; }
-  .date-ago { font-size: 10px; color: var(--text-light); }
 
-  /* ── DETAIL PANEL – LEFT ── */
-  .detail-panel {
-    width: 0;
-    overflow: hidden;
-    background: var(--warm-white);
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    transition: width 0.3s ease;
-    flex-shrink: 0;
-    order: -1;
-  }
-  .detail-panel.open { width: 300px; }
-
-  .detail-header {
-    padding: 16px 18px 12px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    flex-shrink: 0;
-  }
-  .detail-close {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: var(--text-light);
-    font-size: 16px;
-    padding: 2px;
-    flex-shrink: 0;
-  }
-  .detail-plant-name {
-    font-family: 'Playfair Display', serif;
-    font-size: 18px;
-    color: var(--green-deep);
-    font-weight: 600;
-    line-height: 1.2;
-  }
-  .detail-latin {
-    font-size: 12px;
-    color: var(--text-light);
-    font-style: italic;
-    margin-top: 2px;
+  .status-dot {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    display: inline-block;
   }
 
-  .detail-body { flex: 1; overflow-y: auto; padding: 16px 18px; display: flex; flex-direction: column; gap: 16px; }
-
-  /* Image row */
-  .detail-images {
-    display: flex;
-    gap: 8px;
-  }
-  .detail-img-box {
-    flex: 1;
-    aspect-ratio: 1;
-    border-radius: 10px;
-    background: var(--green-mist);
-    border: 1.5px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    font-size: 26px;
-    cursor: pointer;
-    transition: border-color 0.15s;
-    position: relative;
-    overflow: hidden;
-  }
-  .detail-img-box:hover { border-color: var(--green-mid); }
-  .detail-img-label {
-    font-size: 9px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--text-light);
-  }
-
-  /* Info section */
-  .detail-section-title {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.8px;
-    text-transform: uppercase;
-    color: var(--text-light);
-    margin-bottom: 8px;
-  }
-
-  .detail-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-  .detail-field {
-    background: var(--green-mist);
-    border-radius: 8px;
-    padding: 8px 10px;
-  }
-  .detail-field-label {
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    color: var(--text-light);
-    margin-bottom: 3px;
-  }
-  .detail-field-value {
-    font-size: 12.5px;
-    font-weight: 500;
-    color: var(--text-dark);
-  }
-
-  /* Tasks in detail */
-  .detail-task {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 10px;
-    background: var(--green-mist);
-    border-radius: 8px;
-    gap: 8px;
-  }
-  .detail-task-name { font-size: 12.5px; font-weight: 500; flex: 1; }
-  .detail-task-date { font-size: 11px; color: var(--text-light); }
-
-  /* Notes */
-  .detail-notes {
-    background: var(--yellow-soft);
-    border: 1px solid #f0d9a0;
-    border-radius: 8px;
-    padding: 10px 12px;
-    font-size: 12px;
-    color: var(--text-mid);
-    line-height: 1.5;
-  }
-
-  /* Action buttons in detail */
-  .detail-actions {
-    display: flex;
-    gap: 8px;
-    padding: 12px 18px;
-    border-top: 1px solid var(--border);
-    flex-shrink: 0;
-  }
-  .detail-btn {
-    flex: 1;
-    padding: 8px;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 500;
-    font-family: 'DM Sans', sans-serif;
-    cursor: pointer;
-    border: 1.5px solid var(--border);
-    background: none;
-    color: var(--text-mid);
-    transition: all 0.15s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-  }
-  .detail-btn:hover { border-color: var(--green-mid); color: var(--green-deep); background: var(--green-mist); }
-  .detail-btn.primary { background: var(--green-deep); color: white; border-color: var(--green-deep); }
-  .detail-btn.primary:hover { background: var(--green-mid); border-color: var(--green-mid); }
-
-  /* Scrollbar */
-  ::-webkit-scrollbar { width: 5px; height: 5px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--green-pale); border-radius: 3px; }
-
-  /* Card view */
+  /* ── CARD GRID ── */
   .card-grid {
     display: none;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 14px;
     padding: 16px;
+    overflow-y: auto;
+    flex: 1;
+    align-content: start;
   }
   .card-grid.visible { display: grid; }
   .table-wrap.hidden { display: none; }
@@ -555,17 +341,126 @@
   }
   .card-status {
     position: absolute;
-    top: 8px;
-    right: 8px;
+    top: 8px; right: 8px;
     width: 10px; height: 10px;
     border-radius: 50%;
     border: 2px solid white;
   }
   .card-body { padding: 10px 12px; }
-  .card-name { font-weight: 600; font-size: 13px; color: var(--text-dark); margin-bottom: 2px; }
+  .card-name  { font-weight: 600; font-size: 13px; color: var(--text-dark); margin-bottom: 2px; }
   .card-latin { font-size: 10px; color: var(--text-light); font-style: italic; margin-bottom: 8px; }
-  .card-meta { display: flex; gap: 6px; flex-wrap: wrap; }
-  /* ── CHAT PANEL – RIGHT (consistent with Dashboard) ── */
+  .card-meta  { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  /* ── DETAIL PANEL – LEFT of table ── */
+  .detail-panel {
+    width: 0;
+    overflow: hidden;
+    background: var(--warm-white);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    transition: width 0.3s ease;
+    flex-shrink: 0;
+    order: -1;
+  }
+  .detail-panel.open { width: 300px; }
+
+  .detail-header {
+    padding: 16px 18px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .detail-close {
+    background: none; border: none; cursor: pointer;
+    color: var(--text-light); font-size: 16px; padding: 2px; flex-shrink: 0;
+  }
+  .detail-plant-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    color: var(--green-deep);
+    font-weight: 600;
+    line-height: 1.2;
+  }
+  .detail-latin { font-size: 12px; color: var(--text-light); font-style: italic; margin-top: 2px; }
+
+  .detail-body {
+    flex: 1; overflow-y: auto; padding: 16px 18px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+
+  .detail-images { display: flex; gap: 8px; }
+  .detail-img-box {
+    flex: 1; aspect-ratio: 1;
+    border-radius: 10px;
+    background: var(--green-mist);
+    border: 1.5px solid var(--border);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 4px; font-size: 26px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .detail-img-box:hover { border-color: var(--green-mid); }
+  .detail-img-label {
+    font-size: 9px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    color: var(--text-light);
+  }
+
+  .detail-section-title {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.8px; text-transform: uppercase;
+    color: var(--text-light); margin-bottom: 8px;
+  }
+
+  .detail-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  }
+  .detail-field {
+    background: var(--green-mist); border-radius: 8px; padding: 8px 10px;
+  }
+  .detail-field-label {
+    font-size: 9px; font-weight: 700; letter-spacing: 0.5px;
+    text-transform: uppercase; color: var(--text-light); margin-bottom: 3px;
+  }
+  .detail-field-value { font-size: 12.5px; font-weight: 500; color: var(--text-dark); }
+
+  .detail-task {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 10px; background: var(--green-mist);
+    border-radius: 8px; gap: 8px;
+  }
+  .detail-task-name { font-size: 12.5px; font-weight: 500; flex: 1; }
+  .detail-task-date { font-size: 11px; color: var(--text-light); }
+
+  .detail-notes {
+    background: var(--yellow-soft); border: 1px solid #f0d9a0;
+    border-radius: 8px; padding: 10px 12px;
+    font-size: 12px; color: var(--text-mid); line-height: 1.5;
+  }
+
+  .detail-actions {
+    display: flex; gap: 8px;
+    padding: 12px 18px;
+    border-top: 1px solid var(--border); flex-shrink: 0;
+  }
+  .detail-btn {
+    flex: 1; padding: 8px; border-radius: 8px;
+    font-size: 12px; font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer; border: 1.5px solid var(--border);
+    background: none; color: var(--text-mid);
+    transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center; gap: 4px;
+  }
+  .detail-btn:hover { border-color: var(--green-mid); color: var(--green-deep); background: var(--green-mist); }
+  .detail-btn.primary { background: var(--green-deep); color: white; border-color: var(--green-deep); }
+  .detail-btn.primary:hover { background: var(--green-mid); border-color: var(--green-mid); }
+
+  /* ── CHAT PANEL – flush from nav top to bottom ── */
   .chat-panel {
     width: 0;
     overflow: hidden;
@@ -575,26 +470,21 @@
     flex-direction: column;
     transition: width 0.3s ease;
     flex-shrink: 0;
+    /* Sits in body-wrap, so it spans from directly below nav to bottom */
   }
-  .chat-panel.open { width: 280px; }
+  .chat-panel.open { width: 300px; }
 
   .chat-header {
     padding: 14px 16px 12px;
     border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-shrink: 0;
+    display: flex; align-items: center;
+    justify-content: space-between; flex-shrink: 0;
   }
   .chat-title {
     font-family: 'Playfair Display', serif;
-    font-size: 15px;
-    color: var(--green-deep);
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    white-space: nowrap;
+    font-size: 15px; color: var(--green-deep);
+    font-weight: 600; display: flex;
+    align-items: center; gap: 8px; white-space: nowrap;
   }
   .chat-close {
     background: none; border: none; cursor: pointer;
@@ -602,6 +492,7 @@
     transition: color 0.15s;
   }
   .chat-close:hover { color: var(--text-dark); }
+
   .chat-messages {
     flex: 1; overflow-y: auto; padding: 14px;
     display: flex; flex-direction: column; gap: 12px;
@@ -646,35 +537,48 @@
   .chat-send {
     background: var(--green-deep); color: white; border: none;
     border-radius: 50%; width: 32px; height: 32px;
-    cursor: pointer; font-size: 14px; display: flex;
-    align-items: center; justify-content: center;
+    cursor: pointer; font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
     transition: background 0.2s; flex-shrink: 0;
   }
   .chat-send:hover { background: var(--green-mid); }
 
-  /* Chat toggle button – top right, like Dashboard */
+  /* Chat toggle button — vertical strip on the right edge */
   .chat-toggle {
-    position: fixed;
-    top: 60px;
-    right: 12px;
-    background: var(--green-deep);
-    color: white;
+    background: var(--green-mid);
+    color: var(--green-pale);
     border: none;
-    border-radius: 50px;
-    padding: 8px 16px;
+    border-left: 1px solid rgba(255,255,255,0.15);
+    padding: 24px 11px;
     font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 500;
     cursor: pointer;
-    box-shadow: var(--shadow-lg);
+    letter-spacing: 0.6px;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 8px;
-    z-index: 200;
-    transition: all 0.2s;
+    gap: 10px;
+    flex-shrink: 0;
+    transition: background 0.2s;
   }
-  .chat-toggle:hover { background: var(--green-mid); }
+  .chat-toggle-icon {
+    font-size: 20px;
+    line-height: 1;
+  }
+  .chat-toggle-label {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+    letter-spacing: 0.8px;
+  }
+  .chat-toggle:hover { background: var(--green-light); }
   .chat-toggle.hidden { display: none; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--green-pale); border-radius: 3px; }
 </style>
 </head>
 <body>
@@ -693,173 +597,160 @@
   </div>
 </nav>
 
-<!-- Chat toggle button -->
-<button class="chat-toggle" id="chatToggle" onclick="toggleChat()">💬 Assistent</button>
+<!-- BODY WRAP: content + chat side by side, both start directly below nav -->
+<div class="body-wrap">
 
-<!-- SUBHEADER -->
-<div class="subheader">
-  <div class="subheader-row">
+  <!-- CONTENT COLUMN -->
+  <div class="content-col">
 
-    <!-- Search -->
-    <div class="search-wrap">
-      <span class="search-icon">🔍</span>
-      <input class="search-input" type="text" placeholder="Pflanze suchen …" id="searchInput" />
-    </div>
-
-    <!-- Filters -->
-    <div class="filter-chips">
-      <span class="chip-label">Filter:</span>
-      <div class="chip active" onclick="toggleChip(this)">🌿 Alle <span class="chip-x">✕</span></div>
-      <div class="chip" onclick="toggleChip(this)">🔴 Mit Aufgaben</div>
-      <div class="chip" onclick="toggleChip(this)">🌸 Blüht jetzt</div>
-      <div class="chip" onclick="toggleChip(this)">🌳 Bäume</div>
-      <div class="chip" onclick="toggleChip(this)">🌺 Sträucher</div>
-      <div class="chip" onclick="toggleChip(this)">❄️ Frostempfindlich</div>
-    </div>
-
-    <!-- View toggle + column selector + add -->
-    <div class="view-toggle">
-      <button class="view-btn active" id="viewTable" onclick="setView('table')" title="Tabellenansicht">☰</button>
-      <button class="view-btn" id="viewCard" onclick="setView('card')" title="Kartenansicht">⊞</button>
-    </div>
-
-    <button class="col-toggle-btn" id="colToggleBtn" onclick="toggleColMenu()">⚙ Spalten</button>
-
-    <button class="btn-add" onclick="openAddPlant()">＋ Pflanze hinzufügen</button>
-  </div>
-
-  <div class="subheader-row">
-    <span class="count-label" id="countLabel">24 Pflanzen · 3 mit offenen Aufgaben</span>
-  </div>
-</div>
-
-<!-- MAIN -->
-<div class="main-area">
-
-  <!-- TABLE VIEW -->
-  <div class="table-wrap" id="tableWrap">
-    <table id="plantTable">
-      <thead>
-        <tr>
-          <th style="width:50px"></th>
-          <th class="sorted">Name <span class="sort-icon">↑</span></th>
-          <th>Typ <span class="sort-icon">↕</span></th>
-          <th>Standort <span class="sort-icon">↕</span></th>
-          <th>Blütezeit <span class="sort-icon">↕</span></th>
-          <th>Letzter Schnitt <span class="sort-icon">↕</span></th>
-          <th>Letzte Düngung <span class="sort-icon">↕</span></th>
-          <th>Nächste Aufgabe <span class="sort-icon">↕</span></th>
-          <th>Status <span class="sort-icon">↕</span></th>
-        </tr>
-      </thead>
-      <tbody id="plantTableBody">
-      </tbody>
-    </table>
-  </div>
-
-  <!-- CARD VIEW -->
-  <div class="card-grid" id="cardGrid"></div>
-
-  <!-- DETAIL PANEL -->
-  <div class="detail-panel" id="detailPanel">
-    <div class="detail-header">
-      <div>
-        <div class="detail-plant-name" id="detailName">–</div>
-        <div class="detail-latin" id="detailLatin">–</div>
+    <!-- SUBHEADER -->
+    <div class="subheader">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" type="text" placeholder="Pflanze suchen …" id="searchInput" />
       </div>
-      <button class="detail-close" onclick="closeDetail()">✕</button>
+
+      <button class="btn-add" onclick="openAddPlant()">＋ Pflanze hinzufügen</button>
+
+      <div class="subheader-spacer"></div>
+
+      <span class="count-label" id="countLabel">9 Pflanzen · 3 mit offenen Aufgaben</span>
+
+      <div class="view-toggle">
+        <button class="view-btn active" id="viewTable" onclick="setView('table')" title="Tabellenansicht">☰</button>
+        <button class="view-btn" id="viewCard" onclick="setView('card')" title="Kartenansicht">⊞</button>
+      </div>
     </div>
 
-    <div class="detail-body">
+    <!-- MAIN AREA -->
+    <div class="main-area">
 
-      <!-- Images -->
-      <div>
-        <div class="detail-section-title">Bilder</div>
-        <div class="detail-images">
-          <div class="detail-img-box" id="detailImgPlant">
-            <span id="detailEmoji">🌿</span>
-            <span class="detail-img-label">Pflanze</span>
+      <!-- DETAIL PANEL – LEFT -->
+      <div class="detail-panel" id="detailPanel">
+        <div class="detail-header">
+          <div>
+            <div class="detail-plant-name" id="detailName">–</div>
+            <div class="detail-latin" id="detailLatin">–</div>
           </div>
-          <div class="detail-img-box">
-            <span>🌸</span>
-            <span class="detail-img-label">Blüte</span>
+          <button class="detail-close" onclick="closeDetail()">✕</button>
+        </div>
+
+        <div class="detail-body">
+          <div>
+            <div class="detail-section-title">Bilder</div>
+            <div class="detail-images">
+              <div class="detail-img-box">
+                <span id="detailEmoji">🌿</span>
+                <span class="detail-img-label">Pflanze</span>
+              </div>
+              <div class="detail-img-box">
+                <span>🌸</span>
+                <span class="detail-img-label">Blüte</span>
+              </div>
+              <div class="detail-img-box">
+                <span>🍃</span>
+                <span class="detail-img-label">Blatt</span>
+              </div>
+            </div>
           </div>
-          <div class="detail-img-box">
-            <span>🍃</span>
-            <span class="detail-img-label">Blatt</span>
+
+          <div>
+            <div class="detail-section-title">Steckbrief</div>
+            <div class="detail-grid">
+              <div class="detail-field">
+                <div class="detail-field-label">Typ</div>
+                <div class="detail-field-value" id="detailTyp">–</div>
+              </div>
+              <div class="detail-field">
+                <div class="detail-field-label">Standort</div>
+                <div class="detail-field-value" id="detailStandort">–</div>
+              </div>
+              <div class="detail-field">
+                <div class="detail-field-label">Blütezeit</div>
+                <div class="detail-field-value" id="detailBluete">–</div>
+              </div>
+              <div class="detail-field">
+                <div class="detail-field-label">Blütenfarbe</div>
+                <div class="detail-field-value" id="detailFarbe">–</div>
+              </div>
+              <div class="detail-field">
+                <div class="detail-field-label">Alter</div>
+                <div class="detail-field-value" id="detailAlter">–</div>
+              </div>
+              <div class="detail-field">
+                <div class="detail-field-label">Min. Temperatur</div>
+                <div class="detail-field-value" id="detailTemp">–</div>
+              </div>
+            </div>
           </div>
+
+          <div>
+            <div class="detail-section-title">Pflege-Historie</div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <div class="detail-task">
+                <span>✂️</span>
+                <span class="detail-task-name" id="detailLastCut">–</span>
+                <span class="detail-task-date" id="detailLastCutDate">–</span>
+              </div>
+              <div class="detail-task">
+                <span>💧</span>
+                <span class="detail-task-name" id="detailLastFert">–</span>
+                <span class="detail-task-date" id="detailLastFertDate">–</span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="detail-section-title">Pflegehinweise</div>
+            <div class="detail-notes" id="detailNotes">–</div>
+          </div>
+        </div>
+
+        <div class="detail-actions">
+          <button class="detail-btn" onclick="openChat()">💬 Assistent fragen</button>
+          <button class="detail-btn primary">✏️ Bearbeiten</button>
         </div>
       </div>
 
-      <!-- Info grid -->
-      <div>
-        <div class="detail-section-title">Steckbrief</div>
-        <div class="detail-grid">
-          <div class="detail-field">
-            <div class="detail-field-label">Typ</div>
-            <div class="detail-field-value" id="detailTyp">–</div>
-          </div>
-          <div class="detail-field">
-            <div class="detail-field-label">Standort</div>
-            <div class="detail-field-value" id="detailStandort">–</div>
-          </div>
-          <div class="detail-field">
-            <div class="detail-field-label">Blütezeit</div>
-            <div class="detail-field-value" id="detailBluete">–</div>
-          </div>
-          <div class="detail-field">
-            <div class="detail-field-label">Blütenfarbe</div>
-            <div class="detail-field-value" id="detailFarbe">–</div>
-          </div>
-          <div class="detail-field">
-            <div class="detail-field-label">Alter</div>
-            <div class="detail-field-value" id="detailAlter">–</div>
-          </div>
-          <div class="detail-field">
-            <div class="detail-field-label">Min. Temperatur</div>
-            <div class="detail-field-value" id="detailTemp">–</div>
-          </div>
-        </div>
+      <!-- TABLE VIEW -->
+      <div class="table-wrap" id="tableWrap">
+        <table id="plantTable">
+          <thead>
+            <tr>
+              <th style="width:50px"></th>
+              <th class="sorted">Name <span class="sort-icon">↑</span></th>
+              <th>Typ <span class="sort-icon">↕</span></th>
+              <th>Standort <span class="sort-icon">↕</span></th>
+              <th>Blütezeit <span class="sort-icon">↕</span></th>
+              <th>Letzter Schnitt <span class="sort-icon">↕</span></th>
+              <th>Letzte Düngung <span class="sort-icon">↕</span></th>
+              <th>Nächste Aufgabe <span class="sort-icon">↕</span></th>
+              <th>Status <span class="sort-icon">↕</span></th>
+            </tr>
+          </thead>
+          <tbody id="plantTableBody"></tbody>
+        </table>
       </div>
 
-      <!-- Pflege -->
-      <div>
-        <div class="detail-section-title">Pflege-Historie</div>
-        <div style="display:flex;flex-direction:column;gap:6px">
-          <div class="detail-task">
-            <span>✂️</span>
-            <span class="detail-task-name" id="detailLastCut">–</span>
-            <span class="detail-task-date" id="detailLastCutDate">–</span>
-          </div>
-          <div class="detail-task">
-            <span>💧</span>
-            <span class="detail-task-name" id="detailLastFert">–</span>
-            <span class="detail-task-date" id="detailLastFertDate">–</span>
-          </div>
-        </div>
-      </div>
+      <!-- CARD VIEW -->
+      <div class="card-grid" id="cardGrid"></div>
 
-      <!-- Schneidinfo -->
-      <div>
-        <div class="detail-section-title">Pflegehinweise</div>
-        <div class="detail-notes" id="detailNotes">–</div>
-      </div>
+    </div><!-- /main-area -->
+  </div><!-- /content-col -->
 
-    </div>
+  <!-- CHAT TOGGLE STRIP -->
+  <button class="chat-toggle" id="chatToggle" onclick="toggleChat()">
+    <span class="chat-toggle-icon">💬</span>
+    <span class="chat-toggle-label">Assistent</span>
+  </button>
 
-    <div class="detail-actions">
-      <button class="detail-btn" onclick="openChat()">💬 Assistent fragen</button>
-      <button class="detail-btn primary">✏️ Bearbeiten</button>
-    </div>
-  </div>
-
-  <!-- CHAT PANEL – RIGHT -->
+  <!-- CHAT PANEL – flush from nav to bottom -->
   <div class="chat-panel" id="chatPanel">
     <div class="chat-header">
       <div class="chat-title">🤖 Garten-Assistent</div>
       <button class="chat-close" onclick="toggleChat()">✕</button>
     </div>
-    <div class="chat-messages">
+    <div class="chat-messages" id="chatMessages">
       <div style="display:flex;flex-direction:column;gap:4px">
         <div class="chat-sender">Assistent</div>
         <div class="chat-bubble bot">Hallo! Wählen Sie eine Pflanze aus der Liste, und ich beantworte Ihre Fragen dazu – Pflege, Schnitt, Düngung oder Probleme.</div>
@@ -871,74 +762,21 @@
     </div>
   </div>
 
-</div>
+</div><!-- /body-wrap -->
 
 <script>
   // ── DATA ──
   const plants = [
-    { id:1,  emoji:'🌹', name:'Rose',              latin:'Rosa',               typ:'Strauch',  standort:'Westbeet',       bluete:'Mai–Sep',  farbe:'Rot/Pink',   blueSwatches:['#c0392b','#e91e8c'], alter:'4 J.',  temp:'-15°C', lastCut:'14. Mär 2024', lastFert:'12. Apr 2024', nextTask:'Schneiden', nextStatus:'overdue', notes:'Nach Blüte entblättern. Kein Stickstoff nach Aug. Winterschutz ab Nov empfohlen.' },
-    { id:2,  emoji:'💐', name:'Rhododendron',       latin:'Rhododendron hyb.',  typ:'Strauch',  standort:'Terrasse',       bluete:'Apr–Jun',  farbe:'Lila/Pink',  blueSwatches:['#9b59b6','#e91e8c'], alter:'6 J.',  temp:'-10°C', lastCut:'–',           lastFert:'02. Mär 2024', nextTask:'Düngen', nextStatus:'current', notes:'Kalkfreies Substrat wichtig. Rhododendron-Dünger verwenden. Kein Rückschnitt nötig.' },
-    { id:3,  emoji:'🌸', name:'Magnolia Grandiflora',latin:'Magnolia grandiflora',typ:'Baum',   standort:'Nordwest',       bluete:'Apr–Mai',  farbe:'Weiß/Creme', blueSwatches:['#fff9e6','#f5f0dc'], alter:'8 J.',  temp:'-12°C', lastCut:'–',           lastFert:'15. Apr 2024', nextTask:'–', nextStatus:'ok', notes:'Nicht zurückschneiden. Sehr langsamer Wuchs. Blüten sind empfindlich gegen Spätfrost.' },
-    { id:4,  emoji:'🌺', name:'Hibiscus',            latin:'Hibiscus syriacus',  typ:'Strauch',  standort:'Westseite',      bluete:'Jul–Sep',  farbe:'Violett',    blueSwatches:['#7b2d8b'],           alter:'5 J.',  temp:'-20°C', lastCut:'18. Mär 2024', lastFert:'20. Apr 2024', nextTask:'–', nextStatus:'ok', notes:'Kräftiger Rückschnitt im März fördert Blüte. Sonniger Standort bevorzugt.' },
-    { id:5,  emoji:'🌷', name:'Camellie',            latin:'Camellia japonica',  typ:'Strauch',  standort:'Westbeet',       bluete:'Feb–Apr',  farbe:'Rosa/Rot',   blueSwatches:['#e91e8c','#c0392b'], alter:'3 J.',  temp:'-8°C',  lastCut:'–',           lastFert:'–',            nextTask:'Düngen', nextStatus:'upcoming', notes:'Saure Erde (pH 4.5–5.5). Frostschutz im Winter. Keine Kalkerde.' },
-    { id:6,  emoji:'🎋', name:'Bambus',              latin:'Phyllostachys aurea',typ:'Gras',     standort:'Terrasse West',  bluete:'–',        farbe:'–',          blueSwatches:[],                    alter:'7 J.',  temp:'-18°C', lastCut:'Mai 2023',    lastFert:'Apr 2024',     nextTask:'–', nextStatus:'ok', notes:'Rhizomsperre empfohlen. Einmal jährlich alte Halme herausschneiden.' },
-    { id:7,  emoji:'🌲', name:'Thuja',               latin:'Thuja occidentalis', typ:'Nadelbaum',standort:'Grundstücksgrenze',bluete:'–',       farbe:'–',          blueSwatches:[],                    alter:'12 J.', temp:'-30°C', lastCut:'Aug 2023',    lastFert:'Mar 2024',     nextTask:'Schneiden', nextStatus:'upcoming', notes:'Formschnitt im Aug nach der Hauptwachstumsphase. Nicht ins alte Holz schneiden.' },
-    { id:8,  emoji:'🍂', name:'Gingko',              latin:'Ginkgo biloba',      typ:'Baum',     standort:'Einfahrt',       bluete:'–',        farbe:'Goldgelb',   blueSwatches:['#f1c40f'],           alter:'10 J.', temp:'-30°C', lastCut:'–',           lastFert:'–',            nextTask:'–', nextStatus:'ok', notes:'Sehr pflegeleicht. Herbstlaub leuchtend goldgelb. Langsames Wachstum.' },
-    { id:9,  emoji:'🌲', name:'Konifere',            latin:'Picea abies',        typ:'Nadelbaum',standort:'Westseite',      bluete:'–',        farbe:'–',          blueSwatches:[],                    alter:'9 J.',  temp:'-30°C', lastCut:'Jun 2023',    lastFert:'–',            nextTask:'–', nextStatus:'ok', notes:'Formschnitt im Frühsommer. Nicht zu stark zurückschneiden.' },
+    { id:1,  emoji:'🌹', name:'Rose',               latin:'Rosa',                typ:'Strauch',   standort:'Westbeet',  bluete:'Mai–Sep',  farbe:'Rot/Pink',   blueSwatches:['#c0392b','#e91e8c'], alter:'4 J.',  temp:'-15°C', lastCut:'14. Mär 2024', lastFert:'12. Apr 2024', nextTask:'Schneiden',  nextStatus:'overdue', notes:'Nach Blüte entblättern. Kein Stickstoff nach Aug. Winterschutz ab Nov empfohlen.' },
+    { id:2,  emoji:'💐', name:'Rhododendron',        latin:'Rhododendron hyb.',   typ:'Strauch',   standort:'Terrasse',  bluete:'Apr–Jun',  farbe:'Lila/Pink',  blueSwatches:['#9b59b6','#e91e8c'], alter:'6 J.',  temp:'-10°C', lastCut:'–',           lastFert:'02. Mär 2024', nextTask:'Düngen',     nextStatus:'current', notes:'Kalkfreies Substrat wichtig. Rhododendron-Dünger verwenden. Kein Rückschnitt nötig.' },
+    { id:3,  emoji:'🌸', name:'Magnolia',            latin:'Magnolia grandiflora', typ:'Baum',      standort:'Nordwest',  bluete:'Apr–Mai',  farbe:'Weiß/Creme', blueSwatches:['#fff9e6'],           alter:'8 J.',  temp:'-20°C', lastCut:'–',           lastFert:'–',            nextTask:'Beobachten', nextStatus:'upcoming', notes:'Kein Rückschnitt nötig. Frühjahrsblüher – nicht vor dem Frost düngen.' },
+    { id:4,  emoji:'🌻', name:'Sonnenblume',         latin:'Helianthus annuus',    typ:'Einjährig', standort:'Südbeet',   bluete:'Jul–Sep',  farbe:'Gelb',       blueSwatches:['#f1c40f'],           alter:'1 J.',  temp:'0°C',   lastCut:'–',           lastFert:'20. Mai 2024', nextTask:'Gießen',     nextStatus:'current', notes:'Braucht viel Sonne und Wasser. Höhe bis 3m möglich.' },
+    { id:5,  emoji:'🍎', name:'Apfelbaum',           latin:'Malus domestica',      typ:'Obstbaum',  standort:'Mitte',     bluete:'Apr–Mai',  farbe:'Weiß/Rosa',  blueSwatches:['#fdf2f8','#f0b8cc'], alter:'12 J.', temp:'-25°C', lastCut:'Feb 2024',    lastFert:'Mär 2024',     nextTask:'Ernten',     nextStatus:'upcoming', notes:'Schnitt im Winterschlaf. Ausdünnen der Früchte im Juni empfohlen.' },
+    { id:6,  emoji:'🌿', name:'Hortensie',           latin:'Hydrangea macrophylla', typ:'Strauch',  standort:'Ostbeet',   bluete:'Jun–Sep',  farbe:'Blau/Pink',  blueSwatches:['#3498db','#e91e8c'], alter:'3 J.',  temp:'-15°C', lastCut:'Mär 2024',    lastFert:'Apr 2024',     nextTask:'Düngen',     nextStatus:'overdue', notes:'pH-Wert des Bodens bestimmt die Blütenfarbe. Blau bei saurem Boden.' },
+    { id:7,  emoji:'🌲', name:'Lebensbaum',          latin:'Thuja occidentalis',   typ:'Nadelbaum', standort:'Hecke',     bluete:'–',        farbe:'–',          blueSwatches:[],                    alter:'7 J.',  temp:'-30°C', lastCut:'Jun 2023',    lastFert:'–',            nextTask:'Schneiden',  nextStatus:'current', notes:'Schnitt zweimal jährlich. Nicht zu stark zurückschneiden.' },
+    { id:8,  emoji:'🍂', name:'Gingko',              latin:'Ginkgo biloba',        typ:'Baum',      standort:'Einfahrt',  bluete:'–',        farbe:'Goldgelb',   blueSwatches:['#f1c40f'],           alter:'10 J.', temp:'-30°C', lastCut:'–',           lastFert:'–',            nextTask:'–',          nextStatus:'ok',      notes:'Sehr pflegeleicht. Herbstlaub leuchtend goldgelb. Langsames Wachstum.' },
+    { id:9,  emoji:'🌺', name:'Päonie',              latin:'Paeonia lactiflora',   typ:'Staude',    standort:'Nordbeet',  bluete:'Mai–Jun',  farbe:'Rosa/Weiß',  blueSwatches:['#f7b7c8','#fff'],    alter:'5 J.',  temp:'-25°C', lastCut:'Nov 2023',    lastFert:'Mär 2024',     nextTask:'Stützen',    nextStatus:'upcoming', notes:'Schwere Blüten brauchen Stütze. Nicht zu tief pflanzen – max. 3cm.' },
   ];
-
-  // ── RENDER TABLE ──
-  function renderTable(data) {
-    const tbody = document.getElementById('plantTableBody');
-    tbody.innerHTML = data.map(p => `
-      <tr onclick="selectPlant(${p.id})" data-id="${p.id}">
-        <td><div class="plant-thumb">${p.emoji}</div></td>
-        <td>
-          <div class="plant-name-cell">
-            <span class="plant-name">${p.name}</span>
-            <span class="plant-latin">${p.latin}</span>
-          </div>
-        </td>
-        <td>${p.typ}</td>
-        <td>${p.standort}</td>
-        <td>
-          <div class="bloom-cell">
-            ${p.blueSwatches.map(c => `<div class="bloom-swatch" style="background:${c}"></div>`).join('')}
-            <span class="bloom-months">${p.bluete}</span>
-          </div>
-        </td>
-        <td>
-          <div class="date-cell">${p.lastCut}</div>
-        </td>
-        <td>
-          <div class="date-cell">${p.lastFert}</div>
-        </td>
-        <td>${p.nextTask !== '–' ? `<span class="task-pill ${p.nextStatus}">${taskIcon(p.nextStatus)} ${p.nextTask}</span>` : '<span style="color:var(--text-light)">–</span>'}</td>
-        <td><span class="status-dot" style="background:${statusColor(p.nextStatus)}"></span></td>
-      </tr>
-    `).join('');
-  }
-
-  // ── RENDER CARDS ──
-  function renderCards(data) {
-    const grid = document.getElementById('cardGrid');
-    grid.innerHTML = data.map(p => `
-      <div class="plant-card ${selectedId === p.id ? 'selected' : ''}" onclick="selectPlant(${p.id})" data-id="${p.id}">
-        <div class="card-img">
-          ${p.emoji}
-          <div class="card-status" style="background:${statusColor(p.nextStatus)}"></div>
-        </div>
-        <div class="card-body">
-          <div class="card-name">${p.name}</div>
-          <div class="card-latin">${p.latin}</div>
-          <div class="card-meta">
-            <span class="task-pill ok" style="font-size:10px">${p.typ}</span>
-            ${p.nextTask !== '–' ? `<span class="task-pill ${p.nextStatus}" style="font-size:10px">${taskIcon(p.nextStatus)} ${p.nextTask}</span>` : ''}
-          </div>
-        </div>
-      </div>
-    `).join('');
-  }
 
   function taskIcon(s) {
     return s === 'overdue' ? '🔴' : s === 'current' ? '🟡' : s === 'upcoming' ? '🔵' : '✅';
@@ -954,16 +792,14 @@
     const p = plants.find(x => x.id === id);
     if (!p) return;
 
-    // Highlight row/card
     document.querySelectorAll('tr[data-id], .plant-card[data-id]').forEach(el => {
       el.classList.toggle('selected', parseInt(el.dataset.id) === id);
     });
 
-    // Fill panel
-    document.getElementById('detailName').textContent  = p.name;
-    document.getElementById('detailLatin').textContent = p.latin;
-    document.getElementById('detailEmoji').textContent = p.emoji;
-    document.getElementById('detailTyp').textContent   = p.typ;
+    document.getElementById('detailName').textContent     = p.name;
+    document.getElementById('detailLatin').textContent    = p.latin;
+    document.getElementById('detailEmoji').textContent    = p.emoji;
+    document.getElementById('detailTyp').textContent      = p.typ;
     document.getElementById('detailStandort').textContent = p.standort;
     document.getElementById('detailBluete').textContent   = p.bluete;
     document.getElementById('detailFarbe').textContent    = p.farbe;
@@ -995,39 +831,82 @@
     if (v === 'card') renderCards(filteredPlants());
   }
 
-  // ── FILTER & SEARCH ──
-  let activeChips = new Set(['🌿 Alle']);
-
-  function toggleChip(el) {
-    const text = el.textContent.replace('✕','').trim();
-    el.classList.toggle('active');
-    if (el.classList.contains('active')) activeChips.add(text);
-    else activeChips.delete(text);
-    refresh();
-  }
-
+  // ── SEARCH ──
   function filteredPlants() {
     const q = document.getElementById('searchInput').value.toLowerCase();
-    return plants.filter(p => {
-      const matchSearch = !q || p.name.toLowerCase().includes(q) || p.latin.toLowerCase().includes(q) || p.standort.toLowerCase().includes(q);
-      return matchSearch;
-    });
+    return plants.filter(p =>
+      !q || p.name.toLowerCase().includes(q) ||
+            p.latin.toLowerCase().includes(q) ||
+            p.standort.toLowerCase().includes(q)
+    );
   }
 
   function refresh() {
     const data = filteredPlants();
-    document.getElementById('countLabel').textContent = `${data.length} Pflanze${data.length !== 1 ? 'n' : ''} · ${data.filter(p => p.nextStatus !== 'ok').length} mit offenen Aufgaben`;
+    document.getElementById('countLabel').textContent =
+      `${data.length} Pflanze${data.length !== 1 ? 'n' : ''} · ${data.filter(p => p.nextStatus !== 'ok').length} mit offenen Aufgaben`;
     if (currentView === 'table') renderTable(data);
     else renderCards(data);
   }
 
   document.getElementById('searchInput').addEventListener('input', refresh);
 
+  // ── RENDER TABLE ──
+  function renderTable(data) {
+    const tbody = document.getElementById('plantTableBody');
+    tbody.innerHTML = data.map(p => `
+      <tr onclick="selectPlant(${p.id})" data-id="${p.id}">
+        <td><div class="plant-thumb">${p.emoji}</div></td>
+        <td>
+          <div class="plant-name-cell">
+            <span class="plant-name">${p.name}</span>
+            <span class="plant-latin">${p.latin}</span>
+          </div>
+        </td>
+        <td>${p.typ}</td>
+        <td>${p.standort}</td>
+        <td>
+          <div class="bloom-cell">
+            ${p.blueSwatches.map(c => `<div class="bloom-swatch" style="background:${c}"></div>`).join('')}
+            <span class="bloom-months">${p.bluete}</span>
+          </div>
+        </td>
+        <td><div class="date-cell">${p.lastCut}</div></td>
+        <td><div class="date-cell">${p.lastFert}</div></td>
+        <td>${p.nextTask !== '–' ? `<span class="task-pill ${p.nextStatus}">${taskIcon(p.nextStatus)} ${p.nextTask}</span>` : '<span style="color:var(--text-light)">–</span>'}</td>
+        <td><span class="status-dot" style="background:${statusColor(p.nextStatus)}"></span></td>
+      </tr>
+    `).join('');
+  }
+
+  // ── RENDER CARDS ──
+  function renderCards(data) {
+    const grid = document.getElementById('cardGrid');
+    grid.innerHTML = data.map(p => `
+      <div class="plant-card ${selectedId === p.id ? 'selected' : ''}" onclick="selectPlant(${p.id})" data-id="${p.id}">
+        <div class="card-img">
+          ${p.emoji}
+          <div class="card-status" style="background:${statusColor(p.nextStatus)}"></div>
+        </div>
+        <div class="card-body">
+          <div class="card-name">${p.name}</div>
+          <div class="card-latin">${p.latin}</div>
+          <div class="card-meta">
+            <span class="task-pill ok" style="font-size:10px">${p.typ}</span>
+            ${p.nextTask !== '–' ? `<span class="task-pill ${p.nextStatus}" style="font-size:10px">${taskIcon(p.nextStatus)} ${p.nextTask}</span>` : ''}
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ── CHAT ──
   function toggleChat() {
     const panel = document.getElementById('chatPanel');
     const toggle = document.getElementById('chatToggle');
+    const isOpen = panel.classList.contains('open');
     panel.classList.toggle('open');
-    toggle.classList.toggle('hidden', panel.classList.contains('open'));
+    toggle.classList.toggle('hidden', !isOpen ? true : false);
   }
 
   function openChat() {
@@ -1035,11 +914,9 @@
     const toggle = document.getElementById('chatToggle');
     panel.classList.add('open');
     toggle.classList.add('hidden');
-    // Inject context pill for selected plant
     const p = plants.find(x => x.id === selectedId);
     if (p) {
-      const msgs = panel.querySelector('.chat-messages');
-      // Remove old context pill if present
+      const msgs = document.getElementById('chatMessages');
       const old = msgs.querySelector('.chat-context-pill');
       if (old) old.parentElement.remove();
       const div = document.createElement('div');
@@ -1051,11 +928,9 @@
       msgs.scrollTop = msgs.scrollHeight;
     }
   }
+
   function openAddPlant() {
     alert('→ KI-gestützter Dialog: Pflanze per Chat oder Bilderkennung hinzufügen');
-  }
-  function toggleColMenu() {
-    alert('→ Spaltenauswahl: Bild, Name, Typ, Standort, Blütezeit, Blütenfarbe, Schnittinfo, Düngeinfo, Alter, Temp., Aufgaben …');
   }
 
   // ── INIT ──
