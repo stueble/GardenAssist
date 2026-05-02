@@ -1,1 +1,62 @@
 # GardenAssist
+
+> An AI-powered web application to support and simplify everyday gardening.
+
+GardenAssist helps gardeners keep track of their plants, plan garden tasks, and get intelligent advice — all in one place. An integrated AI assistant can answer questions, explain care instructions, identify plants, and help manage your garden data through natural conversation.
+
+---
+
+## Core Features
+
+### 🌿 Plant Management
+Maintain a comprehensive list of all plants in your garden. Each plant includes care details such as pruning schedules, fertilization cycles, bloom periods, leaf and flower colors, frost tolerance, and general growing conditions. Track the current state and age of each plant, as well as the dates of last care activities.
+
+### ✅ Tasks & Reminders
+View all open, current, and upcoming garden tasks at a glance. Mark tasks as done or skip them as needed. A monthly calendar overview provides a quick visual indication of which months have pending work, with details available on hover.
+
+### 📅 Garden Calendar
+A Gantt-style calendar with plants as rows and months as columns gives a seasonal overview of bloom times, pruning windows, fertilization periods, and growth phases — with color-coded display per activity type.
+
+### 🗺️ Visual Garden Plan
+An interactive layout of your garden showing the position and size of each plant. Hover over plant symbols to see a quick summary; click to open the full plant detail view. Selecting a plant in the table highlights its location in the plan.
+
+### 🤖 AI Assistant
+A conversational assistant that supports you throughout the app:
+- Answer questions about plants, care routines, and gardening best practices
+- Explain *why* a task is recommended at a given time
+- Add or update plant data through natural language
+- Identify plants from uploaded photos
+- Search for suitable reference images
+- Analyze uploaded documents or photos for relevant gardening context
+
+### 📖 Garden Journal
+A diary for logging completed tasks, observations, and notes over time. Provides a personal history of your garden's development.
+
+### 📊 Dashboard
+A central overview combining urgent hints and warnings, open and upcoming tasks, the garden plan, a monthly task band, and the AI chat window — everything relevant at a single glance.
+
+---
+
+## Planned Integrations *(future)*
+
+- **Weather** – current conditions, frost warnings, rain forecast, and watering recommendations
+- **Calendar sync** – export or sync garden tasks to external calendar apps
+- **Email notifications** – reminders for upcoming or overdue tasks
+
+---
+
+## Tech Stack
+
+> *To be decided*
+
+---
+
+## Getting Started
+
+> *Setup instructions will be added once the project structure is established.*
+
+---
+
+## Project Status
+
+🚧 Early planning phase — see `backlog.md` for epics, stories, and decisions.
