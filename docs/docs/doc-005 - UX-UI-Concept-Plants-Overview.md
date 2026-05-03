@@ -8,7 +8,7 @@ updated_date: '2026-05-03'
 
 # UI Concept – Plants Overview
 
-**Version:** 0.2  
+**Version:** 0.3  
 **Last updated:** 2026-05-03
 
 ---
@@ -46,7 +46,7 @@ The Plants Overview is the central management view for all plants in the garden.
 ┌──────────────────────────────────────────────────────────────────┐
 │  🌿 GardenAssist  [ Dashboard ][ Plants ][ Calendar ][ Journal ] │
 ├──────────────────────────────────────────────────────────────────┤
-│  🔍 Search …   ➕ Pflanze hinzufügen        9 plants · 3 open  ☰ ⊞ │
+│  🔍 Search …                              9 plants · 3 open  ☰ ⊞ │
 ├───────────────┬──────────────────────────────────────────────┬───┤
 │               │                                              │   │
 │  Detail       │  Name       │ Type  │ Location │ Bloom │ …  │ 💬 │
@@ -63,7 +63,7 @@ The Plants Overview is the central management view for all plants in the garden.
 | Zone | Width | Content |
 |---|---|---|
 | **Top navigation** | 100% | Same nav bar as all views |
-| **Subheader** | 100% | Search input → Add plant button → spacer → result count → view toggle |
+| **Subheader** | 100% | Search input → spacer → result count → view toggle |
 | **Detail panel** (left of table) | ~300px (when open) | Plant profile: images, fact sheet, care history, notes, action buttons |
 | **Table / Card area** | flex (shrinks when detail panel is open) | Scrollable plant list in table or card layout |
 | **Chat strip** (far right) | ~34px (collapsed) / ~300px (expanded) | AI assistant; same vertical strip pattern as dashboard |
@@ -81,7 +81,6 @@ Interactive HTML mockup: `ui-mockups/plants-overview/plants-overview-mockup.html
 | Element | Description | Behavior |
 |---|---|---|
 | **Search input** | Text field with 🔍 icon; fixed width ~300px | Live filters the list on each keystroke; matches against common name, botanical name, and location |
-| **Add plant ➕** | Button directly to the right of the search field | Opens AI-assisted dialog (placeholder in mockup — not yet implemented) |
 | **Result count** | "N plants · N with open tasks" | Updates in real time as search filters |
 | **View toggle ☰ / ⊞** | Switch between table and card view; right-aligned | Instant re-render of the same dataset; active mode highlighted |
 
@@ -112,6 +111,13 @@ Interactive HTML mockup: `ui-mockups/plants-overview/plants-overview-mockup.html
 | **Care notes** | Free-text with yellow background | Read-only; shows care instructions |
 | **Button: Ask assistant** | Opens chat panel with plant as context | Injects context pill for the selected plant into the chat |
 | **Button: Edit** | Opens edit mode | Placeholder — not yet implemented |
+
+### FAB (Floating Action Button)
+
+| Element | Description | Behavior |
+|---|---|---|
+| **＋ button** | 48×48px rounded square, dark green; `position:absolute` within the content column | Always visible at bottom-right of the plant list area; moves with the content area when the chat panel opens; opens the add-plant dialog |
+| **Active state** | Brown/bark color when add-plant dialog is open | Returns to dark green when dialog closes |
 
 ### Chat Strip
 
@@ -151,7 +157,7 @@ Interactive HTML mockup: `ui-mockups/plants-overview/plants-overview-mockup.html
 ## 7. AI Assistant Integration
 
 - **Context-aware entry:** Clicking "Ask assistant" in the detail panel opens the chat with a context pill for the selected plant
-- **Add plant via AI:** The ➕ button will open an AI-assisted dialog where the user can describe a plant in natural language or upload a photo for identification *(not yet implemented)*
+- **Add plant via AI:** The FAB (＋) opens an AI-assisted dialog where the user can describe a plant in natural language or upload a photo for identification *(not yet implemented)*
 - **Data modification:** The assistant can update plant data (care dates, notes, attributes) through conversation
 - **Always reachable:** Chat strip permanently visible on the right edge, same as all views
 
@@ -179,7 +185,7 @@ Interactive HTML mockup: `ui-mockups/plants-overview/plants-overview-mockup.html
 
 ## 10. Not Yet Implemented (Mockup Placeholders)
 
-- **Add plant (➕)** – opens an alert; AI-assisted add-plant dialog not designed
+- **Add plant (FAB ＋)** – opens an alert; AI-assisted add-plant dialog not designed
 - **Image upload in detail panel** – image slots show placeholder emojis; no upload interaction
 - **Edit button in detail panel** – no edit mode or edit view designed yet
 - **Dashboard → Plants link** – clicking a plant in the garden plan does not yet navigate to this view

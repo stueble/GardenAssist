@@ -8,7 +8,7 @@ updated_date: '2026-05-03'
 
 # UI Concept – Garden Calendar
 
-**Version:** 0.1  
+**Version:** 0.2  
 **Last updated:** 2026-05-03
 
 ---
@@ -46,7 +46,7 @@ The Garden Calendar gives the user a seasonal overview of all plants across all 
 ┌──────────────────────────────────────────────────────────────────┐
 │  🌿 GardenAssist  [ Dashboard ][ Plants ][ Calendar ][ Journal ] │
 ├──────────────────────────────────────────────────────────────────┤
-│  🔍 Search …   [🌸 Blütezeit] [💧 Düngen] [✂️ Schnitt] [📋 Sonst] │
+│  🔍 Search …  [🌸 Blütezeit][🌿 Wachstum][🍃 Blätter][💧 Düngen][✂️][📋] │
 ├───────────────────────────────────────────────────────────────┬──┤
 │  ▓▓▓▓▓▓▓▓▓▓   Jan  Feb  Mär  Apr  Mai  Jun  Jul  Aug  …  Dez│  │
 │  🌹 Rose    │               ████████████████████              │  │
@@ -95,7 +95,9 @@ Interactive HTML mockup: `ui-mockups/calendar/calendar-mockup.html`
 | Element | Description | Behavior |
 |---|---|---|
 | **Search input** | Text field with 🔍 icon | Live filters rows by common name or botanical name; no submit needed |
-| **Schedule toggle: 🌸 Blütezeit** | Shows bloom period intervals | Bars colored in each plant's flower color |
+| **Schedule toggle: 🌸 Blütezeit** | Shows bloom period intervals | Bars colored in each plant's actual flower color |
+| **Schedule toggle: 🌿 Wachstum** | Shows growth periods | Bars in rich dark green (`#2e7d32`) |
+| **Schedule toggle: 🍃 Blätter** | Shows foliage periods with seasonal color changes | Multiple bars per plant possible, each in its seasonal color (see foliage color scheme below); no bar = no foliage (e.g. deciduous in winter) |
 | **Schedule toggle: 💧 Düngen** | Shows fertilization windows | Bars in blue |
 | **Schedule toggle: ✂️ Schnitt** | Shows pruning windows | Bars in green |
 | **Schedule toggle: 📋 Sonstiges** | Shows miscellaneous schedules (sowing, harvest, observation, etc.) | Bars in grey/orange per sub-type |
@@ -158,9 +160,23 @@ Same component as in Plants Overview (doc-005, Section 5). Overlays the table fr
 | Schedule type | Color source |
 |---|---|
 | **Blütezeit** | First value of the plant's `blueSwatches` array (actual flower color) |
+| **Wachstum** | Fixed: `#2e7d32` (rich dark green — distinct from pruning green `#27ae60`) |
+| **Blätter** | Per-interval seasonal color: spring `#a8d5a2` (light green), summer `#1b5e20` (dark green), autumn `#c0392b` / `#c0793a` / `#f0c040` depending on species, evergreen `#2d5a1b` (deep green); no bar = no foliage |
 | **Düngen** | Fixed: `#2980b9` (blue) |
 | **Schnitt** | Fixed: `#27ae60` (green) |
 | **Sonstiges** | Sub-type dependent: observation `#7f8c8d` (grey), harvest `#e67e22` (orange), sowing `#7f8c8d` |
+
+### Foliage Color Examples
+
+| Season / State | Color | Hex |
+|---|---|---|
+| Spring (new growth) | Light green | `#a8d5a2` |
+| Summer (full foliage) | Dark green | `#1b5e20` |
+| Autumn (deciduous) | Red-brown | `#c0793a` |
+| Autumn (Gingko) | Gold yellow | `#f0c040` |
+| Autumn (Apfelbaum) | Red | `#c0392b` |
+| Evergreen (year-round) | Deep green | `#2d5a1b` |
+| Winter (deciduous) | No bar | – |
 
 Multiple bars per plant per schedule type are supported (e.g. a rose that is pruned twice per year shows two separate green bars).
 
@@ -186,7 +202,6 @@ Multiple bars per plant per schedule type are supported (e.g. a rose that is pru
 
 ## 10. Open Questions
 
-- [ ] The PRD lists "Growth period" and "Foliage (leaf / no leaf)" as schedule sub-views — these are not yet in the mockup. Should they be added as additional toggle buttons?
 - [ ] Should bars be clickable independently (not just the row), e.g. to edit an interval directly?
 - [ ] Should the current month column be more strongly highlighted (e.g. a vertical line or darker tint)?
 - [ ] Can the user add or edit schedule intervals directly in this view, or only via the plant detail / AI assistant?

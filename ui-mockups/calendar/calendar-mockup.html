@@ -20,8 +20,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text-d
 /* NAV */
 nav{background:var(--green-deep);display:flex;align-items:center;height:52px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.2)}
 .nav-logo{font-family:'Playfair Display',serif;font-size:20px;color:var(--green-pale);letter-spacing:.5px;display:flex;align-items:center;gap:8px;width:240px;flex-shrink:0;padding:0 20px;border-right:1px solid rgba(255,255,255,.1);height:100%}
-.nav-links{display:flex;gap:2px;flex:1;padding:0 12px}
-.nav-link{color:var(--green-pale);padding:6px 14px;border-radius:6px;font-size:13px;opacity:.75;transition:all .2s;cursor:pointer;border:none;background:none;display:flex;align-items:center;gap:6px}
+.nav-links{display:flex;gap:2px;flex:1;padding:0 12px;align-items:center}
+.nav-link{color:var(--green-pale);padding:0 14px;height:36px;line-height:1;border-radius:6px;font-size:13px;opacity:.75;transition:all .2s;cursor:pointer;border:none;background:none;display:flex;align-items:center;gap:6px;white-space:nowrap}
 .nav-link:hover{opacity:1;background:rgba(255,255,255,.1)}
 .nav-link.active{opacity:1;background:rgba(255,255,255,.15);font-weight:500}
 .nav-right{padding-right:16px}
@@ -153,10 +153,10 @@ nav{background:var(--green-deep);display:flex;align-items:center;height:52px;fle
 <nav>
   <div class="nav-logo"><span>🌿</span> GardenAssist</div>
   <div class="nav-links">
-    <button class="nav-link">🏠 Dashboard</button>
-    <button class="nav-link">🌱 Pflanzen</button>
-    <button class="nav-link active">🗓 Kalender</button>
-    <button class="nav-link">📔 Tagebuch</button>
+    <button class="nav-link"><span>🏠</span> Dashboard</button>
+    <button class="nav-link"><span>🌱</span> Pflanzen</button>
+    <button class="nav-link active"><span>🗓</span> Kalender</button>
+    <button class="nav-link"><span>📔</span> Tagebuch</button>
   </div>
   <div class="nav-right"><button class="nav-icon-btn">⚙️</button></div>
 </nav>
@@ -219,6 +219,8 @@ nav{background:var(--green-deep);display:flex;align-items:center;height:52px;fle
     </div>
     <div class="view-tabs">
       <button class="view-tab active" onclick="setView('bloom')">🌸 Blütezeit</button>
+      <button class="view-tab" onclick="setView('growth')">🌿 Wachstum</button>
+      <button class="view-tab" onclick="setView('foliage')">🍃 Blätter</button>
       <button class="view-tab" onclick="setView('fertilize')">💧 Düngen</button>
       <button class="view-tab" onclick="setView('prune')">✂️ Schnitt</button>
       <button class="view-tab" onclick="setView('misc')">📋 Sonstiges</button>
@@ -268,23 +270,23 @@ const CURRENT_MONTH = 5; // Mai (1-based)
 // Plant data: intervals are { start, end } month numbers (1–12)
 const plants = [
   { id:1,  emoji:'🌹', name:'Rose',              latin:'Rosa',                typ:'Strauch',   standort:'Westbeet',  bluete:'Mai–Sep', farbe:'Rot/Pink',   alter:'4 J.',  temp:'-15°C', lastCut:'14. Mär 2024', lastFert:'12. Apr 2024', notes:'Nach Blüte entblättern. Kein Stickstoff nach Aug.',
-    bloom:[{start:5,end:9,color:'#c0392b',label:'Rot/Pink'}], fertilize:[{start:4,end:4,color:'#2980b9',label:'Frühjahr'},{start:6,end:6,color:'#2980b9',label:'Sommer'}], prune:[{start:3,end:3,color:'#27ae60',label:'Frühjahrsschnitt'},{start:8,end:8,color:'#27ae60',label:'Sommersch.'}], misc:[] },
+    bloom:[{start:5,end:9,color:'#c0392b',label:'Rot/Pink'}], growth:[{start:3,end:10,color:'#2e7d32',label:'Wachstum'}], foliage:[{start:4,end:4,color:'#a8d5a2',label:'Frühjahr'},{start:5,end:9,color:'#1b5e20',label:'Sommer'},{start:10,end:10,color:'#b85c1a',label:'Herbst'}], fertilize:[{start:4,end:4,color:'#2980b9',label:'Frühjahr'},{start:6,end:6,color:'#2980b9',label:'Sommer'}], prune:[{start:3,end:3,color:'#27ae60',label:'Frühjahrsschnitt'},{start:8,end:8,color:'#27ae60',label:'Sommersch.'}], misc:[] },
   { id:2,  emoji:'💐', name:'Rhododendron',       latin:'Rhododendron hyb.',   typ:'Strauch',   standort:'Terrasse',  bluete:'Apr–Jun', farbe:'Lila/Pink',  alter:'6 J.',  temp:'-10°C', lastCut:'–',           lastFert:'02. Mär 2024', notes:'Kalkfreies Substrat wichtig. Rhododendron-Dünger verwenden.',
-    bloom:[{start:4,end:6,color:'#8e44ad',label:'Lila/Pink'}], fertilize:[{start:3,end:3,color:'#2980b9',label:'Rhodo-Dünger'},{start:5,end:5,color:'#2980b9',label:'Nachdüngen'}], prune:[], misc:[] },
+    bloom:[{start:4,end:6,color:'#8e44ad',label:'Lila/Pink'}], growth:[{start:3,end:10,color:'#2e7d32',label:'Wachstum'}], foliage:[{start:1,end:12,color:'#2d5a1b',label:'Immergrün'}], fertilize:[{start:3,end:3,color:'#2980b9',label:'Rhodo-Dünger'},{start:5,end:5,color:'#2980b9',label:'Nachdüngen'}], prune:[], misc:[] },
   { id:3,  emoji:'🌸', name:'Magnolia',           latin:'Magnolia grandiflora', typ:'Baum',     standort:'Nordwest',  bluete:'Apr–Mai', farbe:'Weiß/Creme', alter:'8 J.',  temp:'-20°C', lastCut:'–',           lastFert:'–',            notes:'Kein Rückschnitt nötig. Nicht vor dem Frost düngen.',
-    bloom:[{start:4,end:5,color:'#f0e0c0',label:'Weiß/Creme'}], fertilize:[], prune:[], misc:[{start:4,end:5,color:'#7f8c8d',label:'Beobachten'}] },
+    bloom:[{start:4,end:5,color:'#f0e0c0',label:'Weiß/Creme'}], growth:[{start:4,end:9,color:'#2e7d32',label:'Wachstum'}], foliage:[{start:4,end:4,color:'#a8d5a2',label:'Frühjahr'},{start:5,end:9,color:'#1b5e20',label:'Sommer'},{start:10,end:11,color:'#c0793a',label:'Herbst'}], fertilize:[], prune:[], misc:[{start:4,end:5,color:'#7f8c8d',label:'Beobachten'}] },
   { id:4,  emoji:'🌻', name:'Sonnenblume',        latin:'Helianthus annuus',    typ:'Einjährig', standort:'Südbeet',  bluete:'Jul–Sep', farbe:'Gelb',       alter:'1 J.',  temp:'0°C',   lastCut:'–',           lastFert:'20. Mai 2024', notes:'Braucht viel Sonne und Wasser. Höhe bis 3m.',
-    bloom:[{start:7,end:9,color:'#f39c12',label:'Gelb'}], fertilize:[{start:5,end:8,color:'#2980b9',label:'Regelmäßig gießen'}], prune:[], misc:[{start:3,end:4,color:'#7f8c8d',label:'Aussäen'}] },
+    bloom:[{start:7,end:9,color:'#f39c12',label:'Gelb'}], growth:[{start:5,end:9,color:'#2e7d32',label:'Wachstum'}], foliage:[{start:5,end:6,color:'#a8d5a2',label:'Jung'},{start:7,end:9,color:'#1b5e20',label:'Ausgewachsen'}], fertilize:[{start:5,end:8,color:'#2980b9',label:'Regelmäßig gießen'}], prune:[], misc:[{start:3,end:4,color:'#7f8c8d',label:'Aussäen'}] },
   { id:5,  emoji:'🍎', name:'Apfelbaum',          latin:'Malus domestica',      typ:'Obstbaum',  standort:'Mitte',    bluete:'Apr–Mai', farbe:'Weiß/Rosa',  alter:'12 J.', temp:'-25°C', lastCut:'Feb 2024',    lastFert:'Mär 2024',     notes:'Schnitt im Winterschlaf. Ausdünnen der Früchte im Juni.',
-    bloom:[{start:4,end:5,color:'#f8c8d0',label:'Weiß/Rosa'}], fertilize:[{start:3,end:3,color:'#2980b9',label:'Frühjahr'}], prune:[{start:2,end:2,color:'#27ae60',label:'Winterschnitt'}], misc:[{start:6,end:6,color:'#7f8c8d',label:'Ausdünnen'},{start:9,end:10,color:'#e67e22',label:'Ernte'}] },
+    bloom:[{start:4,end:5,color:'#f8c8d0',label:'Weiß/Rosa'}], growth:[{start:4,end:9,color:'#2e7d32',label:'Wachstum'}], foliage:[{start:4,end:4,color:'#a8d5a2',label:'Frühjahr'},{start:5,end:9,color:'#1b5e20',label:'Sommer'},{start:10,end:11,color:'#c0392b',label:'Herbst'}], fertilize:[{start:3,end:3,color:'#2980b9',label:'Frühjahr'}], prune:[{start:2,end:2,color:'#27ae60',label:'Winterschnitt'}], misc:[{start:6,end:6,color:'#7f8c8d',label:'Ausdünnen'},{start:9,end:10,color:'#e67e22',label:'Ernte'}] },
   { id:6,  emoji:'🌿', name:'Hortensie',          latin:'Hydrangea macrophylla', typ:'Strauch',  standort:'Ostbeet',  bluete:'Jun–Sep', farbe:'Blau/Pink',  alter:'3 J.',  temp:'-15°C', lastCut:'Mär 2024',    lastFert:'Apr 2024',     notes:'pH-Wert bestimmt Blütenfarbe. Blau bei saurem Boden.',
-    bloom:[{start:6,end:9,color:'#3498db',label:'Blau/Pink'}], fertilize:[{start:4,end:4,color:'#2980b9',label:'Frühjahr'},{start:6,end:6,color:'#2980b9',label:'Sommer'}], prune:[{start:3,end:3,color:'#27ae60',label:'Frühjahrsschnitt'}], misc:[] },
+    bloom:[{start:6,end:9,color:'#3498db',label:'Blau/Pink'}], growth:[{start:4,end:10,color:'#2e7d32',label:'Wachstum'}], foliage:[{start:4,end:5,color:'#a8d5a2',label:'Frühjahr'},{start:6,end:9,color:'#1b5e20',label:'Sommer'},{start:10,end:11,color:'#c0793a',label:'Herbst'}], fertilize:[{start:4,end:4,color:'#2980b9',label:'Frühjahr'},{start:6,end:6,color:'#2980b9',label:'Sommer'}], prune:[{start:3,end:3,color:'#27ae60',label:'Frühjahrsschnitt'}], misc:[] },
   { id:7,  emoji:'🌲', name:'Lebensbaum',         latin:'Thuja occidentalis',   typ:'Nadelbaum', standort:'Hecke',    bluete:'–',       farbe:'–',          alter:'7 J.',  temp:'-30°C', lastCut:'Jun 2023',    lastFert:'–',            notes:'Schnitt zweimal jährlich. Nicht zu stark zurückschneiden.',
-    bloom:[], fertilize:[], prune:[{start:6,end:6,color:'#27ae60',label:'Formschnitt'},{start:8,end:8,color:'#27ae60',label:'Nachschnitt'}], misc:[] },
+    bloom:[], growth:[{start:4,end:9,color:'#2e7d32',label:'Wachstum'}], foliage:[{start:1,end:12,color:'#2d5a1b',label:'Immergrün'}], fertilize:[], prune:[{start:6,end:6,color:'#27ae60',label:'Formschnitt'},{start:8,end:8,color:'#27ae60',label:'Nachschnitt'}], misc:[] },
   { id:8,  emoji:'🍂', name:'Gingko',             latin:'Ginkgo biloba',        typ:'Baum',      standort:'Einfahrt', bluete:'–',       farbe:'Goldgelb',   alter:'10 J.', temp:'-30°C', lastCut:'–',           lastFert:'–',            notes:'Sehr pflegeleicht. Herbstlaub leuchtend goldgelb.',
-    bloom:[], fertilize:[], prune:[], misc:[{start:10,end:11,color:'#e67e22',label:'Herbstlaub'}] },
+    bloom:[], growth:[{start:4,end:10,color:'#2e7d32',label:'Wachstum'}], foliage:[{start:4,end:5,color:'#a8d5a2',label:'Frühjahr'},{start:6,end:9,color:'#1b5e20',label:'Sommer'},{start:10,end:11,color:'#f0c040',label:'Goldgelb'}], fertilize:[], prune:[], misc:[{start:10,end:11,color:'#e67e22',label:'Herbstlaub'}] },
   { id:9,  emoji:'🌺', name:'Päonie',             latin:'Paeonia lactiflora',   typ:'Staude',    standort:'Nordbeet', bluete:'Mai–Jun', farbe:'Rosa/Weiß',  alter:'5 J.',  temp:'-25°C', lastCut:'Nov 2023',    lastFert:'Mär 2024',     notes:'Schwere Blüten brauchen Stütze. Nicht zu tief pflanzen.',
-    bloom:[{start:5,end:6,color:'#e8a0b0',label:'Rosa/Weiß'}], fertilize:[{start:3,end:3,color:'#2980b9',label:'Frühjahr'}], prune:[{start:11,end:11,color:'#27ae60',label:'Rückschnitt'}], misc:[{start:4,end:5,color:'#7f8c8d',label:'Stützen'}] },
+    bloom:[{start:5,end:6,color:'#e8a0b0',label:'Rosa/Weiß'}], growth:[{start:4,end:9,color:'#2e7d32',label:'Wachstum'}], foliage:[{start:4,end:5,color:'#a8d5a2',label:'Frühjahr'},{start:6,end:9,color:'#1b5e20',label:'Sommer'},{start:10,end:10,color:'#c0793a',label:'Herbst'}], fertilize:[{start:3,end:3,color:'#2980b9',label:'Frühjahr'}], prune:[{start:11,end:11,color:'#27ae60',label:'Rückschnitt'}], misc:[{start:4,end:5,color:'#7f8c8d',label:'Stützen'}] },
 ];
 
 let currentView = 'bloom';
