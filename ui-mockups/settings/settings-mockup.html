@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GardenAssist – Einstellungen</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --green-deep:#2d4a2d;--green-mid:#4a7c4a;--green-light:#7aab6a;
+  --green-pale:#c8dfc0;--green-mist:#eef4eb;--cream:#f8f4ee;
+  --warm-white:#fdfbf8;--red-warn:#c0392b;--red-soft:#fdf0ee;
+  --text-dark:#1e2e1e;--text-mid:#4a5e4a;--text-light:#8a9e8a;
+  --border:#dde8d8;--shadow:0 2px 12px rgba(45,74,45,.10);--shadow-lg:0 8px 32px rgba(45,74,45,.15);
+  --sc-bloom:#c0392b;--sc-growth:#2e7d32;--sc-foliage:#1b5e20;
+  --sc-prune:#27ae60;--sc-fertilize:#2980b9;--sc-misc:#7f8c8d;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text-dark);height:100vh;display:flex;flex-direction:column;overflow:hidden;font-size:13px}
+
+/* NAV */
+nav{background:var(--green-deep);display:flex;align-items:center;height:52px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.nav-logo{font-family:'Playfair Display',serif;font-size:20px;color:var(--green-pale);display:flex;align-items:center;gap:8px;width:240px;flex-shrink:0;padding:0 20px;border-right:1px solid rgba(255,255,255,.1);height:100%}
+.nav-links{display:flex;gap:2px;flex:1;padding:0 12px;align-items:center}
+.nav-link{color:var(--green-pale);padding:0 14px;height:36px;line-height:1;border-radius:6px;font-size:13px;opacity:.75;cursor:pointer;border:none;background:none;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.nav-link:hover{opacity:1;background:rgba(255,255,255,.1)}
+.nav-link.active{opacity:1;background:rgba(255,255,255,.15);font-weight:500}
+.nav-right{padding-right:16px}
+.nav-icon-btn{color:var(--green-pale);background:none;border:none;cursor:pointer;font-size:18px;opacity:1}
+
+/* BODY */
+.body-wrap{display:flex;flex:1;overflow:hidden}
+.settings-wrap{flex:1;overflow-y:auto;padding:28px 32px;max-width:860px}
+.page-title{font-family:'Playfair Display',serif;font-size:24px;font-weight:600;color:var(--green-deep);margin-bottom:6px}
+.page-subtitle{font-size:13px;color:var(--text-light);margin-bottom:28px}
+
+/* SETTINGS SECTIONS */
+.settings-section{background:var(--warm-white);border:1.5px solid var(--border);border-radius:12px;margin-bottom:16px;overflow:hidden}
+.ss-header{padding:14px 20px;display:flex;align-items:center;gap:12px;cursor:pointer;user-select:none;transition:background .15s}
+.ss-header:hover{background:var(--green-mist)}
+.ss-icon{font-size:20px;flex-shrink:0}
+.ss-title-wrap{flex:1}
+.ss-title{font-size:14px;font-weight:600;color:var(--text-dark)}
+.ss-subtitle{font-size:11px;color:var(--text-light);margin-top:2px}
+.ss-toggle{font-size:11px;color:var(--text-light);transition:transform .2s;margin-left:auto}
+.settings-section.open .ss-toggle{transform:rotate(180deg)}
+.ss-body{display:none;padding:0 20px 18px;border-top:1px solid var(--border)}
+.settings-section.open .ss-body{display:block}
+
+/* FIELDS */
+.field-row{margin-bottom:14px}
+.field-row:last-child{margin-bottom:0}
+.field-label{font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--text-light);margin-bottom:6px;display:block}
+.field-input,.field-select{width:100%;background:var(--green-mist);border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text-dark);outline:none;transition:border-color .2s}
+.field-input:focus,.field-select:focus{border-color:var(--green-mid);background:white}
+.field-input.mono{font-family:monospace;letter-spacing:.5px}
+.field-2col{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.field-hint{font-size:11px;color:var(--text-light);margin-top:5px;line-height:1.4}
+
+/* SECTION DIVIDER */
+.ss-divider{height:1px;background:var(--border);margin:16px 0}
+.ss-group-label{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text-light);margin-bottom:10px;margin-top:16px}
+
+/* GARDEN PLAN UPLOAD */
+.plan-upload-area{background:var(--green-mist);border:2px dashed var(--border);border-radius:10px;padding:28px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:10px}
+.plan-upload-area:hover{border-color:var(--green-mid);background:white}
+.plan-upload-area.has-file{background:white;border-style:solid;border-color:var(--green-mid)}
+.plan-upload-icon{font-size:32px;margin-bottom:8px}
+.plan-upload-title{font-size:14px;font-weight:600;color:var(--text-dark);margin-bottom:4px}
+.plan-upload-sub{font-size:11px;color:var(--text-light)}
+.plan-preview{display:flex;align-items:center;gap:12px;background:var(--green-mist);border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:10px}
+.plan-preview-thumb{width:60px;height:44px;background:#c8d8b8;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;overflow:hidden}
+.plan-preview-info{flex:1}
+.plan-preview-name{font-size:13px;font-weight:500;color:var(--text-dark)}
+.plan-preview-meta{font-size:11px;color:var(--text-light);margin-top:2px}
+.plan-preview-del{background:none;border:none;cursor:pointer;color:var(--text-light);font-size:16px;flex-shrink:0}
+.plan-preview-del:hover{color:var(--red-warn)}
+
+/* COLOR PRESET LISTS */
+.preset-list{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.preset-entry{display:flex;align-items:center;gap:8px;background:var(--green-mist);border:1.5px solid var(--border);border-radius:8px;padding:7px 10px}
+.preset-swatch{width:28px;height:28px;border-radius:6px;border:2px solid rgba(0,0,0,.1);flex-shrink:0;cursor:pointer;transition:transform .15s}
+.preset-swatch:hover{transform:scale(1.08)}
+.preset-name-input{flex:1;background:white;border:1.5px solid var(--border);border-radius:6px;padding:5px 9px;font-size:12.5px;font-family:'DM Sans',sans-serif;color:var(--text-dark);outline:none}
+.preset-name-input:focus{border-color:var(--green-mid)}
+.preset-color-input{width:36px;height:30px;border:1.5px solid var(--border);border-radius:6px;cursor:pointer;padding:1px;background:none;flex-shrink:0}
+.preset-delete{background:none;border:none;cursor:pointer;color:var(--text-light);font-size:14px;line-height:1;flex-shrink:0}
+.preset-delete:hover{color:var(--red-warn)}
+
+/* ZONE LIST */
+.zone-list{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.zone-entry{display:flex;align-items:center;gap:8px;background:var(--green-mist);border:1.5px solid var(--border);border-radius:8px;padding:7px 10px}
+.zone-id{font-size:10px;font-weight:700;color:var(--text-light);min-width:20px;text-align:center}
+.zone-name-input{flex:1;background:white;border:1.5px solid var(--border);border-radius:6px;padding:5px 9px;font-size:12.5px;font-family:'DM Sans',sans-serif;color:var(--text-dark);outline:none}
+.zone-name-input:focus{border-color:var(--green-mid)}
+.zone-delete{background:none;border:none;cursor:pointer;color:var(--text-light);font-size:14px;line-height:1;flex-shrink:0}
+.zone-delete:hover{color:var(--red-warn)}
+
+/* CATEGORY LIST */
+.cat-grid{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.cat-chip{display:flex;align-items:center;gap:4px;background:var(--green-mist);border:1.5px solid var(--border);border-radius:20px;padding:4px 10px 4px 12px;font-size:12px;color:var(--text-mid)}
+.cat-chip-del{background:none;border:none;cursor:pointer;color:var(--text-light);font-size:12px;line-height:1;padding:0}
+.cat-chip-del:hover{color:var(--red-warn)}
+.cat-add-row{display:flex;gap:8px}
+.cat-add-input{flex:1;background:var(--green-mist);border:1.5px solid var(--border);border-radius:8px;padding:7px 11px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text-dark);outline:none}
+.cat-add-input:focus{border-color:var(--green-mid);background:white}
+
+/* BUTTONS */
+.btn-row{display:flex;gap:8px;margin-top:14px}
+.btn{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;border:1.5px solid var(--border);background:none;color:var(--text-mid);transition:all .15s}
+.btn:hover{border-color:var(--green-mid);color:var(--green-deep)}
+.btn.primary{background:var(--green-deep);color:white;border-color:var(--green-deep)}
+.btn.primary:hover{background:var(--green-mid)}
+.btn.danger{color:var(--red-warn);border-color:var(--red-warn)}
+.btn.danger:hover{background:var(--red-soft)}
+.add-row-btn{display:flex;align-items:center;gap:6px;background:none;border:1.5px dashed var(--border);border-radius:8px;padding:7px 12px;font-size:12px;font-weight:500;font-family:'DM Sans',sans-serif;color:var(--text-light);cursor:pointer;width:100%;transition:all .15s}
+.add-row-btn:hover{border-color:var(--green-mid);color:var(--green-deep);background:var(--green-mist)}
+
+/* SAVE BAR */
+.save-bar{background:var(--green-deep);padding:12px 32px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;box-shadow:0 -2px 8px rgba(0,0,0,.15)}
+.save-bar-hint{font-size:12px;color:var(--green-pale);opacity:.8}
+.save-bar-btns{display:flex;gap:8px}
+.save-bar-btn{padding:8px 20px;border-radius:8px;font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;border:1.5px solid rgba(255,255,255,.3);background:none;color:var(--green-pale);transition:all .15s}
+.save-bar-btn:hover{background:rgba(255,255,255,.1)}
+.save-bar-btn.primary{background:white;color:var(--green-deep);border-color:white}
+.save-bar-btn.primary:hover{background:var(--green-pale)}
+
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--green-pale);border-radius:3px}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-logo"><span>🌿</span> GardenAssist</div>
+  <div class="nav-links">
+    <button class="nav-link"><span>🏠</span> Dashboard</button>
+    <button class="nav-link"><span>🌱</span> Pflanzen</button>
+    <button class="nav-link"><span>🗓</span> Kalender</button>
+    <button class="nav-link"><span>📔</span> Tagebuch</button>
+  </div>
+  <div class="nav-right"><button class="nav-icon-btn active">⚙️</button></div>
+</nav>
+
+<div class="body-wrap">
+<div class="settings-wrap">
+  <div class="page-title">⚙️ Einstellungen</div>
+  <div class="page-subtitle">Gartenplan, Farben, Zonen und weitere Konfigurationen</div>
+
+  <!-- GARTENPLAN -->
+  <div class="settings-section open" id="ss-plan">
+    <div class="ss-header" onclick="toggleSS('ss-plan')">
+      <span class="ss-icon">🗺️</span>
+      <div class="ss-title-wrap">
+        <div class="ss-title">Gartenplan</div>
+        <div class="ss-subtitle">Grundriss-Bild hochladen, das als Hintergrund des interaktiven Plans dient</div>
+      </div>
+      <span class="ss-toggle">▾</span>
+    </div>
+    <div class="ss-body">
+      <div style="padding-top:14px">
+        <!-- Current file -->
+        <div class="plan-preview" id="planPreview">
+          <div class="plan-preview-thumb">🌿</div>
+          <div class="plan-preview-info">
+            <div class="plan-preview-name">gartenplan.png</div>
+            <div class="plan-preview-meta">2.4 MB · PNG · 3200 × 2400 px · Hochgeladen am 28. Apr 2026</div>
+          </div>
+          <button class="plan-preview-del" onclick="removePlan()" title="Entfernen">✕</button>
+        </div>
+        <div class="plan-upload-area" id="planUpload" onclick="alert('Datei-Dialog öffnet sich …')" style="display:none">
+          <div class="plan-upload-icon">📂</div>
+          <div class="plan-upload-title">Bild hierher ziehen oder klicken</div>
+          <div class="plan-upload-sub">PNG, JPG oder SVG · Empfohlen: min. 2000 px Breite</div>
+        </div>
+        <div class="field-hint">Der Plan wird im Dashboard und im Pflanzen-Edit-Dialog als interaktive Karte angezeigt. Pflanzenpositionen sind als Prozentangaben gespeichert und bleiben beim Ersetzen des Bilds erhalten.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STANDORT -->
+  <div class="settings-section open" id="ss-location">
+    <div class="ss-header" onclick="toggleSS('ss-location')">
+      <span class="ss-icon">📍</span>
+      <div class="ss-title-wrap">
+        <div class="ss-title">Standort</div>
+        <div class="ss-subtitle">Für Wetterdaten und Frostwarnungen</div>
+      </div>
+      <span class="ss-toggle">▾</span>
+    </div>
+    <div class="ss-body">
+      <div style="padding-top:14px">
+        <div class="field-2col">
+          <div>
+            <label class="field-label">Ort / Stadt</label>
+            <input class="field-input" type="text" value="Köln">
+          </div>
+          <div>
+            <label class="field-label">Postleitzahl</label>
+            <input class="field-input" type="text" value="50667">
+          </div>
+        </div>
+        <div class="field-hint">Wird für Wetterwarnungen (Frost, Trockenheit) und den Wetter-Widget im Dashboard verwendet. Wetterintegration ist für eine zukünftige Version geplant.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BEWÄSSERUNGSZONEN -->
+  <div class="settings-section open" id="ss-zones">
+    <div class="ss-header" onclick="toggleSS('ss-zones')">
+      <span class="ss-icon">💧</span>
+      <div class="ss-title-wrap">
+        <div class="ss-title">Bewässerungszonen</div>
+        <div class="ss-subtitle">Definiere die Zonen deiner Bewässerungsanlage</div>
+      </div>
+      <span class="ss-toggle">▾</span>
+    </div>
+    <div class="ss-body">
+      <div style="padding-top:14px">
+        <div class="zone-list" id="zone-list">
+          <div class="zone-entry">
+            <span class="zone-id">A</span>
+            <input class="zone-name-input" type="text" value="Beet West">
+            <button class="zone-delete" onclick="deleteZone(this)">✕</button>
+          </div>
+          <div class="zone-entry">
+            <span class="zone-id">B</span>
+            <input class="zone-name-input" type="text" value="Beet Ost">
+            <button class="zone-delete" onclick="deleteZone(this)">✕</button>
+          </div>
+          <div class="zone-entry">
+            <span class="zone-id">C</span>
+            <input class="zone-name-input" type="text" value="Rasen">
+            <button class="zone-delete" onclick="deleteZone(this)">✕</button>
+          </div>
+          <div class="zone-entry">
+            <span class="zone-id">D</span>
+            <input class="zone-name-input" type="text" value="Terrasse">
+            <button class="zone-delete" onclick="deleteZone(this)">✕</button>
+          </div>
+          <div class="zone-entry">
+            <span class="zone-id">E</span>
+            <input class="zone-name-input" type="text" value="Einfahrt">
+            <button class="zone-delete" onclick="deleteZone(this)">✕</button>
+          </div>
+        </div>
+        <button class="add-row-btn" onclick="addZone()">＋ Zone hinzufügen</button>
+        <div class="field-hint" style="margin-top:8px">Zonennamen erscheinen im Pflanzendialog als Dropdown. Buchstaben werden automatisch vergeben.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PFLANZENKATEGORIEN -->
+  <div class="settings-section open" id="ss-cats">
+    <div class="ss-header" onclick="toggleSS('ss-cats')">
+      <span class="ss-icon">📂</span>
+      <div class="ss-title-wrap">
+        <div class="ss-title">Pflanzenkategorien</div>
+        <div class="ss-subtitle">Verfügbare Kategorien im Pflanzendialog (Dropdown)</div>
+      </div>
+      <span class="ss-toggle">▾</span>
+    </div>
+    <div class="ss-body">
+      <div style="padding-top:14px">
+        <div class="zone-list" id="cat-list">
+          <div class="zone-entry"><input class="zone-name-input" type="text" value="Rosen"><button class="zone-delete" onclick="this.closest('.zone-entry').remove()">✕</button></div>
+          <div class="zone-entry"><input class="zone-name-input" type="text" value="Obstbäume"><button class="zone-delete" onclick="this.closest('.zone-entry').remove()">✕</button></div>
+          <div class="zone-entry"><input class="zone-name-input" type="text" value="Beerensträucher"><button class="zone-delete" onclick="this.closest('.zone-entry').remove()">✕</button></div>
+          <div class="zone-entry"><input class="zone-name-input" type="text" value="Heckenpflanzen"><button class="zone-delete" onclick="this.closest('.zone-entry').remove()">✕</button></div>
+          <div class="zone-entry"><input class="zone-name-input" type="text" value="Stauden"><button class="zone-delete" onclick="this.closest('.zone-entry').remove()">✕</button></div>
+          <div class="zone-entry"><input class="zone-name-input" type="text" value="Einjährige"><button class="zone-delete" onclick="this.closest('.zone-entry').remove()">✕</button></div>
+          <div class="zone-entry"><input class="zone-name-input" type="text" value="Kräuter"><button class="zone-delete" onclick="this.closest('.zone-entry').remove()">✕</button></div>
+          <div class="zone-entry"><input class="zone-name-input" type="text" value="Ziersträucher"><button class="zone-delete" onclick="this.closest('.zone-entry').remove()">✕</button></div>
+          <div class="zone-entry"><input class="zone-name-input" type="text" value="Nadelbäume"><button class="zone-delete" onclick="this.closest('.zone-entry').remove()">✕</button></div>
+        </div>
+        <button class="add-row-btn" onclick="addCat()">＋ Kategorie hinzufügen</button>
+        <div class="field-hint" style="margin-top:8px">Diese Kategorien erscheinen im Pflanzendialog als Dropdown-Auswahl.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FARBPRESETS -->
+  <div class="settings-section open" id="ss-colors">
+    <div class="ss-header" onclick="toggleSS('ss-colors')">
+      <span class="ss-icon">🎨</span>
+      <div class="ss-title-wrap">
+        <div class="ss-title">Farb-Presets</div>
+        <div class="ss-subtitle">Vorauswahl der Farben in Blütezeiten, Blätter und Sonstiges</div>
+      </div>
+      <span class="ss-toggle">▾</span>
+    </div>
+    <div class="ss-body">
+      <div style="padding-top:14px">
+
+        <div class="ss-group-label" style="margin-top:0">🌸 Blütezeiten</div>
+        <div class="preset-list" id="presets-bloom">
+          <div class="preset-entry"><div class="preset-swatch" style="background:#c0392b"></div><input class="preset-name-input" value="Dunkelrot"><input type="color" class="preset-color-input" value="#c0392b"><button class="preset-delete" onclick="this.closest('.preset-entry').remove()">✕</button></div>
+          <div class="preset-entry"><div class="preset-swatch" style="background:#e74c3c"></div><input class="preset-name-input" value="Rot"><input type="color" class="preset-color-input" value="#e74c3c"><button class="preset-delete" onclick="this.closest('.preset-entry').remove()">✕</button></div>
+          <div class="preset-entry"><div class="preset-swatch" style="background:#ff6b9d"></div><input class="preset-name-input" value="Korallrot"><input type="color" class="preset-color-input" value="#ff6b9d"><button class="preset-delete" onclick="this.closest('.preset-entry').remove()">✕</button></div>
+          <div class="preset-entry"><div class="preset-swatch" style="background:#e91e8c"></div><input class="preset-name-input" value="Pink"><input type="color" class="preset-color-input" value="#e91e8c"><button class="preset-delete" onclick="this.closest('.preset-entry').remove()">✕</button></div>
+          <div class="preset-entry"><div class="preset-swatch" style="background:#9b59b6"></div><input class="preset-name-input" value="Lila"><input type="color" class="preset-color-input" value="#9b59b6"><button class="preset-delete" onclick="this.closest('.preset-entry').remove()">✕</button></div>
+          <div class="preset-entry"><div class="preset-swatch" style="background:#f39c12"></div><input class="preset-name-input" value="Orange"><input type="color" class="preset-color-input" value="#f39c12"><button class="preset-delete" onclick="this.closest('.preset-entry').remove()">✕</button></div>
+          <div class="preset-entry"><div class="preset-swatch" style="background:#f8c8d0"></div><input class="preset-name-input" value="Zartrosa"><input type="color" class="preset-color-input" value="#f8c8d0"><button class="preset-delete" onclick="this.closest('.preset-entry').remove()">✕</button></div>
+          <div class="preset-entry"><div class="preset-swatch" style="background:#ffffff;border:1.5px solid var(--border)"></div><input class="preset-name-input" value="Weiß"><input type="color" class="preset-color-input" value="#ffffff"><button class="preset-delete" onclick="this.closest('.preset-entry').remove()">✕</button></div>
+        </div>
+        <button class="add-row-btn" onclick="addPreset('presets-bloom')">＋ Farbe hinzufügen</button>
+
+        <div class="ss-divider"></div>
+        <div class="ss-group-label">🍃 Blätter</div>
+        <div class="preset-list" id="presets-foliage">
+          <div class="preset-entry"><div class="preset-swatch" style="background:#a8d5a2"></div><input class="preset-name-input" value="Frühjahrsgrün"><input type="color" class="preset-color-input" value="#a8d5a2"><button class="preset-delete" onclick="this.closest('.preset-entry').remove()">✕</button></div>
+          <div class="preset-entry"><div class="preset-swatch" style="background:#1b5e20"></div><input class="preset-name-input" value="Dunkelgrün"><input type="color" class="preset-color-input" value="#1b5e20"><button class="preset-delete" onclick="this.closest('.preset-entry').remove()">✕</button></div>
+          <div class="preset-entry"><div class="preset-swatch" style="background:#2d5a1b"></div><input class="preset-name-input" value="Immergrün"><input type="color" class="preset-color-input" value="#2d5a1b"><button class="preset-delete" onclick="this.closest('.preset-entry').remove()">✕</button></div>
+          <div class="preset-entry"><div class="preset-swatch" style="background:#c0392b"></div><input class="preset-name-input" value="Herbstrot"><input type="color" class="preset-color-input" value="#c0392b"><button class="preset-delete" onclick="this.closest('.preset-entry').remove()">✕</button></div>
+          <div class="preset-entry"><div class="preset-swatch" style="background:#c0793a"></div><input class="preset-name-input" value="Herbstorange"><input type="color" class="preset-color-input" value="#c0793a"><button class="preset-delete" onclick="this.closest('.preset-entry').remove()">✕</button></div>
+          <div class="preset-entry"><div class="preset-swatch" style="background:#f0c040"></div><input class="preset-name-input" value="Herbstgold"><input type="color" class="preset-color-input" value="#f0c040"><button class="preset-delete" onclick="this.closest('.preset-entry').remove()">✕</button></div>
+          <div class="preset-entry"><div class="preset-swatch" style="background:#8b7355"></div><input class="preset-name-input" value="Herbstbraun"><input type="color" class="preset-color-input" value="#8b7355"><button class="preset-delete" onclick="this.closest('.preset-entry').remove()">✕</button></div>
+        </div>
+        <button class="add-row-btn" onclick="addPreset('presets-foliage')">＋ Farbe hinzufügen</button>
+
+        <div class="ss-divider"></div>
+        <div class="ss-group-label">📋 Sonstiges</div>
+        <div class="preset-list" id="presets-misc">
+          <div class="preset-entry"><div class="preset-swatch" style="background:#e67e22"></div><input class="preset-name-input" value="Orange"><input type="color" class="preset-color-input" value="#e67e22"><button class="preset-delete" onclick="this.closest('.preset-entry').remove()">✕</button></div>
+          <div class="preset-entry"><div class="preset-swatch" style="background:#7f8c8d"></div><input class="preset-name-input" value="Grau"><input type="color" class="preset-color-input" value="#7f8c8d"><button class="preset-delete" onclick="this.closest('.preset-entry').remove()">✕</button></div>
+          <div class="preset-entry"><div class="preset-swatch" style="background:#3498db"></div><input class="preset-name-input" value="Blau"><input type="color" class="preset-color-input" value="#3498db"><button class="preset-delete" onclick="this.closest('.preset-entry').remove()">✕</button></div>
+          <div class="preset-entry"><div class="preset-swatch" style="background:#f1c40f"></div><input class="preset-name-input" value="Gelb"><input type="color" class="preset-color-input" value="#f1c40f"><button class="preset-delete" onclick="this.closest('.preset-entry').remove()">✕</button></div>
+        </div>
+        <button class="add-row-btn" onclick="addPreset('presets-misc')">＋ Farbe hinzufügen</button>
+        <div class="field-hint" style="margin-top:10px">Diese Presets erscheinen im Pflanzendialog beim Bearbeiten von Blütezeiten, Blättern und sonstigen Zeiträumen.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KI-ASSISTENT -->
+  <div class="settings-section" id="ss-ai">
+    <div class="ss-header" onclick="toggleSS('ss-ai')">
+      <span class="ss-icon">🤖</span>
+      <div class="ss-title-wrap">
+        <div class="ss-title">KI-Assistent</div>
+        <div class="ss-subtitle">API-Schlüssel und Modell-Konfiguration</div>
+      </div>
+      <span class="ss-toggle">▾</span>
+    </div>
+    <div class="ss-body">
+      <div style="padding-top:14px">
+        <div class="field-row">
+          <label class="field-label">Anthropic API-Schlüssel</label>
+          <input class="field-input mono" type="password" value="sk-ant-api03-••••••••••••••••••••••••••" placeholder="sk-ant-…">
+          <div class="field-hint">Wird nur lokal gespeichert und nie übertragen. Erhalte deinen Schlüssel unter console.anthropic.com.</div>
+        </div>
+        <div class="field-row">
+          <label class="field-label">Modell</label>
+          <select class="field-select">
+            <option selected>claude-sonnet-4-6 (empfohlen)</option>
+            <option>claude-opus-4-6 (leistungsstärker, langsamer)</option>
+            <option>claude-haiku-4-5 (schneller, günstig)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DATEN & BACKUP -->
+  <div class="settings-section" id="ss-data">
+    <div class="ss-header" onclick="toggleSS('ss-data')">
+      <span class="ss-icon">💾</span>
+      <div class="ss-title-wrap">
+        <div class="ss-title">Daten &amp; Backup</div>
+        <div class="ss-subtitle">Gartendaten exportieren, importieren oder zurücksetzen</div>
+      </div>
+      <span class="ss-toggle">▾</span>
+    </div>
+    <div class="ss-body">
+      <div style="padding-top:14px">
+        <div class="ss-group-label" style="margin-top:0">Export</div>
+        <div class="btn-row" style="margin-top:0">
+          <button class="btn" onclick="alert('Export wird vorbereitet …')">📥 Alle Daten als JSON exportieren</button>
+          <button class="btn" onclick="alert('CSV-Export …')">📄 Pflanzenliste als CSV</button>
+        </div>
+        <div class="ss-divider"></div>
+        <div class="ss-group-label">Import</div>
+        <div class="btn-row" style="margin-top:0">
+          <button class="btn" onclick="alert('Datei auswählen …')">📤 JSON importieren</button>
+        </div>
+        <div class="field-hint">Beim Import werden bestehende Daten zusammengeführt, nicht überschrieben.</div>
+        <div class="ss-divider"></div>
+        <div class="ss-group-label">Zurücksetzen</div>
+        <div class="btn-row" style="margin-top:0">
+          <button class="btn danger" onclick="if(confirm('Wirklich alle Daten löschen?')) alert('Zurückgesetzt.')">⚠️ Alle Daten löschen</button>
+        </div>
+        <div class="field-hint">Dieser Vorgang kann nicht rückgängig gemacht werden. Erstelle zuerst einen Export.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- SAVE BAR -->
+<div class="save-bar">
+  <span class="save-bar-hint">Änderungen werden erst nach dem Speichern übernommen</span>
+  <div class="save-bar-btns">
+    <button class="save-bar-btn" onclick="alert('Verworfen')">Verwerfen</button>
+    <button class="save-bar-btn primary" onclick="alert('Gespeichert!')">Speichern</button>
+  </div>
+</div>
+
+<script>
+function toggleSS(id){
+  document.getElementById(id).classList.toggle('open');
+}
+
+// Color preset live sync: color picker → swatch + keeps swatch updated
+document.addEventListener('input', e=>{
+  if(e.target.classList.contains('preset-color-input')){
+    const swatch=e.target.closest('.preset-entry').querySelector('.preset-swatch');
+    swatch.style.background=e.target.value;
+  }
+});
+
+function addPreset(listId){
+  const list=document.getElementById(listId);
+  const color='#'+Math.floor(Math.random()*0xffffff).toString(16).padStart(6,'0');
+  const entry=document.createElement('div'); entry.className='preset-entry';
+  entry.innerHTML=`<div class="preset-swatch" style="background:${color}"></div><input class="preset-name-input" placeholder="Farbname"><input type="color" class="preset-color-input" value="${color}"><button class="preset-delete" onclick="this.closest('.preset-entry').remove()">✕</button>`;
+  list.appendChild(entry);
+  entry.querySelector('.preset-name-input').focus();
+}
+
+// Zone list
+const ZONE_LETTERS='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+function updateZoneIds(){
+  document.querySelectorAll('#zone-list .zone-entry').forEach((z,i)=>{
+    z.querySelector('.zone-id').textContent=ZONE_LETTERS[i]||i+1;
+  });
+}
+function addZone(){
+  const list=document.getElementById('zone-list');
+  const n=list.children.length;
+  const entry=document.createElement('div'); entry.className='zone-entry';
+  entry.innerHTML=`<span class="zone-id">${ZONE_LETTERS[n]||n+1}</span><input class="zone-name-input" type="text" placeholder="Zonenname …"><button class="zone-delete" onclick="deleteZone(this)">✕</button>`;
+  list.appendChild(entry);
+  entry.querySelector('.zone-name-input').focus();
+}
+function deleteZone(btn){btn.closest('.zone-entry').remove(); updateZoneIds();}
+
+// Category chips
+function addCat(){
+  const list=document.getElementById('cat-list');
+  const entry=document.createElement('div'); entry.className='zone-entry';
+  entry.innerHTML=`<input class="zone-name-input" type="text" placeholder="Kategoriename …"><button class="zone-delete" onclick="this.closest('.zone-entry').remove()">✕</button>`;
+  list.appendChild(entry);
+  entry.querySelector('.zone-name-input').focus();
+}
+
+// Garden plan toggle
+function removePlan(){
+  document.getElementById('planPreview').style.display='none';
+  document.getElementById('planUpload').style.display='block';
+}
+</script>
+</body>
+</html>

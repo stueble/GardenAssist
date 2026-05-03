@@ -251,10 +251,10 @@ nav{background:var(--green-deep);display:flex;align-items:center;height:52px;fle
           <textarea class="field-textarea">Klassischer Gartenstrauch mit duftenden Blüten. Mehrjährig, pflegebedürftig aber dankbar.</textarea>
         </div>
 
-        <!-- TYP + KATEGORIE + LIFECYCLE -->
+        <!-- KATEGORIE + HERKUNFTSTYP + LIFECYCLE -->
         <div class="field-3col">
           <div>
-            <div class="field-label">Typ</div>
+            <div class="field-label">Kategorie</div>
             <select class="field-select" id="typeSelect" onchange="autoIcon()">
               <option selected>Strauch</option><option>Baum</option><option>Staude</option>
               <option>Einjährig</option><option>Nadelbaum</option><option>Obstbaum</option>
@@ -328,34 +328,19 @@ nav{background:var(--green-deep);display:flex;align-items:center;height:52px;fle
         </div>
 
         <div class="field-row">
+          <label style="display:flex;align-items:flex-start;gap:10px;background:var(--green-mist);border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;cursor:pointer">
+            <input type="checkbox" style="margin-top:2px;width:16px;height:16px;accent-color:var(--green-deep);flex-shrink:0">
+            <div>
+              <div style="font-size:13px;font-weight:500;color:var(--text-dark)">Geschützt / Indoor</div>
+              <div style="font-size:11px;color:var(--text-light);margin-top:2px">Keine Frost- oder Trockenwarnungen für diese Pflanze</div>
+            </div>
+          </label>
+        </div>
+
+        <div class="field-row">
           <div class="field-label">Pflegehinweise</div>
           <textarea class="field-textarea">Nach Blüte entblättern. Kein Stickstoff nach August. Winterschutz ab November empfohlen.</textarea>
         </div>
-      </div>
-    </div>
-
-    <!-- BILDER -->
-    <div class="edit-section open" id="sec-images">
-      <div class="edit-section-header" onclick="toggleSection('sec-images')">
-        <div class="section-accent" style="background:#8b6f47"></div>
-        <div class="edit-section-title">Bilder <span class="section-count" id="cnt-images">2</span></div>
-        <span class="edit-section-toggle">▾</span>
-      </div>
-      <div class="edit-section-body">
-        <div id="image-list" style="display:flex;flex-direction:column;gap:7px;margin-bottom:10px">
-          <div class="img-entry">
-            <div class="img-thumb"><span style="font-size:24px">🌹</span></div>
-            <select class="img-type-select"><option selected>Pflanze</option><option>Blüte</option><option>Blatt</option></select>
-            <button class="img-delete" onclick="this.closest('.img-entry').remove();updateImageCount()">✕</button>
-          </div>
-          <div class="img-entry">
-            <div class="img-thumb"><span style="font-size:24px">📷</span></div>
-            <select class="img-type-select"><option>Pflanze</option><option selected>Blüte</option><option>Blatt</option></select>
-            <button class="img-delete" onclick="this.closest('.img-entry').remove();updateImageCount()">✕</button>
-          </div>
-        </div>
-        <button class="add-entry-btn" onclick="addImage()">＋ Bild hinzufügen</button>
-        <div style="font-size:11px;color:var(--text-light);margin-top:8px">Das erste Bild vom Typ „Pflanze" wird in der Übersicht angezeigt.</div>
       </div>
     </div>
 
@@ -386,6 +371,31 @@ nav{background:var(--green-deep);display:flex;align-items:center;height:52px;fle
           </div>
         </div>
         <button class="add-entry-btn" onclick="addPosition()">＋ Position hinzufügen</button>
+      </div>
+    </div>
+
+    <!-- BILDER -->
+    <div class="edit-section open" id="sec-images">
+      <div class="edit-section-header" onclick="toggleSection('sec-images')">
+        <div class="section-accent" style="background:#8b6f47"></div>
+        <div class="edit-section-title">Bilder <span class="section-count" id="cnt-images">2</span></div>
+        <span class="edit-section-toggle">▾</span>
+      </div>
+      <div class="edit-section-body">
+        <div id="image-list" style="display:flex;flex-direction:column;gap:7px;margin-bottom:10px">
+          <div class="img-entry">
+            <div class="img-thumb"><span style="font-size:24px">🌹</span></div>
+            <select class="img-type-select"><option selected>Pflanze</option><option>Blüte</option><option>Blatt</option></select>
+            <button class="img-delete" onclick="this.closest('.img-entry').remove();updateImageCount()">✕</button>
+          </div>
+          <div class="img-entry">
+            <div class="img-thumb"><span style="font-size:24px">📷</span></div>
+            <select class="img-type-select"><option>Pflanze</option><option selected>Blüte</option><option>Blatt</option></select>
+            <button class="img-delete" onclick="this.closest('.img-entry').remove();updateImageCount()">✕</button>
+          </div>
+        </div>
+        <button class="add-entry-btn" onclick="addImage()">＋ Bild hinzufügen</button>
+        <div style="font-size:11px;color:var(--text-light);margin-top:8px">Das erste Bild vom Typ „Pflanze" wird in der Übersicht angezeigt.</div>
       </div>
     </div>
 
@@ -712,6 +722,13 @@ function addImage(){
   entry.innerHTML=`<div class="img-thumb" title="Bild hochladen"><span style="font-size:24px">📷</span></div><select class="img-type-select"><option selected>Pflanze</option><option>Blüte</option><option>Blatt</option></select><button class="img-delete" onclick="this.closest('.img-entry').remove();updateImageCount()">✕</button>`;
   list.appendChild(entry);
   updateImageCount();
+}
+
+function setOrigin(btn){
+  btn.closest('div').querySelectorAll('.seg-btn').forEach(b=>{
+    b.style.background='none'; b.style.color='var(--text-mid)';
+  });
+  btn.style.background='var(--green-deep)'; btn.style.color='white';
 }
 
 function toggleSection(id){document.getElementById(id).classList.toggle('open');}
