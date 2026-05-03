@@ -18,8 +18,8 @@
 body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text-dark);height:100vh;display:flex;flex-direction:column;overflow:hidden;font-size:13px}
 nav{background:var(--green-deep);display:flex;align-items:center;height:52px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.2)}
 .nav-logo{font-family:'Playfair Display',serif;font-size:20px;color:var(--green-pale);letter-spacing:.5px;display:flex;align-items:center;gap:8px;width:280px;flex-shrink:0;padding:0 20px;border-right:1px solid rgba(255,255,255,.1);height:100%}
-.nav-links{display:flex;gap:2px;flex:1;padding:0 12px}
-.nav-link{color:var(--green-pale);padding:6px 14px;border-radius:6px;font-size:13px;opacity:.75;transition:all .2s;cursor:pointer;border:none;background:none;display:flex;align-items:center;gap:6px}
+.nav-links{display:flex;gap:2px;flex:1;padding:0 12px;align-items:center}
+.nav-link{color:var(--green-pale);padding:0 14px;height:36px;line-height:1;border-radius:6px;font-size:13px;opacity:.75;transition:all .2s;cursor:pointer;border:none;background:none;display:flex;align-items:center;gap:6px;white-space:nowrap}
 .nav-link:hover{opacity:1;background:rgba(255,255,255,.1)}
 .nav-link.active{opacity:1;background:rgba(255,255,255,.15);font-weight:500}
 .nav-right{padding-right:16px}
@@ -71,6 +71,7 @@ nav{background:var(--green-deep);display:flex;align-items:center;height:52px;fle
 .zoom-controls{position:absolute;bottom:14px;right:14px;display:flex;flex-direction:column;gap:4px;z-index:50}
 .zoom-btn{width:32px;height:32px;background:rgba(255,255,255,.9);border:1px solid var(--border);border-radius:7px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow);transition:background .15s;backdrop-filter:blur(4px);color:var(--green-deep);font-weight:700}
 .zoom-btn:hover{background:white}
+.zoom-btn.active{background:var(--green-deep);color:white;border-color:var(--green-deep)}
 /* PLANT PINS */
 .plant-pin{position:absolute;cursor:pointer;transform:translate(-50%,-50%);z-index:10}
 .plant-pin-inner{width:38px;height:38px;border-radius:50%;border:3px solid white;box-shadow:0 3px 10px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;font-size:18px;position:relative;transition:box-shadow .2s}
@@ -164,10 +165,10 @@ nav{background:var(--green-deep);display:flex;align-items:center;height:52px;fle
 <nav>
   <div class="nav-logo"><span>🌿</span> GardenAssist</div>
   <div class="nav-links">
-    <button class="nav-link active">🏠 Dashboard</button>
-    <button class="nav-link">🌱 Pflanzen</button>
-    <button class="nav-link">🗓 Kalender</button>
-    <button class="nav-link">📔 Tagebuch</button>
+    <button class="nav-link active"><span>🏠</span> Dashboard</button>
+    <button class="nav-link"><span>🌱</span> Pflanzen</button>
+    <button class="nav-link"><span>🗓</span> Kalender</button>
+    <button class="nav-link"><span>📔</span> Tagebuch</button>
   </div>
   <div class="nav-right"><button class="nav-icon-btn">⚙️</button></div>
 </nav>
@@ -533,10 +534,7 @@ area.addEventListener('mousedown',e=>{
 });
 window.addEventListener('mousemove',e=>{if(!dragging)return;tx=startTx+(e.clientX-startX);ty=startTy+(e.clientY-startY);applyT(false);});
 window.addEventListener('mouseup',()=>{dragging=false;area.style.cursor='grab';});
-area.addEventListener('wheel',e=>{
-  e.preventDefault();const r=area.getBoundingClientRect();
-  zoomAt(e.clientX-r.left,e.clientY-r.top,e.deltaY<0?1.12:.89);applyT(false);
-},{passive:false});
+// wheel handler set dynamically below based on zoom mode
 let lpd=0;
 area.addEventListener('touchstart',e=>{
   if(e.touches.length===1){dragging=true;startX=e.touches[0].clientX;startY=e.touches[0].clientY;startTx=tx;startTy=ty;}
@@ -552,14 +550,76 @@ area.addEventListener('touchmove',e=>{
   }
 },{passive:false});
 area.addEventListener('touchend',()=>{dragging=false;});
-document.getElementById('zoomFitHeight').addEventListener('click',()=>{
+// ── ZOOM MODE STATE ──
+let modeFitH = false, modeFitW = false;
+
+function applyFitH() {
   const{w,h}=getSize(); scale=h/IMG_H; tx=(w-IMG_W*scale)/2; ty=0; applyT(true);
+}
+function applyFitW() {
+  const{w,h}=getSize(); scale=w/IMG_W; tx=0; ty=(h-IMG_H*scale)/2; applyT(true);
+}
+function applyFitBoth() {
+  const{w,h}=getSize(); scale=1;
+  plan.style.width=w+'px'; plan.style.height=h+'px';
+  plan.style.transition='none';
+  plan.style.transform=`translate(0px,0px) scale(1)`;
+  document.querySelectorAll('.plant-pin').forEach(p=>{p.style.transform=`translate(-50%,-50%) scale(1)`;});
+  return;
+}
+function updateModeButtons() {
+  document.getElementById('zoomFitHeight').classList.toggle('active', modeFitH);
+  document.getElementById('zoomFitWidth').classList.toggle('active', modeFitW);
+}
+function applyCurrentMode(animate) {
+  if (modeFitH && modeFitW) { applyFitBoth(); return; }
+  if (modeFitH) { applyFitH(); return; }
+  if (modeFitW) { applyFitW(); return; }
+  // free mode: just re-apply current transform
+  if (animate !== false) applyT(animate);
+}
+
+document.getElementById('zoomFitHeight').addEventListener('click',()=>{
+  modeFitH = !modeFitH;
+  updateModeButtons();
+  if (modeFitH && modeFitW) { applyFitBoth(); return; }
+  if (modeFitH) applyFitH(); else initPlan();
 });
 document.getElementById('zoomFitWidth').addEventListener('click',()=>{
-  const{w,h}=getSize(); scale=w/IMG_W; tx=0; ty=(h-IMG_H*scale)/2; applyT(true);
+  modeFitW = !modeFitW;
+  updateModeButtons();
+  if (modeFitH && modeFitW) { applyFitBoth(); return; }
+  if (modeFitW) applyFitW(); else initPlan();
 });
-img.addEventListener('load',initPlan);
-window.addEventListener('resize',initPlan);
+
+// Override wheel handler based on mode
+area.removeEventListener('wheel', area._wheelHandler);
+area._wheelHandler = function(e) {
+  e.preventDefault();
+  if (modeFitH && modeFitW) return; // both active: no scroll
+  if (modeFitH) {
+    // scroll left/right
+    tx -= e.deltaY * 1.5; applyT(false); return;
+  }
+  if (modeFitW) {
+    // scroll up/down
+    ty -= e.deltaY * 1.5; applyT(false); return;
+  }
+  // free mode: zoom
+  const r=area.getBoundingClientRect();
+  zoomAt(e.clientX-r.left,e.clientY-r.top,e.deltaY<0?1.12:.89);applyT(false);
+};
+area.addEventListener('wheel', area._wheelHandler, {passive:false});
+
+img.addEventListener('load',()=>{ initPlan(); });
+window.addEventListener('resize',()=>{
+  if (modeFitH || modeFitW) {
+    // re-apply active mode directly, skip initPlan
+    applyCurrentMode(false);
+  } else {
+    initPlan();
+  }
+});
 if(img.complete)initPlan();else setTimeout(initPlan,100);
 </script>
 </body>
