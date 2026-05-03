@@ -8,7 +8,7 @@ updated_date: '2026-05-03'
 
 # UI Concept – Dashboard
 
-**Version:** 0.5  
+**Version:** 0.6  
 **Last updated:** 2026-05-03
 
 ---
@@ -101,7 +101,7 @@ Interactive HTML mockup: `ui-mockups/dashboard/dashboard-mockup.html`
 | **Button ✓ Done** | Green button per todo | Click: item slides out to the left with animation |
 | **Button → Skip** | Gray button per todo | Click: item slides out to the right with animation |
 | **Plant detail panel** (left, below weather) | Full plant profile: images, fact sheet, care history, notes, action buttons | Replaces todo list when a plant pin is clicked; same ✕ close button returns to todo list |
-| **Garden plan** (center) | Image-based layout with plant pins | Pan & zoom via mouse/touch; image loaded from `gartenplan.png`; pins counter-scaled to stay constant size |
+| **Garden plan** (center) | Image uploaded by the user, rendered as a pannable/zoomable layer with plant pins on top | Full pan & zoom (see interactions); image loaded from uploaded file `gartenplan.png` |
 | **Plant pin** | Emoji + ring on the plan surface; red dot indicator for overdue tasks | Hover: tooltip with name, status, next task; first click: opens detail panel; second click on same pin: closes panel |
 | **Zoom buttons ↕ / ↔** | Fixed bottom-right of garden area; toggleable — active button highlighted in dark green | ↕ active: image always scaled to fit available height, auto-updates on window resize; ↔ active: image always scaled to fit available width, auto-updates on window resize; both active: image stretched to fill entire area (distorted); both inactive: free zoom/pan mode; not affected by pan/zoom transform |
 | **Legend** | Fixed bottom-left of garden area | Color key: overdue / current / ok; not affected by pan/zoom transform |
@@ -143,7 +143,7 @@ Interactive HTML mockup: `ui-mockups/dashboard/dashboard-mockup.html`
 
 - **Default** – todo list visible, whole garden plan image visible (Math.min fit), current month highlighted
 - **Plant detail open** – todo list hidden, detail panel visible below weather; selected pin highlighted
-- **Empty state (no todos)** – todo list shows message: "No open tasks — well done! 🌿"
+- **Empty state (no todos)** – todo list stays visible but empty; no special message or hide behavior
 - **Empty state (no garden plan)** – center area shows CTA "Set up garden plan"
 - **Loading state** – skeleton placeholders *(not yet defined)*
 - **Error state** – *(not yet defined)*
@@ -175,10 +175,12 @@ Interactive HTML mockup: `ui-mockups/dashboard/dashboard-mockup.html`
 ## 9. Open Questions
 
 - [ ] Where does weather data come from? Widget is implemented in the mockup but data source (API, mock, manual) is not yet decided.
-- [ ] How is the garden plan image created and updated — free drawing tool, image upload, or structured coordinates?
 - [ ] When the chat opens via todo click, should it auto-populate a message or just set context silently?
-- [ ] How does the left column behave when all todo items are completed — empty state or hide the section?
-- [ ] Monthly band: Is the current month always highlighted, or can the user set a different "active" month?
+
+**Resolved:**
+- [x] Garden plan is uploaded by the user as an image file.
+- [x] When all todos are completed, the list stays visible but empty — no special message or auto-hiding.
+- [x] The current month is always highlighted in the monthly band; the user cannot set a different active month.
 
 ---
 

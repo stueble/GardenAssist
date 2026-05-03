@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GardenAssist – Pflanze bearbeiten</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --green-deep:#2d4a2d;--green-mid:#4a7c4a;--green-light:#7aab6a;
+  --green-pale:#c8dfc0;--green-mist:#eef4eb;--cream:#f8f4ee;
+  --warm-white:#fdfbf8;--red-warn:#c0392b;
+  --text-dark:#1e2e1e;--text-mid:#4a5e4a;--text-light:#8a9e8a;
+  --border:#dde8d8;--shadow:0 2px 12px rgba(45,74,45,.10);--shadow-lg:0 8px 32px rgba(45,74,45,.15);
+  --sc-bloom:#c0392b;--sc-growth:#2e7d32;--sc-foliage:#1b5e20;
+  --sc-prune:#27ae60;--sc-fertilize:#2980b9;--sc-misc:#7f8c8d;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text-dark);height:100vh;display:flex;flex-direction:column;overflow:hidden;font-size:13px}
+nav{background:var(--green-deep);display:flex;align-items:center;height:52px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.nav-logo{font-family:'Playfair Display',serif;font-size:20px;color:var(--green-pale);display:flex;align-items:center;gap:8px;width:240px;flex-shrink:0;padding:0 20px;border-right:1px solid rgba(255,255,255,.1);height:100%}
+.nav-links{display:flex;gap:2px;flex:1;padding:0 12px;align-items:center}
+.nav-link{color:var(--green-pale);padding:0 14px;height:36px;line-height:1;border-radius:6px;font-size:13px;opacity:.75;cursor:pointer;border:none;background:none;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.nav-link:hover{opacity:1;background:rgba(255,255,255,.1)}
+.nav-link.active{opacity:1;background:rgba(255,255,255,.15);font-weight:500}
+.nav-right{padding-right:16px}
+.nav-icon-btn{color:var(--green-pale);background:none;border:none;cursor:pointer;font-size:18px;opacity:.75}
+.body-wrap{display:flex;flex:1;overflow:hidden}
+
+/* ── EDIT PANEL ── */
+.edit-panel{width:360px;min-width:360px;background:var(--warm-white);border-right:2px solid var(--border);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
+.edit-header{padding:13px 18px 11px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--green-deep)}
+.edit-title{font-family:'Playfair Display',serif;font-size:16px;color:var(--green-pale);font-weight:600;display:flex;align-items:center;gap:8px}
+.edit-close{background:rgba(255,255,255,.15);border:none;cursor:pointer;color:var(--green-pale);font-size:12px;padding:5px 10px;border-radius:6px;font-family:'DM Sans',sans-serif;font-weight:500}
+.edit-close:hover{background:rgba(255,255,255,.25)}
+.edit-body{flex:1;overflow-y:auto}
+.edit-actions{display:flex;gap:8px;padding:12px 18px;border-top:2px solid var(--border);flex-shrink:0}
+.btn{padding:9px 18px;border-radius:8px;font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;border:1.5px solid var(--border);background:none;color:var(--text-mid);transition:all .15s;flex:1}
+.btn.primary{background:var(--green-deep);color:white;border-color:var(--green-deep)}
+.btn.primary:hover{background:var(--green-mid)}
+
+/* ── SECTIONS ── */
+.edit-section{border-bottom:1px solid var(--border)}
+.edit-section-header{padding:10px 18px;display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
+.edit-section-header:hover{background:var(--green-mist)}
+.section-accent{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.edit-section-title{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text-light);flex:1;display:flex;align-items:center;gap:8px}
+.section-count{font-size:10px;background:var(--green-mist);color:var(--text-mid);padding:2px 6px;border-radius:10px;font-weight:600}
+.edit-section-toggle{font-size:11px;color:var(--text-light);transition:transform .2s;margin-left:auto}
+.edit-section.open .edit-section-toggle{transform:rotate(180deg)}
+.edit-section-body{display:none;padding:4px 18px 14px}
+.edit-section.open .edit-section-body{display:block}
+
+/* ── FIELDS ── */
+.field-row{margin-bottom:11px}
+.field-label{font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--text-light);margin-bottom:5px}
+.field-input,.field-select{width:100%;background:var(--green-mist);border:1.5px solid var(--border);border-radius:8px;padding:7px 11px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text-dark);outline:none;transition:border-color .2s}
+.field-input:focus,.field-select:focus{border-color:var(--green-mid);background:white}
+.field-textarea{width:100%;background:var(--green-mist);border:1.5px solid var(--border);border-radius:8px;padding:7px 11px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text-dark);outline:none;resize:vertical;min-height:68px;line-height:1.55;transition:border-color .2s}
+.field-textarea:focus{border-color:var(--green-mid);background:white}
+.field-2col{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:11px}
+.field-3col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:11px}
+.ai-filled{border-color:var(--green-mid)!important;background:white!important}
+
+/* ── ICON PICKER ── */
+.icon-row{display:flex;align-items:center;gap:10px;margin-bottom:11px}
+.icon-preview{width:48px;height:48px;border-radius:10px;background:var(--green-mist);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:26px;cursor:pointer;transition:border-color .15s;flex-shrink:0}
+.icon-preview:hover{border-color:var(--green-mid)}
+.icon-auto-info{flex:1}
+.icon-auto-label{font-size:11px;color:var(--text-mid);line-height:1.4}
+.icon-auto-sub{font-size:10px;color:var(--text-light);margin-top:2px}
+.emoji-picker{display:none;flex-wrap:wrap;gap:5px;margin-top:8px;background:white;border:1.5px solid var(--border);border-radius:10px;padding:10px;max-height:120px;overflow-y:auto}
+.emoji-picker.visible{display:flex}
+.emoji-opt{font-size:20px;cursor:pointer;padding:3px 5px;border-radius:6px;transition:background .12s;line-height:1}
+.emoji-opt:hover{background:var(--green-mist)}
+.emoji-opt.selected{background:var(--green-pale)}
+
+/* ── IMAGES ── */
+.img-entry{display:flex;align-items:center;gap:8px;background:var(--green-mist);border:1.5px solid var(--border);border-radius:8px;padding:7px 10px}
+.img-thumb{width:56px;height:56px;border-radius:8px;background:white;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;transition:border-color .15s;font-size:28px}
+.img-thumb:hover{border-color:var(--green-mid)}
+.img-type-select{flex:1;background:white;border:1.5px solid var(--border);border-radius:6px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--text-dark);outline:none}
+.img-type-select:focus{border-color:var(--green-mid)}
+.img-delete{background:none;border:none;cursor:pointer;color:var(--text-light);font-size:13px;line-height:1;flex-shrink:0}
+.img-delete:hover{color:var(--red-warn)}
+
+/* ── POSITIONS ── */
+.positions-list{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.position-row{display:flex;align-items:center;gap:6px;background:var(--green-mist);border:1.5px solid var(--border);border-radius:8px;padding:7px 10px}
+.pos-label{font-size:11px;font-weight:600;color:var(--text-light);min-width:20px}
+.pos-input{flex:1;background:white;border:1.5px solid var(--border);border-radius:6px;padding:4px 8px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--text-dark);outline:none;text-align:center}
+.pos-input:focus{border-color:var(--green-mid)}
+.pos-sep{font-size:12px;color:var(--text-light)}
+.pos-delete{background:none;border:none;cursor:pointer;color:var(--text-light);font-size:13px;line-height:1;flex-shrink:0}
+.pos-delete:hover{color:var(--red-warn)}
+
+/* ── SCHEDULE ENTRIES ── */
+.schedule-entries{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.schedule-entry{background:var(--green-mist);border:1.5px solid var(--border);border-radius:10px;padding:10px 11px}
+.schedule-entry.ai-added{border-color:var(--green-mid);background:#f0faf4}
+.se-top{display:flex;align-items:center;gap:7px;margin-bottom:8px}
+.se-color-wrap{position:relative;flex-shrink:0}
+.se-color-btn{width:22px;height:22px;border-radius:5px;border:2px solid rgba(0,0,0,.12);cursor:pointer;transition:transform .15s}
+.se-color-btn:hover{transform:scale(1.1)}
+.se-range{display:flex;align-items:center;gap:4px;flex:1}
+.week-select{background:white;border:1.5px solid var(--border);border-radius:6px;padding:3px 4px;font-size:11px;font-family:'DM Sans',sans-serif;color:var(--text-dark);outline:none;cursor:pointer;flex:1;min-width:0}
+.week-select:focus{border-color:var(--green-mid)}
+.se-arrow{font-size:11px;color:var(--text-light);flex-shrink:0}
+.ai-badge{font-size:9px;font-weight:700;background:var(--green-pale);color:var(--green-deep);padding:2px 5px;border-radius:4px;flex-shrink:0}
+.se-delete{background:none;border:none;cursor:pointer;color:var(--text-light);font-size:13px;line-height:1;margin-left:auto;flex-shrink:0}
+.se-delete:hover{color:var(--red-warn)}
+.se-fields{display:flex;flex-direction:column;gap:6px}
+.se-label-input{width:100%;background:white;border:1.5px solid var(--border);border-radius:6px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--text-dark);outline:none}
+.se-label-input:focus{border-color:var(--green-mid)}
+.se-notes-textarea{width:100%;background:white;border:1.5px solid var(--border);border-radius:6px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--text-dark);outline:none;resize:vertical;min-height:48px;line-height:1.5}
+.se-notes-textarea:focus{border-color:var(--green-mid)}
+
+/* ── COLOR POPUP ── */
+.color-popup{display:none;position:absolute;top:26px;left:0;background:white;border:1.5px solid var(--border);border-radius:10px;padding:10px;box-shadow:var(--shadow-lg);z-index:100;min-width:250px}
+.native-picker-row{display:flex;align-items:center;gap:8px;border-top:1px solid var(--border);padding-top:8px;margin-top:4px}
+.native-picker-label{font-size:10px;color:var(--text-light);font-weight:600;white-space:nowrap}
+.native-color-input{width:36px;height:28px;border:1.5px solid var(--border);border-radius:6px;cursor:pointer;padding:1px;background:none}
+.native-color-hex{flex:1;border:1.5px solid var(--border);border-radius:6px;padding:3px 6px;font-size:11px;font-family:"DM Sans",sans-serif;outline:none}
+.native-color-hex:focus{border-color:var(--green-mid)}
+.color-popup.visible{display:block}
+.color-swatches{display:flex;flex-wrap:wrap;gap:6px 8px;margin-bottom:10px;align-items:flex-start}
+.color-swatch{width:24px;height:24px;border-radius:4px;cursor:pointer;border:2px solid transparent;transition:all .12px;flex-shrink:0}
+.color-swatch:hover{transform:scale(1.12)}
+.color-swatch.selected{border-color:var(--green-deep);box-shadow:0 0 0 2px var(--green-pale)}
+.color-custom-row{display:flex;align-items:center;gap:6px;border-top:1px solid var(--border);padding-top:7px}
+.color-custom-label{font-size:10px;color:var(--text-light);font-weight:600;white-space:nowrap}
+.color-custom-input{border:1.5px solid var(--border);border-radius:5px;padding:3px 5px;font-size:11px;font-family:'DM Sans',sans-serif;flex:1;outline:none;min-width:0}
+.color-custom-input:focus{border-color:var(--green-mid)}
+.color-preview{width:20px;height:20px;border-radius:4px;border:1px solid var(--border);flex-shrink:0}
+
+.add-entry-btn{display:flex;align-items:center;gap:6px;background:none;border:1.5px dashed var(--border);border-radius:8px;padding:7px 12px;font-size:12px;font-weight:500;font-family:'DM Sans',sans-serif;color:var(--text-light);cursor:pointer;width:100%;transition:all .15s}
+.add-entry-btn:hover{border-color:var(--green-mid);color:var(--green-deep);background:var(--green-mist)}
+
+/* ── CENTER: GARDEN PLAN ── */
+.center{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--green-mist)}
+.zoom-btn{width:32px;height:32px;background:rgba(255,255,255,.9);border:1px solid var(--border);border-radius:7px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow);backdrop-filter:blur(4px);color:var(--green-deep);font-weight:700;transition:background .15s}
+.zoom-btn:hover{background:white}
+.zoom-btn.active{background:var(--green-deep);color:white;border-color:var(--green-deep)}
+.zoom-controls{position:absolute;bottom:14px;right:14px;display:flex;flex-direction:column;gap:4px;z-index:50}
+.garden-area{flex:1;position:relative;overflow:hidden;cursor:grab}
+.garden-area.pick-mode{cursor:crosshair}
+.garden-area:active:not(.pick-mode){cursor:grabbing}
+.garden-plan{position:absolute;transform-origin:0 0}
+.garden-plan-img{display:block;width:100%;height:100%;pointer-events:none}
+.pos-marker{position:absolute;transform:translate(-50%,-50%);z-index:20;pointer-events:none}
+.pos-marker-dot{width:20px;height:20px;border-radius:50%;background:var(--green-deep);border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center}
+.pos-marker-label{font-size:10px;font-weight:700;color:white;line-height:1}
+.pos-marker-ring{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:32px;height:32px;border-radius:50%;border:2px solid rgba(45,74,45,.4);animation:pulse 1.5s ease-out infinite}
+@keyframes pulse{0%{transform:translate(-50%,-50%) scale(1);opacity:.8}100%{transform:translate(-50%,-50%) scale(2.2);opacity:0}}
+
+/* ── CHAT ── */
+.chat-panel{width:310px;min-width:310px;background:var(--warm-white);border-left:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.chat-header{padding:13px 16px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;flex-shrink:0}
+.chat-title{font-family:'Playfair Display',serif;font-size:15px;color:var(--green-deep);font-weight:600;display:flex;align-items:center;gap:8px}
+.chat-context-bar{background:var(--green-mist);border-bottom:1px solid var(--border);padding:7px 14px;font-size:11px;font-weight:600;color:var(--green-deep);display:flex;align-items:center;gap:6px;flex-shrink:0}
+.chat-messages{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+.chat-msg{display:flex;flex-direction:column;gap:3px}
+.chat-bubble{padding:8px 12px;border-radius:12px;font-size:12px;line-height:1.5;max-width:92%}
+.chat-bubble.bot{background:var(--green-mist);color:var(--text-dark);border-radius:4px 12px 12px 12px;align-self:flex-start;border:1px solid var(--border)}
+.chat-bubble.user{background:var(--green-deep);color:var(--green-pale);border-radius:12px 4px 12px 12px;align-self:flex-end}
+.chat-sender{font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--text-light);padding:0 4px}
+.chat-apply-btn{display:inline-flex;align-items:center;gap:5px;margin-top:7px;background:var(--green-pale);color:var(--green-deep);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .15s}
+.chat-apply-btn:hover{background:var(--green-mid);color:white}
+.chat-input-area{padding:10px 12px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0}
+.chat-input{flex:1;background:var(--green-mist);border:1px solid var(--border);border-radius:20px;padding:7px 12px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--text-dark);outline:none}
+.chat-input:focus{border-color:var(--green-mid)}
+.chat-send{background:var(--green-deep);color:white;border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.chat-send:hover{background:var(--green-mid)}
+
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--green-pale);border-radius:3px}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-logo"><span>🌿</span> GardenAssist</div>
+  <div class="nav-links">
+    <button class="nav-link"><span>🏠</span> Dashboard</button>
+    <button class="nav-link active"><span>🌱</span> Pflanzen</button>
+    <button class="nav-link"><span>🗓</span> Kalender</button>
+    <button class="nav-link"><span>📔</span> Tagebuch</button>
+  </div>
+  <div class="nav-right"><button class="nav-icon-btn">⚙️</button></div>
+</nav>
+<div class="body-wrap">
+
+<!-- ═══ EDIT PANEL ═══ -->
+<div class="edit-panel">
+  <div class="edit-header">
+    <div class="edit-title">✏️ Rose bearbeiten</div>
+    <button class="edit-close">✕ Schließen</button>
+  </div>
+  <div class="edit-body">
+
+    <!-- GRUNDDATEN -->
+    <div class="edit-section open" id="sec-basic">
+      <div class="edit-section-header" onclick="toggleSection('sec-basic')">
+        <div class="section-accent" style="background:var(--green-deep)"></div>
+        <div class="edit-section-title">Grunddaten</div>
+        <span class="edit-section-toggle">▾</span>
+      </div>
+      <div class="edit-section-body">
+
+        <!-- ICON -->
+        <div class="field-row">
+          <div class="field-label">Icon</div>
+          <div class="icon-row">
+            <div class="icon-preview" id="iconPreview" onclick="toggleEmojiPicker()" title="Icon ändern">🌹</div>
+            <div class="icon-auto-info">
+              <div class="icon-auto-label">Automatisch: Strauch + Rot → 🌹</div>
+              <div class="icon-auto-sub">Klick zum manuellen Überschreiben</div>
+            </div>
+          </div>
+          <div class="emoji-picker" id="emojiPicker">
+            <span class="emoji-opt selected" onclick="setEmoji('🌹')">🌹</span>
+            <span class="emoji-opt" onclick="setEmoji('🌸')">🌸</span>
+            <span class="emoji-opt" onclick="setEmoji('🌺')">🌺</span>
+            <span class="emoji-opt" onclick="setEmoji('🌻')">🌻</span>
+            <span class="emoji-opt" onclick="setEmoji('🌼')">🌼</span>
+            <span class="emoji-opt" onclick="setEmoji('💐')">💐</span>
+            <span class="emoji-opt" onclick="setEmoji('🌷')">🌷</span>
+            <span class="emoji-opt" onclick="setEmoji('🌿')">🌿</span>
+            <span class="emoji-opt" onclick="setEmoji('🌱')">🌱</span>
+            <span class="emoji-opt" onclick="setEmoji('🌳')">🌳</span>
+            <span class="emoji-opt" onclick="setEmoji('🌲')">🌲</span>
+            <span class="emoji-opt" onclick="setEmoji('🎋')">🎋</span>
+            <span class="emoji-opt" onclick="setEmoji('🍃')">🍃</span>
+            <span class="emoji-opt" onclick="setEmoji('🍂')">🍂</span>
+            <span class="emoji-opt" onclick="setEmoji('🍎')">🍎</span>
+            <span class="emoji-opt" onclick="setEmoji('🍋')">🍋</span>
+            <span class="emoji-opt" onclick="setEmoji('🌵')">🌵</span>
+            <span class="emoji-opt" onclick="setEmoji('🪴')">🪴</span>
+            <span class="emoji-opt" onclick="setEmoji('🌾')">🌾</span>
+            <span class="emoji-opt" onclick="setEmoji('🎍')">🎍</span>
+          </div>
+        </div>
+
+        <!-- NAME + BOTANISCH -->
+        <div class="field-2col">
+          <div><div class="field-label">Name</div><input class="field-input" value="Rose"></div>
+          <div><div class="field-label">Botanisch</div><input class="field-input" value="Rosa"></div>
+        </div>
+
+        <!-- BESCHREIBUNG -->
+        <div class="field-row">
+          <div class="field-label">Beschreibung</div>
+          <textarea class="field-textarea">Klassischer Gartenstrauch mit duftenden Blüten. Mehrjährig, pflegebedürftig aber dankbar.</textarea>
+        </div>
+
+        <!-- TYP + KATEGORIE + LIFECYCLE -->
+        <div class="field-3col">
+          <div>
+            <div class="field-label">Typ</div>
+            <select class="field-select" id="typeSelect" onchange="autoIcon()">
+              <option selected>Strauch</option><option>Baum</option><option>Staude</option>
+              <option>Einjährig</option><option>Nadelbaum</option><option>Obstbaum</option>
+              <option>Kletterpflanze</option><option>Bodendecker</option>
+            </select>
+          </div>
+          <div>
+            <div class="field-label">Herkunftstyp</div>
+            <select class="field-select">
+              <option selected>Native</option>
+              <option>Neophyt</option>
+              <option>Invasiver Neophyt</option>
+            </select>
+          </div>
+          <div>
+            <div class="field-label">Lifecycle</div>
+            <select class="field-select">
+              <option selected>Mehrjährig</option><option>Einjährig</option>
+              <option>Zweijährig</option><option>Immergrün</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- STANDORT + BEWÄSSERUNGSZONE -->
+        <div class="field-2col">
+          <div><div class="field-label">Standort</div><input class="field-input ai-filled" value="Westbeet"></div>
+          <div>
+            <div class="field-label">Bewässerungszone</div>
+            <select class="field-select">
+              <option value="">– keine –</option>
+              <option selected>Zone A – Beet West</option>
+              <option>Zone B – Beet Ost</option>
+              <option>Zone C – Rasen</option>
+              <option>Zone D – Terrasse</option>
+              <option>Zone E – Einfahrt</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- ANSCHAFFUNG + PREIS -->
+        <div class="field-2col">
+          <div><div class="field-label">Anschaffungsdatum</div><input class="field-input" type="date" value="2022-03-15"></div>
+          <div><div class="field-label">Preis (€)</div><input class="field-input" type="number" step="0.01" value="24.90" placeholder="0,00"></div>
+        </div>
+
+        <!-- UMWELT -->
+        <div class="field-3col">
+          <div>
+            <div class="field-label">Sonne</div>
+            <select class="field-select"><option selected>Sonnig</option><option>Halbschattig</option><option>Schattig</option></select>
+          </div>
+          <div>
+            <div class="field-label">Wasser</div>
+            <select class="field-select"><option>Gering</option><option selected>Mittel</option><option>Hoch</option></select>
+          </div>
+          <div>
+            <div class="field-label">Min. Temp.</div>
+            <input class="field-input" value="-15°C">
+          </div>
+        </div>
+
+        <div class="field-2col">
+          <div>
+            <div class="field-label">Boden</div>
+            <select class="field-select"><option selected>Lehmig</option><option>Sandig</option><option>Humusreich</option><option>Kalkhaltig</option><option>Sauer</option></select>
+          </div>
+          <div>
+            <div class="field-label">Gesundheit</div>
+            <select class="field-select"><option selected>Gut</option><option>Beobachten</option><option>Behandlung nötig</option></select>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field-label">Pflegehinweise</div>
+          <textarea class="field-textarea">Nach Blüte entblättern. Kein Stickstoff nach August. Winterschutz ab November empfohlen.</textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- BILDER -->
+    <div class="edit-section open" id="sec-images">
+      <div class="edit-section-header" onclick="toggleSection('sec-images')">
+        <div class="section-accent" style="background:#8b6f47"></div>
+        <div class="edit-section-title">Bilder <span class="section-count" id="cnt-images">2</span></div>
+        <span class="edit-section-toggle">▾</span>
+      </div>
+      <div class="edit-section-body">
+        <div id="image-list" style="display:flex;flex-direction:column;gap:7px;margin-bottom:10px">
+          <div class="img-entry">
+            <div class="img-thumb"><span style="font-size:24px">🌹</span></div>
+            <select class="img-type-select"><option selected>Pflanze</option><option>Blüte</option><option>Blatt</option></select>
+            <button class="img-delete" onclick="this.closest('.img-entry').remove();updateImageCount()">✕</button>
+          </div>
+          <div class="img-entry">
+            <div class="img-thumb"><span style="font-size:24px">📷</span></div>
+            <select class="img-type-select"><option>Pflanze</option><option selected>Blüte</option><option>Blatt</option></select>
+            <button class="img-delete" onclick="this.closest('.img-entry').remove();updateImageCount()">✕</button>
+          </div>
+        </div>
+        <button class="add-entry-btn" onclick="addImage()">＋ Bild hinzufügen</button>
+        <div style="font-size:11px;color:var(--text-light);margin-top:8px">Das erste Bild vom Typ „Pflanze" wird in der Übersicht angezeigt.</div>
+      </div>
+    </div>
+
+    <!-- POSITIONEN -->
+    <div class="edit-section open" id="sec-positions">
+      <div class="edit-section-header" onclick="toggleSection('sec-positions')">
+        <div class="section-accent" style="background:#7d3c98"></div>
+        <div class="edit-section-title">Positionen im Plan <span class="section-count" id="cnt-positions">2</span></div>
+        <span class="edit-section-toggle">▾</span>
+      </div>
+      <div class="edit-section-body">
+        <div style="font-size:11px;color:var(--text-light);margin-bottom:10px;line-height:1.5">Koordinaten auf dem Gartenplan (0–100%). Mehrere Positionen möglich, z.B. bei Reihen oder Gruppen.</div>
+        <button class="plan-mode-btn" id="planModeBtn" onclick="togglePlanMode()" style="margin-bottom:10px;width:100%">📍 Klick-Modus aktivieren</button>
+        <div class="positions-list" id="positions-list">
+          <div class="position-row">
+            <span class="pos-label">1</span>
+            <input class="pos-input" type="number" min="0" max="100" step="0.1" value="8.0" placeholder="X"> <span class="pos-sep">%</span>
+            <span class="pos-sep" style="margin:0 4px">·</span>
+            <input class="pos-input" type="number" min="0" max="100" step="0.1" value="34.0" placeholder="Y"> <span class="pos-sep">%</span>
+            <button class="pos-delete" onclick="this.closest('.position-row').remove();updatePosCnt()">✕</button>
+          </div>
+          <div class="position-row">
+            <span class="pos-label">2</span>
+            <input class="pos-input" type="number" min="0" max="100" step="0.1" value="13.0" placeholder="X"> <span class="pos-sep">%</span>
+            <span class="pos-sep" style="margin:0 4px">·</span>
+            <input class="pos-input" type="number" min="0" max="100" step="0.1" value="37.0" placeholder="Y"> <span class="pos-sep">%</span>
+            <button class="pos-delete" onclick="this.closest('.position-row').remove();updatePosCnt()">✕</button>
+          </div>
+        </div>
+        <button class="add-entry-btn" onclick="addPosition()">＋ Position hinzufügen</button>
+      </div>
+    </div>
+
+    <!-- BLÜTEZEITEN -->
+    <div class="edit-section open" id="sec-bloom">
+      <div class="edit-section-header" onclick="toggleSection('sec-bloom')">
+        <div class="section-accent" style="background:var(--sc-bloom)"></div>
+        <div class="edit-section-title">Blütezeiten <span class="section-count" id="cnt-bloom">1</span></div>
+        <span class="edit-section-toggle">▾</span>
+      </div>
+      <div class="edit-section-body">
+        <div class="schedule-entries" id="entries-bloom"></div>
+        <button class="add-entry-btn" onclick="addEntry('bloom')">＋ Blütezeit hinzufügen</button>
+      </div>
+    </div>
+
+    <!-- WACHSTUM -->
+    <div class="edit-section open" id="sec-growth">
+      <div class="edit-section-header" onclick="toggleSection('sec-growth')">
+        <div class="section-accent" style="background:var(--sc-growth)"></div>
+        <div class="edit-section-title">Wachstum <span class="section-count" id="cnt-growth">1</span></div>
+        <span class="edit-section-toggle">▾</span>
+      </div>
+      <div class="edit-section-body">
+        <div class="schedule-entries" id="entries-growth"></div>
+        <button class="add-entry-btn" onclick="addEntry('growth')">＋ Wachstumsperiode hinzufügen</button>
+      </div>
+    </div>
+
+    <!-- BLÄTTER -->
+    <div class="edit-section" id="sec-foliage">
+      <div class="edit-section-header" onclick="toggleSection('sec-foliage')">
+        <div class="section-accent" style="background:var(--sc-foliage)"></div>
+        <div class="edit-section-title">Blätter <span class="section-count" id="cnt-foliage">3</span></div>
+        <span class="edit-section-toggle">▾</span>
+      </div>
+      <div class="edit-section-body">
+        <div style="font-size:11px;color:var(--text-light);margin-bottom:10px">Keine Einträge = keine Blätter in dieser Zeit (z.B. Laubbäume im Winter).</div>
+        <div class="schedule-entries" id="entries-foliage"></div>
+        <button class="add-entry-btn" onclick="addEntry('foliage')">＋ Blattperiode hinzufügen</button>
+      </div>
+    </div>
+
+    <!-- SCHNITTZEITEN -->
+    <div class="edit-section open" id="sec-prune">
+      <div class="edit-section-header" onclick="toggleSection('sec-prune')">
+        <div class="section-accent" style="background:var(--sc-prune)"></div>
+        <div class="edit-section-title">Schnittzeiten <span class="section-count" id="cnt-prune">2</span></div>
+        <span class="edit-section-toggle">▾</span>
+      </div>
+      <div class="edit-section-body">
+        <div class="schedule-entries" id="entries-prune"></div>
+        <button class="add-entry-btn" onclick="addEntry('prune')">＋ Schnittzeit hinzufügen</button>
+      </div>
+    </div>
+
+    <!-- DÜNGEN -->
+    <div class="edit-section" id="sec-fertilize">
+      <div class="edit-section-header" onclick="toggleSection('sec-fertilize')">
+        <div class="section-accent" style="background:var(--sc-fertilize)"></div>
+        <div class="edit-section-title">Düngezeiten <span class="section-count" id="cnt-fertilize">2</span></div>
+        <span class="edit-section-toggle">▾</span>
+      </div>
+      <div class="edit-section-body">
+        <div class="schedule-entries" id="entries-fertilize"></div>
+        <button class="add-entry-btn" onclick="addEntry('fertilize')">＋ Düngezeit hinzufügen</button>
+      </div>
+    </div>
+
+    <!-- SONSTIGES -->
+    <div class="edit-section" id="sec-misc">
+      <div class="edit-section-header" onclick="toggleSection('sec-misc')">
+        <div class="section-accent" style="background:var(--sc-misc)"></div>
+        <div class="edit-section-title">Sonstiges <span class="section-count" id="cnt-misc">0</span></div>
+        <span class="edit-section-toggle">▾</span>
+      </div>
+      <div class="edit-section-body">
+        <div class="schedule-entries" id="entries-misc"></div>
+        <button class="add-entry-btn" onclick="addEntry('misc')">＋ Eintrag hinzufügen</button>
+      </div>
+    </div>
+
+  </div>
+  <div class="edit-actions">
+    <button class="btn">Abbrechen</button>
+    <button class="btn primary" onclick="alert('Gespeichert!')">Speichern</button>
+  </div>
+</div>
+
+<!-- CENTER: GARDEN PLAN -->
+<div class="center" id="centerArea">
+  <div class="garden-area" id="gardenArea">
+    <div class="garden-plan" id="gartenplan">
+      <img class="garden-plan-img" id="gartenplanImg" src="gartenplan.png" alt="Gartenplan" onerror="this.style.background='#c8d8b8'">
+      <div id="positionMarkers"></div>
+    </div>
+    <div class="zoom-controls">
+      <button class="zoom-btn" id="zoomFitHeight" title="Auf Höhe einpassen">↕</button>
+      <button class="zoom-btn" id="zoomFitWidth" title="Auf Breite einpassen">↔</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHAT -->
+<div class="chat-panel">
+  <div class="chat-header">
+    <div class="chat-title">🤖 Garten-Assistent</div>
+  </div>
+  <div class="chat-context-bar">✏️ Bearbeite: 🌹 Rose</div>
+  <div class="chat-messages" id="chatMessages">
+    <div class="chat-msg">
+      <div class="chat-sender">Assistent</div>
+      <div class="chat-bubble bot">Ich begleite Sie beim Bearbeiten der Rose. Standort und Kategorie habe ich vorausgefüllt. Was soll ich noch ergänzen?</div>
+    </div>
+    <div class="chat-msg">
+      <div class="chat-sender" style="text-align:right">Sie</div>
+      <div class="chat-bubble user">Füge bitte die Schnittzeiten ein</div>
+    </div>
+    <div class="chat-msg">
+      <div class="chat-sender">Assistent</div>
+      <div class="chat-bubble bot">
+        Für Rosen empfehle ich zwei Termine:<br><br>
+        <strong>Frühjahrsschnitt:</strong> W2–W4 März<br>
+        <em>Alle alten Triebe auf 3 Augen zurückschneiden. Schnittwunden ggf. mit Wundverschlussmittel versiegeln.</em><br><br>
+        <strong>Sommerschnitt:</strong> W1–W2 August<br>
+        <em>Verblühte Rispen entfernen, Form erhalten und Nachblüte fördern.</em><br><br>
+        <button class="chat-apply-btn" onclick="applyPrune()">✓ In Dialog übernehmen</button>
+      </div>
+    </div>
+    <div class="chat-msg" id="confirmMsg" style="display:none">
+      <div class="chat-sender">Assistent</div>
+      <div class="chat-bubble bot">✅ Schnittzeiten wurden im Abschnitt „Schnittzeiten" eingetragen — bitte prüfen und bei Bedarf anpassen.</div>
+    </div>
+  </div>
+  <div class="chat-input-area">
+    <input class="chat-input" type="text" placeholder="Frage oder Anweisung …" id="chatInput" onkeydown="if(event.key==='Enter')sendMsg()">
+    <button class="chat-send" onclick="sendMsg()">↑</button>
+  </div>
+</div>
+
+</div>
+<script>
+// ── WEEKS ──
+const MONTHS=['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+const WEEKS=[];
+MONTHS.forEach((m)=>{for(let w=1;w<=4;w++)WEEKS.push(`W${w} ${m}`)});
+function makeWeekSel(idx){
+  const s=document.createElement('select'); s.className='week-select';
+  WEEKS.forEach((w,i)=>{const o=document.createElement('option');o.value=i;o.textContent=w;if(i===idx)o.selected=true;s.appendChild(o);});
+  return s;
+}
+
+// ── COLOR CONFIG ──
+const hasColor={bloom:true,growth:false,foliage:true,prune:false,fertilize:false,misc:true};
+const defaultColor={bloom:'#c0392b',growth:'#2e7d32',foliage:'#a8d5a2',prune:'#27ae60',fertilize:'#2980b9',misc:'#e67e22'};
+const colorPresets={
+  bloom:[
+    {hex:'#c0392b',name:'Dunkelrot'},{hex:'#e74c3c',name:'Rot'},{hex:'#ff6b9d',name:'Korallrot'},
+    {hex:'#e91e8c',name:'Pink'},{hex:'#9b59b6',name:'Lila'},{hex:'#f39c12',name:'Orange'},
+    {hex:'#f8c8d0',name:'Zartrosa'},{hex:'#fff0c0',name:'Cremeweiß'},{hex:'#ffffff',name:'Weiß'},
+    {hex:'#4fc3f7',name:'Hellblau'},
+  ],
+  foliage:[
+    {hex:'#a8d5a2',name:'Frühjahrsgrün'},{hex:'#1b5e20',name:'Dunkelgrün'},{hex:'#2d5a1b',name:'Immergrün'},
+    {hex:'#c0392b',name:'Herbstrot'},{hex:'#c0793a',name:'Herbstorange'},{hex:'#f0c040',name:'Herbstgold'},
+    {hex:'#8b7355',name:'Herbstbraun'},{hex:'#d4e6c3',name:'Hellgrün'},
+  ],
+  misc:[
+    {hex:'#e67e22',name:'Orange'},{hex:'#7f8c8d',name:'Grau'},{hex:'#27ae60',name:'Grün'},
+    {hex:'#3498db',name:'Blau'},{hex:'#9b59b6',name:'Lila'},{hex:'#f1c40f',name:'Gelb'},{hex:'#e74c3c',name:'Rot'},
+  ],
+};
+
+// ── BUILD ENTRY ──
+function buildEntry(type,opts={}){
+  const color=opts.color||defaultColor[type];
+  const entry=document.createElement('div');
+  entry.className='schedule-entry'+(opts.ai?' ai-added':'');
+
+  // TOP ROW
+  const top=document.createElement('div'); top.className='se-top';
+
+  if(hasColor[type]){
+    // Color button + popup
+    const colorWrap=document.createElement('div'); colorWrap.className='se-color-wrap';
+    const colorBtn=document.createElement('div'); colorBtn.className='se-color-btn'; colorBtn.style.background=color; colorBtn.title='Farbe wählen';
+    const popup=document.createElement('div'); popup.className='color-popup';
+    const swatchRow=document.createElement('div'); swatchRow.className='color-swatches';
+
+    // Custom input declared before forEach so closures can reference it
+    const customRow=document.createElement('div'); customRow.className='color-custom-row';
+    const customLabel=document.createElement('span'); customLabel.className='color-custom-label'; customLabel.textContent='Eigene:';
+    const customInput=document.createElement('input'); customInput.className='color-custom-input'; customInput.type='text'; customInput.value=color; customInput.placeholder='#rrggbb';
+    const preview=document.createElement('div'); preview.className='color-preview'; preview.style.background=color;
+    customInput.oninput=()=>{
+      const v=customInput.value;
+      if(/^#[0-9a-f]{6}$/i.test(v)){colorBtn.style.background=v;preview.style.background=v;nativePicker.value=v;}
+    };
+    customRow.append(customLabel,customInput,preview);
+
+    // Native color picker
+    const nativeRow=document.createElement('div'); nativeRow.className='native-picker-row';
+    const nativeLabel=document.createElement('span'); nativeLabel.className='native-picker-label'; nativeLabel.textContent='Farbwähler:';
+    const nativePicker=document.createElement('input'); nativePicker.type='color'; nativePicker.className='native-color-input'; nativePicker.value=color;
+    nativePicker.oninput=()=>{
+      colorBtn.style.background=nativePicker.value;
+      customInput.value=nativePicker.value;
+      preview.style.background=nativePicker.value;
+      popup.querySelectorAll('.color-swatch').forEach(x=>x.classList.remove('selected'));
+    };
+    nativeRow.append(nativeLabel,nativePicker);
+
+    (colorPresets[type]||[]).forEach(p=>{
+      const cell=document.createElement('div');
+      cell.style.cssText='display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer';
+      const sw=document.createElement('div'); sw.className='color-swatch'+(p.hex===color?' selected':'');
+      sw.style.background=p.hex; sw.title=p.name;
+      const lbl=document.createElement('div');
+      lbl.style.cssText='font-size:8px;color:#8a9e8a;text-align:center;max-width:36px;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+      lbl.textContent=p.name;
+      cell.onclick=e=>{
+        e.stopPropagation();
+        colorBtn.style.background=p.hex;
+        popup.querySelectorAll('.color-swatch').forEach(x=>x.classList.remove('selected'));
+        sw.classList.add('selected');
+        customInput.value=p.hex;
+        preview.style.background=p.hex;
+        nativePicker.value=p.hex;
+        // Auto-fill label for bloom entries
+        if(type==='bloom'){
+          const labelInput=entry.querySelector('.se-label-input');
+          if(labelInput&&(!labelInput.value||colorPresets.bloom.some(q=>q.name===labelInput.value))){
+            labelInput.value=p.name;
+          }
+        }
+      };
+      cell.append(sw,lbl); swatchRow.appendChild(cell);
+    });
+
+    popup.append(swatchRow,customRow,nativeRow);
+    colorBtn.onclick=e=>{
+      e.stopPropagation();
+      document.querySelectorAll('.color-popup.visible').forEach(q=>q!==popup&&q.classList.remove('visible'));
+      popup.classList.toggle('visible');
+    };
+    colorWrap.append(colorBtn,popup); top.appendChild(colorWrap);
+  } else {
+    const swatch=document.createElement('div');
+    swatch.style.cssText=`width:14px;height:14px;border-radius:3px;background:${color};border:1.5px solid rgba(0,0,0,.12);flex-shrink:0`;
+    top.appendChild(swatch);
+  }
+
+  const range=document.createElement('div'); range.className='se-range';
+  range.append(makeWeekSel(opts.startIdx||0),Object.assign(document.createElement('span'),{className:'se-arrow',textContent:'→'}),makeWeekSel(opts.endIdx||4));
+  top.appendChild(range);
+  if(opts.ai){const b=document.createElement('span');b.className='ai-badge';b.textContent='🤖 KI';top.appendChild(b);}
+  const del=document.createElement('button'); del.className='se-delete'; del.textContent='✕';
+  del.onclick=()=>{entry.remove();updateCounts();};
+  top.appendChild(del);
+
+  // LABEL + NOTES
+  const fields=document.createElement('div'); fields.className='se-fields';
+  const li=document.createElement('input'); li.className='se-label-input'; li.type='text'; li.placeholder='Bezeichnung'; li.value=opts.label||'';
+  const nt=document.createElement('textarea'); nt.className='se-notes-textarea'; nt.placeholder='Zusätzliche Infos, Hinweise …'; nt.value=opts.notes||'';
+  fields.append(li,nt);
+
+  entry.append(top,fields);
+  return entry;
+}
+
+function addEntry(type,opts={}){
+  document.getElementById('entries-'+type).appendChild(buildEntry(type,opts));
+  updateCounts();
+}
+
+function updateCounts(){
+  ['bloom','growth','foliage','prune','fertilize','misc'].forEach(t=>{
+    const el=document.getElementById('cnt-'+t);
+    if(el) el.textContent=document.querySelectorAll('#entries-'+t+' .schedule-entry').length;
+  });
+}
+
+// ── POSITIONS ──
+function addPosition(){
+  const list=document.getElementById('positions-list');
+  const n=list.children.length+1;
+  const row=document.createElement('div'); row.className='position-row';
+  row.innerHTML=`<span class="pos-label">${n}</span><input class="pos-input" type="number" min="0" max="100" step="0.1" placeholder="X"><span class="pos-sep">%</span><span class="pos-sep" style="margin:0 4px">·</span><input class="pos-input" type="number" min="0" max="100" step="0.1" placeholder="Y"><span class="pos-sep">%</span><button class="pos-delete" onclick="this.closest('.position-row').remove();updatePosCnt()">✕</button>`;
+  list.appendChild(row); updatePosCnt();
+}
+function updatePosCnt(){
+  const rows=document.querySelectorAll('#positions-list .position-row');
+  rows.forEach((r,i)=>r.querySelector('.pos-label').textContent=i+1);
+  document.getElementById('cnt-positions').textContent=rows.length;
+}
+
+// ── ICON ──
+const autoIconMap={
+  'Strauch':{'rot':'🌹','pink':'🌸','lila':'💐','gelb':'🌻','weiß':'🌼','':  '🌿'},
+  'Baum':{'':'🌳'},'Nadelbaum':{'':'🌲'},'Obstbaum':{'':'🍎'},
+  'Staude':{'':'🌺'},'Einjährig':{'':'🌻'},'Kletterpflanze':{'':'🌿'},'Bodendecker':{'':'🍃'},
+};
+function autoIcon(){
+  const typ=document.getElementById('typeSelect').value;
+  const map=autoIconMap[typ]||{'':'🌿'};
+  const icon=map['rot']||map['']||'🌿';
+  document.getElementById('iconPreview').textContent=icon;
+  document.querySelector('.icon-auto-label').textContent=`Automatisch: ${typ} → ${icon}`;
+}
+function toggleEmojiPicker(){document.getElementById('emojiPicker').classList.toggle('visible');}
+function setEmoji(e){
+  document.getElementById('iconPreview').textContent=e;
+  document.querySelectorAll('.emoji-opt').forEach(o=>o.classList.toggle('selected',o.textContent===e));
+  document.getElementById('emojiPicker').classList.remove('visible');
+}
+
+function updateImageCount(){
+  document.getElementById('cnt-images').textContent=document.querySelectorAll('#image-list .img-entry').length;
+}
+
+function addImage(){
+  const list=document.getElementById('image-list');
+  const entry=document.createElement('div'); entry.className='img-entry';
+  entry.innerHTML=`<div class="img-thumb" title="Bild hochladen"><span style="font-size:24px">📷</span></div><select class="img-type-select"><option selected>Pflanze</option><option>Blüte</option><option>Blatt</option></select><button class="img-delete" onclick="this.closest('.img-entry').remove();updateImageCount()">✕</button>`;
+  list.appendChild(entry);
+  updateImageCount();
+}
+
+function toggleSection(id){document.getElementById(id).classList.toggle('open');}
+
+// ── INITIAL DATA ──
+addEntry('bloom',{color:'#c0392b',startIdx:16,endIdx:35,label:'Rot/Pink',notes:'Duftend, mehrmals blühend. Blüten bis Ø 10cm.'});
+addEntry('growth',{startIdx:8,endIdx:39,label:'Wachstum',notes:'Hauptwachstum April–Juni.'});
+addEntry('foliage',{color:'#a8d5a2',startIdx:13,endIdx:15,label:'Frühjahr',notes:'Hellgrün, zart, neu austreibend.'});
+addEntry('foliage',{color:'#1b5e20',startIdx:16,endIdx:35,label:'Sommer',notes:'Dunkelgrün, glänzend, dicht.',ai:true});
+addEntry('foliage',{color:'#c0793a',startIdx:36,endIdx:39,label:'Herbst',notes:'Rötlich-braun vor Blattfall.'});
+addEntry('prune',{startIdx:9,endIdx:11,label:'Frühjahrsschnitt',notes:'Auf 3 Augen kürzen. Schnittwunden versiegeln.',ai:true});
+addEntry('prune',{startIdx:28,endIdx:30,label:'Sommerschnitt',notes:'Verblühtes entfernen, Form erhalten.',ai:true});
+addEntry('fertilize',{startIdx:13,endIdx:13,label:'Frühjahr',notes:'Rosendünger, stickstoffbetont.'});
+addEntry('fertilize',{startIdx:21,endIdx:21,label:'Sommer',notes:'Kali-betont für Blütenentwicklung.'});
+
+// ── GARDEN PLAN ──
+let planScale=1, planTx=0, planTy=0, planDragging=false, planStartX, planStartY, planStartTx, planStartTy;
+let IMG_W=800, IMG_H=600, pickMode=false;
+let modeFitH=false, modeFitW=false;
+const gardenArea=document.getElementById('gardenArea');
+const gartenplan=document.getElementById('gartenplan');
+const gartenplanImg=document.getElementById('gartenplanImg');
+
+function planApply(anim){
+  gartenplan.style.transition=anim?'transform .3s ease':'none';
+  gartenplan.style.transform=`translate(${planTx}px,${planTy}px) scale(${planScale})`;
+}
+function planInit(){
+  IMG_W=gartenplanImg.naturalWidth||800; IMG_H=gartenplanImg.naturalHeight||600;
+  const w=gardenArea.clientWidth, h=gardenArea.clientHeight;
+  const s=Math.min(w/IMG_W, h/IMG_H);
+  planScale=s; planTx=(w-IMG_W*s)/2; planTy=(h-IMG_H*s)/2;
+  gartenplan.style.width=IMG_W+'px'; gartenplan.style.height=IMG_H+'px';
+  planApply(false); renderMarkers();
+}
+function applyFitH(){
+  gartenplan.style.width=IMG_W+'px'; gartenplan.style.height=IMG_H+'px';
+  const w=gardenArea.clientWidth,h=gardenArea.clientHeight;
+  planScale=h/IMG_H; planTx=(w-IMG_W*planScale)/2; planTy=0; planApply(true);
+}
+function applyFitW(){
+  gartenplan.style.width=IMG_W+'px'; gartenplan.style.height=IMG_H+'px';
+  const w=gardenArea.clientWidth,h=gardenArea.clientHeight;
+  planScale=w/IMG_W; planTx=0; planTy=(h-IMG_H*planScale)/2; planApply(true);
+}
+function applyFitBoth(){
+  const w=gardenArea.clientWidth,h=gardenArea.clientHeight;
+  planScale=1; gartenplan.style.width=w+'px'; gartenplan.style.height=h+'px';
+  planTx=0; planTy=0; gartenplan.style.transition='none';
+  gartenplan.style.transform=`translate(0,0) scale(1)`;
+}
+function updateZoomBtns(){
+  document.getElementById('zoomFitHeight').classList.toggle('active',modeFitH);
+  document.getElementById('zoomFitWidth').classList.toggle('active',modeFitW);
+}
+
+gartenplanImg.addEventListener('load', planInit);
+window.addEventListener('resize', ()=>{ if(modeFitH||modeFitW){if(modeFitH&&modeFitW)applyFitBoth();else if(modeFitH)applyFitH();else applyFitW();}else planInit(); });
+if(gartenplanImg.complete) planInit(); else setTimeout(planInit,100);
+
+gardenArea.addEventListener('mousedown', e=>{
+  if(e.target.closest('.zoom-controls')) return;
+  if(pickMode){
+    e.preventDefault();
+    const rect=gardenArea.getBoundingClientRect();
+    const px=((e.clientX-rect.left-planTx)/planScale/IMG_W*100).toFixed(1);
+    const py=((e.clientY-rect.top-planTy)/planScale/IMG_H*100).toFixed(1);
+    addPositionFromPlan(parseFloat(px), parseFloat(py));
+    return;
+  }
+  planDragging=true; planStartX=e.clientX; planStartY=e.clientY; planStartTx=planTx; planStartTy=planTy;
+});
+window.addEventListener('mousemove', e=>{ if(!planDragging) return; planTx=planStartTx+(e.clientX-planStartX); planTy=planStartTy+(e.clientY-planStartY); planApply(false); });
+window.addEventListener('mouseup', ()=>{ planDragging=false; });
+gardenArea.addEventListener('wheel', e=>{
+  e.preventDefault();
+  if(modeFitH&&modeFitW) return;
+  if(modeFitH){ planTx-=e.deltaY*1.5; planApply(false); return; }
+  if(modeFitW){ planTy-=e.deltaY*1.5; planApply(false); return; }
+  const rect=gardenArea.getBoundingClientRect();
+  const cx=e.clientX-rect.left, cy=e.clientY-rect.top, f=e.deltaY<0?1.12:0.89;
+  const ns=Math.max(0.2,Math.min(4,planScale*f)), r=ns/planScale;
+  planTx=cx-r*(cx-planTx); planTy=cy-r*(cy-planTy); planScale=ns;
+  planApply(false);
+},{passive:false});
+
+document.getElementById('zoomFitHeight').addEventListener('click',()=>{
+  modeFitH=!modeFitH; updateZoomBtns();
+  if(modeFitH&&modeFitW){applyFitBoth();return;}
+  if(modeFitH){applyFitH();}else if(modeFitW){applyFitW();}else planInit();
+});
+document.getElementById('zoomFitWidth').addEventListener('click',()=>{
+  modeFitW=!modeFitW; updateZoomBtns();
+  if(modeFitH&&modeFitW){applyFitBoth();return;}
+  if(modeFitW){applyFitW();}else if(modeFitH){applyFitH();}else planInit();
+});
+
+function togglePlanMode(){
+  pickMode=!pickMode;
+  const btn=document.getElementById('planModeBtn');
+  const hint=document.getElementById('planHint');
+  btn.classList.toggle('active', pickMode);
+  btn.textContent=pickMode?'Klick-Modus aktiv':'Klick-Modus aktivieren';
+  gardenArea.classList.toggle('pick-mode', pickMode);
+  hint.textContent=pickMode?'Jetzt auf den Plan klicken um eine Position hinzuzufügen':'Aktiviere den Modus, dann auf den Plan klicken';
+}
+
+function addPositionFromPlan(x, y){
+  const list=document.getElementById('positions-list');
+  const n=list.children.length+1;
+  const row=document.createElement('div'); row.className='position-row';
+  row.innerHTML=`<span class="pos-label">${n}</span><input class="pos-input" type="number" min="0" max="100" step="0.1" value="${x}" placeholder="X"><span class="pos-sep">%</span><span class="pos-sep" style="margin:0 4px">·</span><input class="pos-input" type="number" min="0" max="100" step="0.1" value="${y}" placeholder="Y"><span class="pos-sep">%</span><button class="pos-delete" onclick="this.closest('.position-row').remove();updatePosCnt();renderMarkers()">✕</button>`;
+  row.querySelectorAll('.pos-input').forEach(inp=>inp.addEventListener('change', renderMarkers));
+  list.appendChild(row); updatePosCnt(); renderMarkers();
+  // scroll positions section into view briefly
+  document.getElementById('sec-positions').classList.add('open');
+}
+
+function renderMarkers(){
+  const container=document.getElementById('positionMarkers');
+  container.innerHTML='';
+  document.querySelectorAll('#positions-list .position-row').forEach((row,i)=>{
+    const inputs=row.querySelectorAll('.pos-input');
+    const x=parseFloat(inputs[0].value)||0, y=parseFloat(inputs[1].value)||0;
+    const div=document.createElement('div'); div.className='pos-marker';
+    div.style.left=(x/100*IMG_W)+'px'; div.style.top=(y/100*IMG_H)+'px';
+    div.innerHTML=`<div class="pos-marker-ring"></div><div class="pos-marker-dot"><span class="pos-marker-label">${i+1}</span></div>`;
+    container.appendChild(div);
+  });
+}
+renderMarkers();
+
+// ── CHAT ──
+function applyPrune(){
+  document.getElementById('sec-prune').classList.add('open');
+  const sec=document.getElementById('sec-prune');
+  sec.scrollIntoView({behavior:'smooth',block:'center'});
+  sec.style.transition='background .4s'; sec.style.background='#e8f5e9';
+  setTimeout(()=>{sec.style.background='';},1500);
+  document.getElementById('confirmMsg').style.display='flex';
+}
+function sendMsg(){
+  const inp=document.getElementById('chatInput');
+  const val=inp.value.trim(); if(!val)return;
+  const msgs=document.getElementById('chatMessages');
+  const u=document.createElement('div'); u.className='chat-msg';
+  u.innerHTML=`<div class="chat-sender" style="text-align:right">Sie</div><div class="chat-bubble user">${val}</div>`;
+  msgs.appendChild(u); inp.value='';
+  setTimeout(()=>{
+    const b=document.createElement('div'); b.className='chat-msg';
+    b.innerHTML=`<div class="chat-sender">Assistent</div><div class="chat-bubble bot">Ich habe Ihre Anfrage verstanden und helfe Ihnen gerne. <em>(Demo-Antwort)</em></div>`;
+    msgs.appendChild(b); msgs.scrollTop=msgs.scrollHeight;
+  },600);
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+document.addEventListener('click',()=>{
+  document.querySelectorAll('.color-popup.visible').forEach(p=>p.classList.remove('visible'));
+  document.getElementById('emojiPicker').classList.remove('visible');
+});
+</script>
+</body>
+</html>
