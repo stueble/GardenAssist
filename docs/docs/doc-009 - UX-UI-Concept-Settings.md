@@ -101,18 +101,17 @@ Used for weather data and frost warnings in the dashboard. Weather integration i
 
 ### 4.3 Bewässerungszonen (Irrigation Zones)
 
-A numbered list of irrigation zone names. Each entry has:
-- An auto-assigned letter ID (A, B, C, …; reassigned automatically when entries are deleted)
-- An editable name input
+A list of irrigation zone names. Each entry has:
+- An editable free-text name input
 - A ✕ delete button
 
-A ➕ button appends a new empty entry. Zone names appear as dropdown options in the Plant Edit Dialog (Bewässerungszone field). There is no fixed maximum — the user creates as many zones as their irrigation system has.
+A ➕ button appends a new empty entry. Zone names and their order are entirely up to the user — no auto-assigned IDs. Zone names appear as dropdown options in the Plant Edit Dialog (Bewässerungszone field).
 
 ### 4.4 Pflanzenkategorien (Plant Categories)
 
 A flat list of category names. Each entry has an editable name input and a ✕ delete button. A ➕ button appends a new empty entry.
 
-These are the options that appear in the **Kategorie** dropdown in the Plant Edit Dialog. The default values match the built-in plant types (Strauch, Baum, Staude, …) but can be freely edited, extended, or replaced by the user. No letter IDs — order is display order.
+These are the options that appear in the **Kategorie** dropdown in the Plant Edit Dialog. The list is entirely under user control — no protected defaults, no minimum entries. The user can replace all values, add freely, or leave the list empty.
 
 ### 4.5 Farb-Presets (Color Presets)
 
@@ -138,7 +137,7 @@ Growth, pruning, and fertilization schedules use fixed semantic colors and have 
 
 | Field | Type | Notes |
 |---|---|---|
-| **API-Schlüssel** | Password input | Stored locally only; never transmitted; masked by default |
+| **API-Schlüssel** | Password input + test button | Stored locally only; never transmitted; masked by default; "🔌 Verbindung testen" sends a minimal test request and shows inline success/error feedback |
 | **Modell** | Select | claude-sonnet-4-6 (recommended) · claude-opus-4-6 · claude-haiku-4-5 |
 
 ### 4.7 Daten & Backup
@@ -162,20 +161,24 @@ Three sub-groups:
 ### Interactions
 
 - **Click section header** → section expands or collapses; chevron rotates
-- **Drag file onto dropzone / click dropzone** → file picker opens; on selection: preview row replaces dropzone
-- **Click ✕ on plan preview** → preview removed; dropzone appears
-- **Click ✕ on zone / category / preset entry** → entry removed; zone IDs reassigned if applicable
-- **Click ➕ button** → new empty entry appended; name input focused
-- **Type in preset name field** → name updates; no other effect
-- **Interact with native color picker** → preview swatch updates live; hex value synced
-- **Click "Verwerfen"** → all unsaved changes reverted to last saved state
-- **Click "Speichern"** → all changes persisted; used by all views immediately
+- **Drag file onto dropzone / click dropzone** → file picker opens; on selection: preview row replaces dropzone; save bar activates
+- **Click ✕ on plan preview** → preview removed; dropzone appears; save bar activates
+- **Click ✕ on zone / category / preset entry** → entry removed; save bar activates
+- **Click ➕ button** → new empty entry appended; name input focused; save bar activates
+- **Any input change** → save bar activates (buttons enabled, hint text updates)
+- **Interact with native color picker** → preview swatch updates live; hex value synced; save bar activates
+- **Click "🔌 Verbindung testen"** → button shows "⏳ Teste …" while checking; shows ✅ success or ❌ error message below the field
+- **Click "Verwerfen"** → confirmation dialog: "Alle ungespeicherten Änderungen verwerfen?"; on confirm: all changes reverted, save bar greys out
+- **Click "Speichern"** → changes persisted; save bar greys out; hint returns to "Keine ungespeicherten Änderungen"
 
 ### States
 
-- **Default** – sections showing current saved configuration; save bar visible
-- **Section expanded** – body content visible; chevron pointing up
-- **Unsaved changes** – *(save bar always visible; no explicit dirty indicator in mockup yet)*
+| State | Save bar | Hint text |
+|---|---|---|
+| **No changes** | Greyed out (buttons disabled) | "Keine ungespeicherten Änderungen" |
+| **Unsaved changes** | Active (buttons enabled) | "Ungespeicherte Änderungen vorhanden" |
+| **After save** | Greyed out | "Keine ungespeicherten Änderungen" |
+
 - **No garden plan uploaded** – dropzone visible instead of preview row
 - **Empty list (zones / categories / presets)** – list area empty; ➕ button still visible
 
@@ -183,11 +186,16 @@ Three sub-groups:
 
 ## 6. Open Questions
 
-- [ ] Should there be a confirmation dialog when clicking "Verwerfen" if changes have been made?
-- [ ] Should the save bar only appear when there are unsaved changes, or always?
-- [ ] Should irrigation zone IDs be letters (A, B, C) or numbers (1, 2, 3)?
-- [ ] Should the plant categories section have a fixed set of defaults that cannot be deleted, or is the list fully user-controlled?
-- [ ] API key: should there be a "Test connection" button to verify the key works?
+- [ ] Should the API key field have a show/hide toggle for the masked value?
+- [ ] Should irrigation zone names have any length limit or character restrictions?
+- [ ] Should import warn the user if the incoming data contains plants with the same name as existing ones?
+
+**Resolved:**
+- [x] Save bar is always visible, but greyed out (buttons disabled) when no changes have been made.
+- [x] API key section includes a "Verbindung testen" button with inline success/error feedback.
+- [x] Clicking "Verwerfen" triggers a confirmation dialog before discarding changes.
+- [x] Irrigation zones are fully user-controlled free text — no auto-assigned letter IDs in the name.
+- [x] Plant categories are fully user-controlled — no protected default entries.
 
 ---
 
