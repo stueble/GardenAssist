@@ -18,7 +18,6 @@
   --c-done:#27ae60;   --c-done-bg:#edfaf3;
   --c-obs:#4a78c0;    --c-obs-bg:#eef3fb;
   --c-problem:#c0392b;--c-problem-bg:#fdf0ee;
-  --c-milestone:#d4850a;--c-milestone-bg:#fef9ee;
   --c-purchase:#7d3c98;--c-purchase-bg:#f5eef8;
 }
 body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text-dark);height:100vh;display:flex;flex-direction:column;overflow:hidden;font-size:13px}
@@ -26,8 +25,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text-d
 /* NAV */
 nav{background:var(--green-deep);display:flex;align-items:center;height:52px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.2)}
 .nav-logo{font-family:'Playfair Display',serif;font-size:20px;color:var(--green-pale);display:flex;align-items:center;gap:8px;width:240px;flex-shrink:0;padding:0 20px;border-right:1px solid rgba(255,255,255,.1);height:100%}
-.nav-links{display:flex;gap:2px;flex:1;padding:0 12px}
-.nav-link{color:var(--green-pale);padding:6px 14px;border-radius:6px;font-size:13px;opacity:.75;transition:all .2s;cursor:pointer;border:none;background:none;display:flex;align-items:center;gap:6px}
+.nav-links{display:flex;gap:2px;flex:1;padding:0 12px;align-items:center}
+.nav-link{color:var(--green-pale);padding:0 14px;border-radius:6px;font-size:13px;opacity:.75;transition:all .2s;cursor:pointer;border:none;background:none;display:flex;align-items:center;gap:6px;height:36px;line-height:1;white-space:nowrap}
 .nav-link:hover{opacity:1;background:rgba(255,255,255,.1)}
 .nav-link.active{opacity:1;background:rgba(255,255,255,.15);font-weight:500}
 .nav-right{padding-right:16px}
@@ -35,7 +34,7 @@ nav{background:var(--green-deep);display:flex;align-items:center;height:52px;fle
 
 /* BODY */
 .body-wrap{display:flex;flex:1;overflow:hidden}
-.content-col{display:flex;flex-direction:column;flex:1;overflow:hidden;min-width:0}
+.content-col{display:flex;flex-direction:column;flex:1;overflow:hidden;min-width:0;position:relative}
 
 /* SUBHEADER */
 .subheader{background:var(--warm-white);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:10px;flex-shrink:0;flex-wrap:wrap}
@@ -47,9 +46,13 @@ nav{background:var(--green-deep);display:flex;align-items:center;height:52px;fle
 .chip{padding:5px 12px;border-radius:20px;font-size:11.5px;font-weight:500;border:1.5px solid var(--border);background:none;color:var(--text-mid);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;white-space:nowrap}
 .chip:hover{border-color:var(--green-mid);color:var(--green-deep)}
 .chip.active{background:var(--green-deep);border-color:var(--green-deep);color:white}
-.btn-new{background:var(--green-deep);color:white;border:none;border-radius:8px;padding:7px 16px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:6px;white-space:nowrap;flex-shrink:0;transition:background .15s}
-.btn-new:hover{background:var(--green-mid)}
-.btn-new.active{background:var(--bark, #8b6f47)}
+/* RIGHT STRIP: chat toggle only */
+.right-strip{display:flex;flex-direction:column;align-items:center;flex-shrink:0;background:var(--green-mid);border-left:1px solid rgba(255,255,255,.15)}
+
+/* FLOATING ACTION BUTTON – inside content-col, bottom-right */
+.fab{position:absolute;bottom:24px;right:24px;width:48px;height:48px;border-radius:12px;background:var(--green-deep);color:white;border:none;font-size:26px;font-weight:300;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(45,74,45,.35);transition:background .2s,transform .15s;line-height:1;z-index:10}
+.fab:hover{background:var(--green-mid);transform:scale(1.07)}
+.fab.active{background:#8b6f47}
 
 /* TIMELINE */
 .timeline-wrap{flex:1;overflow-y:auto;padding:24px 32px 24px 48px;position:relative}
@@ -69,7 +72,6 @@ nav{background:var(--green-deep);display:flex;align-items:center;height:52px;fle
 .entry.done::before{background:var(--c-done)}
 .entry.obs::before{background:var(--c-obs)}
 .entry.problem::before{background:var(--c-problem)}
-.entry.milestone::before{background:var(--c-milestone)}
 .entry.purchase::before{background:var(--c-purchase)}
 
 .entry-card{background:var(--warm-white);border:1.5px solid var(--border);border-radius:10px;border-left-width:4px;transition:box-shadow .15s,border-color .15s;overflow:hidden}
@@ -77,7 +79,6 @@ nav{background:var(--green-deep);display:flex;align-items:center;height:52px;fle
 .entry.done .entry-card{border-left-color:var(--c-done)}
 .entry.obs .entry-card{border-left-color:var(--c-obs)}
 .entry.problem .entry-card{border-left-color:var(--c-problem)}
-.entry.milestone .entry-card{border-left-color:var(--c-milestone)}
 .entry.purchase .entry-card{border-left-color:var(--c-purchase)}
 
 .entry-header{padding:10px 14px;display:flex;align-items:center;gap:8px}
@@ -85,7 +86,6 @@ nav{background:var(--green-deep);display:flex;align-items:center;height:52px;fle
 .entry.done .entry-type-badge{background:var(--c-done-bg);color:var(--c-done)}
 .entry.obs .entry-type-badge{background:var(--c-obs-bg);color:var(--c-obs)}
 .entry.problem .entry-type-badge{background:var(--c-problem-bg);color:var(--c-problem)}
-.entry.milestone .entry-type-badge{background:var(--c-milestone-bg);color:var(--c-milestone)}
 .entry.purchase .entry-type-badge{background:var(--c-purchase-bg);color:var(--c-purchase)}
 
 .entry-plant-tag{font-size:11px;color:var(--text-light);background:var(--green-mist);padding:2px 8px;border-radius:10px;display:flex;align-items:center;gap:4px}
@@ -119,7 +119,6 @@ nav{background:var(--green-deep);display:flex;align-items:center;height:52px;fle
 .nep-type-btn.active.t-done{background:var(--c-done-bg);color:var(--c-done);border-color:var(--c-done)}
 .nep-type-btn.active.t-obs{background:var(--c-obs-bg);color:var(--c-obs);border-color:var(--c-obs)}
 .nep-type-btn.active.t-problem{background:var(--c-problem-bg);color:var(--c-problem);border-color:var(--c-problem)}
-.nep-type-btn.active.t-milestone{background:var(--c-milestone-bg);color:var(--c-milestone);border-color:var(--c-milestone)}
 .nep-type-btn.active.t-purchase{background:var(--c-purchase-bg);color:var(--c-purchase);border-color:var(--c-purchase)}
 .nep-select,.nep-input,.nep-textarea{width:100%;background:var(--green-mist);border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text-dark);outline:none;transition:border-color .2s}
 .nep-select:focus,.nep-input:focus,.nep-textarea:focus{border-color:var(--green-mid);background:white}
@@ -135,10 +134,10 @@ nav{background:var(--green-deep);display:flex;align-items:center;height:52px;fle
 .nep-btn.primary:hover{background:var(--green-mid)}
 
 /* CHAT TOGGLE + PANEL */
-.chat-toggle{background:var(--green-mid);color:var(--green-pale);border:none;border-left:1px solid rgba(255,255,255,.15);padding:24px 11px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:10px;flex-shrink:0;transition:background .2s}
+.chat-toggle{background:transparent;color:var(--green-pale);border:none;padding:24px 11px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:10px;flex:1;transition:background .2s;width:100%}
 .chat-toggle-icon{font-size:20px;line-height:1}
 .chat-toggle-label{writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);letter-spacing:.8px}
-.chat-toggle:hover{background:var(--green-light)}
+.chat-toggle:hover{background:rgba(255,255,255,.1)}
 .chat-toggle.hidden{display:none}
 .chat-panel{width:0;overflow:hidden;background:var(--warm-white);border-left:1px solid var(--border);display:flex;flex-direction:column;transition:width .3s ease;flex-shrink:0}
 .chat-panel.open{width:300px}
@@ -164,10 +163,10 @@ nav{background:var(--green-deep);display:flex;align-items:center;height:52px;fle
 <nav>
   <div class="nav-logo"><span>🌿</span> GardenAssist</div>
   <div class="nav-links">
-    <button class="nav-link">🏠 Dashboard</button>
-    <button class="nav-link">🌱 Pflanzen</button>
-    <button class="nav-link">🗓 Kalender</button>
-    <button class="nav-link active">📔 Tagebuch</button>
+    <button class="nav-link"><span>🏠</span> Dashboard</button>
+    <button class="nav-link"><span>🌱</span> Pflanzen</button>
+    <button class="nav-link"><span>🗓</span> Kalender</button>
+    <button class="nav-link active"><span>📔</span> Tagebuch</button>
   </div>
   <div class="nav-right"><button class="nav-icon-btn">⚙️</button></div>
 </nav>
@@ -181,17 +180,15 @@ nav{background:var(--green-deep);display:flex;align-items:center;height:52px;fle
       <input class="search-input" type="text" placeholder="Einträge suchen …" id="searchInput">
     </div>
     <div class="filter-chips">
-      <button class="chip active" onclick="setFilter('all',this)">Alle</button>
       <button class="chip" onclick="setFilter('done',this)">✅ Erledigt</button>
       <button class="chip" onclick="setFilter('obs',this)">👁 Beobachtung</button>
       <button class="chip" onclick="setFilter('problem',this)">⚠️ Problem</button>
-      <button class="chip" onclick="setFilter('milestone',this)">🌟 Meilenstein</button>
-      <button class="chip" onclick="setFilter('purchase',this)">💰 Ausgabe/Kauf</button>
+      <button class="chip" onclick="setFilter('purchase',this)">💰 Ausgabe</button>
     </div>
-    <button class="btn-new" id="btnNew" onclick="toggleNewEntry()">＋ Neuer Eintrag</button>
   </div>
 
   <div class="timeline-wrap" id="timelineWrap"></div>
+  <button class="fab" id="fab" onclick="toggleNewEntry()" title="Neuer Eintrag">＋</button>
 
 </div>
 
@@ -205,26 +202,29 @@ nav{background:var(--green-deep);display:flex;align-items:center;height:52px;fle
     <div>
       <div class="nep-label">Typ</div>
       <div class="nep-type-grid">
-        <button class="nep-type-btn t-done active" onclick="selectType(this)">✅ Erledigt</button>
-        <button class="nep-type-btn t-obs" onclick="selectType(this)">👁 Beobachtung</button>
-        <button class="nep-type-btn t-problem" onclick="selectType(this)">⚠️ Problem</button>
-        <button class="nep-type-btn t-milestone" onclick="selectType(this)">🌟 Meilenstein</button>
-        <button class="nep-type-btn t-purchase" onclick="selectType(this)" style="grid-column:1/-1">💰 Ausgabe / Kauf</button>
+        <button class="nep-type-btn t-done active" onclick="selectType(this,'done')">✅ Erledigt</button>
+        <button class="nep-type-btn t-obs" onclick="selectType(this,'obs')">👁 Beobachtung</button>
+        <button class="nep-type-btn t-problem" onclick="selectType(this,'problem')">⚠️ Problem</button>
+        <button class="nep-type-btn t-purchase" onclick="selectType(this,'purchase')" style="grid-column:1/-1">💰 Ausgabe</button>
       </div>
+    </div>
+    <div id="priceField" style="display:none">
+      <div class="nep-label">Betrag (€)</div>
+      <input class="nep-input" type="number" min="0" step="0.01" placeholder="0,00">
     </div>
     <div>
       <div class="nep-label">Pflanze / Bezug</div>
       <select class="nep-select">
         <option>🌿 Garten (allgemein)</option>
-        <option>🌹 Rose</option>
-        <option>💐 Rhododendron</option>
-        <option>🌸 Magnolia</option>
-        <option>🌻 Sonnenblume</option>
-        <option>🍎 Apfelbaum</option>
-        <option>🌿 Hortensie</option>
-        <option>🌲 Lebensbaum</option>
-        <option>🍂 Gingko</option>
-        <option>🌺 Päonie</option>
+        <option>🌹 Rose — Rot/Pink · Westbeet</option>
+        <option>💐 Rhododendron — Lila/Pink · Terrasse</option>
+        <option>🌸 Magnolia — Weiß/Creme · Nordwest</option>
+        <option>🌻 Sonnenblume — Gelb · Südbeet</option>
+        <option>🍎 Apfelbaum — Weiß/Rosa · Mitte</option>
+        <option>🌿 Hortensie — Blau/Pink · Ostbeet</option>
+        <option>🌲 Lebensbaum — · Hecke</option>
+        <option>🍂 Gingko — Goldgelb · Einfahrt</option>
+        <option>🌺 Päonie — Rosa/Weiß · Nordbeet</option>
       </select>
     </div>
     <div>
@@ -254,11 +254,13 @@ nav{background:var(--green-deep);display:flex;align-items:center;height:52px;fle
   </div>
 </div>
 
-<!-- CHAT TOGGLE + PANEL -->
-<button class="chat-toggle" id="chatToggle" onclick="toggleChat()">
-  <span class="chat-toggle-icon">💬</span>
-  <span class="chat-toggle-label">Assistent</span>
-</button>
+<!-- CHAT TOGGLE STRIP -->
+<div class="right-strip">
+  <button class="chat-toggle" id="chatToggle" onclick="toggleChat()">
+    <span class="chat-toggle-icon">💬</span>
+    <span class="chat-toggle-label">Assistent</span>
+  </button>
+</div>
 <div class="chat-panel" id="chatPanel">
   <div class="chat-header">
     <div class="chat-title">🤖 Garten-Assistent</div>
@@ -284,23 +286,29 @@ const entries = [
   { id:3,  type:'problem',   plant:'🌿 Hortensie',       date:'2026-04-28', title:'Blattläuse entdeckt',              text:'An den Neutrieben starker Läusebefall. Behandlung mit Schmierseifenlösung. Nächste Woche kontrollieren.', photos:['🔍'] },
   { id:4,  type:'done',      plant:'💐 Rhododendron',    date:'2026-04-15', title:'Rhododendron gedüngt',             text:'Rhododendron-Spezaldünger ausgebracht. 80g pro Pflanze, gleichmäßig verteilt.', photos:[] },
   { id:5,  type:'purchase',  plant:'🌿 Garten (allgemein)', date:'2026-04-10', title:'Rosendünger & Mulch gekauft',   text:'Baumarkt: 2× Compo Rosendünger (je 2kg) à 8,99 €, 3 Säcke Rindenmulch à 4,99 €. Gesamt: 32,95 €.', photos:['🧾'] },
-  { id:6,  type:'milestone', plant:'🌹 Rose',            date:'2026-04-05', title:'Erste Blüte der Saison',           text:'Die erste Rose der Saison hat sich geöffnet! Sorte Feuerzauber, westliches Beet. Drei Wochen früher als letztes Jahr.', photos:['🌹','🌹'] },
+  { id:6,  type:'obs',      plant:'🌹 Rose',            date:'2026-04-05', title:'Erste Blüte der Saison',           text:'Die erste Rose der Saison hat sich geöffnet! Sorte Feuerzauber, westliches Beet. Drei Wochen früher als letztes Jahr.', photos:['🌹','🌹'] },
   { id:7,  type:'done',      plant:'🍎 Apfelbaum',       date:'2026-03-20', title:'Winterschnitt abgeschlossen',      text:'Totholz entfernt, Krone ausgelichtet. Ca. 30% der alten Triebe zurückgeschnitten. Schnittwunden mit Baumwachs versiegelt.', photos:['🪚'] },
   { id:8,  type:'purchase',  plant:'🌸 Magnolia',        date:'2026-03-15', title:'Neue Pflanze gekauft',             text:'Magnolia grandiflora "Edith Bogue" beim Gartencenter Müller. Topfgröße 30L, Höhe ca. 120cm. Preis: 89,00 €.', photos:['🌱','🧾'] },
   { id:9,  type:'obs',       plant:'🌿 Garten (allgemein)', date:'2026-03-10', title:'Frühjahrsbeginn beobachtet',    text:'Erste Schneeglöckchen, Krokusse in voller Blüte. Temperaturen tagsüber bis 12°C. Boden noch feucht.', photos:[] },
   { id:10, type:'done',      plant:'🌲 Lebensbaum',      date:'2026-02-20', title:'Hecke zurückgeschnitten',          text:'Thuja-Hecke auf ca. 180cm Höhe zurückgeschnitten. Seiten begradigt. Schnittgut entsorgt.', photos:['✂️'] },
 ];
 
-const typeLabels = { done:'✅ Erledigt', obs:'👁 Beobachtung', problem:'⚠️ Problem', milestone:'🌟 Meilenstein', purchase:'💰 Ausgabe/Kauf' };
+const typeLabels = { done:'✅ Erledigt', obs:'👁 Beobachtung', problem:'⚠️ Problem', purchase:'💰 Ausgabe' };
 const monthNames = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
 
-let activeFilter = 'all';
+let activeFilter = null;
 let openEntryId = null;
 
 function setFilter(f, el) {
-  activeFilter = f;
-  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-  el.classList.add('active');
+  if (activeFilter === f) {
+    // second click: deactivate
+    activeFilter = null;
+    el.classList.remove('active');
+  } else {
+    activeFilter = f;
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+  }
   render();
 }
 
@@ -323,7 +331,7 @@ function groupByMonth(list) {
 function render() {
   const q = document.getElementById('searchInput').value.toLowerCase();
   let filtered = entries.filter(e => {
-    const matchType = activeFilter === 'all' || e.type === activeFilter;
+    const matchType = !activeFilter || e.type === activeFilter;
     const matchQ = !q || e.title.toLowerCase().includes(q) || e.text.toLowerCase().includes(q) || e.plant.toLowerCase().includes(q);
     return matchType && matchQ;
   });
@@ -374,22 +382,21 @@ let newEntryOpen = false;
 function toggleNewEntry() {
   newEntryOpen = !newEntryOpen;
   document.getElementById('newEntryPanel').classList.toggle('open', newEntryOpen);
-  document.getElementById('btnNew').classList.toggle('active', newEntryOpen);
-  // close chat if open
+  document.getElementById('fab').classList.toggle('active', newEntryOpen);
   if (newEntryOpen) {
     document.getElementById('chatPanel').classList.remove('open');
     document.getElementById('chatToggle').classList.remove('hidden');
   }
 }
 
-function selectType(btn) {
+function selectType(btn, type) {
   document.querySelectorAll('.nep-type-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+  document.getElementById('priceField').style.display = type === 'purchase' ? 'block' : 'none';
 }
 
 function saveEntry() {
   toggleNewEntry();
-  // In a real app: save and re-render
 }
 
 function toggleChat() {
@@ -399,9 +406,8 @@ function toggleChat() {
   panel.classList.toggle('open');
   toggle.classList.toggle('hidden', !open);
   if (!open) {
-    // close new entry panel
     document.getElementById('newEntryPanel').classList.remove('open');
-    document.getElementById('btnNew').classList.remove('active');
+    document.getElementById('fab').classList.remove('active');
     newEntryOpen = false;
   }
 }

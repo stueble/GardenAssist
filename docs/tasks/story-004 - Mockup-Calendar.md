@@ -1,19 +1,19 @@
 ---
 id: STORY-004
 title: 'Mockup: Calendar'
-status: Ready
+status: In Progress
 assignee: []
 created_date: '2026-05-02 22:19'
-updated_date: '2026-05-02 22:21'
+updated_date: '2026-05-02 23:53'
 labels:
   - mockup
 dependencies: []
-ordinal: 1000
+ordinal: 2000
 ---
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Mockup created
+- [x] #1 Mockup created
 - [ ] #2 Mockup documented
 <!-- AC:END -->
 

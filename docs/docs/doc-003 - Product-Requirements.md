@@ -3,7 +3,7 @@ id: doc-003
 title: Product Requirements
 type: other
 created_date: '2026-05-02 20:42'
-updated_date: '2026-05-02 23:27'
+updated_date: '2026-05-02 23:51'
 ---
 # Product Requirements Document – GardenAssist
 
@@ -165,7 +165,7 @@ The primary entry point of the application, combining:
 
 ## 5. UI Principles
 
-*(Details in the separate UI Concept document)*
+*(Details in the separate UI Concept documents)*
 
 - Single-page web application, German UI language
 - Clean, calm design — the garden should feel like the main character
@@ -183,6 +183,8 @@ These are captured here to avoid losing them, but will not drive initial develop
 - Email / push notifications for upcoming tasks
 - Garden conditions input (soil type, sun exposure, microclimate)
 - Multi-device / mobile support
+- Upload receipe to generate an expense journal entry. Use AI to extract what has been bought and the price
+- Drop picture to view to create pre-filled journal entry with the picture attached
 
 ---
 

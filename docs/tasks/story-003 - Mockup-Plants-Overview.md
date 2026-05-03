@@ -4,7 +4,7 @@ title: 'Mockup: Plants Overview'
 status: Done
 assignee: []
 created_date: '2026-05-02 22:18'
-updated_date: '2026-05-02 22:21'
+updated_date: '2026-05-02 23:53'
 labels:
   - mockup
 dependencies: []
@@ -13,8 +13,8 @@ ordinal: 4000
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Mockup created
-- [ ] #2 Mockup documented
+- [x] #1 Mockup created
+- [x] #2 Mockup documented
 <!-- AC:END -->
 
 ## Definition of Done

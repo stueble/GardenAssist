@@ -554,9 +554,11 @@ area.addEventListener('touchend',()=>{dragging=false;});
 let modeFitH = false, modeFitW = false;
 
 function applyFitH() {
+  plan.style.width=IMG_W+'px'; plan.style.height=IMG_H+'px';
   const{w,h}=getSize(); scale=h/IMG_H; tx=(w-IMG_W*scale)/2; ty=0; applyT(true);
 }
 function applyFitW() {
+  plan.style.width=IMG_W+'px'; plan.style.height=IMG_H+'px';
   const{w,h}=getSize(); scale=w/IMG_W; tx=0; ty=(h-IMG_H*scale)/2; applyT(true);
 }
 function applyFitBoth() {
@@ -583,13 +585,17 @@ document.getElementById('zoomFitHeight').addEventListener('click',()=>{
   modeFitH = !modeFitH;
   updateModeButtons();
   if (modeFitH && modeFitW) { applyFitBoth(); return; }
-  if (modeFitH) applyFitH(); else initPlan();
+  if (modeFitH) { applyFitH(); return; }
+  if (modeFitW) { applyFitW(); return; }
+  initPlan();
 });
 document.getElementById('zoomFitWidth').addEventListener('click',()=>{
   modeFitW = !modeFitW;
   updateModeButtons();
   if (modeFitH && modeFitW) { applyFitBoth(); return; }
-  if (modeFitW) applyFitW(); else initPlan();
+  if (modeFitW) { applyFitW(); return; }
+  if (modeFitH) { applyFitH(); return; }
+  initPlan();
 });
 
 // Override wheel handler based on mode

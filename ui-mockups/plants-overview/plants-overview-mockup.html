@@ -67,11 +67,13 @@
     border-right: 1px solid rgba(255,255,255,0.1);
     height: 100%;
   }
-  .nav-links { display: flex; gap: 2px; flex: 1; padding: 0 12px; }
+  .nav-links { display: flex; gap: 2px; flex: 1; padding: 0 12px; align-items: center; }
   .nav-link {
     color: var(--green-pale);
     text-decoration: none;
-    padding: 6px 14px;
+    padding: 0 14px;
+    height: 36px;
+    line-height: 1;
     border-radius: 6px;
     font-size: 13px;
     opacity: 0.7;
@@ -82,6 +84,7 @@
     display: flex;
     align-items: center;
     gap: 6px;
+    white-space: nowrap;
   }
   .nav-link:hover { opacity: 1; background: rgba(255,255,255,0.1); }
   .nav-link.active { opacity: 1; background: rgba(255,255,255,0.15); font-weight: 500; }
@@ -102,6 +105,7 @@
     flex: 1;
     overflow: hidden;
     min-width: 0;
+    position: relative;
   }
 
   /* ── SUBHEADER ── */
@@ -167,6 +171,11 @@
     flex-shrink: 0;
   }
   .btn-add:hover { background: var(--green-mid); }
+  /* ── FLOATING ACTION BUTTON ── */
+  .fab { position: absolute; bottom: 24px; right: 24px; width: 48px; height: 48px; border-radius: 12px; background: var(--green-deep); color: white; border: none; font-size: 26px; font-weight: 300; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(45,74,45,.35); transition: background .2s, transform .15s; line-height: 1; z-index: 10; }
+  .fab:hover { background: var(--green-mid); transform: scale(1.07); }
+  .fab.active { background: #8b6f47; }
+
 
   /* Spacer pushes view toggle to the right */
   .subheader-spacer { flex: 1; }
@@ -589,10 +598,10 @@
 <nav>
   <div class="nav-logo"><span>🌿</span> GardenAssist</div>
   <div class="nav-links">
-    <button class="nav-link">🏠 Dashboard</button>
-    <button class="nav-link active">🌱 Pflanzen</button>
-    <button class="nav-link">🗓 Kalender</button>
-    <button class="nav-link">📔 Tagebuch</button>
+    <button class="nav-link"><span>🏠</span> Dashboard</button>
+    <button class="nav-link active"><span>🌱</span> Pflanzen</button>
+    <button class="nav-link"><span>🗓</span> Kalender</button>
+    <button class="nav-link"><span>📔</span> Tagebuch</button>
   </div>
   <div class="nav-right">
     <button class="nav-icon-btn">⚙️</button>
@@ -611,8 +620,6 @@
         <span class="search-icon">🔍</span>
         <input class="search-input" type="text" placeholder="Pflanze suchen …" id="searchInput" />
       </div>
-
-      <button class="btn-add" onclick="openAddPlant()">＋ Pflanze hinzufügen</button>
 
       <div class="subheader-spacer"></div>
 
@@ -738,6 +745,7 @@
       <div class="card-grid" id="cardGrid"></div>
 
     </div><!-- /main-area -->
+  <button class="fab" id="fab" onclick="openAddPlant()" title="Pflanze hinzufügen">＋</button>
   </div><!-- /content-col -->
 
   <!-- CHAT TOGGLE STRIP -->

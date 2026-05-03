@@ -8,7 +8,7 @@ updated_date: '2026-05-03'
 
 # UI Concept – Dashboard
 
-**Version:** 0.4  
+**Version:** 0.5  
 **Last updated:** 2026-05-03
 
 ---
@@ -86,7 +86,7 @@ When a plant pin is clicked, the left column switches from todo list to plant de
 
 ### Mockup
 
-Interactive HTML mockup: `ui-mockups/dashboard/garden-app-mockup.html`
+Interactive HTML mockup: `ui-mockups/dashboard/dashboard-mockup.html`
 
 ---
 
@@ -103,7 +103,7 @@ Interactive HTML mockup: `ui-mockups/dashboard/garden-app-mockup.html`
 | **Plant detail panel** (left, below weather) | Full plant profile: images, fact sheet, care history, notes, action buttons | Replaces todo list when a plant pin is clicked; same ✕ close button returns to todo list |
 | **Garden plan** (center) | Image-based layout with plant pins | Pan & zoom via mouse/touch; image loaded from `gartenplan.png`; pins counter-scaled to stay constant size |
 | **Plant pin** | Emoji + ring on the plan surface; red dot indicator for overdue tasks | Hover: tooltip with name, status, next task; first click: opens detail panel; second click on same pin: closes panel |
-| **Zoom buttons ↕ / ↔** | Fixed bottom-right of garden area | ↕ fits the image to the available height; ↔ fits to width; not affected by pan/zoom transform |
+| **Zoom buttons ↕ / ↔** | Fixed bottom-right of garden area; toggleable — active button highlighted in dark green | ↕ active: image always scaled to fit available height, auto-updates on window resize; ↔ active: image always scaled to fit available width, auto-updates on window resize; both active: image stretched to fill entire area (distorted); both inactive: free zoom/pan mode; not affected by pan/zoom transform |
 | **Legend** | Fixed bottom-left of garden area | Color key: overdue / current / ok; not affected by pan/zoom transform |
 | **Monthly band** (bottom) | 12 month cells with colored dots | Current month highlighted dark; hover per cell: tooltip with task list for that month |
 | **Month tooltip** | Tasks grouped by category (✂️ 💧 🌱) | Appears above the month cell; disappears on mouseout |
@@ -127,11 +127,16 @@ Interactive HTML mockup: `ui-mockups/dashboard/garden-app-mockup.html`
 - **Hover over month cell** → Tooltip appears above with categorized tasks
 - **Click chat strip** → Chat panel expands (width transition), strip is hidden
 - **Click ✕ in chat** → Chat panel collapses, strip reappears
-- **Scroll wheel over garden plan** → Zoom in/out, centered on mouse position
-- **Click + drag in garden plan** → Pan; cursor changes to grabbing hand
-- **Pinch gesture (touch / trackpad)** → Two-finger zoom, centered on pinch midpoint
-- **Button ↕** → Scale image to fit available height, center horizontally
-- **Button ↔** → Scale image to fit available width, center vertically
+- **Scroll wheel (both buttons inactive)** → Zoom in/out, centered on mouse position
+- **Scroll wheel (↕ active, ↔ inactive)** → Pan left/right if image is wider than the container
+- **Scroll wheel (↔ active, ↕ inactive)** → Pan up/down if image is taller than the container
+- **Scroll wheel (both active)** → No function
+- **Click + drag in garden plan** → Pan in all modes; cursor changes to grabbing hand
+- **Pinch gesture (touch / trackpad)** → Two-finger zoom when both buttons inactive
+- **Button ↕ (toggle)** → Activate: scale image to fit available height, center horizontally, auto-refit on window resize; deactivate: return to free mode (or fit-width if ↔ still active)
+- **Button ↔ (toggle)** → Activate: scale image to fit available width, center vertically, auto-refit on window resize; deactivate: return to free mode (or fit-height if ↕ still active)
+- **Both buttons active** → Image stretched to fill entire garden area (distorted); scrollwheel disabled; window resize re-applies stretch
+- **Window resize with a button active** → Active mode re-applied immediately without going through the default fit-all calculation
 - **Plant pins at any zoom level** → Counter-scaled (inverse of zoom) to remain constant visual size
 
 ### States
