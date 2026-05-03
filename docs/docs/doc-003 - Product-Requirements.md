@@ -3,7 +3,7 @@ id: doc-003
 title: Product Requirements
 type: other
 created_date: '2026-05-02 20:42'
-updated_date: '2026-05-02 23:51'
+updated_date: '2026-05-03 20:07'
 ---
 # Product Requirements Document – GardenAssist
 
@@ -50,13 +50,13 @@ A structured overview of all plants in the garden.
 
 Each plant record includes:
 - Name (common and botanical), 
-- Type: 
+- Category: 
     - Grass,
     - Tree, 
     - Shrub
     - Flower
 - Description: Free text
-- Category
+- Origin Type
     - Native
     - Neophyt
     - Invasive neophyt
@@ -198,9 +198,3 @@ These are captured here to avoid losing them, but will not drive initial develop
 ---
 
 ## 8. Open Questions
-
-- [ ] Which AI model / API will power the assistant?
-- [ ] How is garden plan data stored — free-draw canvas or structured coordinates?
-- [ ] Where do plant images come from — user upload, AI search, or a plant database API?
-- [ ] What is the data storage approach — local-first, cloud, or hybrid?
-- [ ] Should the app work offline?
