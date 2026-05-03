@@ -90,7 +90,6 @@ nav{background:var(--green-deep);display:flex;align-items:center;height:52px;fle
 /* ZONE LIST */
 .zone-list{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
 .zone-entry{display:flex;align-items:center;gap:8px;background:var(--green-mist);border:1.5px solid var(--border);border-radius:8px;padding:7px 10px}
-.zone-id{font-size:10px;font-weight:700;color:var(--text-light);min-width:20px;text-align:center}
 .zone-name-input{flex:1;background:white;border:1.5px solid var(--border);border-radius:6px;padding:5px 9px;font-size:12.5px;font-family:'DM Sans',sans-serif;color:var(--text-dark);outline:none}
 .zone-name-input:focus{border-color:var(--green-mid)}
 .zone-delete{background:none;border:none;cursor:pointer;color:var(--text-light);font-size:14px;line-height:1;flex-shrink:0}
@@ -217,33 +216,28 @@ nav{background:var(--green-deep);display:flex;align-items:center;height:52px;fle
       <div style="padding-top:14px">
         <div class="zone-list" id="zone-list">
           <div class="zone-entry">
-            <span class="zone-id">A</span>
-            <input class="zone-name-input" type="text" value="Beet West">
+            <input class="zone-name-input" type="text" value="Beet West" oninput="markDirty()">
             <button class="zone-delete" onclick="deleteZone(this)">✕</button>
           </div>
           <div class="zone-entry">
-            <span class="zone-id">B</span>
-            <input class="zone-name-input" type="text" value="Beet Ost">
+            <input class="zone-name-input" type="text" value="Beet Ost" oninput="markDirty()">
             <button class="zone-delete" onclick="deleteZone(this)">✕</button>
           </div>
           <div class="zone-entry">
-            <span class="zone-id">C</span>
-            <input class="zone-name-input" type="text" value="Rasen">
+            <input class="zone-name-input" type="text" value="Rasen" oninput="markDirty()">
             <button class="zone-delete" onclick="deleteZone(this)">✕</button>
           </div>
           <div class="zone-entry">
-            <span class="zone-id">D</span>
-            <input class="zone-name-input" type="text" value="Terrasse">
+            <input class="zone-name-input" type="text" value="Terrasse" oninput="markDirty()">
             <button class="zone-delete" onclick="deleteZone(this)">✕</button>
           </div>
           <div class="zone-entry">
-            <span class="zone-id">E</span>
-            <input class="zone-name-input" type="text" value="Einfahrt">
+            <input class="zone-name-input" type="text" value="Einfahrt" oninput="markDirty()">
             <button class="zone-delete" onclick="deleteZone(this)">✕</button>
           </div>
         </div>
         <button class="add-row-btn" onclick="addZone()">＋ Zone hinzufügen</button>
-        <div class="field-hint" style="margin-top:8px">Zonennamen erscheinen im Pflanzendialog als Dropdown. Buchstaben werden automatisch vergeben.</div>
+        <div class="field-hint" style="margin-top:8px">Zonennamen erscheinen im Pflanzendialog als Dropdown. Reihenfolge und Bezeichnung sind frei wählbar.</div>
       </div>
     </div>
   </div>
@@ -261,15 +255,14 @@ nav{background:var(--green-deep);display:flex;align-items:center;height:52px;fle
     <div class="ss-body">
       <div style="padding-top:14px">
         <div class="zone-list" id="cat-list">
-          <div class="zone-entry"><input class="zone-name-input" type="text" value="Rosen"><button class="zone-delete" onclick="this.closest('.zone-entry').remove()">✕</button></div>
-          <div class="zone-entry"><input class="zone-name-input" type="text" value="Obstbäume"><button class="zone-delete" onclick="this.closest('.zone-entry').remove()">✕</button></div>
-          <div class="zone-entry"><input class="zone-name-input" type="text" value="Beerensträucher"><button class="zone-delete" onclick="this.closest('.zone-entry').remove()">✕</button></div>
-          <div class="zone-entry"><input class="zone-name-input" type="text" value="Heckenpflanzen"><button class="zone-delete" onclick="this.closest('.zone-entry').remove()">✕</button></div>
-          <div class="zone-entry"><input class="zone-name-input" type="text" value="Stauden"><button class="zone-delete" onclick="this.closest('.zone-entry').remove()">✕</button></div>
-          <div class="zone-entry"><input class="zone-name-input" type="text" value="Einjährige"><button class="zone-delete" onclick="this.closest('.zone-entry').remove()">✕</button></div>
-          <div class="zone-entry"><input class="zone-name-input" type="text" value="Kräuter"><button class="zone-delete" onclick="this.closest('.zone-entry').remove()">✕</button></div>
-          <div class="zone-entry"><input class="zone-name-input" type="text" value="Ziersträucher"><button class="zone-delete" onclick="this.closest('.zone-entry').remove()">✕</button></div>
-          <div class="zone-entry"><input class="zone-name-input" type="text" value="Nadelbäume"><button class="zone-delete" onclick="this.closest('.zone-entry').remove()">✕</button></div>
+          <div class="zone-entry"><input class="zone-name-input" type="text" value="Strauch"><button class="zone-delete" onclick="this.closest('.zone-entry').remove()">✕</button></div>
+          <div class="zone-entry"><input class="zone-name-input" type="text" value="Baum"><button class="zone-delete" onclick="this.closest('.zone-entry').remove()">✕</button></div>
+          <div class="zone-entry"><input class="zone-name-input" type="text" value="Staude"><button class="zone-delete" onclick="this.closest('.zone-entry').remove()">✕</button></div>
+          <div class="zone-entry"><input class="zone-name-input" type="text" value="Einjährig"><button class="zone-delete" onclick="this.closest('.zone-entry').remove()">✕</button></div>
+          <div class="zone-entry"><input class="zone-name-input" type="text" value="Nadelbaum"><button class="zone-delete" onclick="this.closest('.zone-entry').remove()">✕</button></div>
+          <div class="zone-entry"><input class="zone-name-input" type="text" value="Obstbaum"><button class="zone-delete" onclick="this.closest('.zone-entry').remove()">✕</button></div>
+          <div class="zone-entry"><input class="zone-name-input" type="text" value="Kletterpflanze"><button class="zone-delete" onclick="this.closest('.zone-entry').remove()">✕</button></div>
+          <div class="zone-entry"><input class="zone-name-input" type="text" value="Bodendecker"><button class="zone-delete" onclick="this.closest('.zone-entry').remove()">✕</button></div>
         </div>
         <button class="add-row-btn" onclick="addCat()">＋ Kategorie hinzufügen</button>
         <div class="field-hint" style="margin-top:8px">Diese Kategorien erscheinen im Pflanzendialog als Dropdown-Auswahl.</div>
@@ -344,8 +337,11 @@ nav{background:var(--green-deep);display:flex;align-items:center;height:52px;fle
       <div style="padding-top:14px">
         <div class="field-row">
           <label class="field-label">Anthropic API-Schlüssel</label>
-          <input class="field-input mono" type="password" value="sk-ant-api03-••••••••••••••••••••••••••" placeholder="sk-ant-…">
-          <div class="field-hint">Wird nur lokal gespeichert und nie übertragen. Erhalte deinen Schlüssel unter console.anthropic.com.</div>
+          <div style="display:flex;gap:8px">
+            <input class="field-input mono" type="password" value="sk-ant-api03-••••••••••••••••••••••••••" placeholder="sk-ant-…" style="flex:1">
+            <button class="btn" id="testApiBtn" onclick="testApi()" style="white-space:nowrap;flex-shrink:0">🔌 Verbindung testen</button>
+          </div>
+          <div class="field-hint" id="apiTestResult">Wird nur lokal gespeichert und nie übertragen. Erhalte deinen Schlüssel unter console.anthropic.com.</div>
         </div>
         <div class="field-row">
           <label class="field-label">Modell</label>
@@ -396,15 +392,64 @@ nav{background:var(--green-deep);display:flex;align-items:center;height:52px;fle
 </div>
 
 <!-- SAVE BAR -->
-<div class="save-bar">
-  <span class="save-bar-hint">Änderungen werden erst nach dem Speichern übernommen</span>
+<div class="save-bar" id="saveBar">
+  <span class="save-bar-hint" id="saveBarHint">Keine ungespeicherten Änderungen</span>
   <div class="save-bar-btns">
-    <button class="save-bar-btn" onclick="alert('Verworfen')">Verwerfen</button>
-    <button class="save-bar-btn primary" onclick="alert('Gespeichert!')">Speichern</button>
+    <button class="save-bar-btn" id="discardBtn" onclick="discardChanges()" disabled style="opacity:.4;cursor:default">Verwerfen</button>
+    <button class="save-bar-btn primary" id="saveBtn" onclick="saveChanges()" disabled style="opacity:.4;cursor:default">Speichern</button>
   </div>
 </div>
 
 <script>
+let isDirty = false;
+
+function markDirty(){
+  if(isDirty) return;
+  isDirty = true;
+  document.getElementById('saveBarHint').textContent = 'Ungespeicherte Änderungen vorhanden';
+  document.getElementById('discardBtn').disabled = false;
+  document.getElementById('discardBtn').style.opacity = '1';
+  document.getElementById('discardBtn').style.cursor = 'pointer';
+  document.getElementById('saveBtn').disabled = false;
+  document.getElementById('saveBtn').style.opacity = '1';
+  document.getElementById('saveBtn').style.cursor = 'pointer';
+}
+
+function discardChanges(){
+  if(!confirm('Alle ungespeicherten Änderungen verwerfen?')) return;
+  isDirty = false;
+  document.getElementById('saveBarHint').textContent = 'Keine ungespeicherten Änderungen';
+  document.getElementById('discardBtn').disabled = true;
+  document.getElementById('discardBtn').style.opacity = '0.4';
+  document.getElementById('discardBtn').style.cursor = 'default';
+  document.getElementById('saveBtn').disabled = true;
+  document.getElementById('saveBtn').style.opacity = '0.4';
+  document.getElementById('saveBtn').style.cursor = 'default';
+}
+
+function saveChanges(){
+  isDirty = false;
+  document.getElementById('saveBarHint').textContent = 'Keine ungespeicherten Änderungen';
+  document.getElementById('discardBtn').disabled = true;
+  document.getElementById('discardBtn').style.opacity = '0.4';
+  document.getElementById('discardBtn').style.cursor = 'default';
+  document.getElementById('saveBtn').disabled = true;
+  document.getElementById('saveBtn').style.opacity = '0.4';
+  document.getElementById('saveBtn').style.cursor = 'default';
+  alert('Einstellungen gespeichert!');
+}
+
+function testApi(){
+  const btn = document.getElementById('testApiBtn');
+  const result = document.getElementById('apiTestResult');
+  btn.textContent = '⏳ Teste …'; btn.disabled = true;
+  setTimeout(()=>{
+    btn.textContent = '🔌 Verbindung testen'; btn.disabled = false;
+    result.textContent = '✅ Verbindung erfolgreich — claude-sonnet-4-6 antwortet.';
+    result.style.color = 'var(--green-mid)';
+  }, 1200);
+}
+
 function toggleSS(id){
   document.getElementById(id).classList.toggle('open');
 }
@@ -414,6 +459,10 @@ document.addEventListener('input', e=>{
   if(e.target.classList.contains('preset-color-input')){
     const swatch=e.target.closest('.preset-entry').querySelector('.preset-swatch');
     swatch.style.background=e.target.value;
+    markDirty();
+  }
+  if(e.target.classList.contains('preset-name-input')||e.target.classList.contains('zone-name-input')||e.target.classList.contains('field-input')||e.target.classList.contains('field-select')){
+    markDirty();
   }
 });
 
@@ -424,24 +473,27 @@ function addPreset(listId){
   entry.innerHTML=`<div class="preset-swatch" style="background:${color}"></div><input class="preset-name-input" placeholder="Farbname"><input type="color" class="preset-color-input" value="${color}"><button class="preset-delete" onclick="this.closest('.preset-entry').remove()">✕</button>`;
   list.appendChild(entry);
   entry.querySelector('.preset-name-input').focus();
+  markDirty();
 }
 
 // Zone list
-const ZONE_LETTERS='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-function updateZoneIds(){
-  document.querySelectorAll('#zone-list .zone-entry').forEach((z,i)=>{
-    z.querySelector('.zone-id').textContent=ZONE_LETTERS[i]||i+1;
-  });
-}
-function addZone(){
-  const list=document.getElementById('zone-list');
-  const n=list.children.length;
+function addCat(){
+  const list=document.getElementById('cat-list');
   const entry=document.createElement('div'); entry.className='zone-entry';
-  entry.innerHTML=`<span class="zone-id">${ZONE_LETTERS[n]||n+1}</span><input class="zone-name-input" type="text" placeholder="Zonenname …"><button class="zone-delete" onclick="deleteZone(this)">✕</button>`;
+  entry.innerHTML=`<input class="zone-name-input" type="text" placeholder="Kategoriename …"><button class="zone-delete" onclick="this.closest('.zone-entry').remove()">✕</button>`;
   list.appendChild(entry);
   entry.querySelector('.zone-name-input').focus();
 }
-function deleteZone(btn){btn.closest('.zone-entry').remove(); updateZoneIds();}
+
+function addZone(){
+  const list=document.getElementById('zone-list');
+  const entry=document.createElement('div'); entry.className='zone-entry';
+  entry.innerHTML=`<input class="zone-name-input" type="text" placeholder="Zonenname …" oninput="markDirty()"><button class="zone-delete" onclick="deleteZone(this)">✕</button>`;
+  list.appendChild(entry);
+  entry.querySelector('.zone-name-input').focus();
+  markDirty();
+}
+function deleteZone(btn){btn.closest('.zone-entry').remove(); markDirty();}
 
 // Category chips
 function addCat(){
@@ -456,6 +508,7 @@ function addCat(){
 function removePlan(){
   document.getElementById('planPreview').style.display='none';
   document.getElementById('planUpload').style.display='block';
+  markDirty();
 }
 </script>
 </body>
