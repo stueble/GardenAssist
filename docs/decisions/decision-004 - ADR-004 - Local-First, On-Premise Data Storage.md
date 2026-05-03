@@ -1,6 +1,6 @@
 ---
 id: decision-004
-title: ADR-004 - Local-First, On-Premise Data Storage
+title: ADR-004 - Local-First, On-Premise Deployment and Offline Capability
 date: '2026-05-03'
 status: Accepted
 ---
@@ -18,15 +18,16 @@ including images, plant records, settings, and journal entries — is stored on 
 user's own infrastructure. No data is transmitted to any external service except
 for outbound AI API calls initiated explicitly by the user (using their own API key).
 
-The app must be self-hostable and installable without requiring any external account
-or cloud dependency.
+The app must be self-hostable, installable without any external account or cloud
+dependency, and fully functional without an internet connection. An internet
+connection is only required when the user actively triggers an AI assistant request.
 
 ## Consequences
 
 - No backend-as-a-service, cloud database, or authentication provider is needed.
+- All core features (garden plan, plants, calendar, journal) work offline.
 - The user is responsible for backup and data migration (supported via
   Settings → Daten & Backup).
-- Offline functionality is a natural result of this architecture (see ADR-005).
 - The tech stack must support local persistence (e.g. local file system, SQLite,
   or similar embedded storage).
 - Multi-device sync is out of scope for v1.
