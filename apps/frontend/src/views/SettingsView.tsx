@@ -44,8 +44,8 @@ export function SettingsView() {
 
             {/* Page title — mockup: Playfair Display 24px 600, color green-deep */}
             <div
-              className="font-semibold text-green-deep mb-[6px]"
-              style={{ fontFamily: "var(--font-display)", fontSize: "24px" }}
+              className="text-green-deep mb-[6px]"
+              style={{ fontFamily: "var(--font-display)", fontSize: "24px", fontWeight: 600 }}
             >
               ⚙️ {t("title")}
             </div>

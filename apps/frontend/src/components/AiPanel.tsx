@@ -82,22 +82,26 @@ export function AiPanel({ context }: AiPanelProps) {
       )}
 
       {/* Toggle strip — always visible */}
+      {/* Toggle strip — matches mockup .chat-toggle exactly */}
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-label={open ? "Assistent schließen" : "Assistent öffnen"}
         aria-expanded={open}
-        className={cn(
-          "flex flex-col items-center gap-[10px] px-[11px] py-6 border-none font-body text-[14px] font-medium cursor-pointer transition-colors shrink-0",
-          open
-            ? "bg-green-mid text-green-pale hover:bg-green-light"
-            : "bg-green-mid text-green-pale hover:bg-green-light"
-        )}
+        className="flex flex-col items-center gap-[10px] px-[11px] py-6 border-none font-body text-[14px] font-medium cursor-pointer transition-[background] duration-200 shrink-0 bg-green-mid text-green-pale hover:bg-green-light"
+        style={{ borderLeft: "1px solid rgba(255,255,255,.15)" }}
       >
-        <span className="text-[20px] leading-none" aria-hidden="true">🤖</span>
+        {/* Icon — mockup uses 💬, not 🤖 */}
+        <span style={{ fontSize: "20px", lineHeight: 1 }} aria-hidden="true">💬</span>
         <span
-          className="text-[13px] tracking-[0.8px] font-medium"
-          style={{ writingMode: "vertical-rl", textOrientation: "mixed", transform: "rotate(180deg)" }}
+          style={{
+            writingMode:     "vertical-rl",
+            textOrientation: "mixed",
+            transform:       "rotate(180deg)",
+            letterSpacing:   ".8px",
+            fontSize:        "14px",
+            fontWeight:      500,
+          }}
         >
           Assistent
         </span>
