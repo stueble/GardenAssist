@@ -3,9 +3,13 @@
   "compilerOptions": {
     "lib": ["ESNext"],
     "outDir": "dist",
+    "rootDir": "../..",
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
     "paths": {
       "@api/*": ["../../docs/api/*"]
     }
   },
-  "include": ["src", "../../docs/api"]
+  "include": ["src", "../../docs/api"],
+  "exclude": ["src/db/__tests__"]
 }
