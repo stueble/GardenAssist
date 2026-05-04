@@ -193,4 +193,78 @@ describe("deriveTasks", () => {
     });
     expect(tasks).toHaveLength(0);
   });
+
+  describe("year-end wrapping (end_week < start_week)", () => {
+    // Reference: NOW = 2026-05-05 = W19.
+    // Schedule W50–W04 wraps across year boundary.
+    // With lookahead 40 weeks from W19 we reach ~W59 = W07 of next year → covers W50–W52 of 2026 and W01–W04 of 2027.
+    // With lookback 2 weeks we only go back to W17 — so W50–W52/2026 are upcoming, W01–W04/2027 are upcoming too.
+
+    const wrappingSchedule = makeSchedule({ start_week: 50, end_week: 4 });
+
+    it("generates tasks for weeks on both sides of the year boundary", () => {
+      const tasks = deriveTasks({
+        schedules:      [wrappingSchedule],
+        journalEntries: [],
+        lookbackWeeks:  0,
+        lookaheadWeeks: 40,
+        now:            NOW,
+      });
+      const weeks = tasks.map((t) => t.week);
+      // Should contain late-year weeks of 2026
+      expect(weeks).toContain("2026-W50");
+      expect(weeks).toContain("2026-W52");
+      // And early-year weeks of 2027
+      expect(weeks).toContain("2027-W01");
+      expect(weeks).toContain("2027-W04");
+      // Should NOT contain W05 (beyond end_week=4)
+      expect(weeks).not.toContain("2027-W05");
+    });
+
+    it("marks wrapping-schedule weeks as upcoming when all are in the future", () => {
+      const tasks = deriveTasks({
+        schedules:      [wrappingSchedule],
+        journalEntries: [],
+        lookbackWeeks:  0,
+        lookaheadWeeks: 40,
+        now:            NOW,
+      });
+      // All weeks of this schedule are in the future relative to W19
+      expect(tasks.every((t) => t.status === "upcoming")).toBe(true);
+    });
+
+    it("marks wrapping-schedule week as overdue when it is in the past", () => {
+      // Reference: end of 2026, W50 is current week → W49 just passed
+      const lateNow = new Date("2026-12-07T12:00:00Z"); // 2026-W50 (Mon)
+      const tasks = deriveTasks({
+        schedules:      [wrappingSchedule],
+        journalEntries: [],
+        lookbackWeeks:  2,
+        lookaheadWeeks: 8,
+        now:            lateNow,
+      });
+      // W50 should be "due", W51–W52 upcoming, W01–W04/2027 upcoming
+      const w50 = tasks.find((t) => t.week === "2026-W50");
+      expect(w50?.status).toBe("due");
+      const w51 = tasks.find((t) => t.week === "2026-W51");
+      expect(w51?.status).toBe("upcoming");
+      const w01 = tasks.find((t) => t.week === "2027-W01");
+      expect(w01?.status).toBe("upcoming");
+    });
+
+    it("suppresses a wrapping-schedule task when resolved by done entry", () => {
+      const tasks = deriveTasks({
+        schedules:      [wrappingSchedule],
+        journalEntries: [
+          { schedule_id: "sched-001", week: "2026-W51", entry_type: "done" },
+        ],
+        lookbackWeeks:  0,
+        lookaheadWeeks: 40,
+        now:            NOW,
+      });
+      expect(tasks.find((t) => t.week === "2026-W51")).toBeUndefined();
+      // Other weeks should still be present
+      expect(tasks.find((t) => t.week === "2026-W50")).toBeDefined();
+    });
+  });
 });
