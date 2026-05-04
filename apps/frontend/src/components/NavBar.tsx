@@ -1,28 +1,32 @@
 import { NavLink } from "react-router-dom";
 import { Settings } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 
 const tabs = [
-  { to: "/",         icon: "🏠", label: "Dashboard" },
-  { to: "/plants",   icon: "🌱", label: "Pflanzen"  },
-  { to: "/calendar", icon: "🗓", label: "Kalender"  },
-  { to: "/journal",  icon: "📔", label: "Tagebuch"  },
+  { to: "/",         icon: "🏠", key: "dashboard" },
+  { to: "/plants",   icon: "🌱", key: "plants"    },
+  { to: "/calendar", icon: "🗓", key: "calendar"  },
+  { to: "/journal",  icon: "📔", key: "journal"   },
 ] as const;
 
 export function NavBar() {
+  const { t } = useTranslation("common");
+
   return (
     <nav
       className="flex items-center h-[52px] shrink-0 bg-green-deep shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
       aria-label="Hauptnavigation"
     >
-      {/* Logo — 280px, Playfair Display 20px, green-pale, gap-[8px] between emoji and name */}
+      {/* Logo */}
       <span className="flex items-center gap-[8px] w-[280px] shrink-0 px-5 h-full border-r border-white/10 font-display leading-none text-green-pale tracking-[0.5px] select-none" style={{ fontSize: "20px" }}>
-        <span aria-hidden="true">🌿</span>GardenAssist
+        <span aria-hidden="true">🌿</span>{t("app_name")}
       </span>
 
       {/* Main tabs */}
       <div className="flex gap-0.5 flex-1 items-center px-3" role="tablist">
-        {tabs.map(({ to, icon, label }) => (
+        {tabs.map(({ to, icon, key }) => (
           <NavLink
             key={to}
             to={to}
@@ -37,16 +41,17 @@ export function NavBar() {
               )
             }
           >
-            <span aria-hidden="true">{icon}</span>{label}
+            <span aria-hidden="true">{icon}</span>{t(`nav.${key}`)}
           </NavLink>
         ))}
       </div>
 
-      {/* Settings icon */}
-      <div className="pr-4">
+      {/* Language switcher + Settings */}
+      <div className="flex items-center gap-2 pr-4">
+        <LanguageSwitcher />
         <NavLink
           to="/settings"
-          aria-label="Einstellungen"
+          aria-label={t("nav.settings")}
           className={({ isActive }) =>
             cn(
               "text-green-pale text-[18px] transition-opacity",

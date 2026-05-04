@@ -22,6 +22,7 @@ async function seed() {
     .insert(settings)
     .values({
       id: "settings",
+      language: "de",
       location_city: null,
       location_zip: null,
       irrigation_zones: "[]",

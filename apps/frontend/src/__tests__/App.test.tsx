@@ -2,17 +2,26 @@
  * App routing tests.
  *
  * Verifies that navigating to each route renders the correct view.
+ * Tests run with German locale (default).
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { I18nextProvider } from "react-i18next";
+import i18n from "../i18n/index";
 import { App } from "../App";
+
+beforeEach(async () => {
+  await i18n.changeLanguage("de");
+});
 
 function renderAt(path: string) {
   return render(
     <MemoryRouter initialEntries={[path]}>
-      <App />
+      <I18nextProvider i18n={i18n}>
+        <App />
+      </I18nextProvider>
     </MemoryRouter>
   );
 }

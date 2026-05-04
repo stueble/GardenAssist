@@ -1,0 +1,12 @@
+{
+  "title": "Kalender",
+  "subtitle": "Saisonaler Überblick über alle Pflegemaßnahmen.",
+  "schedule_type": {
+    "bloom": "Blütezeit",
+    "growth": "Wachstum",
+    "foliage": "Blätter",
+    "pruning": "Schnitt",
+    "fertilization": "Düngen",
+    "misc": "Sonstiges"
+  }
+}

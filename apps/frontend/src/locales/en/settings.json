@@ -1,0 +1,31 @@
+{
+  "title": "Settings",
+  "subtitle": "Global app configuration.",
+  "sections": {
+    "general": "General",
+    "location": "Location",
+    "garden": "Garden",
+    "tasks": "Tasks",
+    "storage": "File Storage",
+    "ai": "AI Assistant",
+    "data": "Data & Backup"
+  },
+  "fields": {
+    "language": "Language",
+    "location_city": "City",
+    "location_zip": "Postal Code",
+    "irrigation_zones": "Irrigation Zones",
+    "plant_categories": "Plant Categories",
+    "task_lookback_weeks": "Lookback (weeks)",
+    "task_lookahead_weeks": "Lookahead (weeks)",
+    "attachment_size_limit_mb": "Max. file size (MB)",
+    "ai_provider": "Provider",
+    "ai_model": "Model",
+    "ai_api_key": "API Key"
+  },
+  "ai_provider": {
+    "anthropic": "Anthropic (Claude)",
+    "openai": "OpenAI (GPT)",
+    "openrouter": "OpenRouter"
+  }
+}

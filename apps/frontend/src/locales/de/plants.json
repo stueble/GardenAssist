@@ -1,0 +1,56 @@
+{
+  "title": "Pflanzen",
+  "subtitle": "Alle Pflanzen in deinem Garten.",
+  "fields": {
+    "name_common": "Name",
+    "name_botanical": "Botanischer Name",
+    "origin_type": "Herkunft",
+    "category": "Kategorie",
+    "lifecycle": "Lebenszyklus",
+    "description": "Beschreibung",
+    "care_notes": "Pflegehinweise",
+    "sun_demand": "Lichtbedarf",
+    "water_demand": "Wasserbedarf",
+    "soil_type": "Bodentyp",
+    "frost_tolerance_min_c": "Frosttoleranz (°C)",
+    "temperature_protected": "Frostschutz nötig",
+    "health_status": "Gesundheitszustand",
+    "location": "Standort",
+    "watering_zone": "Bewässerungszone",
+    "purchase_date": "Kaufdatum",
+    "purchase_price": "Kaufpreis (€)"
+  },
+  "origin_type": {
+    "native": "Heimisch",
+    "neophyte": "Neophyt",
+    "invasive_neophyte": "Invasiver Neophyt"
+  },
+  "lifecycle": {
+    "annual": "Einjährig",
+    "biennial": "Zweijährig",
+    "perennial": "Mehrjährig",
+    "evergreen": "Immergrün"
+  },
+  "sun_demand": {
+    "sunny": "Sonnig (6+ h)",
+    "partial_shade": "Halbschattig (3–6 h)",
+    "shady": "Schattig (< 3 h)"
+  },
+  "water_demand": {
+    "low": "Gering",
+    "medium": "Mittel",
+    "high": "Hoch"
+  },
+  "soil_type": {
+    "loamy": "Lehmig",
+    "sandy": "Sandig",
+    "humus_rich": "Humusreich",
+    "calcareous": "Kalkhaltig",
+    "acidic": "Sauer"
+  },
+  "health_status": {
+    "good": "Gut",
+    "watch": "Beobachten",
+    "needs_treatment": "Behandlung nötig"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "app_name": "GardenAssist",
+  "nav": {
+    "dashboard": "Dashboard",
+    "plants": "Plants",
+    "calendar": "Calendar",
+    "journal": "Journal",
+    "settings": "Settings"
+  },
+  "language": {
+    "de": "Deutsch",
+    "en": "English"
+  },
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "confirm": "Confirm"
+  },
+  "status": {
+    "loading": "Loading…",
+    "error": "Error",
+    "empty": "No entries"
+  }
+}

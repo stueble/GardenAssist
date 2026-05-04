@@ -97,6 +97,7 @@ export function mockGarden(): Garden {
 
 export function mockSettings(): Settings {
   return {
+    language:                 "de",
     location_city:            null,
     location_zip:             null,
     irrigation_zones:         [],

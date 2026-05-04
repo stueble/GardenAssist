@@ -91,6 +91,7 @@ const ColorPresetSchema = z.object({
 });
 
 export const SettingsSchema = z.object({
+  language:                 z.enum(["de", "en"]),
   location_city:            z.string().nullable(),
   location_zip:             z.string().nullable(),
   irrigation_zones:         z.array(z.string()),

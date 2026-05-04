@@ -1,0 +1,12 @@
+{
+  "title": "Calendar",
+  "subtitle": "Seasonal overview of all care activities.",
+  "schedule_type": {
+    "bloom": "Bloom",
+    "growth": "Growth",
+    "foliage": "Foliage",
+    "pruning": "Pruning",
+    "fertilization": "Fertilization",
+    "misc": "Miscellaneous"
+  }
+}

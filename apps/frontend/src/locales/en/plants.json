@@ -1,0 +1,56 @@
+{
+  "title": "Plants",
+  "subtitle": "All plants in your garden.",
+  "fields": {
+    "name_common": "Name",
+    "name_botanical": "Botanical Name",
+    "origin_type": "Origin",
+    "category": "Category",
+    "lifecycle": "Lifecycle",
+    "description": "Description",
+    "care_notes": "Care Notes",
+    "sun_demand": "Sun Requirement",
+    "water_demand": "Water Requirement",
+    "soil_type": "Soil Type",
+    "frost_tolerance_min_c": "Frost Tolerance (°C)",
+    "temperature_protected": "Needs frost protection",
+    "health_status": "Health Status",
+    "location": "Location",
+    "watering_zone": "Watering Zone",
+    "purchase_date": "Purchase Date",
+    "purchase_price": "Purchase Price (€)"
+  },
+  "origin_type": {
+    "native": "Native",
+    "neophyte": "Neophyte",
+    "invasive_neophyte": "Invasive Neophyte"
+  },
+  "lifecycle": {
+    "annual": "Annual",
+    "biennial": "Biennial",
+    "perennial": "Perennial",
+    "evergreen": "Evergreen"
+  },
+  "sun_demand": {
+    "sunny": "Sunny (6+ h)",
+    "partial_shade": "Partial shade (3–6 h)",
+    "shady": "Shady (< 3 h)"
+  },
+  "water_demand": {
+    "low": "Low",
+    "medium": "Medium",
+    "high": "High"
+  },
+  "soil_type": {
+    "loamy": "Loamy",
+    "sandy": "Sandy",
+    "humus_rich": "Humus-rich",
+    "calcareous": "Calcareous",
+    "acidic": "Acidic"
+  },
+  "health_status": {
+    "good": "Good",
+    "watch": "Watch",
+    "needs_treatment": "Needs treatment"
+  }
+}

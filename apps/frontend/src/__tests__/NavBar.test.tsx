@@ -3,17 +3,26 @@
  *
  * Verifies that the navigation bar renders all four main tabs plus the
  * settings icon, and that routing links point to the correct paths.
+ * Tests run with German locale (default).
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { I18nextProvider } from "react-i18next";
+import i18n from "../i18n/index";
 import { NavBar } from "../components/NavBar";
+
+beforeEach(async () => {
+  await i18n.changeLanguage("de");
+});
 
 function renderNavBar(initialPath = "/") {
   return render(
     <MemoryRouter initialEntries={[initialPath]}>
-      <NavBar />
+      <I18nextProvider i18n={i18n}>
+        <NavBar />
+      </I18nextProvider>
     </MemoryRouter>
   );
 }
@@ -24,12 +33,12 @@ describe("NavBar", () => {
     expect(screen.getByText(/GardenAssist/i)).toBeInTheDocument();
   });
 
-  it("renders all four main tabs", () => {
+  it("renders all four main tabs in German", () => {
     renderNavBar();
-    expect(screen.getByRole("tab", { name: "Dashboard" })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Pflanzen"  })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Kalender"  })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Tagebuch"  })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Dashboard"  })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Pflanzen"   })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Kalender"   })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Tagebuch"   })).toBeInTheDocument();
   });
 
   it("renders the settings icon link", () => {
@@ -39,25 +48,21 @@ describe("NavBar", () => {
 
   it("Dashboard tab links to /", () => {
     renderNavBar();
-    const link = screen.getByRole("tab", { name: "Dashboard" });
-    expect(link).toHaveAttribute("href", "/");
+    expect(screen.getByRole("tab", { name: "Dashboard" })).toHaveAttribute("href", "/");
   });
 
   it("Pflanzen tab links to /plants", () => {
     renderNavBar();
-    const link = screen.getByRole("tab", { name: "Pflanzen" });
-    expect(link).toHaveAttribute("href", "/plants");
+    expect(screen.getByRole("tab", { name: "Pflanzen" })).toHaveAttribute("href", "/plants");
   });
 
   it("Kalender tab links to /calendar", () => {
     renderNavBar();
-    const link = screen.getByRole("tab", { name: "Kalender" });
-    expect(link).toHaveAttribute("href", "/calendar");
+    expect(screen.getByRole("tab", { name: "Kalender" })).toHaveAttribute("href", "/calendar");
   });
 
   it("Tagebuch tab links to /journal", () => {
     renderNavBar();
-    const link = screen.getByRole("tab", { name: "Tagebuch" });
-    expect(link).toHaveAttribute("href", "/journal");
+    expect(screen.getByRole("tab", { name: "Tagebuch" })).toHaveAttribute("href", "/journal");
   });
 });
