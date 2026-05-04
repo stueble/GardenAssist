@@ -19,16 +19,33 @@ export interface UseSettingsResult {
   dirty:       boolean;
   status:      SettingsSaveStatus;
   loading:     boolean;
+  error:       boolean;
   updateForm:  (patch: Partial<Settings>) => void;
   save:        () => Promise<void>;
   discard:     () => void;
 }
+
+const DEFAULT_SETTINGS: Settings = {
+  language:                 "de",
+  location_city:            null,
+  location_zip:             null,
+  irrigation_zones:         [],
+  plant_categories:         [],
+  color_presets:            [],
+  task_lookback_weeks:      2,
+  task_lookahead_weeks:     4,
+  attachment_size_limit_mb: 10,
+  ai_provider:              null,
+  ai_model:                 null,
+  ai_api_key:               null,
+};
 
 export function useSettings(): UseSettingsResult {
   const [saved,   setSaved]   = useState<Settings | null>(null);
   const [form,    setForm]    = useState<Settings | null>(null);
   const [loading, setLoading] = useState(true);
   const [status,  setStatus]  = useState<SettingsSaveStatus>("idle");
+  const [error,   setError]   = useState(false);
 
   // Load on mount
   useEffect(() => {
@@ -40,7 +57,13 @@ export function useSettings(): UseSettingsResult {
         setLoading(false);
       }
     }).catch(() => {
-      if (!cancelled) setLoading(false);
+      if (!cancelled) {
+        // Show defaults so the form is usable even if backend is unreachable
+        setSaved(DEFAULT_SETTINGS);
+        setForm(DEFAULT_SETTINGS);
+        setError(true);
+        setLoading(false);
+      }
     });
     return () => { cancelled = true; };
   }, []);
@@ -78,6 +101,7 @@ export function useSettings(): UseSettingsResult {
     dirty,
     status,
     loading,
+    error,
     updateForm,
     save,
     discard,

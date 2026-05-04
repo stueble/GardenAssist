@@ -13,7 +13,7 @@ import { apiClient }         from "@/api/client";
 
 export function SettingsView() {
   const { t, i18n } = useTranslation("settings");
-  const { form, dirty, status, loading, updateForm, save, discard } = useSettings();
+  const { form, dirty, status, loading, error, updateForm, save, discard } = useSettings();
 
   // AC #5: language switch takes effect immediately
   useEffect(() => {
@@ -67,6 +67,13 @@ export function SettingsView() {
 
         <div className="flex-1 overflow-y-auto" style={{ padding: "28px 32px" }}>
           <div style={{ maxWidth: "860px" }}>
+
+            {/* Backend error banner */}
+            {error && (
+              <div className="mb-4 px-4 py-3 rounded-lg bg-red-soft border-[1.5px] border-red-warn text-[13px] text-red-warn">
+                ⚠️ Backend nicht erreichbar — Änderungen können nicht gespeichert werden.
+              </div>
+            )}
 
             {/* Page title */}
             <div
