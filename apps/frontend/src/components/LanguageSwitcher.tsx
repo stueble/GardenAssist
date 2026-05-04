@@ -18,8 +18,9 @@ export function LanguageSwitcher() {
         <button
           key={lang}
           onClick={() => switchTo(lang)}
+          style={{ fontSize: "var(--font-size-nav-lang)" }}
           className={cn(
-            "px-2 py-0.5 rounded text-[12px] font-medium transition-colors uppercase",
+            "px-2 py-0.5 rounded font-medium transition-colors uppercase",
             current === lang
               ? "bg-white/20 text-white"
               : "text-white/60 hover:text-white hover:bg-white/10"

@@ -53,6 +53,15 @@
   --font-body:    "DM Sans", sans-serif;
   --font-mono:    ui-monospace, monospace;
 
+  /* ── Font sizes ── */
+  --font-size-logo:    20px;   /* NavBar app name */
+  --font-size-nav:     13px;   /* NavBar tab labels */
+  --font-size-nav-lang: 12px;  /* LanguageSwitcher */
+
+  /* ── Layout ── */
+  --height-nav:        52px;   /* NavBar height */
+  --width-nav-logo:    280px;  /* NavBar logo area */
+
   /* ── Shadows ── */
   --shadow-ga:    0 2px 12px rgba(45, 74, 45, 0.10);
   --shadow-ga-lg: 0 8px 32px rgba(45, 74, 45, 0.15);

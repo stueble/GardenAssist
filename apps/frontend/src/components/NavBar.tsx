@@ -16,11 +16,15 @@ export function NavBar() {
 
   return (
     <nav
-      className="flex items-center h-[52px] shrink-0 bg-green-deep shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
+      className="flex items-center shrink-0 bg-green-deep shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
+      style={{ height: "var(--height-nav)" }}
       aria-label="Hauptnavigation"
     >
       {/* Logo */}
-      <span className="flex items-center gap-[8px] w-[280px] shrink-0 px-5 h-full border-r border-white/10 font-display leading-none text-green-pale tracking-[0.5px] select-none" style={{ fontSize: "20px" }}>
+      <span
+        className="flex items-center shrink-0 px-5 h-full border-r border-white/10 font-display leading-none text-green-pale tracking-[0.5px] select-none"
+        style={{ gap: "8px", width: "var(--width-nav-logo)", fontSize: "var(--font-size-logo)" }}
+      >
         <span aria-hidden="true">🌿</span>{t("app_name")}
       </span>
 
@@ -34,12 +38,13 @@ export function NavBar() {
             role="tab"
             className={({ isActive }) =>
               cn(
-                "flex items-center gap-[6px] px-[14px] h-9 rounded-[6px] text-[13px] text-green-pale transition-all whitespace-nowrap border-none bg-none",
+                "flex items-center px-[14px] h-9 rounded-[6px] text-green-pale transition-all whitespace-nowrap border-none bg-none",
                 isActive
                   ? "opacity-100 bg-white/15 font-medium"
                   : "opacity-75 hover:opacity-100 hover:bg-white/10"
               )
             }
+            style={{ gap: "6px", fontSize: "var(--font-size-nav)" }}
           >
             <span aria-hidden="true">{icon}</span>{t(`nav.${key}`)}
           </NavLink>

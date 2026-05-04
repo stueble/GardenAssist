@@ -32,6 +32,8 @@ const requiredColors = [
 ];
 
 const requiredFonts = ["display", "body"];
+const requiredFontSizes = ["font-size-logo", "font-size-nav", "font-size-nav-lang"];
+const requiredLayout = ["height-nav", "width-nav-logo"];
 const requiredShadows = ["shadow-ga", "shadow-ga-lg"];
 const requiredRadii = ["radius-sm", "radius-md", "radius-lg", "radius-xl", "radius-full"];
 
@@ -62,6 +64,22 @@ describe("Design tokens — @theme block", () => {
     it("imports DM Sans from Google Fonts", () => {
       expect(css).toContain("DM+Sans");
     });
+  });
+
+  describe("Font sizes", () => {
+    for (const token of requiredFontSizes) {
+      it(`defines --${token}`, () => {
+        expect(css).toContain(`--${token}:`);
+      });
+    }
+  });
+
+  describe("Layout", () => {
+    for (const token of requiredLayout) {
+      it(`defines --${token}`, () => {
+        expect(css).toContain(`--${token}:`);
+      });
+    }
   });
 
   describe("Shadows", () => {
