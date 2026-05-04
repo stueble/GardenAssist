@@ -80,6 +80,7 @@ A central overview combining urgent hints and warnings, open and upcoming tasks,
 
 - [Node.js](https://nodejs.org/) >= 20
 - [pnpm](https://pnpm.io/) >= 9 — install with `npm install -g pnpm`
+- [Docker](https://docs.docker.com/get-docker/) + Docker Compose (for production deployment)
 
 ### Install dependencies
 
@@ -104,6 +105,24 @@ API requests from the frontend are proxied to the backend via Vite's dev proxy
 
 ```bash
 pnpm typecheck
+```
+
+### Docker (production / on-premise)
+
+```bash
+# Copy and adjust environment variables
+cp .env.example .env
+
+# Start the full stack (frontend on http://localhost:3000)
+docker-compose up --build
+```
+
+Data (SQLite database + attachments) is persisted in a Docker volume (`gardenassist_data`).
+
+To use PostgreSQL instead of SQLite, set `DATABASE_URL` in `.env`:
+
+```
+DATABASE_URL=postgresql://user:password@host:5432/gardenassist
 ```
 
 ### Shared API types

@@ -1,0 +1,12 @@
+node_modules
+**/node_modules
+**/dist
+**/.env
+.git
+.gitignore
+ui-mockups
+docs/tasks
+docs/decisions
+docs/drafts
+docs/completed
+docs/archive
