@@ -1,14 +1,15 @@
 ---
 id: STORY-015
 title: React + Vite Frontend Skeleton
-status: In Review
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-04 17:26'
-updated_date: '2026-05-04 21:52'
+updated_date: '2026-05-04 22:01'
 labels:
   - setup
 dependencies: []
+ordinal: 16000
 ---
 
 ## Description

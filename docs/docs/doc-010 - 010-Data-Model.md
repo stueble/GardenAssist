@@ -3,7 +3,7 @@ id: doc-010
 title: 010 - Data Model
 type: other
 created_date: '2026-05-03'
-updated_date: '2026-05-04 17:08'
+updated_date: '2026-05-04 22:12'
 ---
 # Data Model – GardenAssist
 
@@ -215,6 +215,7 @@ Single-row table (always exactly one record).
 | Column | Type | Constraints | Notes |
 |---|---|---|---|
 | `id` | TEXT | PK | Fixed value: 'settings' |
+| `language` | TEXT | NOT NULL DEFAULT 'de' | Enum: de, en; UI display language |
 | `location_city` | TEXT | | |
 | `location_zip` | TEXT | | |
 | `irrigation_zones` | TEXT | | JSON array of strings |

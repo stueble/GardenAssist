@@ -1,17 +1,18 @@
 ---
 id: STORY-018
 title: Internationalisation Setup (i18next)
-status: In Review
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-04 22:08'
-updated_date: '2026-05-04 22:32'
+updated_date: '2026-05-04 22:33'
 labels: []
 dependencies: []
 documentation:
   - docs/api/plant.ts
   - docs/api/schedule.ts
   - docs/api/journal-entry.ts
+ordinal: 17000
 ---
 
 ## Description

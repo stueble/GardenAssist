@@ -1,5 +1,21 @@
 import { ColorPreset } from "./color-preset";
 
+// ── Enums (Language) ─────────────────────────────────────────────────────────
+
+/**
+ * UI display language.
+ * - de: German (default)
+ * - en: English
+ *
+ * Stored in Settings and applied on every page load.
+ * Additional locales can be added without code changes.
+ */
+export const Language = {
+  De: "de",
+  En: "en",
+} as const;
+export type Language = typeof Language[keyof typeof Language];
+
 // ── Enums ────────────────────────────────────────────────────────────────────
 
 /**
@@ -24,6 +40,14 @@ export type AiProvider = typeof AiProvider[keyof typeof AiProvider];
  * always updated as a whole.
  */
 export type Settings = {
+
+  // ── General ───────────────────────────────────────────────────────────────
+
+  /**
+   * UI display language. Default: "de".
+   * Determines which locale file is loaded by i18next.
+   */
+  language: Language;
 
   // ── Location ───────────────────────────────────────────────────────────────
 
