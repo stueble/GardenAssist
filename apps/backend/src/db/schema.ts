@@ -83,6 +83,7 @@ export const attachments = sqliteTable("attachments", {
   category:        text("category"),              // main | bloom | leaf | problem | invoice
   url:             text("url").notNull(),
   created_at:      text("created_at").notNull(),
+  updated_at:      text("updated_at").notNull(),
 });
 
 // ── journal_entry_attachments (junction) ──────────────────────────────────────

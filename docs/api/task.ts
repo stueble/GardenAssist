@@ -35,7 +35,7 @@ export type TaskStatus = typeof TaskStatus[keyof typeof TaskStatus];
  *
  * Tasks cannot be created, updated, or deleted via the API.
  * To resolve a task, create a JournalEntry of type "done" or "skipped"
- * referencing the task's schedule_id and week.
+ * referencing the task's schedule.id and week.
  */
 export type Task = {
   /**

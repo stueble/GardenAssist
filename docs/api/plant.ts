@@ -209,15 +209,14 @@ export type Plant = {
   // ── Nested Objects ────────────────────────────────────────────────────────
 
   /**
-   * All positions of this plant on the garden plan, ordered by sort_order.
+   * All positions of this plant on the garden plan.
    * A plant may appear in multiple locations (e.g. a hedge row, a group planting).
    */
   positions: PlantPosition[];
 
   /**
-   * All attachments of this plant, ordered by sort_order.
-   * The attachment referenced by thumbnail_attachment_id is used as the thumbnail in the Plants Overview,
-   * 
+   * All attachments of this plant.
+   * The attachment referenced by thumbnail_attachment_id is used as the thumbnail in the Plants Overview.
    */
   attachments: Attachment[];
 

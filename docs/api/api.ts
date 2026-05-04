@@ -1,4 +1,4 @@
-import { Attachment, AttachmentCategory } from "./attachment";
+import { Attachment } from "./attachment";
 import { Garden } from "./garden";
 import { JournalEntry } from "./journal-entry";
 import { Plant } from "./plant";
@@ -143,8 +143,10 @@ export interface Api {
 
   /**
    * Uploads a new attachment and associates it with a plant or the garden.
-   * - owner_type "plant": attachment is added to Plant.attachments[]
-   * - owner_type "garden": attachment is added to Garden.attachments[]
+   * - owner_type "plant": attachment is added to Plant.attachments[];
+   *   owner_id must be the plant's UUID (non-null).
+   * - owner_type "garden": attachment is added to Garden.attachments[];
+   *   owner_id must be null (the garden is a singleton with no ID).
    *
    * The server derives attachment_type from the file's MIME type.
    * Maximum file size: Settings.attachment_size_limit_mb.

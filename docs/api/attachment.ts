@@ -62,4 +62,7 @@ export type Attachment = {
 
   /** ISO 8601 datetime string. Set on creation, never updated. */
   created_at: string;
+
+  /** ISO 8601 datetime string. Updated on every write. */
+  updated_at: string;
 };

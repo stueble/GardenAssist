@@ -31,7 +31,7 @@ export type ScheduleType = typeof ScheduleType[keyof typeof ScheduleType];
 /**
  * A recurring care or growth interval for a plant.
  *
- * Week numbers follow ISO 8601 (1–52). If start_week > end_week, the interval
+ * Week numbers follow ISO 8601 (1–53). If start_week > end_week, the interval
  * wraps across the calendar year (e.g. start_week 48, end_week 6 means
  * late November through early February).
  *
@@ -45,13 +45,13 @@ export type Schedule = {
   schedule_type: ScheduleType;
 
   /**
-   * Start of the interval as an ISO 8601 week number (1–52).
+   * Start of the interval as an ISO 8601 week number (1–53).
    * If start_week > end_week, the interval wraps across the calendar year.
    */
   start_week: number;
 
   /**
-   * End of the interval as an ISO 8601 week number (1–52).
+   * End of the interval as an ISO 8601 week number (1–53).
    * If end_week < start_week, the interval wraps across the calendar year.
    */
   end_week: number;
