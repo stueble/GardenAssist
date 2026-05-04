@@ -4,6 +4,15 @@ dist/
 .env
 .env.local
 
+# Runtime data (SQLite DB and uploaded files — not committed)
+apps/backend/gardenassist.db
+apps/backend/gardenassist.db-wal
+apps/backend/gardenassist.db-shm
+apps/backend/data/attachments/
+apps/backend/data/garden/
+# Keep the data directory structure
+!apps/backend/data/.gitkeep
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
