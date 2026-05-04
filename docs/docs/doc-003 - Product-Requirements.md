@@ -1,4 +1,13 @@
-# Product Requirements Document – GardenAssist
+---
+id: doc-003
+title: Product Requirements Document
+type: other
+created_date: '2026-05-02 13:55'
+updated_date: '2026-05-02 14:26'
+---
+
+
+# Product Requirements Document
 
 **Version:** 0.2
 **Status:** Work in progress
@@ -12,8 +21,6 @@ GardenAssist is an AI-powered web application that helps hobby gardeners manage 
 
 The core idea: the AI does the heavy lifting. Users should be able to describe their garden in natural language, ask questions, and get things done — without filling in forms or consulting external sources.
 
----
-
 ## 2. Target User
 
 A single-user application for hobby gardeners who:
@@ -24,8 +31,6 @@ A single-user application for hobby gardeners who:
 
 > Multi-user and collaborative features are explicitly out of scope for the initial version.
 
----
-
 ## 3. Goals
 
 - Provide a clear, always up-to-date overview of the garden and its plants
@@ -33,12 +38,9 @@ A single-user application for hobby gardeners who:
 - Make plant knowledge accessible through conversation, not just documentation
 - Enable gradual data entry — the garden doesn't need to be fully set up before the app is useful
 
----
-
 ## 4. Features
 
 ### 4.1 Plant Management
-
 A structured overview of all plants in the garden.
 
 Each plant record includes:
@@ -71,7 +73,6 @@ Each plant record includes:
 - Detail panel on row click (read-only; edit via Plant Edit Dialog)
 
 ### 4.2 Task Management
-
 Tasks are ephemeral — derived from plant care schedules for the current time window,
 not stored as independent objects (see ADR-005).
 
@@ -80,7 +81,6 @@ not stored as independent objects (see ADR-005).
 - Skip tasks → creates a journal entry automatically
 
 ### 4.3 Garden Calendar
-
 A Gantt-style seasonal overview with months as columns and plants as rows.
 
 Switchable sub-views: Bloom period, Growth period, Pruning window, Fertilization period, Foliage.
@@ -92,7 +92,6 @@ Schedule intervals that span year-end are supported: if `start_week > end_week`,
 Additionally: a compact monthly band (12 months) for the dashboard showing at a glance which months have tasks, with details on hover.
 
 ### 4.4 Visual Garden Plan
-
 The garden plan is a static image uploaded by the user (PNG, JPG, or SVG; see ADR-002).
 Plant positions are stored as X/Y percentage coordinates relative to the image dimensions.
 
@@ -102,7 +101,6 @@ Plant positions are stored as X/Y percentage coordinates relative to the image d
 - Click table row → highlight plant in garden plan
 
 ### 4.5 AI Assistant
-
 A conversational assistant embedded in the application. Provider-agnostic — users
 configure their own API key (Anthropic, OpenAI, or OpenRouter; see ADR-001).
 
@@ -118,7 +116,6 @@ Capabilities:
 The assistant has access to the user's garden data as context for all interactions.
 
 ### 4.6 Garden Journal
-
 A chronological diary of gardening activities and observations.
 
 - Completed and skipped tasks are automatically converted into journal entries
@@ -130,15 +127,12 @@ A chronological diary of gardening activities and observations.
 - Photos can be attached (PNG, JPG, WebP; size limit configurable in Settings)
 
 ### 4.7 Dashboard
-
 The primary entry point of the application, combining:
 - Hints & warnings (e.g. frost risk, overdue tasks)
 - Open and upcoming task list
 - Garden plan (visual, interactive)
 - Monthly task band (compact 12-month overview)
 - AI chat window
-
----
 
 ## 5. UI Principles
 
@@ -150,10 +144,7 @@ The primary entry point of the application, combining:
 - The AI chat is always accessible, not hidden in a submenu
 - On-premise installable; works fully offline (except AI calls; see ADR-004)
 
----
-
 ## 6. Future Ideas *(not in scope for v1)*
-
 These are captured here to avoid losing them, but will not drive initial development:
 
 - **Column selector** – configurable visible columns in the Plants table
@@ -169,25 +160,11 @@ These are captured here to avoid losing them, but will not drive initial develop
 - **Email / push notifications** – reminders for upcoming or overdue tasks
 - **Multi-device sync** – share garden data across devices
 
----
-
 ## 7. Out of Scope
-
 - Multi-user or collaborative features
 - E-commerce (buying plants, tools)
 - Integration with smart garden hardware
 - Public plant database contributions
 
----
 
-## 8. Architecture Decisions
 
-All architectural decisions are documented as ADRs in `docs/decisions/`:
-
-| ADR | Title | Status |
-|-----|-------|--------|
-| ADR-001 | AI Provider Integration | Accepted |
-| ADR-002 | Garden Plan as User-Uploaded Image | Accepted |
-| ADR-003 | Plant Images and Icons | Accepted |
-| ADR-004 | Local-First, On-Premise Deployment and Offline Capability | Accepted |
-| ADR-005 | Ephemeral Tasks and Journal as Persistent Protocol | Accepted |

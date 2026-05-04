@@ -88,7 +88,8 @@ nav{background:var(--green-deep);display:flex;align-items:center;height:52px;fle
 .entry.problem .entry-type-badge{background:var(--c-problem-bg);color:var(--c-problem)}
 .entry.purchase .entry-type-badge{background:var(--c-purchase-bg);color:var(--c-purchase)}
 
-.entry-plant-tag{font-size:11px;color:var(--text-light);background:var(--green-mist);padding:2px 8px;border-radius:10px;display:flex;align-items:center;gap:4px}
+.entry-plant-tag{font-size:11px;color:var(--text-light);background:var(--green-mist);padding:2px 8px;border-radius:10px;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.entry-plant-sub{font-size:10px;color:var(--text-light);opacity:.8}
 .entry-title{font-size:13px;font-weight:500;color:var(--text-dark);flex:1}
 .entry-date{font-size:11px;color:var(--text-light);flex-shrink:0;margin-left:auto}
 .entry-chevron{font-size:12px;color:var(--text-light);transition:transform .2s;flex-shrink:0}
@@ -98,10 +99,14 @@ nav{background:var(--green-deep);display:flex;align-items:center;height:52px;fle
 .entry-body{display:none;padding:0 14px 12px;border-top:1px solid var(--border)}
 .entry.open .entry-body{display:block}
 .entry-text{font-size:12.5px;color:var(--text-mid);line-height:1.6;padding:10px 0}
-.entry-photos{display:flex;gap:8px;margin-top:4px}
-.entry-photo{width:72px;height:72px;border-radius:8px;background:var(--green-mist);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;cursor:pointer;transition:border-color .15s}
-.entry-photo:hover{border-color:var(--green-mid)}
-.entry-photo.has-img{font-size:28px}
+.entry-photos{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.img-entry{display:flex;align-items:center;gap:8px;background:var(--green-mist);border:1.5px solid var(--border);border-radius:8px;padding:7px 10px}
+.img-thumb{width:52px;height:52px;border-radius:7px;background:white;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;font-size:24px;transition:border-color .15s}
+.img-thumb:hover{border-color:var(--green-mid)}
+.img-type-select{flex:1;background:white;border:1.5px solid var(--border);border-radius:6px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--text-dark);outline:none}
+.img-type-select:focus{border-color:var(--green-mid)}
+.img-delete{background:none;border:none;cursor:pointer;color:var(--text-light);font-size:13px;line-height:1;flex-shrink:0}
+.img-delete:hover{color:var(--red-warn)}
 
 /* NEW ENTRY PANEL */
 .new-entry-panel{width:0;overflow:hidden;background:var(--warm-white);border-left:1px solid var(--border);display:flex;flex-direction:column;transition:width .3s ease;flex-shrink:0}
@@ -123,10 +128,8 @@ nav{background:var(--green-deep);display:flex;align-items:center;height:52px;fle
 .nep-select,.nep-input,.nep-textarea{width:100%;background:var(--green-mist);border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text-dark);outline:none;transition:border-color .2s}
 .nep-select:focus,.nep-input:focus,.nep-textarea:focus{border-color:var(--green-mid);background:white}
 .nep-textarea{resize:vertical;min-height:90px;line-height:1.5}
-.nep-photo-row{display:flex;gap:8px}
-.nep-photo-slot{width:70px;height:70px;border-radius:8px;background:var(--green-mist);border:1.5px dashed var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;transition:border-color .15s;font-size:20px;color:var(--text-light)}
-.nep-photo-slot:hover{border-color:var(--green-mid);color:var(--green-mid)}
-.nep-photo-slot span{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.add-entry-btn{display:flex;align-items:center;gap:6px;background:none;border:1.5px dashed var(--border);border-radius:8px;padding:7px 12px;font-size:12px;font-weight:500;font-family:'DM Sans',sans-serif;color:var(--text-light);cursor:pointer;width:100%;transition:all .15s}
+.add-entry-btn:hover{border-color:var(--green-mid);color:var(--green-deep);background:var(--green-mist)}
 .nep-actions{display:flex;gap:8px;padding:12px 18px;border-top:1px solid var(--border);flex-shrink:0}
 .nep-btn{flex:1;padding:9px;border-radius:8px;font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;border:1.5px solid var(--border);background:none;color:var(--text-mid);transition:all .15s}
 .nep-btn:hover{border-color:var(--green-mid);color:var(--green-deep)}
@@ -172,8 +175,9 @@ nav{background:var(--green-deep);display:flex;align-items:center;height:52px;fle
 </nav>
 
 <div class="body-wrap">
-<div class="content-col">
 
+<!-- CONTENT COL: timeline -->
+<div class="content-col">
   <div class="subheader">
     <div class="search-wrap">
       <span class="search-icon">🔍</span>
@@ -186,13 +190,11 @@ nav{background:var(--green-deep);display:flex;align-items:center;height:52px;fle
       <button class="chip" onclick="setFilter('purchase',this)">💰 Ausgabe</button>
     </div>
   </div>
-
   <div class="timeline-wrap" id="timelineWrap"></div>
   <button class="fab" id="fab" onclick="toggleNewEntry()" title="Neuer Eintrag">＋</button>
+</div><!-- /content-col -->
 
-</div>
-
-<!-- NEW ENTRY PANEL -->
+<!-- NEW ENTRY PANEL (right of content, left of chat) -->
 <div class="new-entry-panel" id="newEntryPanel">
   <div class="nep-header">
     <div class="nep-title">Neuer Eintrag</div>
@@ -240,19 +242,16 @@ nav{background:var(--green-deep);display:flex;align-items:center;height:52px;fle
       <textarea class="nep-textarea" placeholder="Details, Beobachtungen, Mengen, Preise …"></textarea>
     </div>
     <div>
-      <div class="nep-label">Fotos</div>
-      <div class="nep-photo-row">
-        <div class="nep-photo-slot">📷<span>Foto</span></div>
-        <div class="nep-photo-slot">📷<span>Foto</span></div>
-        <div class="nep-photo-slot">📷<span>Foto</span></div>
-      </div>
+      <div class="nep-label">Fotos <span id="journal-img-count" style="font-size:10px;background:var(--green-mist);color:var(--text-mid);padding:1px 6px;border-radius:10px;font-weight:600">0</span></div>
+      <div id="journal-img-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px"></div>
+      <button class="add-entry-btn" onclick="addJournalImage()" style="font-size:12px;padding:6px 10px">＋ Foto hinzufügen</button>
     </div>
-  </div>
+  </div><!-- /nep-body -->
   <div class="nep-actions">
     <button class="nep-btn" onclick="toggleNewEntry()">Abbrechen</button>
     <button class="nep-btn primary" onclick="saveEntry()">Speichern</button>
   </div>
-</div>
+</div><!-- /new-entry-panel -->
 
 <!-- CHAT TOGGLE STRIP -->
 <div class="right-strip">
@@ -276,21 +275,21 @@ nav{background:var(--green-deep);display:flex;align-items:center;height:52px;fle
     <input class="chat-input" type="text" placeholder="Frage stellen …">
     <button class="chat-send">↑</button>
   </div>
-</div>
-</div>
+</div><!-- /chat-panel -->
+</div><!-- /body-wrap -->
 
 <script>
 const entries = [
-  { id:1,  type:'done',      plant:'🌹 Rose',           date:'2026-05-01', title:'Rosen geschnitten',                text:'Frühjahrsschnitt durchgeführt. Alle alten Triebe auf 3 Augen zurückgeschnitten. Danach mit Rosendünger versorgt.', photos:['🌹',''] },
-  { id:2,  type:'obs',       plant:'🌸 Magnolia',        date:'2026-05-01', title:'Erste Knospen sichtbar',           text:'Die Magnolia zeigt die ersten Knospen des Jahres. Etwa 12–15 Stück an der Hauptachse. Entwicklung verläuft normal.', photos:[] },
-  { id:3,  type:'problem',   plant:'🌿 Hortensie',       date:'2026-04-28', title:'Blattläuse entdeckt',              text:'An den Neutrieben starker Läusebefall. Behandlung mit Schmierseifenlösung. Nächste Woche kontrollieren.', photos:['🔍'] },
-  { id:4,  type:'done',      plant:'💐 Rhododendron',    date:'2026-04-15', title:'Rhododendron gedüngt',             text:'Rhododendron-Spezaldünger ausgebracht. 80g pro Pflanze, gleichmäßig verteilt.', photos:[] },
-  { id:5,  type:'purchase',  plant:'🌿 Garten (allgemein)', date:'2026-04-10', title:'Rosendünger & Mulch gekauft',   text:'Baumarkt: 2× Compo Rosendünger (je 2kg) à 8,99 €, 3 Säcke Rindenmulch à 4,99 €. Gesamt: 32,95 €.', photos:['🧾'] },
-  { id:6,  type:'obs',      plant:'🌹 Rose',            date:'2026-04-05', title:'Erste Blüte der Saison',           text:'Die erste Rose der Saison hat sich geöffnet! Sorte Feuerzauber, westliches Beet. Drei Wochen früher als letztes Jahr.', photos:['🌹','🌹'] },
-  { id:7,  type:'done',      plant:'🍎 Apfelbaum',       date:'2026-03-20', title:'Winterschnitt abgeschlossen',      text:'Totholz entfernt, Krone ausgelichtet. Ca. 30% der alten Triebe zurückgeschnitten. Schnittwunden mit Baumwachs versiegelt.', photos:['🪚'] },
-  { id:8,  type:'purchase',  plant:'🌸 Magnolia',        date:'2026-03-15', title:'Neue Pflanze gekauft',             text:'Magnolia grandiflora "Edith Bogue" beim Gartencenter Müller. Topfgröße 30L, Höhe ca. 120cm. Preis: 89,00 €.', photos:['🌱','🧾'] },
-  { id:9,  type:'obs',       plant:'🌿 Garten (allgemein)', date:'2026-03-10', title:'Frühjahrsbeginn beobachtet',    text:'Erste Schneeglöckchen, Krokusse in voller Blüte. Temperaturen tagsüber bis 12°C. Boden noch feucht.', photos:[] },
-  { id:10, type:'done',      plant:'🌲 Lebensbaum',      date:'2026-02-20', title:'Hecke zurückgeschnitten',          text:'Thuja-Hecke auf ca. 180cm Höhe zurückgeschnitten. Seiten begradigt. Schnittgut entsorgt.', photos:['✂️'] },
+  { id:1,  type:'done',     plant:'🌹 Rose',              farbe:'Rot/Pink',   farbeHex:'#c0392b', standort:'Westbeet', date:'2026-05-01', title:'Rosen geschnitten',              text:'Frühjahrsschnitt durchgeführt. Alle alten Triebe auf 3 Augen zurückgeschnitten. Danach mit Rosendünger versorgt.', photos:['🌹',''] },
+  { id:2,  type:'obs',      plant:'🌸 Magnolia',           farbe:'Weiß/Creme', farbeHex:'#f0e0c0', standort:'Nordwest', date:'2026-05-01', title:'Erste Knospen sichtbar',         text:'Die Magnolia zeigt die ersten Knospen des Jahres. Etwa 12–15 Stück an der Hauptachse. Entwicklung verläuft normal.', photos:[] },
+  { id:3,  type:'problem',  plant:'🌿 Hortensie',          farbe:'Blau/Pink',  farbeHex:'#3498db', standort:'Ostbeet',  date:'2026-04-28', title:'Blattläuse entdeckt',             text:'An den Neutrieben starker Läusebefall. Behandlung mit Schmierseifenlösung. Nächste Woche kontrollieren.', photos:['🔍'] },
+  { id:4,  type:'done',     plant:'💐 Rhododendron',       farbe:'Lila/Pink',  farbeHex:'#8e44ad', standort:'Terrasse', date:'2026-04-15', title:'Rhododendron gedüngt',            text:'Rhododendron-Spezaldünger ausgebracht. 80g pro Pflanze, gleichmäßig verteilt.', photos:[] },
+  { id:5,  type:'purchase', plant:'🌿 Garten (allgemein)', farbe:'',           farbeHex:'',        standort:'',         date:'2026-04-10', title:'Rosendünger & Mulch gekauft',     text:'Baumarkt: 2× Compo Rosendünger (je 2kg) à 8,99 €, 3 Säcke Rindenmulch à 4,99 €. Gesamt: 32,95 €.', photos:['🧾'] },
+  { id:6,  type:'obs',      plant:'🌹 Rose',               farbe:'Rot/Pink',   farbeHex:'#c0392b', standort:'Westbeet', date:'2026-04-05', title:'Erste Blüte der Saison',          text:'Die erste Rose der Saison hat sich geöffnet! Sorte Feuerzauber, westliches Beet. Drei Wochen früher als letztes Jahr.', photos:['🌹','🌹'] },
+  { id:7,  type:'done',     plant:'🍎 Apfelbaum',          farbe:'Weiß/Rosa',  farbeHex:'#f8c8d0', standort:'Mitte',    date:'2026-03-20', title:'Winterschnitt abgeschlossen',     text:'Totholz entfernt, Krone ausgelichtet. Ca. 30% der alten Triebe zurückgeschnitten. Schnittwunden mit Baumwachs versiegelt.', photos:['🪚'] },
+  { id:8,  type:'purchase', plant:'🌸 Magnolia',           farbe:'Weiß/Creme', farbeHex:'#f0e0c0', standort:'Nordwest', date:'2026-03-15', title:'Neue Pflanze gekauft',            text:'Magnolia grandiflora "Edith Bogue" beim Gartencenter Müller. Topfgröße 30L, Höhe ca. 120cm. Preis: 89,00 €.', photos:['🌱','🧾'] },
+  { id:9,  type:'obs',      plant:'🌿 Garten (allgemein)', farbe:'',           farbeHex:'',        standort:'',         date:'2026-03-10', title:'Frühjahrsbeginn beobachtet',      text:'Erste Schneeglöckchen, Krokusse in voller Blüte. Temperaturen tagsüber bis 12°C. Boden noch feucht.', photos:[] },
+  { id:10, type:'done',     plant:'🌲 Lebensbaum',         farbe:'',           farbeHex:'',        standort:'Hecke',    date:'2026-02-20', title:'Hecke zurückgeschnitten',          text:'Thuja-Hecke auf ca. 180cm Höhe zurückgeschnitten. Seiten begradigt. Schnittgut entsorgt.', photos:['✂️'] },
 ];
 
 const typeLabels = { done:'✅ Erledigt', obs:'👁 Beobachtung', problem:'⚠️ Problem', purchase:'💰 Ausgabe' };
@@ -353,17 +352,19 @@ function render() {
             <div class="entry-card">
               <div class="entry-header">
                 <span class="entry-type-badge">${typeLabels[e.type]}</span>
-                <span class="entry-plant-tag">${e.plant}</span>
+                <span class="entry-plant-tag">${e.plant}${(e.farbe||e.standort) ? '<span class="entry-plant-sub">' + (e.farbeHex ? '<span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:' + e.farbeHex + ';border:1px solid rgba(0,0,0,.12);vertical-align:middle;margin-right:2px"></span>' : '') + [e.farbe,e.standort].filter(Boolean).join(' · ') + '</span>' : ''}</span>
                 <span class="entry-title">${e.title}</span>
                 <span class="entry-date">${formatDate(e.date)}</span>
                 <span class="entry-chevron">▾</span>
               </div>
               <div class="entry-body">
                 <div class="entry-text">${e.text}</div>
-                ${e.photos.length ? `<div class="entry-photos">${e.photos.map(p => p
-                  ? `<div class="entry-photo has-img">${p}</div>`
-                  : `<div class="entry-photo">📷</div>`
-                ).join('')}</div>` : ''}
+                ${e.photos.length ? '<div class="entry-photos">' + e.photos.filter(p=>p).map(p =>
+                  '<div class="img-entry"><div class="img-thumb">' + p + '</div><select class="img-type-select"><option>Allgemein</option><option>Pflanze</option><option>Blüte</option><option>Blatt</option><option>Problem</option><option>Beleg</option></select></div>'
+                ).join('') + '</div>' : ''}
+                <div style="margin-top:10px">
+                  <button onclick="event.stopPropagation();editEntry(${e.id})" style="display:flex;align-items:center;gap:5px;background:none;border:1.5px solid var(--border);border-radius:7px;padding:5px 12px;font-size:12px;font-weight:500;font-family:'DM Sans',sans-serif;color:var(--text-mid);cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor='var(--green-mid)';this.style.color='var(--green-deep)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-mid)'">✏️ Bearbeiten</button>
+                </div>
               </div>
             </div>
           </div>
@@ -371,6 +372,27 @@ function render() {
       </div>
     </div>
   `).join('');
+}
+
+function editEntry(id) {
+  const e = entries.find(x => x.id === id);
+  if (!e) return;
+  // Update panel title
+  document.querySelector('.nep-title').textContent = 'Eintrag bearbeiten';
+  // Pre-fill type
+  document.querySelectorAll('.nep-type-btn').forEach(b => b.classList.remove('active'));
+  const typeBtn = document.querySelector(`.nep-type-btn.t-${e.type}`);
+  if (typeBtn) typeBtn.classList.add('active');
+  // Pre-fill price field
+  document.getElementById('priceField').style.display = e.type === 'purchase' ? 'block' : 'none';
+  // Pre-fill date and title
+  document.querySelector('.nep-input[type="date"]').value = e.date;
+  document.querySelector('.nep-input[type="text"]').value = e.title;
+  document.querySelector('.nep-textarea').value = e.text;
+  // Open panel, hide FAB
+  newEntryOpen = true;
+  document.getElementById('newEntryPanel').classList.add('open');
+  document.getElementById('fab').style.display = 'none';
 }
 
 function toggleEntry(id) {
@@ -382,11 +404,20 @@ let newEntryOpen = false;
 function toggleNewEntry() {
   newEntryOpen = !newEntryOpen;
   document.getElementById('newEntryPanel').classList.toggle('open', newEntryOpen);
-  document.getElementById('fab').classList.toggle('active', newEntryOpen);
-  if (newEntryOpen) {
-    document.getElementById('chatPanel').classList.remove('open');
-    document.getElementById('chatToggle').classList.remove('hidden');
-  }
+  document.getElementById('fab').style.display = newEntryOpen ? 'none' : 'flex';
+  if (!newEntryOpen) document.querySelector('.nep-title').textContent = 'Neuer Eintrag';
+}
+
+function addJournalImage(){
+  const list=document.getElementById('journal-img-list');
+  const entry=document.createElement('div'); entry.className='img-entry';
+  entry.innerHTML=`<div class="img-thumb">📷</div><select class="img-type-select"><option selected>Allgemein</option><option>Pflanze</option><option>Blüte</option><option>Blatt</option><option>Problem</option><option>Beleg</option></select><button class="img-delete" onclick="this.closest('.img-entry').remove();updateJournalImgCount()">✕</button>`;
+  list.appendChild(entry);
+  updateJournalImgCount();
+}
+function updateJournalImgCount(){
+  const cnt=document.getElementById('journal-img-count');
+  if(cnt) cnt.textContent=document.querySelectorAll('#journal-img-list .img-entry').length;
 }
 
 function selectType(btn, type) {
@@ -405,11 +436,6 @@ function toggleChat() {
   const open = panel.classList.contains('open');
   panel.classList.toggle('open');
   toggle.classList.toggle('hidden', !open);
-  if (!open) {
-    document.getElementById('newEntryPanel').classList.remove('open');
-    document.getElementById('fab').classList.remove('active');
-    newEntryOpen = false;
-  }
 }
 
 document.getElementById('searchInput').addEventListener('input', render);

@@ -1,13 +1,13 @@
 ---
 id: STORY-006
 title: 'Mockup: Settings'
-status: In Review
+status: Done
 assignee: []
 created_date: '2026-05-03 17:08'
-updated_date: '2026-05-03 17:08'
+updated_date: '2026-05-03 21:36'
 labels: []
 dependencies: []
-ordinal: 2000
+ordinal: 8000
 ---
 
 ## Definition of Done

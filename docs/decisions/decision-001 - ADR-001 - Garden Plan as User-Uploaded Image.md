@@ -1,7 +1,7 @@
 ---
 id: decision-001
 title: ADR-001 - AI Provider Integration
-date: '2026-05-03'
+date: '2026-05-02'
 status: Accepted
 ---
 

@@ -28,14 +28,14 @@ nav{background:var(--green-deep);display:flex;align-items:center;height:52px;fle
 .body-wrap{display:flex;flex:1;overflow:hidden}
 
 /* ── EDIT PANEL ── */
-.edit-panel{width:360px;min-width:360px;background:var(--warm-white);border-right:2px solid var(--border);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
-.edit-header{padding:13px 18px 11px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--green-deep)}
-.edit-title{font-family:'Playfair Display',serif;font-size:16px;color:var(--green-pale);font-weight:600;display:flex;align-items:center;gap:8px}
-.edit-close{background:rgba(255,255,255,.15);border:none;cursor:pointer;color:var(--green-pale);font-size:12px;padding:5px 10px;border-radius:6px;font-family:'DM Sans',sans-serif;font-weight:500}
-.edit-close:hover{background:rgba(255,255,255,.25)}
+.edit-panel{width:360px;min-width:360px;background:var(--warm-white);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
+.edit-header{padding:13px 16px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.edit-title{font-family:'Playfair Display',serif;font-size:15px;color:var(--green-deep);font-weight:600;display:flex;align-items:center;gap:8px}
+.edit-close{background:none;border:none;cursor:pointer;color:var(--text-light);font-size:16px;line-height:1;transition:color .15s}
+.edit-close:hover{color:var(--text-dark)}
 .edit-body{flex:1;overflow-y:auto}
-.edit-actions{display:flex;gap:8px;padding:12px 18px;border-top:2px solid var(--border);flex-shrink:0}
-.btn{padding:9px 18px;border-radius:8px;font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;border:1.5px solid var(--border);background:none;color:var(--text-mid);transition:all .15s;flex:1}
+.edit-actions{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--border);flex-shrink:0;align-items:center}
+.btn{height:32px;padding:0 18px;border-radius:8px;font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;border:1.5px solid var(--border);background:none;color:var(--text-mid);transition:all .15s;flex:1}
 .btn.primary{background:var(--green-deep);color:white;border-color:var(--green-deep)}
 .btn.primary:hover{background:var(--green-mid)}
 
@@ -137,7 +137,7 @@ nav{background:var(--green-deep);display:flex;align-items:center;height:52px;fle
 .add-entry-btn:hover{border-color:var(--green-mid);color:var(--green-deep);background:var(--green-mist)}
 
 /* ── CENTER: GARDEN PLAN ── */
-.center{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--green-mist)}
+.center{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--green-mist);min-width:0}
 .zoom-btn{width:32px;height:32px;background:rgba(255,255,255,.9);border:1px solid var(--border);border-radius:7px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow);backdrop-filter:blur(4px);color:var(--green-deep);font-weight:700;transition:background .15s}
 .zoom-btn:hover{background:white}
 .zoom-btn.active{background:var(--green-deep);color:white;border-color:var(--green-deep)}
@@ -155,7 +155,7 @@ nav{background:var(--green-deep);display:flex;align-items:center;height:52px;fle
 
 /* ── CHAT ── */
 .chat-panel{width:310px;min-width:310px;background:var(--warm-white);border-left:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
-.chat-header{padding:13px 16px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;flex-shrink:0}
+.chat-header{padding:13px 16px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .chat-title{font-family:'Playfair Display',serif;font-size:15px;color:var(--green-deep);font-weight:600;display:flex;align-items:center;gap:8px}
 .chat-context-bar{background:var(--green-mist);border-bottom:1px solid var(--border);padding:7px 14px;font-size:11px;font-weight:600;color:var(--green-deep);display:flex;align-items:center;gap:6px;flex-shrink:0}
 .chat-messages{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
@@ -166,7 +166,7 @@ nav{background:var(--green-deep);display:flex;align-items:center;height:52px;fle
 .chat-sender{font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--text-light);padding:0 4px}
 .chat-apply-btn{display:inline-flex;align-items:center;gap:5px;margin-top:7px;background:var(--green-pale);color:var(--green-deep);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .15s}
 .chat-apply-btn:hover{background:var(--green-mid);color:white}
-.chat-input-area{padding:10px 12px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0}
+.chat-input-area{padding:10px 12px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0;align-items:center}
 .chat-input{flex:1;background:var(--green-mist);border:1px solid var(--border);border-radius:20px;padding:7px 12px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--text-dark);outline:none}
 .chat-input:focus{border-color:var(--green-mid)}
 .chat-send{background:var(--green-deep);color:white;border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -188,11 +188,25 @@ nav{background:var(--green-deep);display:flex;align-items:center;height:52px;fle
 </nav>
 <div class="body-wrap">
 
-<!-- ═══ EDIT PANEL ═══ -->
+<!-- CENTER: GARDEN PLAN (always leftmost) -->
+<div class="center" id="centerArea">
+  <div class="garden-area" id="gardenArea">
+    <div class="garden-plan" id="gartenplan">
+      <img class="garden-plan-img" id="gartenplanImg" src="gartenplan.png" alt="Gartenplan" onerror="this.style.background='#c8d8b8'">
+      <div id="positionMarkers"></div>
+    </div>
+    <div class="zoom-controls">
+      <button class="zoom-btn" id="zoomFitHeight" title="Auf Höhe einpassen">↕</button>
+      <button class="zoom-btn" id="zoomFitWidth" title="Auf Breite einpassen">↔</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ EDIT PANEL (right of center) ═══ -->
 <div class="edit-panel">
   <div class="edit-header">
     <div class="edit-title">✏️ Rose bearbeiten</div>
-    <button class="edit-close">✕ Schließen</button>
+    <button class="edit-close">✕</button>
   </div>
   <div class="edit-body">
 
@@ -485,24 +499,11 @@ nav{background:var(--green-deep);display:flex;align-items:center;height:52px;fle
   </div>
 </div>
 
-<!-- CENTER: GARDEN PLAN -->
-<div class="center" id="centerArea">
-  <div class="garden-area" id="gardenArea">
-    <div class="garden-plan" id="gartenplan">
-      <img class="garden-plan-img" id="gartenplanImg" src="gartenplan.png" alt="Gartenplan" onerror="this.style.background='#c8d8b8'">
-      <div id="positionMarkers"></div>
-    </div>
-    <div class="zoom-controls">
-      <button class="zoom-btn" id="zoomFitHeight" title="Auf Höhe einpassen">↕</button>
-      <button class="zoom-btn" id="zoomFitWidth" title="Auf Breite einpassen">↔</button>
-    </div>
-  </div>
-</div>
-
 <!-- CHAT -->
 <div class="chat-panel">
   <div class="chat-header">
     <div class="chat-title">🤖 Garten-Assistent</div>
+    <button style="background:none;border:none;cursor:pointer;color:var(--text-light);font-size:16px;line-height:1">✕</button>
   </div>
   <div class="chat-context-bar">✏️ Bearbeite: 🌹 Rose</div>
   <div class="chat-messages" id="chatMessages">
