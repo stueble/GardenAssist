@@ -1,11 +1,11 @@
 ---
 id: STORY-017
 title: Tailwind Design Tokens
-status: In Review
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-04 21:36'
-updated_date: '2026-05-04 22:05'
+updated_date: '2026-05-04 22:36'
 labels: []
 dependencies: []
 documentation:
@@ -14,6 +14,7 @@ documentation:
   - ui-mockups/plant-edit/plant-edit-mockup.html
   - ui-mockups/calendar/calendar-mockup.html
   - ui-mockups/settings/settings-mockup.html
+ordinal: 18000
 ---
 
 ## Description
