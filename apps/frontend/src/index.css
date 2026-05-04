@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+/* ── Design tokens ─────────────────────────────────────────────────────────── */
+:root {
+  --green-deep:  #2d4a2d;
+  --green-mid:   #4a7c4a;
+  --green-light: #7aab6a;
+  --green-pale:  #c8dfc0;
+  --green-mist:  #eef4eb;
+  --cream:       #f8f4ee;
+  --warm-white:  #fdfbf8;
+  --border:      #dde8d8;
+  --text-dark:   #1e2e1e;
+  --text-mid:    #4a5e4a;
+  --text-light:  #8a9e8a;
+  --blue-mid:    #4a78c0;
+  --blue-soft:   #e8f0fb;
+  --red-warn:    #c0392b;
+  --red-soft:    #fdf0ee;
+  --yellow-warn: #d4850a;
+  --yellow-soft: #fef9ee;
+  --shadow:      0 2px 12px rgba(45, 74, 45, 0.10);
+  --shadow-lg:   0 8px 32px rgba(45, 74, 45, 0.15);
+}
+
+body {
+  background-color: var(--warm-white);
+  color: var(--text-dark);
+  font-family: system-ui, -apple-system, sans-serif;
+}

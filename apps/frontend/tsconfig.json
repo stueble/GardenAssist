@@ -3,9 +3,13 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "rootDir": "../..",
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
     "paths": {
-      "@api/*": ["../../docs/api/*"]
+      "@api/*": ["../../docs/api/*"],
+      "@/*":    ["./src/*"]
     }
   },
-  "include": ["src", "../../docs/api"]
+  "include": ["src", "../../docs/api", "vite.config.ts"]
 }
