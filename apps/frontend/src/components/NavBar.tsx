@@ -3,10 +3,10 @@ import { Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const tabs = [
-  { to: "/",         label: "Dashboard" },
-  { to: "/plants",   label: "Pflanzen"  },
-  { to: "/calendar", label: "Kalender"  },
-  { to: "/journal",  label: "Tagebuch"  },
+  { to: "/",         icon: "🏠", label: "Dashboard" },
+  { to: "/plants",   icon: "🌱", label: "Pflanzen"  },
+  { to: "/calendar", icon: "🗓", label: "Kalender"  },
+  { to: "/journal",  icon: "📔", label: "Tagebuch"  },
 ] as const;
 
 export function NavBar() {
@@ -22,7 +22,7 @@ export function NavBar() {
 
       {/* Main tabs */}
       <div className="flex gap-0.5 flex-1 items-center px-3" role="tablist">
-        {tabs.map(({ to, label }) => (
+        {tabs.map(({ to, icon, label }) => (
           <NavLink
             key={to}
             to={to}
@@ -37,7 +37,7 @@ export function NavBar() {
               )
             }
           >
-            {label}
+            <span aria-hidden="true">{icon}</span>{label}
           </NavLink>
         ))}
       </div>
