@@ -1,30 +1,108 @@
 @import "tailwindcss";
 
-/* ── Design tokens ─────────────────────────────────────────────────────────── */
-:root {
-  --green-deep:  #2d4a2d;
-  --green-mid:   #4a7c4a;
-  --green-light: #7aab6a;
-  --green-pale:  #c8dfc0;
-  --green-mist:  #eef4eb;
-  --cream:       #f8f4ee;
-  --warm-white:  #fdfbf8;
-  --border:      #dde8d8;
-  --text-dark:   #1e2e1e;
-  --text-mid:    #4a5e4a;
-  --text-light:  #8a9e8a;
-  --blue-mid:    #4a78c0;
-  --blue-soft:   #e8f0fb;
-  --red-warn:    #c0392b;
-  --red-soft:    #fdf0ee;
-  --yellow-warn: #d4850a;
-  --yellow-soft: #fef9ee;
-  --shadow:      0 2px 12px rgba(45, 74, 45, 0.10);
-  --shadow-lg:   0 8px 32px rgba(45, 74, 45, 0.15);
+/* ── Google Fonts ──────────────────────────────────────────────────────────── */
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap");
+
+/* ── Design tokens (Tailwind v4 @theme) ────────────────────────────────────── */
+/*
+ * Defining tokens in @theme makes them available as Tailwind utility classes:
+ *   bg-green-deep, text-green-mid, shadow-ga, font-display, etc.
+ * The CSS custom properties are also preserved for use in arbitrary values
+ * and legacy style="" attributes.
+ */
+@theme {
+  /* ── Colors: Brand greens ── */
+  --color-green-deep:  #2d4a2d;
+  --color-green-mid:   #4a7c4a;
+  --color-green-light: #7aab6a;
+  --color-green-pale:  #c8dfc0;
+  --color-green-mist:  #eef4eb;
+
+  /* ── Colors: Neutrals / backgrounds ── */
+  --color-cream:       #f8f4ee;
+  --color-warm-white:  #fdfbf8;
+  --color-bark:        #8b6f47;
+  --color-bark-light:  #c4a882;
+
+  /* ── Colors: Semantic / state ── */
+  --color-red-warn:    #c0392b;
+  --color-red-soft:    #fdf0ee;
+  --color-yellow-warn: #d4850a;
+  --color-yellow-soft: #fef9ee;
+  --color-blue-mid:    #4a78c0;
+  --color-blue-soft:   #e8f0fb;
+
+  /* ── Colors: Text ── */
+  --color-text-dark:   #1e2e1e;
+  --color-text-mid:    #4a5e4a;
+  --color-text-light:  #8a9e8a;
+
+  /* ── Colors: Structural ── */
+  --color-border:      #dde8d8;
+
+  /* ── Colors: Schedule / Gantt categories ── */
+  --color-sc-bloom:      #c0392b;
+  --color-sc-growth:     #2e7d32;
+  --color-sc-foliage:    #1b5e20;
+  --color-sc-prune:      #27ae60;
+  --color-sc-fertilize:  #2980b9;
+  --color-sc-misc:       #7f8c8d;
+
+  /* ── Fonts ── */
+  --font-display: "Playfair Display", serif;
+  --font-body:    "DM Sans", sans-serif;
+  --font-mono:    ui-monospace, monospace;
+
+  /* ── Shadows ── */
+  --shadow-ga:    0 2px 12px rgba(45, 74, 45, 0.10);
+  --shadow-ga-lg: 0 8px 32px rgba(45, 74, 45, 0.15);
+
+  /* ── Border radius ── */
+  --radius-sm:  4px;
+  --radius-md:  8px;
+  --radius-lg:  12px;
+  --radius-xl:  20px;
+  --radius-full: 9999px;
 }
 
+/* ── CSS custom properties (for var() usage in arbitrary values) ───────────── */
+:root {
+  --green-deep:    #2d4a2d;
+  --green-mid:     #4a7c4a;
+  --green-light:   #7aab6a;
+  --green-pale:    #c8dfc0;
+  --green-mist:    #eef4eb;
+  --cream:         #f8f4ee;
+  --warm-white:    #fdfbf8;
+  --bark:          #8b6f47;
+  --bark-light:    #c4a882;
+  --red-warn:      #c0392b;
+  --red-soft:      #fdf0ee;
+  --yellow-warn:   #d4850a;
+  --yellow-soft:   #fef9ee;
+  --blue-mid:      #4a78c0;
+  --blue-soft:     #e8f0fb;
+  --text-dark:     #1e2e1e;
+  --text-mid:      #4a5e4a;
+  --text-light:    #8a9e8a;
+  --border:        #dde8d8;
+  --sc-bloom:      #c0392b;
+  --sc-growth:     #2e7d32;
+  --sc-foliage:    #1b5e20;
+  --sc-prune:      #27ae60;
+  --sc-fertilize:  #2980b9;
+  --sc-misc:       #7f8c8d;
+  --shadow:        0 2px 12px rgba(45, 74, 45, 0.10);
+  --shadow-lg:     0 8px 32px rgba(45, 74, 45, 0.15);
+}
+
+/* ── Base styles ───────────────────────────────────────────────────────────── */
 body {
   background-color: var(--warm-white);
   color: var(--text-dark);
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: var(--font-body, "DM Sans", sans-serif);
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display, "Playfair Display", serif);
 }

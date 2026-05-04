@@ -12,12 +12,11 @@ const tabs = [
 export function NavBar() {
   return (
     <nav
-      className="flex items-center justify-between px-4 h-12 border-b"
-      style={{ background: "var(--green-deep)", borderColor: "var(--green-mid)" }}
+      className="flex items-center justify-between px-4 h-12 bg-green-deep border-b border-green-mid shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
       aria-label="Hauptnavigation"
     >
       {/* Logo */}
-      <span className="text-white font-semibold text-sm tracking-wide select-none">
+      <span className="text-white font-semibold text-sm tracking-wide select-none font-display">
         🌿 GardenAssist
       </span>
 
@@ -31,7 +30,7 @@ export function NavBar() {
             role="tab"
             className={({ isActive }) =>
               cn(
-                "px-4 py-1.5 rounded text-sm font-medium transition-colors",
+                "px-4 py-1.5 rounded-md text-sm font-medium transition-colors",
                 isActive
                   ? "bg-white/20 text-white"
                   : "text-white/70 hover:bg-white/10 hover:text-white"
@@ -49,7 +48,7 @@ export function NavBar() {
         aria-label="Einstellungen"
         className={({ isActive }) =>
           cn(
-            "p-1.5 rounded transition-colors",
+            "p-1.5 rounded-md transition-colors",
             isActive
               ? "bg-white/20 text-white"
               : "text-white/70 hover:bg-white/10 hover:text-white"

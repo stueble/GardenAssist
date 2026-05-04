@@ -8,7 +8,7 @@ import { SettingsView }  from "@/views/SettingsView";
 
 export function App() {
   return (
-    <div className="flex flex-col min-h-screen" style={{ background: "var(--warm-white)" }}>
+    <div className="flex flex-col min-h-screen bg-warm-white">
       <NavBar />
       <main className="flex-1">
         <Routes>
