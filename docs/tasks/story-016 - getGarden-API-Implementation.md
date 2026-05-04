@@ -1,17 +1,18 @@
 ---
 id: STORY-016
 title: getGarden API Implementation
-status: In Review
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-04 17:26'
-updated_date: '2026-05-04 22:42'
+updated_date: '2026-05-04 23:14'
 labels:
   - setup
 dependencies: []
 documentation:
   - docs/api/garden.ts
   - docs/api/task.ts
+ordinal: 19000
 ---
 
 ## Description
