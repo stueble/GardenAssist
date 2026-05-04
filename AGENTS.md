@@ -8,8 +8,8 @@ Conceptual background lives in `docs/` — this file contains commands, paths, a
 ## What This Project Is
 
 An AI-assisted web application for garden management. Stack: React + TypeScript + Vite (frontend),
-Hono + Drizzle + SQLite (backend), deployed via Docker. **Currently in early planning/scaffolding
-phase — no application code exists yet.**
+Hono + Drizzle + SQLite (backend), deployed via Docker. Monorepo with pnpm workspaces.
+**Scaffolding complete (stories 011–020 done). Active feature development in progress.**
 
 ---
 
@@ -89,6 +89,13 @@ Optional longer explanation.
 | `docs/decisions/` | Architectural Decision Records (ADR-001 through ADR-009) |
 | `docs/drafts/` | Draft stories not yet accepted |
 | `ui-mockups/` | UI mockup files |
+| `apps/backend/src/services/` | Business logic (garden, settings, tasks) |
+| `apps/backend/src/routes/` | Hono route handlers |
+| `apps/backend/src/db/` | Drizzle schema, migrations, seed |
+| `apps/frontend/src/views/` | Page-level view components |
+| `apps/frontend/src/components/` | Shared UI components |
+| `apps/frontend/src/hooks/` | React hooks (useSettings, etc.) |
+| `apps/frontend/src/locales/` | i18n translation files (de/en) |
 
 ---
 
@@ -98,16 +105,43 @@ Optional longer explanation.
   schedules, tasks, attachments, journal entries. Write operations are per-entity.
 - **Tasks are derived**, not stored. They are computed from schedules minus resolved
   journal entries (`entry_type: "done"` or `"skipped"`).
-- **Monorepo planned** with `/apps/frontend` and `/apps/backend` (story-011, not yet implemented).
-- **Shared types** in `docs/api/` are accessible from both packages once scaffolded.
+- **Monorepo** with `/apps/frontend` and `/apps/backend`, pnpm workspaces.
+- **Shared types** in `docs/api/` imported via `@api/*` path alias in both packages.
 - SQLite for v1; Drizzle abstracts the switch to PostgreSQL later.
+- **i18n:** All UI text via `t()` — no hardcoded strings in JSX. Locale files in `apps/frontend/src/locales/de/` and `en/`. Language stored in localStorage (`ga_language`).
+- **Tailwind v4:** Design tokens defined via `@theme` in `index.css` — no `tailwind.config.ts`. Font sizes and layout values use `style={{ ... }}` with CSS variables (Tailwind v4 does not reliably resolve arbitrary font-size classes). Always use `var(--font-display)` etc. inline for typography.
+- **UI Mockups:** Always check `ui-mockups/` before implementing a view. Match styles exactly — pixel values, colors, fonts. Deviations need explicit justification.
+- **backlog CLI task IDs** use `STORY-NNN` format (e.g. `backlog task edit STORY-016 ...`).
 
 ---
 
 ## Running the System
 
-No application code exists yet. Setup instructions will be added in story-011 (Project Scaffolding)
-and story-015 (React/Vite frontend) / story-014 (Hono backend skeleton).
+```bash
+# Install (once)
+export PNPM_HOME="/home/stueble/.local/share/pnpm" && export PATH="$PNPM_HOME:$PATH"
+pnpm install
+
+# Seed DB (once, or after db:migrate)
+pnpm --filter backend db:migrate
+pnpm --filter backend db:seed
+
+# Dev servers
+pnpm dev:backend    # http://localhost:3000
+pnpm dev:frontend   # http://localhost:5173
+
+# Tests + typecheck
+pnpm --filter backend test
+pnpm --filter frontend test
+pnpm --filter backend typecheck
+pnpm --filter frontend typecheck
+
+# Kill a stuck port
+lsof -ti:3000 | xargs kill -9
+```
+
+**Known quirk:** `apps/backend/data/` must exist for static file serving (already committed).
+The SQLite DB file (`gardenassist.db`) is created in `apps/backend/` on first run.
 
 ---
 
