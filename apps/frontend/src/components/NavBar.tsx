@@ -12,16 +12,16 @@ const tabs = [
 export function NavBar() {
   return (
     <nav
-      className="flex items-center justify-between px-4 h-12 bg-green-deep border-b border-green-mid shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
+      className="flex items-center h-[52px] shrink-0 bg-green-deep shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
       aria-label="Hauptnavigation"
     >
-      {/* Logo */}
-      <span className="text-white font-semibold text-sm tracking-wide select-none font-display">
+      {/* Logo — 280px, Playfair Display 20px, green-pale, border-right */}
+      <span className="flex items-center gap-2 w-[280px] shrink-0 px-5 h-full border-r border-white/10 font-display text-[20px] text-green-pale tracking-[0.5px] select-none">
         🌿 GardenAssist
       </span>
 
       {/* Main tabs */}
-      <div className="flex gap-1" role="tablist">
+      <div className="flex gap-0.5 flex-1 items-center px-3" role="tablist">
         {tabs.map(({ to, label }) => (
           <NavLink
             key={to}
@@ -30,10 +30,10 @@ export function NavBar() {
             role="tab"
             className={({ isActive }) =>
               cn(
-                "px-4 py-1.5 rounded-md text-sm font-medium transition-colors",
+                "flex items-center px-[14px] h-9 rounded-[6px] text-[13px] text-green-pale transition-all whitespace-nowrap border-none bg-none",
                 isActive
-                  ? "bg-white/20 text-white"
-                  : "text-white/70 hover:bg-white/10 hover:text-white"
+                  ? "opacity-100 bg-white/15 font-medium"
+                  : "opacity-75 hover:opacity-100 hover:bg-white/10"
               )
             }
           >
@@ -43,20 +43,20 @@ export function NavBar() {
       </div>
 
       {/* Settings icon */}
-      <NavLink
-        to="/settings"
-        aria-label="Einstellungen"
-        className={({ isActive }) =>
-          cn(
-            "p-1.5 rounded-md transition-colors",
-            isActive
-              ? "bg-white/20 text-white"
-              : "text-white/70 hover:bg-white/10 hover:text-white"
-          )
-        }
-      >
-        <Settings size={18} />
-      </NavLink>
+      <div className="pr-4">
+        <NavLink
+          to="/settings"
+          aria-label="Einstellungen"
+          className={({ isActive }) =>
+            cn(
+              "text-green-pale text-[18px] transition-opacity",
+              isActive ? "opacity-100" : "opacity-75 hover:opacity-100"
+            )
+          }
+        >
+          <Settings size={18} />
+        </NavLink>
+      </div>
     </nav>
   );
 }
