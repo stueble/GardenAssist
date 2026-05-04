@@ -1,14 +1,20 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { SettingsSchema } from "../schemas/index.js";
-import { mockSettings } from "../mock/index.js";
+import { db } from "../db/index.js";
+import { getSettings, updateSettings } from "../services/settings.service.js";
 
 export const settingsRoutes = new Hono()
 
-  // GET /api/settings
-  .get("/", (c) => c.json(mockSettings()))
+  // GET /api/settings — real implementation
+  .get("/", (c) => {
+    const settings = getSettings(db);
+    return c.json(settings);
+  })
 
-  // PUT /api/settings
+  // PUT /api/settings — real implementation
   .put("/", zValidator("json", SettingsSchema), (c) => {
-    return c.json(mockSettings());
+    const data = c.req.valid("json");
+    const updated = updateSettings(db, data);
+    return c.json(updated);
   });
