@@ -3,10 +3,11 @@
   "subtitle": "Globale Konfiguration der App.",
   "sections": {
     "general": "Allgemein",
+    "garden_plan": "Gartenplan",
     "location": "Standort",
-    "garden": "Garten",
-    "tasks": "Aufgaben",
-    "storage": "Dateispeicher",
+    "irrigation_zones": "Bewässerungszonen",
+    "plant_categories": "Pflanzenkategorien",
+    "color_presets": "Farb-Presets",
     "ai": "KI-Assistent",
     "data": "Daten & Backup"
   },

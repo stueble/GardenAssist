@@ -1,0 +1,122 @@
+/**
+ * SettingsView tests.
+ *
+ * Verifies that all 7 sections are rendered, the save bar is present,
+ * the AI panel toggle is present, and sections can be collapsed/expanded.
+ */
+
+import { describe, it, expect, beforeEach } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
+import { I18nextProvider } from "react-i18next";
+import i18n from "../i18n/index";
+import { SettingsView } from "../views/SettingsView";
+
+beforeEach(async () => {
+  await i18n.changeLanguage("de");
+});
+
+function renderSettings() {
+  return render(
+    <MemoryRouter>
+      <I18nextProvider i18n={i18n}>
+        <SettingsView />
+      </I18nextProvider>
+    </MemoryRouter>
+  );
+}
+
+describe("SettingsView", () => {
+  it("renders the page title", () => {
+    renderSettings();
+    expect(screen.getByRole("heading", { name: /Einstellungen/i })).toBeInTheDocument();
+  });
+
+  it("renders all 7 sections", () => {
+    renderSettings();
+    const sections = screen.getAllByTestId("settings-section");
+    expect(sections).toHaveLength(7);
+  });
+
+  it("renders Gartenplan section", () => {
+    renderSettings();
+    expect(screen.getByText("Gartenplan")).toBeInTheDocument();
+  });
+
+  it("renders Standort section", () => {
+    renderSettings();
+    expect(screen.getByText("Standort")).toBeInTheDocument();
+  });
+
+  it("renders Bewässerungszonen section", () => {
+    renderSettings();
+    expect(screen.getByText("Bewässerungszonen")).toBeInTheDocument();
+  });
+
+  it("renders Pflanzenkategorien section", () => {
+    renderSettings();
+    expect(screen.getByText("Pflanzenkategorien")).toBeInTheDocument();
+  });
+
+  it("renders Farb-Presets section", () => {
+    renderSettings();
+    expect(screen.getByText("Farb-Presets")).toBeInTheDocument();
+  });
+
+  it("renders KI-Assistent section", () => {
+    renderSettings();
+    expect(screen.getByText("KI-Assistent")).toBeInTheDocument();
+  });
+
+  it("renders Daten & Backup section", () => {
+    renderSettings();
+    expect(screen.getByText("Daten & Backup")).toBeInTheDocument();
+  });
+
+  it("renders the save bar", () => {
+    renderSettings();
+    expect(screen.getByTestId("save-bar")).toBeInTheDocument();
+  });
+
+  it("save and discard buttons are disabled when nothing changed", () => {
+    renderSettings();
+    expect(screen.getByTestId("save-bar-save")).toBeDisabled();
+    expect(screen.getByTestId("save-bar-discard")).toBeDisabled();
+  });
+
+  it("renders the AI panel toggle button", () => {
+    renderSettings();
+    expect(screen.getByRole("button", { name: /Assistent öffnen/i })).toBeInTheDocument();
+  });
+
+  it("opens AI panel when toggle is clicked", () => {
+    renderSettings();
+    fireEvent.click(screen.getByRole("button", { name: /Assistent öffnen/i }));
+    expect(screen.getByTestId("ai-messages")).toBeInTheDocument();
+  });
+
+  it("Gartenplan section is open by default", () => {
+    renderSettings();
+    // defaultOpen=true means body is visible — check for placeholder text
+    expect(screen.getByText(/Gartenplan — Inhalt folgt/i)).toBeInTheDocument();
+  });
+
+  it("closed section body is not visible", () => {
+    renderSettings();
+    // Standort is closed by default
+    expect(screen.queryByText(/Standort — Inhalt folgt/i)).not.toBeInTheDocument();
+  });
+
+  it("clicking a closed section header opens it", () => {
+    renderSettings();
+    fireEvent.click(screen.getByText("Standort"));
+    expect(screen.getByText(/Standort — Inhalt folgt/i)).toBeInTheDocument();
+  });
+
+  it("clicking an open section header closes it", () => {
+    renderSettings();
+    // Gartenplan is open — click to close
+    fireEvent.click(screen.getByText("Gartenplan"));
+    expect(screen.queryByText(/Gartenplan — Inhalt folgt/i)).not.toBeInTheDocument();
+  });
+});
