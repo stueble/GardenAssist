@@ -29,7 +29,7 @@ function renderSettings() {
 describe("SettingsView", () => {
   it("renders the page title", () => {
     renderSettings();
-    expect(screen.getByRole("heading", { name: /Einstellungen/i })).toBeInTheDocument();
+    expect(screen.getByText(/Einstellungen/i)).toBeInTheDocument();
   });
 
   it("renders all 7 sections", () => {

@@ -49,6 +49,6 @@ describe("App routing", () => {
 
   it("/settings renders the Settings view", () => {
     renderAt("/settings");
-    expect(screen.getByRole("heading", { name: /Einstellungen/i })).toBeInTheDocument();
+    expect(screen.getByText(/Einstellungen/i)).toBeInTheDocument();
   });
 });

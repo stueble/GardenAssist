@@ -41,9 +41,15 @@ export function SettingsView() {
           <div className="max-w-[860px]">
 
             {/* Page title */}
-            <h1 className="font-display text-[24px] font-semibold text-green-deep mb-6">
+            <div
+              className="text-green-deep font-semibold mb-[6px]"
+              style={{ fontFamily: "var(--font-display)", fontSize: "24px" }}
+            >
               ⚙️ {t("title")}
-            </h1>
+            </div>
+            <div className="text-[13px] text-text-light mb-7">
+              {t("subtitle")}
+            </div>
 
             {/* Sections */}
             {SECTIONS.map(({ icon, key, defaultOpen }) => (
