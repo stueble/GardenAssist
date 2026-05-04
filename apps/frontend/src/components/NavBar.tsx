@@ -15,9 +15,9 @@ export function NavBar() {
       className="flex items-center h-[52px] shrink-0 bg-green-deep shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
       aria-label="Hauptnavigation"
     >
-      {/* Logo — 280px, Playfair Display 20px, green-pale, border-right */}
-      <span className="flex items-center gap-2 w-[280px] shrink-0 px-5 h-full border-r border-white/10 font-display text-[20px] text-green-pale tracking-[0.5px] select-none">
-        🌿 GardenAssist
+      {/* Logo — 280px, Playfair Display 20px, green-pale, gap-[8px] between emoji and name */}
+      <span className="flex items-center gap-[8px] w-[280px] shrink-0 px-5 h-full border-r border-white/10 font-display leading-none text-green-pale tracking-[0.5px] select-none" style={{ fontSize: "20px" }}>
+        <span aria-hidden="true">🌿</span>GardenAssist
       </span>
 
       {/* Main tabs */}
@@ -30,7 +30,7 @@ export function NavBar() {
             role="tab"
             className={({ isActive }) =>
               cn(
-                "flex items-center px-[14px] h-9 rounded-[6px] text-[13px] text-green-pale transition-all whitespace-nowrap border-none bg-none",
+                "flex items-center gap-[6px] px-[14px] h-9 rounded-[6px] text-[13px] text-green-pale transition-all whitespace-nowrap border-none bg-none",
                 isActive
                   ? "opacity-100 bg-white/15 font-medium"
                   : "opacity-75 hover:opacity-100 hover:bg-white/10"
