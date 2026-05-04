@@ -3,7 +3,7 @@ id: doc-001
 title: 001 - Contributing
 type: other
 created_date: '2026-05-02 13:55'
-updated_date: '2026-05-04 17:06'
+updated_date: '2026-05-04 20:45'
 ---
 # Contributing
 
@@ -12,7 +12,7 @@ AI agents: also read `AGENTS.md` for operative commands and implementation guide
 
 ## User Stories
 
-User stories are managed exclusively as backlogmd tasks. Also read `docs/docs/doc-001 - Backlog-Usage-Guide.md`
+User stories are managed exclusively as backlogmd tasks. Also read `docs/docs/doc-002 - Backlog-Usage-Guide.md`
 — the issue is the single source of truth.
 
 ### Issue structure

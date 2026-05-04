@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ESNext"],
+    "outDir": "dist",
+    "paths": {
+      "@api/*": ["../../docs/api/*"]
+    }
+  },
+  "include": ["src", "../../docs/api"]
+}

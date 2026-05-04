@@ -44,6 +44,12 @@ tech stack must satisfy the following constraints:
 | Containerization | Docker | On-premise, self-hostable; single docker-compose.yml for the full stack |
 | Persistence | Docker Volume | SQLite file and attachment directory mounted as a volume; survives container restarts |
 
+### Monorepo Tooling
+
+| Component | Technology | Rationale |
+|---|---|---|
+| Package manager | pnpm | Native workspace support; avoids hoisting issues; faster installs than npm; single `pnpm-workspace.yaml` to declare packages |
+
 ## Consequences
 
 - TypeScript is required for both frontend and backend — no language boundary
@@ -58,3 +64,6 @@ tech stack must satisfy the following constraints:
   React's built-in useState/useEffect for simplicity, given the app's small
   scope and single root API call (getGarden).
 - All components are open-source with MIT or Apache 2.0 licenses.
+- pnpm workspaces manage the monorepo — `pnpm install` at the root installs all
+  packages; individual packages are run with `pnpm --filter frontend ...` or
+  `pnpm --filter backend ...`.

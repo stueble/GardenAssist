@@ -76,10 +76,49 @@ A central overview combining urgent hints and warnings, open and upcoming tasks,
 
 ## Getting Started
 
-> *Setup instructions will be added once the project structure is established.*
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) >= 20
+- [pnpm](https://pnpm.io/) >= 9 — install with `npm install -g pnpm`
+
+### Install dependencies
+
+```bash
+pnpm install
+```
+
+### Development
+
+```bash
+# Frontend (React + Vite, http://localhost:5173)
+pnpm dev:frontend
+
+# Backend (Hono, http://localhost:3000)
+pnpm dev:backend
+```
+
+API requests from the frontend are proxied to the backend via Vite's dev proxy
+(`/api` → `http://localhost:3000`).
+
+### Type checking
+
+```bash
+pnpm typecheck
+```
+
+### Shared API types
+
+The TypeScript types in `docs/api/` are the source of truth for the data model.
+Both packages import them via the `@api/*` path alias, e.g.:
+
+```ts
+import type { Garden } from "@api/garden";
+```
+
+No copying or code generation required — the alias resolves directly to `docs/api/`.
 
 ---
 
 ## Project Status
 
-🚧 Early planning phase — see `backlog.md` for epics, stories, and decisions.
+🚧 In scaffolding — core structure in place, features not yet implemented.
