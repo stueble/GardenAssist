@@ -1,16 +1,17 @@
 ---
 id: STORY-013
 title: Drizzle Schema & Database Setup
-status: In Review
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-04 17:25'
-updated_date: '2026-05-04 21:13'
+updated_date: '2026-05-04 21:39'
 labels:
   - setup
 dependencies: []
 documentation:
   - docs/docs/doc-010 - 010-Data-Model.md
+ordinal: 14000
 ---
 
 ## Description

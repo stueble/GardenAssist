@@ -1,16 +1,17 @@
 ---
 id: STORY-014
 title: Hono Backend Skeleton
-status: In Review
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-04 17:26'
-updated_date: '2026-05-04 21:44'
+updated_date: '2026-05-04 21:46'
 labels:
   - setup
 dependencies: []
 documentation:
   - docs/api/api.ts
+ordinal: 15000
 ---
 
 ## Description

@@ -1,14 +1,15 @@
 ---
 id: STORY-012
 title: Docker Setup
-status: In Review
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-04 17:25'
-updated_date: '2026-05-04 21:06'
+updated_date: '2026-05-04 21:07'
 labels:
   - setup
 dependencies: []
+ordinal: 13000
 ---
 
 ## Description
