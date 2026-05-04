@@ -1,12 +1,10 @@
 ---
 id: doc-003
-title: Product Requirements Document
+title: 003 - Product Requirements Document
 type: other
 created_date: '2026-05-02 13:55'
-updated_date: '2026-05-02 14:26'
+updated_date: '2026-05-04 17:06'
 ---
-
-
 # Product Requirements Document
 
 **Version:** 0.2
@@ -165,6 +163,3 @@ These are captured here to avoid losing them, but will not drive initial develop
 - E-commerce (buying plants, tools)
 - Integration with smart garden hardware
 - Public plant database contributions
-
-
-

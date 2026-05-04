@@ -1,9 +1,9 @@
 ---
 id: doc-002
-title: Backlog Usage Guide
+title: 002 - Backlog Usage Guide
 type: other
 created_date: '2026-05-02 13:57'
-updated_date: '2026-05-02 14:30'
+updated_date: '2026-05-04 17:06'
 ---
 <!-- BACKLOG.MD GUIDELINES START -->
 # Instructions for the usage of Backlog.md CLI Tool

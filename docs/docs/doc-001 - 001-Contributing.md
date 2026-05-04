@@ -1,9 +1,9 @@
 ---
 id: doc-001
-title: Contributing
+title: 001 - Contributing
 type: other
 created_date: '2026-05-02 13:55'
-updated_date: '2026-05-02 14:26'
+updated_date: '2026-05-04 17:06'
 ---
 # Contributing
 

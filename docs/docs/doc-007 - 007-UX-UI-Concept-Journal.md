@@ -1,11 +1,10 @@
 ---
 id: doc-007
-title: UX/UI Concept - Journal
+title: 007 - UX/UI Concept - Journal
 type: other
 created_date: '2026-05-03'
-updated_date: '2026-05-03'
+updated_date: '2026-05-04 17:07'
 ---
-
 # UI Concept – Journal
 
 **Version:** 0.1  

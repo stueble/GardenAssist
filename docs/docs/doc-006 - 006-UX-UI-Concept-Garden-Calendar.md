@@ -1,11 +1,10 @@
 ---
 id: doc-006
-title: UX/UI Concept - Garden Calendar
+title: 006 - UX/UI Concept - Garden Calendar
 type: other
 created_date: '2026-05-03'
-updated_date: '2026-05-03'
+updated_date: '2026-05-04 17:07'
 ---
-
 # UI Concept – Garden Calendar
 
 **Version:** 0.2  

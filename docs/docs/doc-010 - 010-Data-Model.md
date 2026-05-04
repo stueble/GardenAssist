@@ -1,11 +1,10 @@
 ---
 id: doc-010
-title: Data Model
+title: 010 - Data Model
 type: other
 created_date: '2026-05-03'
-updated_date: '2026-05-04'
+updated_date: '2026-05-04 17:08'
 ---
-
 # Data Model – GardenAssist
 
 **Version:** 0.4

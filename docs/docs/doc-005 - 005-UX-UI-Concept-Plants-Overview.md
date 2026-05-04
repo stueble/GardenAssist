@@ -1,11 +1,10 @@
 ---
 id: doc-005
-title: UX/UI Concept - Plants Overview
+title: 005 - UX/UI Concept - Plants Overview
 type: other
 created_date: '2026-05-02'
-updated_date: '2026-05-03'
+updated_date: '2026-05-04 17:07'
 ---
-
 # UI Concept – Plants Overview
 
 **Version:** 0.3  

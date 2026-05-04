@@ -47,7 +47,30 @@ A central overview combining urgent hints and warnings, open and upcoming tasks,
 
 ## Tech Stack
 
-> *To be decided*
+## Frontend
+ 
+| Component | Technology | Rationale |
+|---|---|---|
+| Framework | React + TypeScript | Industry standard; best AI code generation support |
+| Build tool | Vite | Fast dev server and build; replaces Create React App |
+| UI components | shadcn/ui | Radix UI (accessible, headless) + Tailwind; components copied into project for full control |
+| Styling | Tailwind CSS | Utility-first; no separate CSS files needed |
+ 
+### Backend
+ 
+| Component | Technology | Rationale |
+|---|---|---|
+| Server framework | Hono | Lightweight, TypeScript-first; simpler than NestJS, more modern than Express |
+| Validation | Zod | Runtime validation of all API inputs; enables OpenAPI generation for future mobile client (see ADR-007) |
+| ORM | Drizzle | TypeScript-first schema definition; lightweight; supports SQLite and PostgreSQL with a single connection config change |
+| Database | SQLite (v1) → PostgreSQL (future) | SQLite for zero-dependency on-premise install; Drizzle abstracts the switch to PostgreSQL |
+ 
+### Deployment
+ 
+| Component | Technology | Rationale |
+|---|---|---|
+| Containerization | Docker | On-premise, self-hostable; single docker-compose.yml for the full stack |
+| Persistence | Docker Volume | SQLite file and attachment directory mounted as a volume; survives container restarts |
 
 ---
 

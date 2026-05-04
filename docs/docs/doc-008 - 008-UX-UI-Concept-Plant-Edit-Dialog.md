@@ -1,11 +1,10 @@
 ---
 id: doc-008
-title: UX/UI Concept - Plant Edit Dialog
+title: 008 - UX/UI Concept - Plant Edit Dialog
 type: other
 created_date: '2026-05-03'
-updated_date: '2026-05-03'
+updated_date: '2026-05-04 17:07'
 ---
-
 # UI Concept – Plant Edit Dialog
 
 **Version:** 0.1  

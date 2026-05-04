@@ -1,11 +1,10 @@
 ---
 id: doc-009
-title: UX/UI Concept - Settings
+title: 009 - UX/UI Concept - Settings
 type: other
 created_date: '2026-05-03'
-updated_date: '2026-05-03'
+updated_date: '2026-05-04 17:07'
 ---
-
 # UI Concept – Settings
 
 **Version:** 0.1  

@@ -1,11 +1,10 @@
 ---
 id: doc-004
-title: UX/UI Concept - Dashboard
+title: 004 - UX/UI Concept - Dashboard
 type: other
 created_date: '2026-05-02 20:45'
-updated_date: '2026-05-03'
+updated_date: '2026-05-04 17:06'
 ---
-
 # UI Concept – Dashboard
 
 **Version:** 0.6  
