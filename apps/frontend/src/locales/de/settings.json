@@ -1,6 +1,6 @@
 {
   "title": "Einstellungen",
-  "subtitle": "Globale Konfiguration der App.",
+  "subtitle": "Gartenplan, Farben, Zonen und weitere Konfigurationen",
   "sections": {
     "general": "Allgemein",
     "garden_plan": "Gartenplan",
@@ -10,6 +10,15 @@
     "color_presets": "Farb-Presets",
     "ai": "KI-Assistent",
     "data": "Daten & Backup"
+  },
+  "section_subtitles": {
+    "garden_plan": "Grundriss-Bild hochladen, das als Hintergrund des interaktiven Plans dient",
+    "location": "Für Wetterdaten und Frostwarnungen",
+    "irrigation_zones": "Definiere die Zonen deiner Bewässerungsanlage",
+    "plant_categories": "Verfügbare Kategorien im Pflanzendialog (Dropdown)",
+    "color_presets": "Vorauswahl der Farben in Blütezeiten, Blätter und Sonstiges",
+    "ai": "API-Schlüssel und Modell-Konfiguration",
+    "data": "Gartendaten exportieren, importieren oder zurücksetzen"
   },
   "fields": {
     "language": "Sprache",

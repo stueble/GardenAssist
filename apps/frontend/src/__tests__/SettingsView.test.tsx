@@ -95,21 +95,9 @@ describe("SettingsView", () => {
     expect(screen.getByTestId("ai-messages")).toBeInTheDocument();
   });
 
-  it("Gartenplan section is open by default", () => {
+  it("all sections are open by default (matching mockup)", () => {
     renderSettings();
-    // defaultOpen=true means body is visible — check for placeholder text
     expect(screen.getByText(/Gartenplan — Inhalt folgt/i)).toBeInTheDocument();
-  });
-
-  it("closed section body is not visible", () => {
-    renderSettings();
-    // Standort is closed by default
-    expect(screen.queryByText(/Standort — Inhalt folgt/i)).not.toBeInTheDocument();
-  });
-
-  it("clicking a closed section header opens it", () => {
-    renderSettings();
-    fireEvent.click(screen.getByText("Standort"));
     expect(screen.getByText(/Standort — Inhalt folgt/i)).toBeInTheDocument();
   });
 
@@ -118,5 +106,25 @@ describe("SettingsView", () => {
     // Gartenplan is open — click to close
     fireEvent.click(screen.getByText("Gartenplan"));
     expect(screen.queryByText(/Gartenplan — Inhalt folgt/i)).not.toBeInTheDocument();
+  });
+
+  it("clicking a closed section header opens it", () => {
+    renderSettings();
+    // Close Gartenplan first, then reopen
+    fireEvent.click(screen.getByText("Gartenplan"));
+    expect(screen.queryByText(/Gartenplan — Inhalt folgt/i)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByText("Gartenplan"));
+    expect(screen.getByText(/Gartenplan — Inhalt folgt/i)).toBeInTheDocument();
+  });
+
+  it("shows section subtitles", () => {
+    renderSettings();
+    expect(screen.getByText(/Grundriss-Bild hochladen/i)).toBeInTheDocument();
+    expect(screen.getByText(/Für Wetterdaten/i)).toBeInTheDocument();
+  });
+
+  it("save bar shows hint text when not dirty", () => {
+    renderSettings();
+    expect(screen.getByText(/Keine ungespeicherten Änderungen/i)).toBeInTheDocument();
   });
 });

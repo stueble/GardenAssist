@@ -4,15 +4,16 @@ import { SettingsSection } from "@/components/SettingsSection";
 import { SaveBar } from "@/components/SaveBar";
 import { AiPanel } from "@/components/AiPanel";
 
-// Section definitions — icon + i18n key + defaultOpen
+// Section definitions — icon + i18n key
+// All open by default, matching the mockup
 const SECTIONS = [
-  { icon: "🗺️", key: "garden_plan",       defaultOpen: true  },
-  { icon: "📍", key: "location",           defaultOpen: false },
-  { icon: "💧", key: "irrigation_zones",   defaultOpen: false },
-  { icon: "📂", key: "plant_categories",   defaultOpen: false },
-  { icon: "🎨", key: "color_presets",      defaultOpen: false },
-  { icon: "🤖", key: "ai",                 defaultOpen: false },
-  { icon: "💾", key: "data",               defaultOpen: false },
+  { icon: "🗺️", key: "garden_plan"     },
+  { icon: "📍", key: "location"         },
+  { icon: "💧", key: "irrigation_zones" },
+  { icon: "📂", key: "plant_categories" },
+  { icon: "🎨", key: "color_presets"    },
+  { icon: "🤖", key: "ai"              },
+  { icon: "💾", key: "data"            },
 ] as const;
 
 export function SettingsView() {
@@ -30,36 +31,40 @@ export function SettingsView() {
   }
 
   return (
-    // ADR-006: Main → (no context dialog here) → Assistant panel
-    <div className="flex flex-1 min-h-0 overflow-hidden">
+    // ADR-006: Main → (no context dialog) → Assistant panel
+    // Background: cream (#f8f4ee) matching mockup body background
+    <div className="flex flex-1 min-h-0 overflow-hidden bg-cream">
 
       {/* ── Main content ── */}
       <div className="flex flex-col flex-1 min-w-0">
 
-        {/* Scrollable section list */}
-        <div className="flex-1 overflow-y-auto px-8 py-7">
-          <div className="max-w-[860px]">
+        {/* Scrollable section list — mockup: padding 28px 32px, max-width 860px */}
+        <div className="flex-1 overflow-y-auto" style={{ padding: "28px 32px" }}>
+          <div style={{ maxWidth: "860px" }}>
 
-            {/* Page title */}
+            {/* Page title — mockup: Playfair Display 24px 600, color green-deep */}
             <div
-              className="text-green-deep font-semibold mb-[6px]"
+              className="font-semibold text-green-deep mb-[6px]"
               style={{ fontFamily: "var(--font-display)", fontSize: "24px" }}
             >
               ⚙️ {t("title")}
             </div>
+
+            {/* Subtitle — mockup: 13px text-light, margin-bottom 28px */}
             <div className="text-[13px] text-text-light mb-7">
               {t("subtitle")}
             </div>
 
-            {/* Sections */}
-            {SECTIONS.map(({ icon, key, defaultOpen }) => (
+            {/* Sections — all open by default (matching mockup) */}
+            {SECTIONS.map(({ icon, key }) => (
               <SettingsSection
                 key={key}
                 icon={icon}
                 title={t(`sections.${key}`)}
-                defaultOpen={defaultOpen}
+                subtitle={t(`section_subtitles.${key}`)}
+                defaultOpen={true}
               >
-                {/* Placeholder content — filled in future stories */}
+                {/* Placeholder — filled in future stories */}
                 <p className="text-[13px] text-text-light">
                   {t(`sections.${key}`)} — Inhalt folgt.
                 </p>

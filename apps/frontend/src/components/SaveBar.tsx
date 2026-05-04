@@ -15,8 +15,9 @@ export function SaveBar({ dirty, onSave, onDiscard }: SaveBarProps) {
       className="bg-green-deep flex items-center justify-between px-8 py-3 shrink-0 shadow-[0_-2px_8px_rgba(0,0,0,0.15)]"
       data-testid="save-bar"
     >
+      {/* Hint text — always visible (matching mockup) */}
       <span className="text-[12px] text-green-pale opacity-80">
-        {dirty ? "⚠ Ungespeicherte Änderungen" : ""}
+        {dirty ? "Ungespeicherte Änderungen vorhanden" : "Keine ungespeicherten Änderungen"}
       </span>
 
       <div className="flex gap-2">

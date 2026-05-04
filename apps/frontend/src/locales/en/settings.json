@@ -1,6 +1,6 @@
 {
   "title": "Settings",
-  "subtitle": "Global app configuration.",
+  "subtitle": "Garden plan, colors, zones and further configuration",
   "sections": {
     "general": "General",
     "garden_plan": "Garden Plan",
@@ -10,6 +10,15 @@
     "color_presets": "Color Presets",
     "ai": "AI Assistant",
     "data": "Data & Backup"
+  },
+  "section_subtitles": {
+    "garden_plan": "Upload a floor plan image used as background for the interactive plan",
+    "location": "For weather data and frost warnings",
+    "irrigation_zones": "Define the zones of your irrigation system",
+    "plant_categories": "Available categories in the plant dialog (dropdown)",
+    "color_presets": "Preset colors for bloom periods, foliage and miscellaneous",
+    "ai": "API key and model configuration",
+    "data": "Export, import or reset garden data"
   },
   "fields": {
     "language": "Language",
