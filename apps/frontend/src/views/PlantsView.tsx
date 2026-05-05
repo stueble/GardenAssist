@@ -973,20 +973,21 @@ function DetailPanel({ plant, onClose, t }: DetailPanelProps) {
                   <span style={{ fontSize: "13px", flexShrink: 0 }}>
                     {SCHEDULE_ICON[s.schedule_type] ?? "📌"}
                   </span>
-                  {/* Color swatch */}
-                  <div style={{
-                    width: "12px", height: "12px", borderRadius: "3px",
-                    background: s.color ?? "var(--border)",
-                    border: "1px solid rgba(0,0,0,.1)", flexShrink: 0,
-                  }} />
-                  {/* Label */}
+                  {/* Label — takes all available space */}
                   <span style={{ fontSize: "12px", fontWeight: 500, flex: 1, color: "var(--text-dark)" }}>
                     {s.label ?? s.schedule_type}
                   </span>
-                  {/* Month range */}
-                  <span style={{ fontSize: "11px", color: "var(--text-light)", whiteSpace: "nowrap" }}>
-                    {weekRangeLabel(s.start_week, s.end_week)}
-                  </span>
+                  {/* Swatch + month range — right-aligned */}
+                  <div style={{ display: "flex", alignItems: "center", gap: "4px", flexShrink: 0 }}>
+                    <div style={{
+                      width: "10px", height: "10px", borderRadius: "2px",
+                      background: s.color ?? "var(--border)",
+                      border: "1px solid rgba(0,0,0,.1)", flexShrink: 0,
+                    }} />
+                    <span style={{ fontSize: "11px", color: "var(--text-light)", whiteSpace: "nowrap" }}>
+                      {weekRangeLabel(s.start_week, s.end_week)}
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>
