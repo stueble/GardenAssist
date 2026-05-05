@@ -4,11 +4,12 @@ import { SettingsSection } from "@/components/SettingsSection";
 import { SaveBar } from "@/components/SaveBar";
 import { AiPanel } from "@/components/AiPanel";
 import { useSettings } from "@/hooks/useSettings";
-import { LocationSection }   from "@/components/settings/LocationSection";
-import { ZonesSection }      from "@/components/settings/ZonesSection";
-import { CategoriesSection } from "@/components/settings/CategoriesSection";
-import { AiSection }         from "@/components/settings/AiSection";
-import { DataSection }       from "@/components/settings/DataSection";
+import { LocationSection }    from "@/components/settings/LocationSection";
+import { ZonesSection }       from "@/components/settings/ZonesSection";
+import { CategoriesSection }  from "@/components/settings/CategoriesSection";
+import { AiSection }          from "@/components/settings/AiSection";
+import { DataSection }        from "@/components/settings/DataSection";
+import { GardenPlanSection }  from "@/components/settings/GardenPlanSection";
 import { apiClient }         from "@/api/client";
 
 export function SettingsView() {
@@ -86,14 +87,14 @@ export function SettingsView() {
               {t("subtitle")}
             </div>
 
-            {/* Gartenplan — placeholder until story-021 */}
+            {/* Gartenplan */}
             <SettingsSection
               icon="🗺️"
               title={t("sections.garden_plan")}
               subtitle={t("section_subtitles.garden_plan")}
               defaultOpen={true}
             >
-              <p className="text-[13px] text-text-light">Gartenplan-Upload folgt in einer späteren Version.</p>
+              <GardenPlanSection />
             </SettingsSection>
 
             {/* Standort */}

@@ -37,5 +37,13 @@
     "anthropic": "Anthropic (Claude)",
     "openai": "OpenAI (GPT)",
     "openrouter": "OpenRouter"
+  },
+  "garden_plan": {
+    "dropzone_title": "Bild hierher ziehen oder klicken",
+    "dropzone_sub": "PNG, JPG oder SVG · Empfohlen: min. 2000 px Breite",
+    "uploaded_on": "Hochgeladen am",
+    "remove_label": "Entfernen",
+    "uploading": "Wird hochgeladen …",
+    "removing": "Wird entfernt …"
   }
 }

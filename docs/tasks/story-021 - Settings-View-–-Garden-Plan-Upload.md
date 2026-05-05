@@ -1,9 +1,11 @@
 ---
 id: STORY-021
 title: Settings View – Garden Plan Upload
-status: Ready
-assignee: []
+status: In Progress
+assignee:
+  - '@agent'
 created_date: '2026-05-04 22:44'
+updated_date: '2026-05-05 16:15'
 labels: []
 dependencies: []
 documentation:
@@ -24,6 +26,17 @@ Implement garden plan image upload and removal in the Settings → Gartenplan se
 - [ ] #3 Remove button deletes plan and returns to dropzone state
 - [ ] #4 uploadGardenPlan() and deleteGardenPlan() API methods used
 <!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Backend: POST /api/garden/plan und DELETE /api/garden/plan real implementieren
+2. Frontend: useGardenPlan-Hook erstellen
+3. Frontend: GardenPlanSection-Komponente erstellen (Dropzone + Preview)
+4. SettingsView: Platzhalter durch GardenPlanSection ersetzen
+5. i18n: Neue Keys in de/en settings.json
+6. Tests: Backend-Route-Tests + Frontend-Render-Tests
+<!-- SECTION:PLAN:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->

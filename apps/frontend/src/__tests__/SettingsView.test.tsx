@@ -24,6 +24,12 @@ vi.mock("../api/client", () => ({
       attachment_size_limit_mb: 10, ai_provider: null, ai_model: null, ai_api_key: null,
     }),
     updateSettings:  vi.fn().mockImplementation((s: Settings) => Promise.resolve(s)),
+    // getGarden is used by GardenPlanSection (rendered inside SettingsView)
+    getGarden: vi.fn().mockResolvedValue({
+      plan_url: null, plan_name: null, plants: [], journal_entries: [], attachments: [],
+    }),
+    uploadGardenPlan: vi.fn(),
+    deleteGardenPlan: vi.fn(),
     exportJson:      vi.fn().mockResolvedValue(new Blob()),
     exportPlantsCsv: vi.fn().mockResolvedValue(new Blob()),
     importJson:      vi.fn().mockResolvedValue({}),
