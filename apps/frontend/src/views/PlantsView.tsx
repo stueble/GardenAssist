@@ -306,6 +306,7 @@ export function PlantsView() {
                       <SortHeader label={t("table.col_name")}     col="name_common" current={sortKey} dir={sortDir} onSort={handleSort} />
                       <SortHeader label={t("table.col_category")} col="category"    current={sortKey} dir={sortDir} onSort={handleSort} />
                       <SortHeader label={t("table.col_location")} col="location"    current={sortKey} dir={sortDir} onSort={handleSort} />
+                      <th style={thStyle(false)}>{t("table.col_health")}</th>
                       <th style={thStyle(false)}>{t("table.col_bloom")}</th>
                       <th style={thStyle(false)}>{t("table.col_last_cut")}</th>
                       <th style={thStyle(false)}>{t("table.col_last_fert")}</th>
@@ -525,6 +526,15 @@ function PlantRow({ plant, selected, onClick, t }: PlantRowProps) {
         {plant.location ?? "–"}
       </td>
 
+      {/* Health */}
+      <td style={{ padding: "10px 14px" }}>
+        {plant.health_status ? (
+          <HealthBadge status={plant.health_status} t={t} />
+        ) : (
+          <span style={{ color: "var(--text-light)" }}>–</span>
+        )}
+      </td>
+
       {/* Bloom — swatch left, months top, color name bottom (matches mockup .bloom-cell) */}
       <td style={{ padding: "10px 14px" }}>
         {colors.length > 0 ? (
@@ -706,6 +716,33 @@ function PlantCard({ plant, selected, onClick, t: _t }: PlantCardProps) {
         </div>
       </div>
     </div>
+  );
+}
+
+// ── HealthBadge ───────────────────────────────────────────────────────────────
+
+const HEALTH_STYLE: Record<string, { bg: string; color: string }> = {
+  good:            { bg: "var(--green-mist)",  color: "var(--green-mid)"   },
+  watch:           { bg: "var(--yellow-soft)", color: "var(--yellow-warn)" },
+  needs_treatment: { bg: "var(--red-soft)",    color: "var(--red-warn)"    },
+};
+
+function HealthBadge({ status, t }: { status: string; t: ReturnType<typeof useTranslation<"plants">>["t"] }) {
+  const style = HEALTH_STYLE[status] ?? { bg: "var(--green-mist)", color: "var(--text-light)" };
+  return (
+    <span style={{
+      display:      "inline-flex",
+      alignItems:   "center",
+      padding:      "3px 8px",
+      borderRadius: "12px",
+      fontSize:     "11px",
+      fontWeight:   500,
+      whiteSpace:   "nowrap",
+      background:   style.bg,
+      color:        style.color,
+    }}>
+      {t(`health_status.${status}` as any)}
+    </span>
   );
 }
 
@@ -891,14 +928,19 @@ function DetailPanel({ plant, onClose, t }: DetailPanelProps) {
           </div>
         </div>
 
-        {/* Facts — only origin, lifecycle, temperature */}
+        {/* Facts */}
         <div>
           <div style={sectionTitleStyle}>{t("detail.section_facts")}</div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
             {[
-              { label: t("detail.fact_origin"),     value: plant.origin_type ? t(`origin_type.${plant.origin_type}`) : "–" },
-              { label: t("detail.fact_lifecycle"),  value: plant.lifecycle   ? t(`lifecycle.${plant.lifecycle}`)     : "–" },
-              { label: t("detail.fact_temp"),       value: plant.frost_tolerance_min_c != null ? `${plant.frost_tolerance_min_c}°C` : "–" },
+              { label: t("detail.fact_origin"),    value: plant.origin_type   ? t(`origin_type.${plant.origin_type}`) : "–" },
+              { label: t("detail.fact_lifecycle"), value: plant.lifecycle     ? t(`lifecycle.${plant.lifecycle}`)     : "–" },
+              { label: t("detail.fact_watering"),  value: plant.watering_zone ?? "–" },
+              { label: t("detail.fact_sun"),       value: plant.sun_demand    ? t(`sun_demand.${plant.sun_demand}`)   : "–" },
+              { label: t("detail.fact_water"),     value: plant.water_demand  ? t(`water_demand.${plant.water_demand}`) : "–" },
+              { label: t("detail.fact_soil"),      value: plant.soil_type     ? t(`soil_type.${plant.soil_type}`)     : "–" },
+              { label: t("detail.fact_health"),    value: plant.health_status ? t(`health_status.${plant.health_status}`) : "–" },
+              { label: t("detail.fact_temp"),      value: plant.frost_tolerance_min_c != null ? `${plant.frost_tolerance_min_c}°C` : "–" },
             ].map(({ label, value }) => (
               <div key={label} style={{ background: "var(--green-mist)", borderRadius: "8px", padding: "8px 10px" }}>
                 <div style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.5px", textTransform: "uppercase", color: "var(--text-light)", marginBottom: "3px" }}>
