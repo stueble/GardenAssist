@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { SettingsSection } from "@/components/SettingsSection";
 import { SaveBar } from "@/components/SaveBar";
@@ -35,19 +35,14 @@ export function SettingsView() {
     discardSettings();
   }
 
-  // Sync i18n on initial load: apply the stored language from DB once when
-  // the form first loads. We do NOT re-run this on every render to avoid
-  // fighting with LanguageSwitcher (which updates i18n directly).
-  const initializedRef = useRef(false);
+  // Apply language whenever form.language changes (initial load or user selection).
+  // The NavBar LanguageSwitcher has been removed, so there is no competing updater.
   useEffect(() => {
-    if (form?.language && !initializedRef.current) {
-      initializedRef.current = true;
-      if (form.language !== i18n.language) {
-        i18n.changeLanguage(form.language);
-        localStorage.setItem("ga_language", form.language);
-      }
+    if (form?.language && form.language !== i18n.language) {
+      i18n.changeLanguage(form.language);
+      localStorage.setItem("ga_language", form.language);
     }
-  }, [form?.language]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [form?.language, i18n]);
 
   async function handleExportJson() {
     const blob = await apiClient.exportJson();

@@ -124,18 +124,23 @@ describe("SettingsView — API integration", () => {
     expect(screen.getByRole("button", { name: /Assistent öffnen/i })).toBeInTheDocument();
   });
 
-  it("language switch via i18n immediately re-renders Settings in new language (AC #5)", async () => {
+  it("selecting a language in the dropdown updates form.language and switches i18n immediately", async () => {
     await i18n.changeLanguage("de");
     renderSettings();
     await waitFor(() => expect(screen.queryByText(/werden geladen/i)).not.toBeInTheDocument());
 
-    // German subtitle visible (unique string)
+    // German subtitle visible
     expect(screen.getByText(/Gartenplan, Farben, Zonen/i)).toBeInTheDocument();
 
-    // Simulate LanguageSwitcher clicking EN — changes i18n directly (no page reload)
-    await i18n.changeLanguage("en");
+    // Open the language section (it starts closed)
+    const langSectionBtn = screen.getByRole("button", { name: /Sprache/i });
+    fireEvent.click(langSectionBtn);
 
-    // English subtitle should appear immediately
+    // Find the language select and switch to English
+    const langSelect = screen.getByRole("combobox") as HTMLSelectElement;
+    fireEvent.change(langSelect, { target: { value: "en" } });
+
+    // i18n and UI should update immediately (before save)
     await waitFor(() =>
       expect(screen.getByText(/Garden plan, colors, zones/i)).toBeInTheDocument()
     );
