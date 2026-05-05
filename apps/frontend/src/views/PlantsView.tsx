@@ -576,6 +576,7 @@ function PlantRow({ plant, selected, onClick, t }: PlantRowProps) {
             <TaskPill
               status={careTask.status as PlantStatus}
               label={careTask.schedule.label ?? careTask.schedule.schedule_type}
+              scheduleColor={careTask.schedule.color}
               t={t}
             />
             <span style={{ fontSize: "10px", color: "var(--text-light)", paddingLeft: "4px" }}>
@@ -681,23 +682,14 @@ function PlantCard({ plant, selected, onClick, t: _t }: PlantCardProps) {
             </span>
           )}
           {careTask && (
-            <span
-              style={{
-                display:      "inline-flex",
-                alignItems:   "center",
-                gap:          "4px",
-                padding:      "3px 8px",
-                borderRadius: "12px",
-                fontSize:     "10px",
-                fontWeight:   500,
-                background:   STATUS_BG[careTask.status as PlantStatus],
-                color:        STATUS_TEXT[careTask.status as PlantStatus],
-              }}
-            >
-              {STATUS_ICON[careTask.status as PlantStatus]}{" "}
-              {careTask.schedule.label ?? careTask.schedule.schedule_type}
-            </span>
+            <TaskPill
+              status={careTask.status as PlantStatus}
+              label={careTask.schedule.label ?? careTask.schedule.schedule_type}
+              scheduleColor={careTask.schedule.color}
+              t={_t}
+            />
           )}
+
         </div>
       </div>
     </div>
@@ -705,18 +697,19 @@ function PlantCard({ plant, selected, onClick, t: _t }: PlantCardProps) {
 }
 
 interface TaskPillProps {
-  status: PlantStatus;
-  label:  string;
-  t:      ReturnType<typeof useTranslation<"plants">>["t"];
+  status:        PlantStatus;
+  label:         string;
+  scheduleColor: string | null;
+  t:             ReturnType<typeof useTranslation<"plants">>["t"];
 }
 
-function TaskPill({ status, label }: TaskPillProps) {
+function TaskPill({ status, label, scheduleColor }: TaskPillProps) {
   return (
     <span
       style={{
         display:      "inline-flex",
         alignItems:   "center",
-        gap:          "4px",
+        gap:          "5px",
         padding:      "3px 8px",
         borderRadius: "12px",
         fontSize:     "11px",
@@ -726,7 +719,23 @@ function TaskPill({ status, label }: TaskPillProps) {
         color:        STATUS_TEXT[status],
       }}
     >
-      {STATUS_ICON[status]} {label}
+      {/* Color swatch from schedule — replaces the generic status icon */}
+      {scheduleColor ? (
+        <span
+          style={{
+            width:        "9px",
+            height:       "9px",
+            borderRadius: "2px",
+            background:   scheduleColor,
+            flexShrink:   0,
+            display:      "inline-block",
+            border:       "1px solid rgba(0,0,0,.15)",
+          }}
+        />
+      ) : (
+        STATUS_ICON[status]
+      )}
+      {label}
     </span>
   );
 }
