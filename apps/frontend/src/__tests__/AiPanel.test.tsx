@@ -71,10 +71,18 @@ describe("AiPanel — collapsed state (AC #1)", () => {
 });
 
 describe("AiPanel — opening (AC #2)", () => {
-  it("toggle disappears after clicking it", async () => {
+  it("toggle is hidden (display:none) when panel is open", async () => {
     await setup();
     fireEvent.click(screen.getByTestId("ai-toggle"));
-    expect(screen.queryByTestId("ai-toggle")).not.toBeInTheDocument();
+    const toggle = screen.getByTestId("ai-toggle") as HTMLElement;
+    expect(toggle.style.display).toBe("none");
+  });
+
+  it("panel width changes to 300px when open", async () => {
+    await setup();
+    fireEvent.click(screen.getByTestId("ai-toggle"));
+    const panel = screen.getByTestId("ai-chat-panel") as HTMLElement;
+    expect(panel.style.width).toBe("300px");
   });
 
   it("close button appears after opening", async () => {
@@ -101,11 +109,20 @@ describe("AiPanel — panel content (AC #3)", () => {
 });
 
 describe("AiPanel — closing (AC #6)", () => {
-  it("toggle reappears after closing", async () => {
+  it("toggle becomes visible again after closing", async () => {
     await setup();
     fireEvent.click(screen.getByTestId("ai-toggle"));
     fireEvent.click(screen.getByTestId("ai-panel-close"));
-    expect(screen.getByTestId("ai-toggle")).toBeInTheDocument();
+    const toggle = screen.getByTestId("ai-toggle") as HTMLElement;
+    expect(toggle.style.display).not.toBe("none");
+  });
+
+  it("panel width returns to 0 after closing", async () => {
+    await setup();
+    fireEvent.click(screen.getByTestId("ai-toggle"));
+    fireEvent.click(screen.getByTestId("ai-panel-close"));
+    const panel = screen.getByTestId("ai-chat-panel") as HTMLElement;
+    expect(panel.style.width).toBe("0px");
   });
 });
 

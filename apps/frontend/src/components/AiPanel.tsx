@@ -234,45 +234,45 @@ export function AiPanel({ context }: AiPanelProps) {
         </div>
       </div>
 
-      {/* ── Toggle strip — hidden when panel is open (AC #1, #6) ── */}
-      {!open && (
-        <button
-          type="button"
-          onClick={handleOpen}
-          aria-label="Assistent öffnen"
-          data-testid="ai-toggle"
+      {/* ── Toggle strip — always in DOM, hidden via display:none when panel open.
+           This mirrors the mockup exactly: when the panel closes (width 300→0),
+           the toggle becomes visible again and appears to slide in from the left. ── */}
+      <button
+        type="button"
+        onClick={handleOpen}
+        aria-label="Assistent öffnen"
+        data-testid="ai-toggle"
+        style={{
+          background:    "var(--green-mid)",
+          color:         "var(--green-pale)",
+          border:        "none",
+          borderLeft:    "1px solid rgba(255,255,255,.15)",
+          padding:       "24px 11px",
+          fontFamily:    "var(--font-body)",
+          fontSize:      "14px",
+          fontWeight:    500,
+          cursor:        "pointer",
+          display:       open ? "none" : "flex",
+          flexDirection: "column",
+          alignItems:    "center",
+          gap:           "10px",
+          flexShrink:    0,
+          transition:    "background .2s",
+        }}
+        className="hover:bg-green-light"
+      >
+        <span style={{ fontSize: "20px", lineHeight: 1 }} aria-hidden="true">💬</span>
+        <span
           style={{
-            background:    "var(--green-mid)",
-            color:         "var(--green-pale)",
-            border:        "none",
-            borderLeft:    "1px solid rgba(255,255,255,.15)",
-            padding:       "24px 11px",
-            fontFamily:    "var(--font-body)",
-            fontSize:      "14px",
-            fontWeight:    500,
-            cursor:        "pointer",
-            display:       "flex",
-            flexDirection: "column",
-            alignItems:    "center",
-            gap:           "10px",
-            flexShrink:    0,
-            transition:    "background .2s",
+            writingMode:     "vertical-rl",
+            textOrientation: "mixed",
+            transform:       "rotate(180deg)",
+            letterSpacing:   ".8px",
           }}
-          className="hover:bg-green-light"
         >
-          <span style={{ fontSize: "20px", lineHeight: 1 }} aria-hidden="true">💬</span>
-          <span
-            style={{
-              writingMode:     "vertical-rl",
-              textOrientation: "mixed",
-              transform:       "rotate(180deg)",
-              letterSpacing:   ".8px",
-            }}
-          >
-            Assistent
-          </span>
-        </button>
-      )}
+          Assistent
+        </span>
+      </button>
     </div>
   );
 }
