@@ -31,11 +31,9 @@ const DEFAULT_PLANT_CATEGORIES = JSON.stringify([
   "Strauch",
   "Baum",
   "Staude",
-  "Einjährig",
+  "Blume",
   "Nadelbaum",
   "Obstbaum",
-  "Kletterpflanze",
-  "Bodendecker",
 ]);
 
 const DEFAULT_COLOR_PRESETS: Array<{
