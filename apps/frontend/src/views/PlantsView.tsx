@@ -1035,6 +1035,38 @@ function DetailPanel({ plant, onClose, t }: DetailPanelProps) {
   );
 }
 
+// ── CollapsibleSection — reusable toggle wrapper ──────────────────────────────
+
+function CollapsibleSection({ label, children }: { label: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ borderTop: "1px solid var(--border)", marginTop: "4px" }}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        style={{
+          width: "100%", background: "none", border: "none", cursor: "pointer",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "10px 0 6px",
+          fontSize: "10px", fontWeight: 700, letterSpacing: "0.8px",
+          textTransform: "uppercase", color: "var(--text-light)",
+        }}
+      >
+        {label}
+        <span style={{
+          fontSize: "11px", transition: "transform .2s", display: "inline-block",
+          transform: open ? "rotate(180deg)" : "rotate(0deg)",
+        }}>▾</span>
+      </button>
+      {open && (
+        <div style={{ paddingBottom: "8px" }}>
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── MoreInfoSection ───────────────────────────────────────────────────────────
 
 interface MoreInfoProps {
@@ -1047,89 +1079,65 @@ interface MoreInfoProps {
 }
 
 function MoreInfoSection({ plant, bloom, bloomColor, lastCut, lastFert, t }: MoreInfoProps) {
-  const [open, setOpen] = useState(false);
+  const factCell = (label: string, value: string) => (
+    <div key={label} style={{ background: "var(--green-mist)", borderRadius: "8px", padding: "8px 10px" }}>
+      <div style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.5px", textTransform: "uppercase", color: "var(--text-light)", marginBottom: "3px" }}>{label}</div>
+      <div style={{ fontSize: "12.5px", fontWeight: 500, color: "var(--text-dark)" }}>{value}</div>
+    </div>
+  );
 
   return (
-    <div style={{ borderTop: "1px solid var(--border)", marginTop: "4px" }}>
-      {/* Toggle header */}
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        style={{
-          width:          "100%",
-          background:     "none",
-          border:         "none",
-          cursor:         "pointer",
-          display:        "flex",
-          alignItems:     "center",
-          justifyContent: "space-between",
-          padding:        "10px 0 6px",
-          fontSize:       "10px",
-          fontWeight:     700,
-          letterSpacing:  "0.8px",
-          textTransform:  "uppercase",
-          color:          "var(--text-light)",
-        }}
-      >
-        {t("detail.section_more")}
-        <span style={{
-          fontSize:   "11px",
-          transition: "transform .2s",
-          display:    "inline-block",
-          transform:  open ? "rotate(180deg)" : "rotate(0deg)",
-        }}>▾</span>
-      </button>
-
-      {/* Collapsible content */}
-      {open && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "12px", paddingBottom: "4px" }}>
-
-          {/* Typ + Standort */}
+    <>
+      {/* Weitere Infos — Kategorie, Standort, Blütezeit, Blütenfarbe */}
+      <CollapsibleSection label={t("detail.section_more")}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-            {[
-              { label: t("detail.fact_type"),     value: plant.category ?? "–" },
-              { label: t("detail.fact_location"),  value: plant.location ?? "–" },
-            ].map(({ label, value }) => (
-              <div key={label} style={{ background: "var(--green-mist)", borderRadius: "8px", padding: "8px 10px" }}>
-                <div style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.5px", textTransform: "uppercase", color: "var(--text-light)", marginBottom: "3px" }}>{label}</div>
-                <div style={{ fontSize: "12.5px", fontWeight: 500, color: "var(--text-dark)" }}>{value}</div>
-              </div>
-            ))}
+            {factCell(t("detail.fact_type"),    plant.category ?? "–")}
+            {factCell(t("detail.fact_location"), plant.location ?? "–")}
+            {factCell(t("detail.fact_bloom"),    bloom)}
+            {factCell(t("detail.fact_color"),    bloomColor)}
           </div>
-
-          {/* Blütezeit + Blütenfarbe */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-            {[
-              { label: t("detail.fact_bloom"),  value: bloom },
-              { label: t("detail.fact_color"),  value: bloomColor },
-            ].map(({ label, value }) => (
-              <div key={label} style={{ background: "var(--green-mist)", borderRadius: "8px", padding: "8px 10px" }}>
-                <div style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.5px", textTransform: "uppercase", color: "var(--text-light)", marginBottom: "3px" }}>{label}</div>
-                <div style={{ fontSize: "12.5px", fontWeight: 500, color: "var(--text-dark)" }}>{value}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Pflege-Historie */}
-          <div>
-            <div style={sectionTitleStyle}>{t("detail.section_history")}</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-              {[
-                { icon: "✂️", label: t("detail.last_cut"),  value: lastCut  },
-                { icon: "💧", label: t("detail.last_fert"), value: lastFert },
-              ].map(({ icon, label, value }) => (
-                <div key={label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 10px", background: "var(--green-mist)", borderRadius: "8px", gap: "8px" }}>
-                  <span>{icon}</span>
-                  <span style={{ fontSize: "12.5px", fontWeight: 500, flex: 1 }}>{label}</span>
-                  <span style={{ fontSize: "11px", color: "var(--text-light)" }}>{value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
         </div>
-      )}
-    </div>
+      </CollapsibleSection>
+
+      {/* Pflege-Historie — separate collapsible */}
+      <CollapsibleSection label={t("detail.section_history")}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+          {[
+            { icon: "✂️", label: t("detail.last_cut"),  value: lastCut  },
+            { icon: "💧", label: t("detail.last_fert"), value: lastFert },
+          ].map(({ icon, label, value }) => (
+            <div key={label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 10px", background: "var(--green-mist)", borderRadius: "8px", gap: "8px" }}>
+              <span>{icon}</span>
+              <span style={{ fontSize: "12.5px", fontWeight: 500, flex: 1 }}>{label}</span>
+              <span style={{ fontSize: "11px", color: "var(--text-light)" }}>{value}</span>
+            </div>
+          ))}
+        </div>
+      </CollapsibleSection>
+
+      {/* Weitere Bilder — separate collapsible */}
+      <CollapsibleSection label={t("detail.section_gallery")}>
+        <div style={{ display: "flex", gap: "8px" }}>
+          {[...Array(3)].map((_, i) => (
+            <div
+              key={i}
+              style={{
+                flex: 1, aspectRatio: "1", borderRadius: "8px",
+                background: "var(--green-mist)", border: "1.5px dashed var(--border)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: "22px", cursor: "pointer", color: "var(--text-light)",
+              }}
+            >
+              +
+            </div>
+          ))}
+        </div>
+        <div style={{ fontSize: "11px", color: "var(--text-light)", marginTop: "6px" }}>
+          Bilder-Upload folgt in einer späteren Version.
+        </div>
+      </CollapsibleSection>
+    </>
   );
 }
 
