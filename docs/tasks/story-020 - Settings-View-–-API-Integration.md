@@ -1,16 +1,17 @@
 ---
 id: STORY-020
 title: Settings View – API Integration
-status: In Review
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-04 22:44'
-updated_date: '2026-05-04 23:22'
+updated_date: '2026-05-05 16:02'
 labels: []
 dependencies: []
 documentation:
   - docs/api/settings.ts
   - docs/api/api.ts
+ordinal: 20000
 ---
 
 ## Description

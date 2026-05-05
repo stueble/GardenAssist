@@ -1,16 +1,17 @@
 ---
 id: STORY-019
 title: Settings View – Layout & Sections
-status: In Review
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-04 22:44'
-updated_date: '2026-05-04 22:53'
+updated_date: '2026-05-05 16:02'
 labels: []
 dependencies: []
 documentation:
   - docs/docs/doc-009 - 009-UX-UI-Concept-Settings.md
   - ui-mockups/settings/settings-mockup.html
+ordinal: 21000
 ---
 
 ## Description
