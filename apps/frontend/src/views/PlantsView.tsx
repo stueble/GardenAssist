@@ -569,19 +569,28 @@ function PlantRow({ plant, selected, onClick, t }: PlantRowProps) {
         </span>
       </td>
 
-      {/* Next care task (no bloom) — pill + month range below */}
+      {/* Next care task — same layout as bloom cell: swatch + two text lines */}
       <td style={{ padding: "10px 14px" }}>
         {careTask ? (
-          <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-            <TaskPill
-              status={careTask.status as PlantStatus}
-              label={careTask.schedule.label ?? careTask.schedule.schedule_type}
-              scheduleColor={careTask.schedule.color}
-              t={t}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <div
+              style={{
+                width:        "16px",
+                height:       "16px",
+                borderRadius: "4px",
+                border:       "1px solid rgba(0,0,0,.12)",
+                flexShrink:   0,
+                background:   careTask.schedule.color ?? STATUS_COLOR[careTask.status as PlantStatus],
+              }}
             />
-            <span style={{ fontSize: "10px", color: "var(--text-light)", paddingLeft: "4px" }}>
-              {weekRangeLabel(careTask.schedule.start_week, careTask.schedule.end_week)}
-            </span>
+            <div style={{ display: "flex", flexDirection: "column", gap: "1px" }}>
+              <span style={{ fontSize: "11.5px", color: "var(--text-mid)" }}>
+                {careTask.schedule.label ?? careTask.schedule.schedule_type}
+              </span>
+              <span style={{ fontSize: "11.5px", color: "var(--text-light)" }}>
+                {weekRangeLabel(careTask.schedule.start_week, careTask.schedule.end_week)}
+              </span>
+            </div>
           </div>
         ) : (
           <span style={{ color: "var(--text-light)" }}>–</span>
