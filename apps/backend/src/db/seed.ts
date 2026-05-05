@@ -63,16 +63,16 @@ const DEFAULT_COLOR_PRESETS: Array<{
   { schedule_type: "foliage", name: "Herbstgold",    color: "#f0c040" },
   { schedule_type: "foliage", name: "Herbstbraun",   color: "#8b7355" },
   // Schnitt (pruning)
-  { schedule_type: "pruning", name: "Hellgrün",  color: "#27ae60" },
-  { schedule_type: "pruning", name: "Grün",      color: "#2ecc71" },
+  { schedule_type: "pruning", name: "Frühlingsschnitt", color: "#27ae60" },
+  { schedule_type: "pruning", name: "Herbstschnitt",    color: "#2ecc71" },
   // Düngung (fertilization)
-  { schedule_type: "fertilization", name: "Blau",      color: "#2980b9" },
-  { schedule_type: "fertilization", name: "Hellblau",  color: "#3498db" },
+  { schedule_type: "fertilization", name: "Düngen",       color: "#3498db" },
+  { schedule_type: "fertilization", name: "Herbstdünger", color: "#2980b9" },
   // Sonstiges (misc)
-  { schedule_type: "misc", name: "Orange", color: "#e67e22" },
-  { schedule_type: "misc", name: "Grau",   color: "#7f8c8d" },
-  { schedule_type: "misc", name: "Blau",   color: "#3498db" },
-  { schedule_type: "misc", name: "Gelb",   color: "#f1c40f" },
+  { schedule_type: "misc", name: "Lüften",      color: "#e67e22" },
+  { schedule_type: "misc", name: "Vertikutieren", color: "#7f8c8d" },
+  { schedule_type: "misc", name: "Ernte",        color: "#3498db" },
+  { schedule_type: "misc", name: "Aussähen",     color: "#f1c40f" },
 ];
 
 // ── Seed ──────────────────────────────────────────────────────────────────────
