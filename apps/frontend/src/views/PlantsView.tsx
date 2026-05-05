@@ -186,7 +186,7 @@ export function PlantsView() {
     <div className="flex flex-1 min-h-0 overflow-hidden bg-cream">
 
       {/* ── Content column ── */}
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden relative">
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden relative" style={{ minWidth: 0 }}>
 
         {/* Subheader */}
         <div
@@ -290,26 +290,8 @@ export function PlantsView() {
           </div>
         )}
 
-        {/* Main area: detail panel + table/card */}
+        {/* Main area: table/card only (detail panel moved outside content column) */}
         <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
-
-          {/* Detail panel (left, slides open) */}
-          <div
-            data-testid="detail-panel"
-            style={{
-              width:        selected ? "300px" : "0",
-              overflow:     "hidden",
-              background:   "var(--warm-white)",
-              borderRight:  "1px solid var(--border)",
-              display:      "flex",
-              flexDirection:"column",
-              transition:   "width .3s ease",
-              flexShrink:   0,
-              order:        -1,
-            }}
-          >
-            {selected && <DetailPanel plant={selected} onClose={() => setSelected(null)} t={t} />}
-          </div>
 
           {/* Table view */}
           {view === "table" && (
@@ -410,6 +392,23 @@ export function PlantsView() {
         >
           ＋
         </button>
+      </div>
+
+      {/* Detail panel — right of content, left of AI panel, full height */}
+      <div
+        data-testid="detail-panel"
+        style={{
+          width:        selected ? "300px" : "0",
+          overflow:     "hidden",
+          background:   "var(--warm-white)",
+          borderLeft:   selected ? "1px solid var(--border)" : "none",
+          display:      "flex",
+          flexDirection:"column",
+          transition:   "width .3s ease",
+          flexShrink:   0,
+        }}
+      >
+        {selected && <DetailPanel plant={selected} onClose={() => setSelected(null)} t={t} />}
       </div>
 
       <AiPanel context={aiContext} />
