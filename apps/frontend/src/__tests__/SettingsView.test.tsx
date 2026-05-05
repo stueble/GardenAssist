@@ -123,4 +123,24 @@ describe("SettingsView — API integration", () => {
     await waitFor(() => expect(screen.queryByText(/werden geladen/i)).not.toBeInTheDocument());
     expect(screen.getByRole("button", { name: /Assistent öffnen/i })).toBeInTheDocument();
   });
+
+  it("language switch via i18n immediately re-renders Settings in new language (AC #5)", async () => {
+    await i18n.changeLanguage("de");
+    renderSettings();
+    await waitFor(() => expect(screen.queryByText(/werden geladen/i)).not.toBeInTheDocument());
+
+    // German subtitle visible (unique string)
+    expect(screen.getByText(/Gartenplan, Farben, Zonen/i)).toBeInTheDocument();
+
+    // Simulate LanguageSwitcher clicking EN — changes i18n directly (no page reload)
+    await i18n.changeLanguage("en");
+
+    // English subtitle should appear immediately
+    await waitFor(() =>
+      expect(screen.getByText(/Garden plan, colors, zones/i)).toBeInTheDocument()
+    );
+
+    // Cleanup
+    await i18n.changeLanguage("de");
+  });
 });

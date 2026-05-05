@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { SettingsSection } from "@/components/SettingsSection";
 import { SaveBar } from "@/components/SaveBar";
@@ -34,13 +34,19 @@ export function SettingsView() {
     discardSettings();
   }
 
-  // AC #5: language switch takes effect immediately
+  // Sync i18n on initial load: apply the stored language from DB once when
+  // the form first loads. We do NOT re-run this on every render to avoid
+  // fighting with LanguageSwitcher (which updates i18n directly).
+  const initializedRef = useRef(false);
   useEffect(() => {
-    if (form?.language && form.language !== i18n.language) {
-      i18n.changeLanguage(form.language);
-      localStorage.setItem("ga_language", form.language);
+    if (form?.language && !initializedRef.current) {
+      initializedRef.current = true;
+      if (form.language !== i18n.language) {
+        i18n.changeLanguage(form.language);
+        localStorage.setItem("ga_language", form.language);
+      }
     }
-  }, [form?.language, i18n]);
+  }, [form?.language]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleExportJson() {
     const blob = await apiClient.exportJson();
