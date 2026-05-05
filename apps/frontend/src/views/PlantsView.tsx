@@ -737,8 +737,17 @@ interface DetailPanelProps {
   t:       ReturnType<typeof useTranslation<"plants">>["t"];
 }
 
+// Schedule type → display icon
+const SCHEDULE_ICON: Record<string, string> = {
+  bloom:         "🌸",
+  growth:        "🌱",
+  foliage:       "🍃",
+  pruning:       "✂️",
+  fertilization: "💧",
+  misc:          "📋",
+};
+
 function DetailPanel({ plant, onClose, t }: DetailPanelProps) {
-  const age        = plantAge(plant.purchase_date);
   const bloom      = bloomPeriod(plant.schedules);
   const lastCut    = lastJournalDate(plant, "pruning");
   const lastFert   = lastJournalDate(plant, "fertilization");
@@ -747,6 +756,9 @@ function DetailPanel({ plant, onClose, t }: DetailPanelProps) {
     .filter((s) => s.schedule_type === "bloom" && s.label)
     .map((s) => s.label)
     .join(", ") || "–";
+
+  // All schedules sorted by start_week for the tasks section
+  const sortedSchedules = [...plant.schedules].sort((a, b) => a.start_week - b.start_week);
 
   return (
     <>
@@ -809,6 +821,16 @@ function DetailPanel({ plant, onClose, t }: DetailPanelProps) {
           gap:           "16px",
         }}
       >
+        {/* Description — first, before images */}
+        {plant.description && (
+          <div>
+            <div style={sectionTitleStyle}>{t("detail.section_description")}</div>
+            <div style={{ fontSize: "12px", color: "var(--text-mid)", lineHeight: 1.5 }}>
+              {plant.description}
+            </div>
+          </div>
+        )}
+
         {/* Images */}
         <div>
           <div style={sectionTitleStyle}>{t("detail.section_images")}</div>
@@ -836,15 +858,7 @@ function DetailPanel({ plant, onClose, t }: DetailPanelProps) {
                 }}
               >
                 {emoji}
-                <span
-                  style={{
-                    fontSize:      "9px",
-                    fontWeight:    600,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.5px",
-                    color:         "var(--text-light)",
-                  }}
-                >
+                <span style={{ fontSize: "9px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", color: "var(--text-light)" }}>
                   {label}
                 </span>
               </div>
@@ -852,22 +866,20 @@ function DetailPanel({ plant, onClose, t }: DetailPanelProps) {
           </div>
         </div>
 
-        {/* Facts */}
+        {/* Facts — Herkunft + Lifecycle statt Alter */}
         <div>
           <div style={sectionTitleStyle}>{t("detail.section_facts")}</div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
             {[
-              { label: t("detail.fact_type"),     value: plant.category ?? "–" },
-              { label: t("detail.fact_location"),  value: plant.location ?? "–" },
-              { label: t("detail.fact_bloom"),     value: bloom },
-              { label: t("detail.fact_color"),     value: bloomColor },
-              { label: t("detail.fact_age"),       value: age },
-              { label: t("detail.fact_temp"),      value: plant.frost_tolerance_min_c != null ? `${plant.frost_tolerance_min_c}°C` : "–" },
+              { label: t("detail.fact_type"),      value: plant.category ?? "–" },
+              { label: t("detail.fact_location"),   value: plant.location ?? "–" },
+              { label: t("detail.fact_bloom"),      value: bloom },
+              { label: t("detail.fact_color"),      value: bloomColor },
+              { label: t("detail.fact_origin"),     value: plant.origin_type ? t(`origin_type.${plant.origin_type}`) : "–" },
+              { label: t("detail.fact_lifecycle"),  value: plant.lifecycle   ? t(`lifecycle.${plant.lifecycle}`)     : "–" },
+              { label: t("detail.fact_temp"),       value: plant.frost_tolerance_min_c != null ? `${plant.frost_tolerance_min_c}°C` : "–" },
             ].map(({ label, value }) => (
-              <div
-                key={label}
-                style={{ background: "var(--green-mist)", borderRadius: "8px", padding: "8px 10px" }}
-              >
+              <div key={label} style={{ background: "var(--green-mist)", borderRadius: "8px", padding: "8px 10px" }}>
                 <div style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.5px", textTransform: "uppercase", color: "var(--text-light)", marginBottom: "3px" }}>
                   {label}
                 </div>
@@ -889,15 +901,7 @@ function DetailPanel({ plant, onClose, t }: DetailPanelProps) {
             ].map(({ icon, label, value }) => (
               <div
                 key={label}
-                style={{
-                  display:        "flex",
-                  alignItems:     "center",
-                  justifyContent: "space-between",
-                  padding:        "8px 10px",
-                  background:     "var(--green-mist)",
-                  borderRadius:   "8px",
-                  gap:            "8px",
-                }}
+                style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 10px", background: "var(--green-mist)", borderRadius: "8px", gap: "8px" }}
               >
                 <span>{icon}</span>
                 <span style={{ fontSize: "12.5px", fontWeight: 500, flex: 1 }}>{label}</span>
@@ -913,16 +917,52 @@ function DetailPanel({ plant, onClose, t }: DetailPanelProps) {
             <div style={sectionTitleStyle}>{t("detail.section_notes")}</div>
             <div
               style={{
-                background:   "var(--yellow-soft)",
-                border:       "1px solid #f0d9a0",
-                borderRadius: "8px",
-                padding:      "10px 12px",
-                fontSize:     "12px",
-                color:        "var(--text-mid)",
-                lineHeight:   1.5,
+                background: "var(--yellow-soft)", border: "1px solid #f0d9a0",
+                borderRadius: "8px", padding: "10px 12px",
+                fontSize: "12px", color: "var(--text-mid)", lineHeight: 1.5,
               }}
             >
               {plant.care_notes}
+            </div>
+          </div>
+        )}
+
+        {/* Schedules / Tasks — sorted by start_week */}
+        {sortedSchedules.length > 0 && (
+          <div>
+            <div style={sectionTitleStyle}>{t("detail.section_tasks")}</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              {sortedSchedules.map((s) => (
+                <div
+                  key={s.id}
+                  style={{
+                    display:     "flex",
+                    alignItems:  "center",
+                    gap:         "8px",
+                    padding:     "8px 10px",
+                    background:  "var(--green-mist)",
+                    borderRadius:"8px",
+                  }}
+                >
+                  {/* Color swatch */}
+                  <div style={{
+                    width: "12px", height: "12px", borderRadius: "3px",
+                    background: s.color ?? "var(--border)",
+                    border: "1px solid rgba(0,0,0,.1)", flexShrink: 0,
+                  }} />
+                  {/* Icon + label */}
+                  <span style={{ fontSize: "13px", flexShrink: 0 }}>
+                    {SCHEDULE_ICON[s.schedule_type] ?? "📌"}
+                  </span>
+                  <span style={{ fontSize: "12px", fontWeight: 500, flex: 1, color: "var(--text-dark)" }}>
+                    {s.label ?? s.schedule_type}
+                  </span>
+                  {/* Week range */}
+                  <span style={{ fontSize: "11px", color: "var(--text-light)", whiteSpace: "nowrap" }}>
+                    {weekRangeLabel(s.start_week, s.end_week)}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         )}
