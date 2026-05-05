@@ -10,9 +10,14 @@
  * - markRemove()      — stages the plan for removal (no API call yet)
  * - save()            — applies the staged change via API
  * - discard()         — reverts to the last saved state
+ *
+ * previewUrl is the URL to display in the thumbnail:
+ * - While a file is staged: a blob: URL created from the File object
+ * - After save / on load:   the server URL (/static/garden/plan.xxx)
+ * - No plan:                null
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { apiClient } from "@/api/client";
 
 export type PlanPendingAction =
@@ -21,30 +26,50 @@ export type PlanPendingAction =
   | null;
 
 export interface GardenPlanState {
-  /** Currently active plan URL (saved or from last successful save) */
-  savedPlanUrl:    string | null;
-  savedPlanName:   string | null;
+  /** URL to show in the thumbnail (blob: while staged, server URL after save) */
+  previewUrl:    string | null;
+  /** Display name (original filename or server-side plan_name) */
+  previewName:   string | null;
   /** Staged, not-yet-saved action */
-  pending:         PlanPendingAction;
+  pending:       PlanPendingAction;
   /** True if there is a staged change not yet saved */
-  dirty:           boolean;
-  saving:          boolean;
-  loading:         boolean;
-  error:           string | null;
-  selectFile:      (file: File) => void;
-  markRemove:      () => void;
-  save:            () => Promise<void>;
-  discard:         () => void;
+  dirty:         boolean;
+  saving:        boolean;
+  loading:       boolean;
+  error:         string | null;
+  selectFile:    (file: File) => void;
+  markRemove:    () => void;
+  save:          () => Promise<void>;
+  discard:       () => void;
 }
 
 export function useGardenPlan(): GardenPlanState {
+  // Saved state (from server)
   const [savedPlanUrl,  setSavedPlanUrl]  = useState<string | null>(null);
   const [savedPlanName, setSavedPlanName] = useState<string | null>(null);
-  const [pending,       setPending]       = useState<PlanPendingAction>(null);
-  const [loading,       setLoading]       = useState(true);
-  const [saving,        setSaving]        = useState(false);
-  const [error,         setError]         = useState<string | null>(null);
 
+  // Staged state
+  const [pending,  setPending]  = useState<PlanPendingAction>(null);
+
+  // Blob URL for the staged file — managed here to control lifetime
+  const [blobUrl,  setBlobUrl]  = useState<string | null>(null);
+  const blobUrlRef = useRef<string | null>(null);
+
+  const [loading,  setLoading]  = useState(true);
+  const [saving,   setSaving]   = useState(false);
+  const [error,    setError]    = useState<string | null>(null);
+
+  // Revoke the blob URL when the component unmounts
+  useEffect(() => {
+    return () => {
+      if (blobUrlRef.current) {
+        URL.revokeObjectURL(blobUrlRef.current);
+        blobUrlRef.current = null;
+      }
+    };
+  }, []);
+
+  // Load saved plan on mount
   useEffect(() => {
     let cancelled = false;
     apiClient.getGarden().then((garden) => {
@@ -62,69 +87,89 @@ export function useGardenPlan(): GardenPlanState {
     return () => { cancelled = true; };
   }, []);
 
+  function revokeBlobUrl() {
+    if (blobUrlRef.current) {
+      URL.revokeObjectURL(blobUrlRef.current);
+      blobUrlRef.current = null;
+    }
+    setBlobUrl(null);
+  }
+
   const selectFile = useCallback((file: File) => {
     setError(null);
+    // Revoke any previous blob URL before creating a new one
+    revokeBlobUrl();
+    const url = URL.createObjectURL(file);
+    blobUrlRef.current = url;
+    setBlobUrl(url);
     setPending({ type: "upload", file });
   }, []);
 
-  const markRemove = useCallback(() => {
+  const markRemove = useCallback((currentPending: PlanPendingAction, currentSavedUrl: string | null) => {
     setError(null);
-    // If there's a staged upload, simply cancel it
-    if (pending?.type === "upload") {
+    if (currentPending?.type === "upload") {
+      // Cancel staged upload
+      revokeBlobUrl();
       setPending(null);
       return;
     }
-    // Otherwise stage a removal of the saved plan
-    if (savedPlanUrl) {
+    if (currentSavedUrl) {
       setPending({ type: "remove" });
     }
-  }, [pending, savedPlanUrl]);
+  }, []);
 
-  const save = useCallback(async () => {
-    if (!pending) return;
+  const save = useCallback(async (currentPending: PlanPendingAction) => {
+    if (!currentPending) return;
     setSaving(true);
     setError(null);
     try {
-      if (pending.type === "upload") {
-        const garden = await apiClient.uploadGardenPlan(pending.file);
-        // Prefer the server URL; the object URL will be revoked when pending clears.
-        // If the server URL fails to load (e.g. proxy not configured), the img
-        // onError handler falls back to the emoji icon gracefully.
+      if (currentPending.type === "upload") {
+        const garden = await apiClient.uploadGardenPlan(currentPending.file);
         setSavedPlanUrl(garden.plan_url);
-        setSavedPlanName(garden.plan_name ?? pending.file.name);
+        setSavedPlanName(garden.plan_name ?? currentPending.file.name);
+        // Keep the blob URL alive as preview — revoke happens on unmount or next selectFile
       } else {
         await apiClient.deleteGardenPlan();
         setSavedPlanUrl(null);
         setSavedPlanName(null);
+        revokeBlobUrl();
       }
       setPending(null);
     } catch {
       setError(
-        pending.type === "upload"
+        currentPending.type === "upload"
           ? "Upload fehlgeschlagen. Bitte versuche es erneut."
           : "Löschen fehlgeschlagen. Bitte versuche es erneut."
       );
     } finally {
       setSaving(false);
     }
-  }, [pending]);
+  }, []);
 
   const discard = useCallback(() => {
+    revokeBlobUrl();
     setPending(null);
     setError(null);
   }, []);
 
+  // Derive display values
+  const previewUrl  = blobUrl ?? savedPlanUrl;
+  const previewName = pending?.type === "upload"
+    ? pending.file.name
+    : savedPlanName ?? savedPlanUrl?.split("/").pop() ?? null;
+
   return {
-    savedPlanUrl,
-    savedPlanName,
+    previewUrl,
+    previewName,
     pending,
     dirty:   pending !== null,
     saving,
     loading,
     error,
     selectFile,
-    markRemove,
-    save,
+    // Wrap with current state to avoid stale closures in the component
+    markRemove: () => markRemove(pending, savedPlanUrl),
+    save:       () => save(pending),
     discard,
   };
 }

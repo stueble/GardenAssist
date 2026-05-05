@@ -1,4 +1,4 @@
-import { useRef, useMemo, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import type { GardenPlanState } from "@/hooks/useGardenPlan";
 
@@ -17,28 +17,10 @@ export function GardenPlanSection({ plan }: Props) {
   const { t } = useTranslation("settings");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Derive what to display:
-  // - pending upload  → show local file preview (not yet saved)
-  // - pending remove  → show dropzone (not yet saved)
-  // - saved plan      → show saved preview
-  // - nothing         → show dropzone
+  // Show dropzone when: pending remove, or no plan at all
   const showDropzone =
     plan.pending?.type === "remove" ||
-    (!plan.pending && !plan.savedPlanUrl);
-
-  const previewName: string | null = plan.pending?.type === "upload"
-    ? plan.pending.file.name
-    : plan.savedPlanName ?? plan.savedPlanUrl?.split("/").pop() ?? null;
-
-  // Create and revoke object URL only when the staged file changes
-  const pendingFile = plan.pending?.type === "upload" ? plan.pending.file : null;
-  const objectUrl = useMemo(
-    () => (pendingFile ? URL.createObjectURL(pendingFile) : null),
-    [pendingFile],
-  );
-  useEffect(() => () => { if (objectUrl) URL.revokeObjectURL(objectUrl); }, [objectUrl]);
-
-  const previewUrl: string | null = pendingFile ? objectUrl : plan.savedPlanUrl;
+    (!plan.pending && !plan.previewUrl);
 
   function openPicker() {
     inputRef.current?.click();
@@ -125,8 +107,8 @@ export function GardenPlanSection({ plan }: Props) {
       ) : (
         /* ── Preview row ── */
         <PlanPreview
-          previewUrl={previewUrl}
-          displayName={previewName ?? "plan"}
+          previewUrl={plan.previewUrl}
+          displayName={plan.previewName ?? "plan"}
           isPending={plan.pending?.type === "upload"}
           saving={plan.saving}
           onRemove={plan.markRemove}
@@ -156,6 +138,9 @@ function PlanPreview({
 }: PlanPreviewProps) {
   const ext = displayName.split(".").pop()?.toUpperCase() ?? "";
   const today = formatDate(new Date());
+  // Track img load errors in React state to avoid direct DOM mutation bugs
+  const [imgError, setImgError] = useState(false);
+  useEffect(() => { setImgError(false); }, [previewUrl]);
 
   return (
     <div
@@ -164,7 +149,7 @@ function PlanPreview({
         display:       "flex",
         alignItems:    "center",
         gap:           "12px",
-        background:    isPending ? "var(--green-mist)" : "var(--green-mist)",
+        background:    "var(--green-mist)",
         border:        isPending
           ? "1.5px dashed var(--green-mid)"
           : "1.5px solid var(--border)",
@@ -188,17 +173,12 @@ function PlanPreview({
           overflow:       "hidden",
         }}
       >
-        {previewUrl ? (
+        {previewUrl && !imgError ? (
           <img
             src={previewUrl}
             alt={displayName}
             style={{ width: "100%", height: "100%", objectFit: "cover" }}
-            onError={(e) => {
-              (e.currentTarget as HTMLImageElement).style.display = "none";
-              if (e.currentTarget.parentElement) {
-                e.currentTarget.parentElement.textContent = "🗺️";
-              }
-            }}
+            onError={() => setImgError(true)}
           />
         ) : (
           "🗺️"
