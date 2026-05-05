@@ -67,7 +67,6 @@ export function AiPanel({ context }: AiPanelProps) {
         aria-label="Assistent öffnen"
         data-testid="ai-toggle"
         style={{
-          background:    "var(--green-mid)",
           color:         "var(--green-pale)",
           border:        "none",
           borderLeft:    "1px solid rgba(255,255,255,.15)",
@@ -83,7 +82,7 @@ export function AiPanel({ context }: AiPanelProps) {
           flexShrink:    0,
           transition:    "background .2s",
         }}
-        className="hover:bg-green-light"
+        className="bg-green-mid hover:bg-green-light"
       >
         <span style={{ fontSize: "20px", lineHeight: 1 }} aria-hidden="true">💬</span>
         <span
