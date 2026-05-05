@@ -2,25 +2,31 @@ import { useState, useRef, useEffect } from "react";
 import { apiClient } from "@/api/client";
 
 interface AiPanelProps {
-  /** Optional context pill text, e.g. "⚙️ Einstellungen" */
+  /** Context bar text, e.g. "✏️ Bearbeite: 🌹 Rose" or "⚙️ Einstellungen" */
   context?: string;
 }
 
 /**
- * AI Assistant panel (ADR-006: always rightmost).
+ * AI Assistant panel — spec: doc-011 § 5, reference: plant-edit-mockup.html
  *
- * Collapsed: narrow vertical toggle strip (~34px), always visible.
- * Expanded:  300px panel slides in from the right; toggle is hidden.
+ * Structure (doc-011 § 5.1):
+ *   chat-wrap (position: relative, width animates 36 → 314px)
+ *   ├── strip / toggle  (position: static, width: 36px, always visible)
+ *   └── panel           (position: absolute, right: 0, z-index: 2, width: 0 → 310px)
  *
- * When the panel opens, checks whether an AI provider is configured.
- * If not, shows a hint to configure in Settings (AC #7).
- *
- * AI message sending (AC #4, #5) is a stub — wired in a later story.
+ * Key spec points:
+ * - Strip is NEVER hidden — panel slides over it, leaving 4px of strip visible (§ 5.3)
+ * - Close control is › chevron, not ✕ (§ 5.5)
+ * - Panel background: green-mist (§ 5.7)
+ * - Bot bubbles: white background + border + subtle shadow (§ 5.7)
+ * - Input: white background (§ 5.7)
+ * - Context bar: rgba(255,255,255,.85) (§ 5.8)
+ * - Strip hover: green-mid → green-light, 0.2s (§ 5.6)
  */
 export function AiPanel({ context }: AiPanelProps) {
-  const [open,          setOpen]          = useState(false);
-  const [configured,    setConfigured]    = useState<boolean | null>(null);
-  const [inputValue,    setInputValue]    = useState("");
+  const [open,       setOpen]       = useState(false);
+  const [configured, setConfigured] = useState<boolean | null>(null);
+  const [input,      setInput]      = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Check AI configuration when panel opens
@@ -28,59 +34,61 @@ export function AiPanel({ context }: AiPanelProps) {
     if (!open) return;
     apiClient.getSettings().then((s) => {
       setConfigured(!!(s.ai_provider && s.ai_api_key));
-    }).catch(() => {
-      setConfigured(false);
-    });
+    }).catch(() => setConfigured(false));
   }, [open]);
 
   // Focus input when panel opens and AI is configured
   useEffect(() => {
     if (open && configured) {
-      setTimeout(() => inputRef.current?.focus(), 50);
+      setTimeout(() => inputRef.current?.focus(), 320); // after transition
     }
   }, [open, configured]);
 
-  function handleOpen() {
-    setOpen(true);
-  }
-
-  function handleClose() {
-    setOpen(false);
-  }
-
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter" && inputValue.trim()) {
-      // Stub: message sending wired in future story
-      setInputValue("");
+    if (e.key === "Enter" && input.trim()) {
+      // Stub: AI sending wired in future story
+      setInput("");
     }
   }
 
   return (
-    <div className="flex shrink-0" data-testid="ai-panel">
+    // chat-wrap: position:relative so panel (absolute) is anchored here
+    <div
+      data-testid="ai-panel"
+      style={{
+        position:   "relative",
+        display:    "flex",
+        flexShrink: 0,
+        width:      open ? "314px" : "36px",   // 310px panel + 4px strip
+        transition: "width .3s ease",
+      }}
+    >
 
-      {/* ── Toggle strip — LEFT of panel, always in DOM.
-           When panel closes (width 300→0), toggle reappears here on the left,
-           creating the effect of sliding in from the left. ── */}
+      {/* ── Strip / Toggle — always 36px, never hidden (doc-011 § 5.2 / § 5.6) ── */}
       <button
         type="button"
-        onClick={handleOpen}
-        aria-label="Assistent öffnen"
+        onClick={() => setOpen((o) => !o)}
+        aria-label={open ? "Assistent einklappen" : "Assistent öffnen"}
+        aria-expanded={open}
         data-testid="ai-toggle"
         style={{
-          color:         "var(--green-pale)",
+          width:         "36px",
+          flexShrink:    0,
           border:        "none",
           borderLeft:    "1px solid rgba(255,255,255,.15)",
-          padding:       "24px 11px",
+          padding:       "24px 0",
           fontFamily:    "var(--font-body)",
           fontSize:      "14px",
           fontWeight:    500,
           cursor:        "pointer",
-          display:       open ? "none" : "flex",
+          display:       "flex",
           flexDirection: "column",
           alignItems:    "center",
           gap:           "10px",
-          flexShrink:    0,
+          overflow:      "hidden",
           transition:    "background .2s",
+          zIndex:        1,
+          color:         "var(--green-pale)",
         }}
         className="bg-green-mid hover:bg-green-light"
       >
@@ -97,101 +105,111 @@ export function AiPanel({ context }: AiPanelProps) {
         </span>
       </button>
 
-      {/* ── Chat panel — RIGHT of toggle, slides open ── */}
+      {/* ── Panel — absolute, right-anchored, slides over strip (doc-011 § 5.3/5.4) ── */}
       <div
         data-testid="ai-chat-panel"
         style={{
-          width:      open ? "300px" : "0",
-          overflow:   "hidden",
-          background: "var(--warm-white)",
-          borderLeft: open ? "1px solid var(--border)" : "none",
-          display:    "flex",
+          position:      "absolute",
+          top:           0,
+          right:         0,
+          bottom:        0,
+          width:         open ? "310px" : "0",
+          background:    "var(--green-mist)",
+          display:       "flex",
           flexDirection: "column",
-          transition: "width .3s ease",
-          flexShrink: 0,
+          overflow:      "hidden",
+          transition:    "width .3s ease",
+          zIndex:        2,
         }}
       >
         {/* Header */}
         <div
           style={{
-            padding:        "16px 16px 12px",
-            borderBottom:   "1px solid var(--border)",
+            padding:        "13px 16px 10px",
+            borderBottom:   "1px solid rgba(74,124,74,.2)",
             display:        "flex",
             alignItems:     "center",
             justifyContent: "space-between",
             flexShrink:     0,
+            background:     "rgba(74,124,74,.06)",
           }}
         >
           <span
             style={{
-              fontFamily:  "var(--font-display)",
-              fontSize:    "15px",
-              color:       "var(--green-deep)",
-              fontWeight:  600,
-              display:     "flex",
-              alignItems:  "center",
-              gap:         "8px",
-              whiteSpace:  "nowrap",
+              fontFamily: "var(--font-display)",
+              fontSize:   "15px",
+              color:      "var(--green-deep)",
+              fontWeight: 600,
+              display:    "flex",
+              alignItems: "center",
+              gap:        "8px",
             }}
           >
             🤖 Garten-Assistent
           </span>
+          {/* Close: › chevron (doc-011 § 5.5) */}
           <button
             type="button"
-            onClick={handleClose}
-            aria-label="Assistent schließen"
+            onClick={() => setOpen(false)}
+            title="Assistent einklappen"
+            aria-label="Assistent einklappen"
+            data-testid="ai-panel-close"
             style={{
-              background:  "none",
-              border:      "none",
-              cursor:      "pointer",
-              color:       "var(--text-light)",
-              fontSize:    "16px",
-              padding:     "2px",
-              lineHeight:  1,
-              transition:  "color .15s",
+              background:   "none",
+              border:       "none",
+              cursor:       "pointer",
+              color:        "var(--text-light)",
+              fontSize:     "20px",
+              lineHeight:   1,
+              padding:      "2px 4px",
+              borderRadius: "4px",
+              transition:   "color .15s",
             }}
             className="hover:text-text-dark"
-            data-testid="ai-panel-close"
           >
-            ✕
+            ›
           </button>
         </div>
 
-        {/* Messages area */}
+        {/* Context bar (doc-011 § 5.8) */}
+        {context && (
+          <div
+            style={{
+              background:   "rgba(255,255,255,.85)",
+              borderBottom: "1px solid rgba(74,124,74,.15)",
+              padding:      "7px 14px",
+              fontSize:     "11px",
+              fontWeight:   600,
+              color:        "var(--green-deep)",
+              display:      "flex",
+              alignItems:   "center",
+              gap:          "6px",
+              flexShrink:   0,
+            }}
+          >
+            {context}
+          </div>
+        )}
+
+        {/* Messages */}
         <div
           style={{
-            flex:         1,
-            overflowY:    "auto",
-            padding:      "14px",
-            display:      "flex",
-            flexDirection:"column",
-            gap:          "12px",
-            minHeight:    0,
+            flex:          1,
+            overflowY:     "auto",
+            padding:       "14px",
+            display:       "flex",
+            flexDirection: "column",
+            gap:           "10px",
+            minHeight:     0,
           }}
           data-testid="ai-messages"
         >
-          {/* Context pill */}
-          {context && (
-            <span
-              style={{
-                background:   "var(--green-pale)",
-                color:        "var(--green-deep)",
-                borderRadius: "20px",
-                padding:      "3px 10px",
-                fontSize:     "10px",
-                fontWeight:   600,
-                display:      "inline-flex",
-                alignItems:   "center",
-                gap:          "4px",
-                alignSelf:    "flex-start",
-              }}
-            >
-              {context}
-            </span>
+          {configured === null && (
+            <span style={{ fontSize: "12px", color: "var(--text-light)" }}>…</span>
           )}
 
+          {/* AC #7: not configured */}
           {configured === false && (
-            /* AC #7 — not configured hint */
             <BotMessage>
               KI-Assistent ist noch nicht eingerichtet.{" "}
               Bitte hinterlege einen API-Schlüssel unter{" "}
@@ -204,84 +222,81 @@ export function AiPanel({ context }: AiPanelProps) {
               Hallo! Wie kann ich dir mit deinem Garten helfen?
             </BotMessage>
           )}
-
-          {configured === null && open && (
-            <span style={{ fontSize: "12px", color: "var(--text-light)" }}>
-              …
-            </span>
-          )}
         </div>
 
-        {/* Input area */}
+        {/* Input area (doc-011 § 5.7: white input background) */}
         <div
           style={{
-            padding:     "12px",
-            borderTop:   "1px solid var(--border)",
+            padding:     "10px 12px",
+            borderTop:   "1px solid rgba(74,124,74,.15)",
             display:     "flex",
             gap:         "8px",
             flexShrink:  0,
+            alignItems:  "center",
+            background:  "rgba(255,255,255,.5)",
           }}
         >
           <input
             ref={inputRef}
             type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Frage stellen …"
+            placeholder="Frage oder Anweisung …"
             aria-label="Nachricht an Assistenten"
             disabled={!configured}
+            data-testid="ai-input"
             style={{
               flex:         1,
-              background:   "var(--green-mist)",
+              background:   "white",
               border:       "1px solid var(--border)",
               borderRadius: "20px",
-              padding:      "8px 14px",
+              padding:      "7px 12px",
               fontSize:     "12px",
               fontFamily:   "var(--font-body)",
               color:        "var(--text-dark)",
               outline:      "none",
-              transition:   "border-color .2s",
               opacity:      configured ? 1 : 0.5,
             }}
-            data-testid="ai-input"
           />
           <button
             type="button"
             aria-label="Senden"
-            disabled={!configured || !inputValue.trim()}
-            style={{
-              background:   "var(--green-deep)",
-              color:        "white",
-              border:       "none",
-              borderRadius: "50%",
-              width:        "34px",
-              height:       "34px",
-              cursor:       configured && inputValue.trim() ? "pointer" : "not-allowed",
-              fontSize:     "15px",
-              display:      "flex",
-              alignItems:   "center",
-              justifyContent: "center",
-              transition:   "background .2s",
-              flexShrink:   0,
-              opacity:      configured && inputValue.trim() ? 1 : 0.4,
-            }}
+            disabled={!configured || !input.trim()}
+            onClick={() => { if (input.trim()) setInput(""); }}
             data-testid="ai-send"
+            style={{
+              background:     "var(--green-deep)",
+              color:          "white",
+              border:         "none",
+              borderRadius:   "50%",
+              width:          "32px",
+              height:         "32px",
+              cursor:         configured && input.trim() ? "pointer" : "not-allowed",
+              fontSize:       "14px",
+              display:        "flex",
+              alignItems:     "center",
+              justifyContent: "center",
+              flexShrink:     0,
+              opacity:        configured && input.trim() ? 1 : 0.4,
+              transition:     "background .2s",
+            }}
+            className={configured && input.trim() ? "hover:bg-green-mid" : ""}
           >
             ↑
           </button>
         </div>
       </div>
-
     </div>
   );
 }
 
 // ── BotMessage ────────────────────────────────────────────────────────────────
+// doc-011 § 5.7: white background, border, subtle shadow
 
 function BotMessage({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
       <span
         style={{
           fontSize:      "10px",
@@ -297,14 +312,15 @@ function BotMessage({ children }: { children: React.ReactNode }) {
       <span
         style={{
           alignSelf:    "flex-start",
-          background:   "var(--green-mist)",
+          background:   "white",
           color:        "var(--text-dark)",
           border:       "1px solid var(--border)",
           borderRadius: "4px 12px 12px 12px",
-          padding:      "9px 12px",
+          padding:      "8px 12px",
           fontSize:     "12px",
           lineHeight:   1.5,
-          maxWidth:     "90%",
+          maxWidth:     "92%",
+          boxShadow:    "0 1px 3px rgba(45,74,45,.08)",
         }}
       >
         {children}
