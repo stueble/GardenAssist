@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { apiClient } from "@/api/client";
+import { useAiPanelState } from "@/hooks/useAiPanelState";
 
 interface AiPanelProps {
   /** Context bar text, e.g. "✏️ Bearbeite: 🌹 Rose" or "⚙️ Einstellungen" */
@@ -24,7 +25,7 @@ interface AiPanelProps {
  * - Strip hover: green-mid → green-light, 0.2s (§ 5.6)
  */
 export function AiPanel({ context }: AiPanelProps) {
-  const [open,       setOpen]       = useState(false);
+  const { open, setOpen } = useAiPanelState();
   const [configured, setConfigured] = useState<boolean | null>(null);
   const [input,      setInput]      = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -67,7 +68,7 @@ export function AiPanel({ context }: AiPanelProps) {
       {/* ── Strip / Toggle — always 36px, never hidden (doc-011 § 5.2 / § 5.6) ── */}
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => setOpen(!open)}
         aria-label={open ? "Assistent einklappen" : "Assistent öffnen"}
         aria-expanded={open}
         data-testid="ai-toggle"

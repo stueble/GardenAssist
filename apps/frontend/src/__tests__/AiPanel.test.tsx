@@ -14,6 +14,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { I18nextProvider } from "react-i18next";
 import i18n from "../i18n/index";
 import { AiPanel } from "../components/AiPanel";
+import { resetAiPanelState } from "../hooks/useAiPanelState";
 import type { Settings } from "@api/settings";
 
 const MOCK_SETTINGS_UNCONFIGURED: Settings = {
@@ -40,6 +41,7 @@ vi.mock("../api/client", () => ({
 beforeEach(async () => {
   await i18n.changeLanguage("de");
   vi.clearAllMocks();
+  resetAiPanelState(); // ensure panel starts closed in every test
 });
 
 async function setup(configured = false) {
