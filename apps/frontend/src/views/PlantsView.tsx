@@ -757,8 +757,11 @@ function DetailPanel({ plant, onClose, t }: DetailPanelProps) {
     .map((s) => s.label)
     .join(", ") || "–";
 
-  // All schedules sorted by start_week for the tasks section
-  const sortedSchedules = [...plant.schedules].sort((a, b) => a.start_week - b.start_week);
+  // Only care task schedules (no bloom, foliage, growth), sorted by start_week
+  const TASK_TYPES = ["pruning", "fertilization", "misc"];
+  const sortedSchedules = [...plant.schedules]
+    .filter((s) => TASK_TYPES.includes(s.schedule_type))
+    .sort((a, b) => a.start_week - b.start_week);
 
   return (
     <>
