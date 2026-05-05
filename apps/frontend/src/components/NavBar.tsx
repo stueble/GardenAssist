@@ -2,7 +2,6 @@ import { NavLink } from "react-router-dom";
 import { Settings } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
-import { LanguageSwitcher } from "./LanguageSwitcher";
 
 const tabs = [
   { to: "/",         icon: "🏠", key: "dashboard" },
@@ -51,9 +50,8 @@ export function NavBar() {
         ))}
       </div>
 
-      {/* Language switcher + Settings */}
-      <div className="flex items-center gap-2 pr-4">
-        <LanguageSwitcher />
+      {/* Settings */}
+      <div className="flex items-center pr-4">
         <NavLink
           to="/settings"
           aria-label={t("nav.settings")}

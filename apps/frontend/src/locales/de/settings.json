@@ -9,6 +9,7 @@
     "plant_categories": "Pflanzenkategorien",
     "color_presets": "Farb-Presets",
     "ai": "KI-Assistent",
+    "language": "Sprache",
     "data": "Daten & Backup"
   },
   "section_subtitles": {
@@ -18,7 +19,12 @@
     "plant_categories": "Verfügbare Kategorien im Pflanzendialog (Dropdown)",
     "color_presets": "Vorauswahl der Farben in Blütezeiten, Blätter und Sonstiges",
     "ai": "API-Schlüssel und Modell-Konfiguration",
+    "language": "Anzeigesprache der Benutzeroberfläche",
     "data": "Gartendaten exportieren, importieren oder zurücksetzen"
+  },
+  "language": {
+    "de": "Deutsch",
+    "en": "English"
   },
   "fields": {
     "language": "Sprache",

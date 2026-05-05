@@ -12,6 +12,7 @@ import { AiSection }            from "@/components/settings/AiSection";
 import { DataSection }          from "@/components/settings/DataSection";
 import { GardenPlanSection }    from "@/components/settings/GardenPlanSection";
 import { ColorPresetsSection }  from "@/components/settings/ColorPresetsSection";
+import { LanguageSection }      from "@/components/settings/LanguageSection";
 import { apiClient }          from "@/api/client";
 
 export function SettingsView() {
@@ -169,6 +170,16 @@ export function SettingsView() {
               defaultOpen={false}
             >
               {form && <AiSection form={form} onChange={updateForm} />}
+            </SettingsSection>
+
+            {/* Sprache */}
+            <SettingsSection
+              icon="🌐"
+              title={t("sections.language")}
+              subtitle={t("section_subtitles.language")}
+              defaultOpen={false}
+            >
+              {form && <LanguageSection form={form} onChange={updateForm} />}
             </SettingsSection>
 
             {/* Daten & Backup */}
