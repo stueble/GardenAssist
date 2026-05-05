@@ -224,7 +224,8 @@ export function AiPanel({ context }: AiPanelProps) {
           )}
         </div>
 
-        {/* Input area (doc-011 § 5.7: white input background) */}
+        {/* Input area — height 53px: padding 10px top/bottom + send button 32px + 1px border-top.
+             Matches SaveBar height so both bottom bars align visually. */}
         <div
           style={{
             padding:     "10px 12px",

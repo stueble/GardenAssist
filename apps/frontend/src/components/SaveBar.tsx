@@ -21,9 +21,11 @@ export function SaveBar({ dirty, status = "idle", onSave, onDiscard }: SaveBarPr
 
   const isBusy = status === "saving";
 
+  // Height is fixed at 53px to match the AI panel input area:
+  // padding 10px top/bottom + button height 32px (py-[6px] + 13px text * 1.5lh ≈ 19px + 6px = 31px≈32px) + 1px border-top
   return (
     <div
-      className="bg-green-deep flex items-center justify-between px-8 py-3 shrink-0 shadow-[0_-2px_8px_rgba(0,0,0,0.15)]"
+      className="bg-green-deep flex items-center justify-between px-8 py-[10px] shrink-0 shadow-[0_-2px_8px_rgba(0,0,0,0.15)]"
       data-testid="save-bar"
     >
       {/* Hint text — always visible */}
@@ -37,7 +39,7 @@ export function SaveBar({ dirty, status = "idle", onSave, onDiscard }: SaveBarPr
           onClick={onDiscard}
           disabled={!dirty || isBusy}
           className={cn(
-            "px-5 py-2 rounded-[8px] text-[13px] font-medium font-body border-[1.5px] border-white/30 bg-none text-green-pale transition-colors",
+            "px-5 py-[6px] rounded-[8px] text-[13px] font-medium font-body border-[1.5px] border-white/30 bg-none text-green-pale transition-colors",
             dirty && !isBusy
               ? "hover:bg-white/10 cursor-pointer"
               : "opacity-40 cursor-not-allowed"
@@ -51,7 +53,7 @@ export function SaveBar({ dirty, status = "idle", onSave, onDiscard }: SaveBarPr
           onClick={onSave}
           disabled={!dirty || isBusy}
           className={cn(
-            "px-5 py-2 rounded-[8px] text-[13px] font-medium font-body border-[1.5px] border-white transition-colors",
+            "px-5 py-[6px] rounded-[8px] text-[13px] font-medium font-body border-[1.5px] border-white transition-colors",
             dirty && !isBusy
               ? "bg-white text-green-deep hover:bg-green-pale cursor-pointer"
               : "bg-white/30 text-green-pale/50 border-white/20 cursor-not-allowed"
