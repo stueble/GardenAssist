@@ -4,17 +4,34 @@ import { SettingsSection } from "@/components/SettingsSection";
 import { SaveBar } from "@/components/SaveBar";
 import { AiPanel } from "@/components/AiPanel";
 import { useSettings } from "@/hooks/useSettings";
+import { useGardenPlan } from "@/hooks/useGardenPlan";
 import { LocationSection }    from "@/components/settings/LocationSection";
 import { ZonesSection }       from "@/components/settings/ZonesSection";
 import { CategoriesSection }  from "@/components/settings/CategoriesSection";
 import { AiSection }          from "@/components/settings/AiSection";
 import { DataSection }        from "@/components/settings/DataSection";
 import { GardenPlanSection }  from "@/components/settings/GardenPlanSection";
-import { apiClient }         from "@/api/client";
+import { apiClient }          from "@/api/client";
 
 export function SettingsView() {
   const { t, i18n } = useTranslation("settings");
-  const { form, dirty, status, loading, error, updateForm, save, discard } = useSettings();
+  const { form, dirty: settingsDirty, status, loading, error, updateForm, save: saveSettings, discard: discardSettings } = useSettings();
+  const plan = useGardenPlan();
+
+  const dirty = settingsDirty || plan.dirty;
+
+  async function save() {
+    // Run plan save and settings save in parallel; both must succeed
+    await Promise.all([
+      plan.dirty ? plan.save() : Promise.resolve(),
+      saveSettings(),
+    ]);
+  }
+
+  function discard() {
+    plan.discard();
+    discardSettings();
+  }
 
   // AC #5: language switch takes effect immediately
   useEffect(() => {
@@ -94,7 +111,7 @@ export function SettingsView() {
               subtitle={t("section_subtitles.garden_plan")}
               defaultOpen={true}
             >
-              <GardenPlanSection />
+              <GardenPlanSection plan={plan} />
             </SettingsSection>
 
             {/* Standort */}
@@ -165,7 +182,7 @@ export function SettingsView() {
           </div>
         </div>
 
-        <SaveBar dirty={dirty} status={status} onSave={save} onDiscard={discard} />
+        <SaveBar dirty={dirty} status={status} onSave={() => void save()} onDiscard={discard} />
       </div>
 
       <AiPanel context={`⚙️ ${t("title")}`} />

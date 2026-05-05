@@ -1,39 +1,56 @@
 /**
- * useGardenPlan — manages garden plan image state.
+ * useGardenPlan — manages garden plan image state with deferred upload.
+ *
+ * Upload and remove are staged locally first; the actual API calls happen
+ * only when save() is called. This allows the Settings SaveBar to reflect
+ * unsaved plan changes alongside other settings changes.
  *
  * - Fetches plan_url and plan_name from getGarden() on mount
- * - upload(file) calls uploadGardenPlan() and updates local state
- * - remove() calls deleteGardenPlan() and clears local state
+ * - selectFile(file)  — stages a file for upload (no API call yet)
+ * - markRemove()      — stages the plan for removal (no API call yet)
+ * - save()            — applies the staged change via API
+ * - discard()         — reverts to the last saved state
  */
 
 import { useState, useEffect, useCallback } from "react";
 import { apiClient } from "@/api/client";
 
+export type PlanPendingAction =
+  | { type: "upload"; file: File }
+  | { type: "remove" }
+  | null;
+
 export interface GardenPlanState {
-  planUrl:    string | null;
-  planName:   string | null;
-  uploading:  boolean;
-  removing:   boolean;
-  loading:    boolean;
-  error:      string | null;
-  upload:     (file: File) => Promise<void>;
-  remove:     () => Promise<void>;
+  /** Currently active plan URL (saved or from last successful save) */
+  savedPlanUrl:    string | null;
+  savedPlanName:   string | null;
+  /** Staged, not-yet-saved action */
+  pending:         PlanPendingAction;
+  /** True if there is a staged change not yet saved */
+  dirty:           boolean;
+  saving:          boolean;
+  loading:         boolean;
+  error:           string | null;
+  selectFile:      (file: File) => void;
+  markRemove:      () => void;
+  save:            () => Promise<void>;
+  discard:         () => void;
 }
 
 export function useGardenPlan(): GardenPlanState {
-  const [planUrl,   setPlanUrl]   = useState<string | null>(null);
-  const [planName,  setPlanName]  = useState<string | null>(null);
-  const [loading,   setLoading]   = useState(true);
-  const [uploading, setUploading] = useState(false);
-  const [removing,  setRemoving]  = useState(false);
-  const [error,     setError]     = useState<string | null>(null);
+  const [savedPlanUrl,  setSavedPlanUrl]  = useState<string | null>(null);
+  const [savedPlanName, setSavedPlanName] = useState<string | null>(null);
+  const [pending,       setPending]       = useState<PlanPendingAction>(null);
+  const [loading,       setLoading]       = useState(true);
+  const [saving,        setSaving]        = useState(false);
+  const [error,         setError]         = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     apiClient.getGarden().then((garden) => {
       if (!cancelled) {
-        setPlanUrl(garden.plan_url);
-        setPlanName(garden.plan_name);
+        setSavedPlanUrl(garden.plan_url);
+        setSavedPlanName(garden.plan_name);
         setLoading(false);
       }
     }).catch(() => {
@@ -45,42 +62,66 @@ export function useGardenPlan(): GardenPlanState {
     return () => { cancelled = true; };
   }, []);
 
-  const upload = useCallback(async (file: File) => {
-    setUploading(true);
+  const selectFile = useCallback((file: File) => {
     setError(null);
-    try {
-      const garden = await apiClient.uploadGardenPlan(file);
-      setPlanUrl(garden.plan_url);
-      setPlanName(garden.plan_name);
-    } catch {
-      setError("Upload fehlgeschlagen. Bitte versuche es erneut.");
-    } finally {
-      setUploading(false);
-    }
+    setPending({ type: "upload", file });
   }, []);
 
-  const remove = useCallback(async () => {
-    setRemoving(true);
+  const markRemove = useCallback(() => {
+    setError(null);
+    // If there's a staged upload, simply cancel it
+    if (pending?.type === "upload") {
+      setPending(null);
+      return;
+    }
+    // Otherwise stage a removal of the saved plan
+    if (savedPlanUrl) {
+      setPending({ type: "remove" });
+    }
+  }, [pending, savedPlanUrl]);
+
+  const save = useCallback(async () => {
+    if (!pending) return;
+    setSaving(true);
     setError(null);
     try {
-      await apiClient.deleteGardenPlan();
-      setPlanUrl(null);
-      setPlanName(null);
+      if (pending.type === "upload") {
+        const garden = await apiClient.uploadGardenPlan(pending.file);
+        setSavedPlanUrl(garden.plan_url);
+        setSavedPlanName(garden.plan_name);
+      } else {
+        await apiClient.deleteGardenPlan();
+        setSavedPlanUrl(null);
+        setSavedPlanName(null);
+      }
+      setPending(null);
     } catch {
-      setError("Löschen fehlgeschlagen. Bitte versuche es erneut.");
+      setError(
+        pending.type === "upload"
+          ? "Upload fehlgeschlagen. Bitte versuche es erneut."
+          : "Löschen fehlgeschlagen. Bitte versuche es erneut."
+      );
     } finally {
-      setRemoving(false);
+      setSaving(false);
     }
+  }, [pending]);
+
+  const discard = useCallback(() => {
+    setPending(null);
+    setError(null);
   }, []);
 
   return {
-    planUrl,
-    planName,
-    uploading,
-    removing,
+    savedPlanUrl,
+    savedPlanName,
+    pending,
+    dirty:   pending !== null,
+    saving,
     loading,
     error,
-    upload,
-    remove,
+    selectFile,
+    markRemove,
+    save,
+    discard,
   };
 }
