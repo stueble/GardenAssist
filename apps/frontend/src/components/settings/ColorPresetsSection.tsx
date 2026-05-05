@@ -93,9 +93,10 @@ interface PresetGroupProps {
 }
 
 function PresetGroup({ scheduleType, label, presets, addLabel, onUpdate }: PresetGroupProps) {
-  // Drag & drop state
-  const dragIndexRef  = useRef<number | null>(null);
-  const [dragOver, setDragOver] = useState<number | null>(null);
+  const dragIndexRef = useRef<number | null>(null);
+  // insertBefore: the index before which the dragged item will be inserted.
+  // null = no active drag. presets.length = insert after last element.
+  const [insertBefore, setInsertBefore] = useState<number | null>(null);
 
   function handleDragStart(index: number) {
     dragIndexRef.current = index;
@@ -103,34 +104,43 @@ function PresetGroup({ scheduleType, label, presets, addLabel, onUpdate }: Prese
 
   function handleDragOver(e: React.DragEvent, index: number) {
     e.preventDefault();
-    setDragOver(index);
+    // Determine insert position: top half → insert before index, bottom half → insert before index+1
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const mid  = rect.top + rect.height / 2;
+    setInsertBefore(e.clientY < mid ? index : index + 1);
   }
 
-  function handleDrop(index: number) {
+  function handleDragLeaveList() {
+    setInsertBefore(null);
+  }
+
+  function handleDropOnList(e: React.DragEvent) {
+    e.preventDefault();
     const from = dragIndexRef.current;
-    if (from === null || from === index) {
+    if (from === null || insertBefore === null) {
       dragIndexRef.current = null;
-      setDragOver(null);
+      setInsertBefore(null);
       return;
     }
+    // Normalise: if inserting after the dragged item's original position
+    // the effective index shifts by -1
+    const to = insertBefore > from ? insertBefore - 1 : insertBefore;
+    dragIndexRef.current = null;
+    setInsertBefore(null);
+    if (from === to) return;
     const updated = [...presets];
     const [item] = updated.splice(from, 1);
-    updated.splice(index, 0, item);
-    dragIndexRef.current = null;
-    setDragOver(null);
+    updated.splice(to, 0, item);
     onUpdate(updated);
   }
 
   function handleDragEnd() {
     dragIndexRef.current = null;
-    setDragOver(null);
+    setInsertBefore(null);
   }
 
   function updatePreset(index: number, patch: Partial<Omit<ColorPreset, "schedule_type">>) {
-    const updated = presets.map((p, i) =>
-      i === index ? { ...p, ...patch } : p
-    );
-    onUpdate(updated);
+    onUpdate(presets.map((p, i) => i === index ? { ...p, ...patch } : p));
   }
 
   function deletePreset(index: number) {
@@ -138,8 +148,7 @@ function PresetGroup({ scheduleType, label, presets, addLabel, onUpdate }: Prese
   }
 
   function addPreset() {
-    const color = randomColor();
-    onUpdate([...presets, { schedule_type: scheduleType, name: "", color }]);
+    onUpdate([...presets, { schedule_type: scheduleType, name: "", color: randomColor() }]);
   }
 
   return (
@@ -158,29 +167,65 @@ function PresetGroup({ scheduleType, label, presets, addLabel, onUpdate }: Prese
         {label}
       </div>
 
-      {/* Preset entries */}
+      {/* Preset entries — drop target is the list container */}
       <div
-        style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "10px" }}
+        onDragOver={(e) => e.preventDefault()}
+        onDragLeave={handleDragLeaveList}
+        onDrop={handleDropOnList}
+        style={{ marginBottom: "10px" }}
         data-testid={`preset-entries-${scheduleType}`}
       >
         {presets.map((preset, index) => (
-          <PresetEntry
-            key={index}
-            preset={preset}
-            isDragOver={dragOver === index}
-            draggable
-            onDragStart={() => handleDragStart(index)}
-            onDragOver={(e) => handleDragOver(e, index)}
-            onDrop={() => handleDrop(index)}
-            onDragEnd={handleDragEnd}
-            onChangeName={(name) => updatePreset(index, { name })}
-            onChangeColor={(color) => updatePreset(index, { color })}
-            onDelete={() => deletePreset(index)}
-          />
+          <div key={index}>
+            {/* Insert indicator line — shown ABOVE this item */}
+            <InsertLine visible={insertBefore === index && dragIndexRef.current !== index} />
+            <PresetEntry
+              preset={preset}
+              isDragging={dragIndexRef.current === index && insertBefore !== null}
+              draggable
+              onDragStart={() => handleDragStart(index)}
+              onDragOver={(e) => handleDragOver(e, index)}
+              onDragEnd={handleDragEnd}
+              onChangeName={(name) => updatePreset(index, { name })}
+              onChangeColor={(color) => updatePreset(index, { color })}
+              onDelete={() => deletePreset(index)}
+            />
+          </div>
         ))}
+        {/* Insert indicator line — shown AFTER last item */}
+        <InsertLine visible={insertBefore === presets.length && dragIndexRef.current !== presets.length - 1} />
       </div>
 
       <AddRowButton onClick={addPreset}>{addLabel}</AddRowButton>
+    </div>
+  );
+}
+
+// ── InsertLine ────────────────────────────────────────────────────────────────
+
+function InsertLine({ visible }: { visible: boolean }) {
+  if (!visible) return null;
+  return (
+    <div
+      style={{
+        height:       "2px",
+        background:   "var(--green-mid)",
+        borderRadius: "2px",
+        margin:       "2px 0",
+        position:     "relative",
+      }}
+    >
+      {/* Dot at the left end */}
+      <div style={{
+        position:     "absolute",
+        left:         "-3px",
+        top:          "50%",
+        transform:    "translateY(-50%)",
+        width:        "8px",
+        height:       "8px",
+        borderRadius: "50%",
+        background:   "var(--green-mid)",
+      }} />
     </div>
   );
 }
@@ -189,11 +234,10 @@ function PresetGroup({ scheduleType, label, presets, addLabel, onUpdate }: Prese
 
 interface PresetEntryProps {
   preset:      ColorPreset;
-  isDragOver:  boolean;
+  isDragging:  boolean;
   draggable:   boolean;
   onDragStart: () => void;
   onDragOver:  (e: React.DragEvent) => void;
-  onDrop:      () => void;
   onDragEnd:   () => void;
   onChangeName:  (name: string) => void;
   onChangeColor: (color: string) => void;
@@ -201,8 +245,8 @@ interface PresetEntryProps {
 }
 
 function PresetEntry({
-  preset, isDragOver,
-  draggable, onDragStart, onDragOver, onDrop, onDragEnd,
+  preset, isDragging,
+  draggable, onDragStart, onDragOver, onDragEnd,
   onChangeName, onChangeColor, onDelete,
 }: PresetEntryProps) {
   const colorInputRef = useRef<HTMLInputElement>(null);
@@ -212,18 +256,17 @@ function PresetEntry({
       // The row itself is NOT draggable — only the handle is.
       // This prevents the browser from intercepting mousedown on inputs.
       onDragOver={onDragOver}
-      onDrop={onDrop}
       data-testid="preset-entry"
       style={{
         display:      "flex",
         alignItems:   "center",
         gap:          "8px",
         background:   "var(--green-mist)",
-        border:       isDragOver
-          ? "1.5px dashed var(--green-mid)"
-          : "1.5px solid var(--border)",
+        border:       "1.5px solid var(--border)",
         borderRadius: "8px",
         padding:      "7px 10px",
+        opacity:      isDragging ? 0.4 : 1,
+        transition:   "opacity .15s",
       }}
     >
       {/* Drag handle — only this element is draggable */}
