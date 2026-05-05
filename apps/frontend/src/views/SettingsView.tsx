@@ -8,9 +8,10 @@ import { useGardenPlan } from "@/hooks/useGardenPlan";
 import { LocationSection }    from "@/components/settings/LocationSection";
 import { ZonesSection }       from "@/components/settings/ZonesSection";
 import { CategoriesSection }  from "@/components/settings/CategoriesSection";
-import { AiSection }          from "@/components/settings/AiSection";
-import { DataSection }        from "@/components/settings/DataSection";
-import { GardenPlanSection }  from "@/components/settings/GardenPlanSection";
+import { AiSection }            from "@/components/settings/AiSection";
+import { DataSection }          from "@/components/settings/DataSection";
+import { GardenPlanSection }    from "@/components/settings/GardenPlanSection";
+import { ColorPresetsSection }  from "@/components/settings/ColorPresetsSection";
 import { apiClient }          from "@/api/client";
 
 export function SettingsView() {
@@ -144,14 +145,14 @@ export function SettingsView() {
               {form && <CategoriesSection form={form} onChange={updateForm} />}
             </SettingsSection>
 
-            {/* Farb-Presets — placeholder until story-022 */}
+            {/* Farb-Presets */}
             <SettingsSection
               icon="🎨"
               title={t("sections.color_presets")}
               subtitle={t("section_subtitles.color_presets")}
               defaultOpen={true}
             >
-              <p className="text-[13px] text-text-light">Farb-Presets-Editor folgt in einer späteren Version.</p>
+              {form && <ColorPresetsSection form={form} onChange={updateForm} />}
             </SettingsSection>
 
             {/* KI-Assistent */}

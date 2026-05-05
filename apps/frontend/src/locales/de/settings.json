@@ -38,6 +38,18 @@
     "openai": "OpenAI (GPT)",
     "openrouter": "OpenRouter"
   },
+  "color_presets": {
+    "hint": "Diese Presets erscheinen im Pflanzendialog beim Bearbeiten von Blütezeiten, Blättern und sonstigen Zeiträumen.",
+    "add_color": "＋ Farbe hinzufügen",
+    "schedule_types": {
+      "bloom":         "🌸 Blütezeiten",
+      "growth":        "🌱 Wachstum",
+      "foliage":       "🍃 Blätter",
+      "pruning":       "✂️ Schnitt",
+      "fertilization": "💧 Düngung",
+      "misc":          "📋 Sonstiges"
+    }
+  },
   "garden_plan": {
     "dropzone_title": "Bild hierher ziehen oder klicken",
     "dropzone_sub": "PNG, JPG oder SVG · Empfohlen: min. 2000 px Breite",

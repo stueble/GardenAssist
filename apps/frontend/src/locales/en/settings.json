@@ -38,6 +38,18 @@
     "openai": "OpenAI (GPT)",
     "openrouter": "OpenRouter"
   },
+  "color_presets": {
+    "hint": "These presets appear in the plant dialog when editing bloom periods, foliage, and miscellaneous intervals.",
+    "add_color": "＋ Add color",
+    "schedule_types": {
+      "bloom":         "🌸 Bloom periods",
+      "growth":        "🌱 Growth",
+      "foliage":       "🍃 Foliage",
+      "pruning":       "✂️ Pruning",
+      "fertilization": "💧 Fertilization",
+      "misc":          "📋 Miscellaneous"
+    }
+  },
   "garden_plan": {
     "dropzone_title": "Drag image here or click to upload",
     "dropzone_sub": "PNG, JPG or SVG · Recommended: min. 2000 px width",
