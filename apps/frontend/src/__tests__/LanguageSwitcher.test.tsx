@@ -2,14 +2,32 @@
  * LanguageSwitcher tests.
  *
  * Verifies that the switcher renders both language options, marks the active
- * one as pressed, and calls i18n.changeLanguage when clicked.
+ * one as pressed, calls i18n.changeLanguage when clicked, and persists the
+ * language to the backend via updateSettings.
  */
 
-import { describe, it, expect } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { I18nextProvider } from "react-i18next";
 import i18n from "../i18n/index";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
+
+vi.mock("../api/client", () => ({
+  apiClient: {
+    getSettings: vi.fn().mockResolvedValue({
+      language: "de", location_city: null, location_zip: null,
+      irrigation_zones: [], plant_categories: [], color_presets: [],
+      task_lookback_weeks: 2, task_lookahead_weeks: 4,
+      attachment_size_limit_mb: 10,
+      ai_provider: null, ai_model: null, ai_api_key: null,
+    }),
+    updateSettings: vi.fn().mockImplementation((s) => Promise.resolve(s)),
+  },
+}));
+
+beforeEach(() => {
+  vi.clearAllMocks();
+});
 
 function renderSwitcher() {
   return render(
@@ -47,5 +65,19 @@ describe("LanguageSwitcher", () => {
     renderSwitcher();
     fireEvent.click(screen.getByRole("button", { name: /deutsch/i }));
     expect(i18n.language).toBe("de");
+  });
+
+  it("persists language to DB via updateSettings when switched", async () => {
+    const { apiClient } = await import("../api/client");
+    await i18n.changeLanguage("de");
+    renderSwitcher();
+    fireEvent.click(screen.getByRole("button", { name: /english/i }));
+    await waitFor(() =>
+      expect(apiClient.updateSettings).toHaveBeenCalledOnce()
+    );
+    const call = (apiClient.updateSettings as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    expect(call.language).toBe("en");
+    // reset
+    await i18n.changeLanguage("de");
   });
 });
