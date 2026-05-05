@@ -118,6 +118,43 @@ describe("ColorPresetsSection — preset entries", () => {
   });
 });
 
+describe("ColorPresetsSection — input editability", () => {
+  it("name input is not blocked by draggable container: mousedown does not have stopPropagation that prevents focus", () => {
+    renderSection(SAMPLE_PRESETS);
+    const input = screen.getByDisplayValue("Rot") as HTMLInputElement;
+
+    // The entry row must NOT have draggable=true (only the handle should)
+    const entryRow = input.closest("[data-testid='preset-entry']") as HTMLElement;
+    expect(entryRow.getAttribute("draggable")).not.toBe("true");
+
+    // The drag handle must exist and be draggable
+    const handle = within(entryRow).getByTestId("preset-drag-handle");
+    expect(handle.getAttribute("draggable")).toBe("true");
+  });
+
+  it("name input has no draggable ancestor that would block cursor placement", () => {
+    renderSection(SAMPLE_PRESETS);
+    const input = screen.getByDisplayValue("Rot");
+
+    // Walk up the DOM — no ancestor between input and root should have draggable=true
+    let el: HTMLElement | null = input.parentElement;
+    while (el && el !== document.body) {
+      expect(el.getAttribute("draggable")).not.toBe("true");
+      el = el.parentElement;
+    }
+  });
+
+  it("can programmatically set selection range inside the input", () => {
+    renderSection(SAMPLE_PRESETS);
+    const input = screen.getByDisplayValue("Rot") as HTMLInputElement;
+
+    // This only works if the input is not blocked by a draggable ancestor
+    input.setSelectionRange(1, 2);
+    expect(input.selectionStart).toBe(1);
+    expect(input.selectionEnd).toBe(2);
+  });
+});
+
 describe("ColorPresetsSection — interactions", () => {
   it("adds a new preset when 'Add color' is clicked (AC #3)", () => {
     const { onChange } = renderSection(SAMPLE_PRESETS);

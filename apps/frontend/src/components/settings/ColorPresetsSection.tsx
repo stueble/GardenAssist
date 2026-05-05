@@ -205,32 +205,47 @@ function PresetEntry({
   draggable, onDragStart, onDragOver, onDrop, onDragEnd,
   onChangeName, onChangeColor, onDelete,
 }: PresetEntryProps) {
-  const colorInputRef  = useRef<HTMLInputElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
+  const colorInputRef = useRef<HTMLInputElement>(null);
 
   return (
     <div
-      draggable={draggable}
-      onDragStart={() => { setIsDragging(true); onDragStart(); }}
+      // The row itself is NOT draggable — only the handle is.
+      // This prevents the browser from intercepting mousedown on inputs.
       onDragOver={onDragOver}
       onDrop={onDrop}
-      onDragEnd={() => { setIsDragging(false); onDragEnd(); }}
       data-testid="preset-entry"
       style={{
-        display:       "flex",
-        alignItems:    "center",
-        gap:           "8px",
-        background:    "var(--green-mist)",
-        border:        isDragOver
+        display:      "flex",
+        alignItems:   "center",
+        gap:          "8px",
+        background:   "var(--green-mist)",
+        border:       isDragOver
           ? "1.5px dashed var(--green-mid)"
           : "1.5px solid var(--border)",
-        borderRadius:  "8px",
-        padding:       "7px 10px",
-        // Only apply grab cursor and userSelect:none while not interacting with text
-        cursor:        isDragging ? "grabbing" : "grab",
-        userSelect:    isDragging ? "none" : "auto",
+        borderRadius: "8px",
+        padding:      "7px 10px",
       }}
     >
+      {/* Drag handle — only this element is draggable */}
+      <div
+        draggable={draggable}
+        onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
+        title="Verschieben"
+        data-testid="preset-drag-handle"
+        style={{
+          flexShrink:  0,
+          cursor:      "grab",
+          color:       "var(--text-light)",
+          fontSize:    "14px",
+          lineHeight:  1,
+          padding:     "2px 4px 2px 0",
+          userSelect:  "none",
+        }}
+      >
+        ⠿
+      </div>
+
       {/* Color swatch — clicking it opens the hidden color input */}
       <div
         onClick={() => colorInputRef.current?.click()}
@@ -267,9 +282,6 @@ function PresetEntry({
           color:        "var(--text-dark)",
           outline:      "none",
         }}
-        // Prevent drag from starting when clicking into the input
-        onMouseDown={(e) => e.stopPropagation()}
-        onDragStart={(e) => e.preventDefault()}
       />
 
       {/* Hidden native color picker */}
