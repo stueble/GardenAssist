@@ -15,7 +15,7 @@
  */
 
 import { db } from "./index.js";
-import { garden, settings, colorPresets } from "./schema.js";
+import { garden, settings, colorPresets, plants, schedules } from "./schema.js";
 
 // ── Default values from the UI mockup ────────────────────────────────────────
 
@@ -75,6 +75,129 @@ const DEFAULT_COLOR_PRESETS: Array<{
   { schedule_type: "misc", name: "Aussähen",     color: "#f1c40f" },
 ];
 
+// ── Default plants ────────────────────────────────────────────────────────────
+
+const NOW = new Date().toISOString();
+
+const DEFAULT_PLANTS: Array<{
+  id: string;
+  name_common: string;
+  name_botanical: string | null;
+  icon: string;
+  category: string;
+  lifecycle: string;
+  location: string;
+  watering_zone: string;
+  frost_tolerance_min_c: number | null;
+  temperature_protected: boolean;
+  care_notes: string | null;
+  purchase_date: string | null;
+  schedules: Array<{
+    id: string;
+    schedule_type: string;
+    start_week: number;
+    end_week: number;
+    color: string | null;
+    label: string | null;
+  }>;
+}> = [
+  {
+    id:                    "plant-seed-001",
+    name_common:           "Rote Rose",
+    name_botanical:        "Rosa",
+    icon:                  "🌹",
+    category:              "Strauch",
+    lifecycle:             "perennial",
+    location:              "Beet West",
+    watering_zone:         "Beet West",
+    frost_tolerance_min_c: -15,
+    temperature_protected: false,
+    purchase_date:         "2022-03-15",
+    care_notes:            "Nach Blüte entblättern. Kein Stickstoff nach August. Winterschutz ab November empfohlen.",
+    schedules: [
+      { id:"sched-001-bloom",  schedule_type:"bloom",         start_week:18, end_week:38, color:"#e74c3c", label:"Rot" },
+      { id:"sched-001-prune1", schedule_type:"pruning",       start_week:9,  end_week:11, color:"#27ae60", label:"Frühlingsschnitt" },
+      { id:"sched-001-prune2", schedule_type:"pruning",       start_week:32, end_week:33, color:"#2ecc71", label:"Sommerschnitt" },
+      { id:"sched-001-fert",   schedule_type:"fertilization", start_week:15, end_week:20, color:"#3498db", label:"Düngen" },
+    ],
+  },
+  {
+    id:                    "plant-seed-002",
+    name_common:           "Rhododendron",
+    name_botanical:        "Rhododendron hyb.",
+    icon:                  "💐",
+    category:              "Strauch",
+    lifecycle:             "evergreen",
+    location:              "Terrasse",
+    watering_zone:         "Terrasse",
+    frost_tolerance_min_c: -10,
+    temperature_protected: false,
+    purchase_date:         "2020-04-10",
+    care_notes:            "Kalkfreies Substrat wichtig. Rhododendron-Dünger verwenden. Kein Rückschnitt nötig.",
+    schedules: [
+      { id:"sched-002-bloom", schedule_type:"bloom",         start_week:14, end_week:22, color:"#9b59b6", label:"Lila" },
+      { id:"sched-002-fert",  schedule_type:"fertilization", start_week:14, end_week:20, color:"#3498db", label:"Düngen" },
+    ],
+  },
+  {
+    id:                    "plant-seed-003",
+    name_common:           "Magnolia",
+    name_botanical:        "Magnolia grandiflora",
+    icon:                  "🌸",
+    category:              "Baum",
+    lifecycle:             "evergreen",
+    location:              "Nordwest",
+    watering_zone:         "Rasen",
+    frost_tolerance_min_c: -20,
+    temperature_protected: false,
+    purchase_date:         "2016-05-01",
+    care_notes:            "Kein Rückschnitt nötig. Frühjahrsblüher – nicht vor dem Frost düngen.",
+    schedules: [
+      { id:"sched-003-bloom",   schedule_type:"bloom",         start_week:14, end_week:19, color:"#ffffff", label:"Weiß" },
+      { id:"sched-003-foliage", schedule_type:"foliage",       start_week:1,  end_week:52, color:"#2d5a1b", label:"Immergrün" },
+    ],
+  },
+  {
+    id:                    "plant-seed-004",
+    name_common:           "Apfelbaum",
+    name_botanical:        "Malus domestica",
+    icon:                  "🍎",
+    category:              "Obstbaum",
+    lifecycle:             "perennial",
+    location:              "Mitte",
+    watering_zone:         "Rasen",
+    frost_tolerance_min_c: -25,
+    temperature_protected: false,
+    purchase_date:         "2012-03-20",
+    care_notes:            "Schnitt im Winterschlaf. Ausdünnen der Früchte im Juni empfohlen. Sorte: Elstar.",
+    schedules: [
+      { id:"sched-004-bloom",  schedule_type:"bloom",         start_week:16, end_week:19, color:"#f8c8d0", label:"Zartrosa" },
+      { id:"sched-004-prune",  schedule_type:"pruning",       start_week:6,  end_week:9,  color:"#27ae60", label:"Winterschnitt" },
+      { id:"sched-004-fert",   schedule_type:"fertilization", start_week:13, end_week:16, color:"#3498db", label:"Düngen" },
+      { id:"sched-004-misc",   schedule_type:"misc",          start_week:36, end_week:41, color:"#3498db", label:"Ernte" },
+    ],
+  },
+  {
+    id:                    "plant-seed-005",
+    name_common:           "Lebensbaum",
+    name_botanical:        "Thuja occidentalis",
+    icon:                  "🌲",
+    category:              "Nadelbaum",
+    lifecycle:             "evergreen",
+    location:              "Hecke Nord",
+    watering_zone:         "Beet Ost",
+    frost_tolerance_min_c: -30,
+    temperature_protected: false,
+    purchase_date:         "2017-10-05",
+    care_notes:            "Schnitt zweimal jährlich. Nicht zu stark zurückschneiden – braune Stellen treiben nicht wieder aus.",
+    schedules: [
+      { id:"sched-005-foliage",  schedule_type:"foliage",  start_week:1,  end_week:52, color:"#2d5a1b", label:"Immergrün" },
+      { id:"sched-005-prune1",   schedule_type:"pruning",  start_week:21, end_week:23, color:"#27ae60", label:"Frühlingsschnitt" },
+      { id:"sched-005-prune2",   schedule_type:"pruning",  start_week:33, end_week:35, color:"#2ecc71", label:"Herbstschnitt" },
+    ],
+  },
+];
+
 // ── Seed ──────────────────────────────────────────────────────────────────────
 
 async function seed() {
@@ -120,6 +243,46 @@ async function seed() {
     console.log(`Inserted ${DEFAULT_COLOR_PRESETS.length} default color presets.`);
   } else {
     console.log(`Color presets already exist (${existingPresets.length} rows) — skipped.`);
+  }
+
+  // Sample plants — only insert when plants table is empty
+  const existingPlants = db.select().from(plants).all();
+  if (existingPlants.length === 0) {
+    for (const plant of DEFAULT_PLANTS) {
+      db.insert(plants).values({
+        id:                      plant.id,
+        name_common:             plant.name_common,
+        name_botanical:          plant.name_botanical,
+        icon:                    plant.icon,
+        category:                plant.category,
+        lifecycle:               plant.lifecycle,
+        location:                plant.location,
+        watering_zone:           plant.watering_zone,
+        frost_tolerance_min_c:   plant.frost_tolerance_min_c,
+        temperature_protected:   plant.temperature_protected,
+        care_notes:              plant.care_notes,
+        purchase_date:           plant.purchase_date,
+        created_at:              NOW,
+        updated_at:              NOW,
+      }).run();
+
+      for (const sched of plant.schedules) {
+        db.insert(schedules).values({
+          id:            sched.id,
+          plant_id:      plant.id,
+          schedule_type: sched.schedule_type,
+          start_week:    sched.start_week,
+          end_week:      sched.end_week,
+          color:         sched.color,
+          label:         sched.label,
+          created_at:    NOW,
+          updated_at:    NOW,
+        }).run();
+      }
+    }
+    console.log(`Inserted ${DEFAULT_PLANTS.length} sample plants.`);
+  } else {
+    console.log(`Plants already exist (${existingPlants.length} rows) — skipped.`);
   }
 
   console.log("Seed complete.");
