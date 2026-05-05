@@ -10,7 +10,7 @@ export function App() {
   return (
     <div className="flex flex-col min-h-screen bg-warm-white">
       <NavBar />
-      <main className="flex-1">
+      <main className="flex flex-col flex-1 min-h-0 overflow-hidden">
         <Routes>
           <Route path="/"         element={<DashboardView />} />
           <Route path="/plants"   element={<PlantsView />}    />
