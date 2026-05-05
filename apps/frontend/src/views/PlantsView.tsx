@@ -569,33 +569,32 @@ function PlantRow({ plant, selected, onClick, t }: PlantRowProps) {
         </span>
       </td>
 
-      {/* Next care task — Icon · Swatch · Text · Zeitraum in one row */}
+      {/* Next care task — Icon (centered) | top: Text | bottom: Swatch + Zeitraum */}
       <td style={{ padding: "10px 14px" }}>
         {careTask ? (
-          <div style={{ display: "flex", alignItems: "center", gap: "6px", whiteSpace: "nowrap" }}>
-            {/* Icon */}
-            <span style={{ fontSize: "13px", flexShrink: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            {/* Icon — vertically centered */}
+            <span style={{ fontSize: "15px", flexShrink: 0 }}>
               {SCHEDULE_ICON[careTask.schedule.schedule_type] ?? "📌"}
             </span>
-            {/* Color swatch */}
-            <div
-              style={{
-                width:        "12px",
-                height:       "12px",
-                borderRadius: "3px",
-                border:       "1px solid rgba(0,0,0,.12)",
-                flexShrink:   0,
-                background:   careTask.schedule.color ?? STATUS_COLOR[careTask.status as PlantStatus],
-              }}
-            />
-            {/* Label */}
-            <span style={{ fontSize: "11.5px", color: "var(--text-mid)" }}>
-              {careTask.schedule.label ?? careTask.schedule.schedule_type}
-            </span>
-            {/* Month range */}
-            <span style={{ fontSize: "11px", color: "var(--text-light)" }}>
-              {weekRangeLabel(careTask.schedule.start_week, careTask.schedule.end_week)}
-            </span>
+            {/* Two text lines */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+              {/* Line 1: Label */}
+              <span style={{ fontSize: "11.5px", color: "var(--text-mid)", fontWeight: 500 }}>
+                {careTask.schedule.label ?? careTask.schedule.schedule_type}
+              </span>
+              {/* Line 2: Swatch + month range */}
+              <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                <div style={{
+                  width: "10px", height: "10px", borderRadius: "2px", flexShrink: 0,
+                  background: careTask.schedule.color ?? STATUS_COLOR[careTask.status as PlantStatus],
+                  border: "1px solid rgba(0,0,0,.12)",
+                }} />
+                <span style={{ fontSize: "11px", color: "var(--text-light)" }}>
+                  {weekRangeLabel(careTask.schedule.start_week, careTask.schedule.end_week)}
+                </span>
+              </div>
+            </div>
           </div>
         ) : (
           <span style={{ color: "var(--text-light)" }}>–</span>
