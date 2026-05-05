@@ -16,6 +16,12 @@ const css = readFileSync(
   "utf-8"
 );
 
+// Fonts are loaded via <link> in index.html (not in CSS)
+const html = readFileSync(
+  resolve(__dirname, "../../index.html"),
+  "utf-8"
+);
+
 const requiredColors = [
   // Brand greens
   "green-deep", "green-mid", "green-light", "green-pale", "green-mist",
@@ -57,12 +63,20 @@ describe("Design tokens — @theme block", () => {
       });
     }
 
-    it("imports Playfair Display from Google Fonts", () => {
-      expect(css).toContain("Playfair+Display");
+    it("imports Playfair Display from Google Fonts (via index.html <link>)", () => {
+      expect(html).toContain("Playfair+Display");
     });
 
-    it("imports DM Sans from Google Fonts", () => {
-      expect(css).toContain("DM+Sans");
+    it("imports DM Sans from Google Fonts (via index.html <link>)", () => {
+      expect(html).toContain("DM+Sans");
+    });
+
+    it("loads correct font weights for Playfair Display (400, 600, italic 400)", () => {
+      expect(html).toContain("0,400;0,600;1,400");
+    });
+
+    it("loads correct font weights for DM Sans (300, 400, 500)", () => {
+      expect(html).toContain("wght@300;400;500");
     });
   });
 
