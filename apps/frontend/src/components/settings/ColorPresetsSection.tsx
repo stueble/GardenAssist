@@ -327,23 +327,14 @@ function PresetEntry({
         }}
       />
 
-      {/* Hidden native color picker */}
+      {/* Color picker — fully hidden, opened via swatch click */}
       <input
         ref={colorInputRef}
         type="color"
         value={preset.color}
         onChange={(e) => onChangeColor(e.target.value)}
         data-testid="preset-color-input"
-        style={{
-          width:        "36px",
-          height:       "30px",
-          border:       "1.5px solid var(--border)",
-          borderRadius: "6px",
-          cursor:       "pointer",
-          padding:      "1px",
-          background:   "none",
-          flexShrink:   0,
-        }}
+        style={{ display: "none" }}
       />
 
       {/* Delete button */}
