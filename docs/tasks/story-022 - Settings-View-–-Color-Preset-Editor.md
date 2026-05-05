@@ -1,16 +1,17 @@
 ---
 id: STORY-022
 title: Settings View – Color Preset Editor
-status: In Review
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-04 22:44'
-updated_date: '2026-05-05 16:59'
+updated_date: '2026-05-05 21:15'
 labels: []
 dependencies: []
 documentation:
   - docs/api/color-preset.ts
   - docs/api/settings.ts
+ordinal: 26000
 ---
 
 ## Description
