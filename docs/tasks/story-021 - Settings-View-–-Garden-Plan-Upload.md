@@ -1,16 +1,17 @@
 ---
 id: STORY-021
 title: Settings View – Garden Plan Upload
-status: In Progress
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-04 22:44'
-updated_date: '2026-05-05 16:15'
+updated_date: '2026-05-05 16:51'
 labels: []
 dependencies: []
 documentation:
   - docs/api/api.ts
   - docs/docs/doc-009 - 009-UX-UI-Concept-Settings.md
+ordinal: 23000
 ---
 
 ## Description
@@ -21,10 +22,10 @@ Implement garden plan image upload and removal in the Settings → Gartenplan se
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Drag & drop and click-to-upload supported (PNG, JPG, SVG)
-- [ ] #2 Preview row shows thumbnail, filename, file size and upload date after upload
-- [ ] #3 Remove button deletes plan and returns to dropzone state
-- [ ] #4 uploadGardenPlan() and deleteGardenPlan() API methods used
+- [x] #1 Drag & drop and click-to-upload supported (PNG, JPG, SVG)
+- [x] #2 Preview row shows thumbnail, filename, file size and upload date after upload
+- [x] #3 Remove button deletes plan and returns to dropzone state
+- [x] #4 uploadGardenPlan() and deleteGardenPlan() API methods used
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -37,6 +38,20 @@ Implement garden plan image upload and removal in the Settings → Gartenplan se
 5. i18n: Neue Keys in de/en settings.json
 6. Tests: Backend-Route-Tests + Frontend-Render-Tests
 <!-- SECTION:PLAN:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Garden plan upload and removal fully implemented.
+
+Backend: POST /api/garden/plan saves file to data/garden/plan.<ext> and updates DB; DELETE /api/garden/plan removes file and clears DB. DATA_DIR resolved at call time for testability.
+
+Frontend: new useGardenPlan hook fetches plan state from getGarden(); new GardenPlanSection component shows dropzone (no plan) or preview row (plan exists) with drag&drop + click-to-upload and remove button. SettingsView placeholder replaced.
+
+i18n: new garden_plan keys added to de/en settings.json.
+
+Tests: 7 backend route tests (upload/delete/validation/file-system), 8 frontend component tests (dropzone state, preview state, API calls, state transitions). All tests green (63 backend, 75 frontend).
+<!-- SECTION:FINAL_SUMMARY:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
