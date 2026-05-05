@@ -495,23 +495,25 @@ function PlantRow({ plant, selected, onClick, t }: PlantRowProps) {
 
       {/* Bloom */}
       <td style={{ padding: "10px 14px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <div
-            style={{
-              width:        "16px",
-              height:       "16px",
-              borderRadius: "4px",
-              border:       "1px solid rgba(0,0,0,.12)",
-              flexShrink:   0,
-              background:   colors[0] ?? "#e0e0e0",
-            }}
-          />
-          <div style={{ display: "flex", flexDirection: "column", gap: "1px" }}>
+        {colors.length > 0 ? (
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <div
+              style={{
+                width:        "16px",
+                height:       "16px",
+                borderRadius: "4px",
+                border:       "1px solid rgba(0,0,0,.12)",
+                flexShrink:   0,
+                background:   colors[0],
+              }}
+            />
             <span style={{ fontSize: "11.5px", color: "var(--text-mid)" }}>
               {bloomPeriod(plant.schedules)}
             </span>
           </div>
-        </div>
+        ) : (
+          <span style={{ color: "var(--text-light)" }}>–</span>
+        )}
       </td>
 
       {/* Last cut */}
