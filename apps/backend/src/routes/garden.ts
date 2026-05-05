@@ -10,9 +10,11 @@ import { writeFile, unlink, mkdir } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 
-// Read at call time so tests can override DATA_DIR via vi.stubEnv
+// Read at call time so tests can override DATA_DIR via vi.stubEnv.
+// Files are stored under <DATA_DIR>/static/garden/ so that serveStatic
+// (root: DATA_DIR) serves them at /static/garden/<file>.
 function gardenPlanDir(): string {
-  return join(process.env.DATA_DIR ?? "./data", "garden");
+  return join(process.env.DATA_DIR ?? "./data", "static", "garden");
 }
 
 const ALLOWED_TYPES: Record<string, string> = {

@@ -23,7 +23,7 @@ let tmpDir: string;
 
 beforeAll(async () => {
   tmpDir = await mkdtemp(join(tmpdir(), "gardenassist-test-"));
-  await mkdir(join(tmpDir, "garden"), { recursive: true });
+  await mkdir(join(tmpDir, "static", "garden"), { recursive: true });
   vi.stubEnv("DATA_DIR", tmpDir);
 });
 
@@ -36,7 +36,7 @@ afterAll(async () => {
 beforeEach(async () => {
   db.update(garden).set({ plan_url: null, plan_name: null }).where(eq(garden.id, "garden")).run();
   // Remove any leftover plan files
-  const gardenDir = join(tmpDir, "garden");
+  const gardenDir = join(tmpDir, "static", "garden");
   if (existsSync(gardenDir)) {
     const files = await readdir(gardenDir);
     for (const f of files) {
@@ -99,12 +99,12 @@ describe("POST /api/garden/plan", () => {
     expect(body.plan_name).toBe("gartenplan.png");
   });
 
-  it("saves the file to the garden directory", async () => {
+  it("saves the file to the static/garden directory", async () => {
     const form = new FormData();
     form.append("file", makePngFile("gartenplan.png"));
     await app.request("/api/garden/plan", { method: "POST", body: form });
 
-    const files = await readdir(join(tmpDir, "garden"));
+    const files = await readdir(join(tmpDir, "static", "garden"));
     expect(files).toContain("plan.png");
   });
 
@@ -119,7 +119,7 @@ describe("POST /api/garden/plan", () => {
     const res2 = await app.request("/api/garden/plan", { method: "POST", body: form2 });
     expect(res2.status).toBe(200);
 
-    const files = await readdir(join(tmpDir, "garden"));
+    const files = await readdir(join(tmpDir, "static", "garden"));
     // Old .png should be gone, new .svg present
     expect(files).not.toContain("plan.png");
     expect(files).toContain("plan.svg");
@@ -141,7 +141,7 @@ describe("DELETE /api/garden/plan", () => {
     await app.request("/api/garden/plan", { method: "POST", body: form });
 
     // Confirm file exists
-    expect(existsSync(join(tmpDir, "garden", "plan.png"))).toBe(true);
+    expect(existsSync(join(tmpDir, "static", "garden", "plan.png"))).toBe(true);
 
     // Delete
     const res = await app.request("/api/garden/plan", { method: "DELETE" });
@@ -151,6 +151,6 @@ describe("DELETE /api/garden/plan", () => {
     expect(body.plan_name).toBeNull();
 
     // File should be gone
-    expect(existsSync(join(tmpDir, "garden", "plan.png"))).toBe(false);
+    expect(existsSync(join(tmpDir, "static", "garden", "plan.png"))).toBe(false);
   });
 });
