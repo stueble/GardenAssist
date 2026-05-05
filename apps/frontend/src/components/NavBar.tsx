@@ -59,8 +59,8 @@ export function NavBar() {
             cn(
               "flex items-center justify-center h-9 rounded-[6px] text-green-pale transition-all",
               isActive
-                ? "opacity-100 bg-white/15 w-8"   /* 32px: leaves 2px dark-green on each side */
-                : "opacity-75 hover:opacity-100 hover:bg-white/10 w-8"
+                ? "opacity-100 bg-white/15 w-[30px]"   /* 30px: leaves 3px dark-green on each side */
+                : "opacity-75 hover:opacity-100 hover:bg-white/10 w-[30px]"
             )
           }
         >
