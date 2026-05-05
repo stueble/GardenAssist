@@ -5,12 +5,26 @@
  * Tests run with German locale (default).
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { I18nextProvider } from "react-i18next";
 import i18n from "../i18n/index";
 import { App } from "../App";
+
+// PlantsView loads data via apiClient — mock to prevent real requests
+vi.mock("../api/client", () => ({
+  apiClient: {
+    getGarden:    vi.fn().mockResolvedValue({ plan_url:null, plan_name:null, plants:[], attachments:[], journal_entries:[] }),
+    getSettings:  vi.fn().mockResolvedValue({ language:"de", location_city:null, location_zip:null, irrigation_zones:[], plant_categories:[], color_presets:[], task_lookback_weeks:2, task_lookahead_weeks:4, attachment_size_limit_mb:10, ai_provider:null, ai_model:null, ai_api_key:null }),
+    updateSettings: vi.fn().mockImplementation((s) => Promise.resolve(s)),
+    exportJson:   vi.fn().mockResolvedValue(new Blob()),
+    exportPlantsCsv: vi.fn().mockResolvedValue(new Blob()),
+    importJson:   vi.fn().mockResolvedValue({}),
+    uploadGardenPlan: vi.fn(),
+    deleteGardenPlan: vi.fn(),
+  },
+}));
 
 beforeEach(async () => {
   await i18n.changeLanguage("de");
@@ -34,7 +48,11 @@ describe("App routing", () => {
 
   it("/plants renders the Plants view", () => {
     renderAt("/plants");
-    expect(screen.getByRole("heading", { name: /Pflanzen/i })).toBeInTheDocument();
+    // PlantsView shows a search input (no h1) — check for loading state or search
+    expect(
+      screen.getByText(/Pflanzen werden geladen/i) ||
+      screen.queryByTestId("plants-search")
+    ).toBeTruthy();
   });
 
   it("/calendar renders the Calendar view", () => {

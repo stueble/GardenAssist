@@ -1,6 +1,56 @@
 {
   "title": "Plants",
   "subtitle": "All plants in your garden.",
+  "overview": {
+    "search_placeholder": "Search plants …",
+    "count_one":   "{{count}} plant",
+    "count_other": "{{count}} plants",
+    "open_tasks_one":   "· {{count}} with open task",
+    "open_tasks_other": "· {{count}} with open tasks",
+    "no_results": "No plants found.",
+    "no_plants":  "No plants yet — add your first plant.",
+    "view_table": "Table view",
+    "view_card":  "Card view",
+    "add_plant":  "＋ Plant",
+    "loading":    "Loading plants …"
+  },
+  "table": {
+    "col_thumb":    "",
+    "col_name":     "Name",
+    "col_category": "Type",
+    "col_location": "Location",
+    "col_bloom":    "Bloom",
+    "col_last_cut": "Last pruning",
+    "col_last_fert":"Last fertilization",
+    "col_task":     "Next task",
+    "col_status":   "Status"
+  },
+  "detail": {
+    "section_images":  "Images",
+    "img_plant":       "Plant",
+    "img_bloom":       "Bloom",
+    "img_leaf":        "Leaf",
+    "section_facts":   "Facts",
+    "fact_type":       "Type",
+    "fact_location":   "Location",
+    "fact_bloom":      "Bloom period",
+    "fact_color":      "Flower color",
+    "fact_age":        "Age",
+    "fact_temp":       "Min. temperature",
+    "section_history": "Care history",
+    "last_cut":        "Last pruning",
+    "last_fert":       "Last fertilization",
+    "section_notes":   "Care notes",
+    "btn_assistant":   "💬 Ask assistant",
+    "btn_edit":        "✏️ Edit",
+    "no_date":         "–"
+  },
+  "status": {
+    "overdue":  "Overdue",
+    "due":      "Due",
+    "upcoming": "Upcoming",
+    "ok":       "OK"
+  },
   "fields": {
     "name_common": "Name",
     "name_botanical": "Botanical Name",

@@ -31,6 +31,8 @@ eggs/
 .eggs/
 lib/
 lib64/
+# Keep frontend src/lib (utility modules)
+!apps/frontend/src/lib/
 parts/
 sdist/
 var/

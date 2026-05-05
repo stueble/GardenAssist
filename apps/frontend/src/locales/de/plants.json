@@ -1,6 +1,56 @@
 {
   "title": "Pflanzen",
   "subtitle": "Alle Pflanzen in deinem Garten.",
+  "overview": {
+    "search_placeholder": "Pflanze suchen …",
+    "count_one":   "{{count}} Pflanze",
+    "count_other": "{{count}} Pflanzen",
+    "open_tasks_one":   "· {{count}} mit offener Aufgabe",
+    "open_tasks_other": "· {{count}} mit offenen Aufgaben",
+    "no_results": "Keine Pflanzen gefunden.",
+    "no_plants":  "Noch keine Pflanzen — füge deine erste Pflanze hinzu.",
+    "view_table": "Tabellenansicht",
+    "view_card":  "Kartenansicht",
+    "add_plant":  "＋ Pflanze",
+    "loading":    "Pflanzen werden geladen …"
+  },
+  "table": {
+    "col_thumb":    "",
+    "col_name":     "Name",
+    "col_category": "Typ",
+    "col_location": "Standort",
+    "col_bloom":    "Blütezeit",
+    "col_last_cut": "Letzter Schnitt",
+    "col_last_fert":"Letzte Düngung",
+    "col_task":     "Nächste Aufgabe",
+    "col_status":   "Status"
+  },
+  "detail": {
+    "section_images":  "Bilder",
+    "img_plant":       "Pflanze",
+    "img_bloom":       "Blüte",
+    "img_leaf":        "Blatt",
+    "section_facts":   "Steckbrief",
+    "fact_type":       "Typ",
+    "fact_location":   "Standort",
+    "fact_bloom":      "Blütezeit",
+    "fact_color":      "Blütenfarbe",
+    "fact_age":        "Alter",
+    "fact_temp":       "Min. Temperatur",
+    "section_history": "Pflege-Historie",
+    "last_cut":        "Letzter Schnitt",
+    "last_fert":       "Letzte Düngung",
+    "section_notes":   "Pflegehinweise",
+    "btn_assistant":   "💬 Assistent fragen",
+    "btn_edit":        "✏️ Bearbeiten",
+    "no_date":         "–"
+  },
+  "status": {
+    "overdue":  "Überfällig",
+    "due":      "Aktuell",
+    "upcoming": "Geplant",
+    "ok":       "OK"
+  },
   "fields": {
     "name_common": "Name",
     "name_botanical": "Botanischer Name",
