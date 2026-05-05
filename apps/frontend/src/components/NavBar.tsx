@@ -50,17 +50,17 @@ export function NavBar() {
         ))}
       </div>
 
-      {/* Settings */}
-      <div className="flex items-center pr-4">
+      {/* Settings icon — 36px wide, flush right, centered over the AI strip below */}
+      <div className="flex items-center justify-center shrink-0" style={{ width: "36px" }}>
         <NavLink
           to="/settings"
           aria-label={t("nav.settings")}
           className={({ isActive }) =>
             cn(
-              "flex items-center justify-center h-9 w-9 rounded-[6px] text-green-pale transition-all",
+              "flex items-center justify-center h-9 rounded-[6px] text-green-pale transition-all",
               isActive
-                ? "opacity-100 bg-white/15"
-                : "opacity-75 hover:opacity-100 hover:bg-white/10"
+                ? "opacity-100 bg-white/15 w-8"   /* 32px: leaves 2px dark-green on each side */
+                : "opacity-75 hover:opacity-100 hover:bg-white/10 w-8"
             )
           }
         >
