@@ -952,43 +952,40 @@ function DetailPanel({ plant, onClose, t }: DetailPanelProps) {
           </div>
         )}
 
-        {/* Schedules / Tasks — sorted by start_week */}
+        {/* Schedules / Tasks — grid so color swatches align vertically */}
         {sortedSchedules.length > 0 && (
           <div>
             <div style={sectionTitleStyle}>{t("detail.section_tasks")}</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            {/* 4-column grid: Icon | Label | Swatch | Period — each column aligns across all rows */}
+            <div style={{
+              display:             "grid",
+              gridTemplateColumns: "20px 1fr 12px auto",
+              alignItems:          "center",
+              rowGap:              "6px",
+              columnGap:           "6px",
+            }}>
               {sortedSchedules.map((s) => (
-                <div
-                  key={s.id}
-                  style={{
-                    display:     "flex",
-                    alignItems:  "center",
-                    gap:         "6px",
-                    padding:     "8px 10px",
-                    background:  "var(--green-mist)",
-                    borderRadius:"8px",
-                  }}
-                >
+                <>
                   {/* Icon */}
-                  <span style={{ fontSize: "13px", flexShrink: 0 }}>
+                  <span key={`${s.id}-icon`} style={{ fontSize: "13px", textAlign: "center" }}>
                     {SCHEDULE_ICON[s.schedule_type] ?? "📌"}
                   </span>
-                  {/* Label — takes all available space */}
-                  <span style={{ fontSize: "12px", fontWeight: 500, flex: 1, color: "var(--text-dark)" }}>
+                  {/* Label */}
+                  <span key={`${s.id}-label`} style={{ fontSize: "12px", fontWeight: 500, color: "var(--text-dark)" }}>
                     {s.label ?? s.schedule_type}
                   </span>
-                  {/* Swatch + month range — right-aligned */}
-                  <div style={{ display: "flex", alignItems: "center", gap: "4px", flexShrink: 0 }}>
-                    <div style={{
-                      width: "10px", height: "10px", borderRadius: "2px",
-                      background: s.color ?? "var(--border)",
-                      border: "1px solid rgba(0,0,0,.1)", flexShrink: 0,
-                    }} />
-                    <span style={{ fontSize: "11px", color: "var(--text-light)", whiteSpace: "nowrap" }}>
-                      {weekRangeLabel(s.start_week, s.end_week)}
-                    </span>
-                  </div>
-                </div>
+                  {/* Color swatch */}
+                  <div key={`${s.id}-swatch`} style={{
+                    width: "10px", height: "10px", borderRadius: "2px",
+                    background: s.color ?? "var(--border)",
+                    border: "1px solid rgba(0,0,0,.1)",
+                    justifySelf: "center",
+                  }} />
+                  {/* Month range */}
+                  <span key={`${s.id}-period`} style={{ fontSize: "11px", color: "var(--text-light)", whiteSpace: "nowrap" }}>
+                    {weekRangeLabel(s.start_week, s.end_week)}
+                  </span>
+                </>
               ))}
             </div>
           </div>
