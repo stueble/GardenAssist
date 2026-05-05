@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { AiPanel } from "@/components/AiPanel";
 import { useAiPanelState } from "@/hooks/useAiPanelState";
+import { PlantEditDialog } from "@/components/PlantEditDialog";
 import { apiClient } from "@/api/client";
 import type { Plant } from "@api/plant";
 import type { Schedule } from "@api/schedule";
@@ -51,6 +52,8 @@ export function PlantsView() {
   const [sortKey,   setSortKey]   = useState<SortKey>("name_common");
   const [sortDir,   setSortDir]   = useState<SortDir>("asc");
   const [selected,  setSelected]  = useState<Plant | null>(null);
+  // null = closed, undefined = new plant, Plant = edit existing
+  const [editTarget, setEditTarget] = useState<Plant | null | undefined>(undefined);
 
   // Load plants on mount
   useEffect(() => {
@@ -323,7 +326,7 @@ export function PlantsView() {
           type="button"
           title={t("overview.add_plant")}
           data-testid="fab-add-plant"
-          onClick={() => {/* wired up in Plant Edit story */}}
+          onClick={() => setEditTarget(null)}
           style={{
             position:       "absolute",
             bottom:         "24px",
@@ -351,28 +354,57 @@ export function PlantsView() {
         </button>
       </div>
 
+      {/* Edit dialog — AC #1: left panel per ADR-006, slides open */}
+      <div
+        data-testid="edit-dialog"
+        style={{
+          width:        editTarget !== undefined ? "360px" : "0",
+          minWidth:     editTarget !== undefined ? "360px" : "0",
+          overflow:     "hidden",
+          background:   "var(--warm-white)",
+          borderLeft:   editTarget !== undefined ? "1px solid var(--border)" : "none",
+          display:      "flex",
+          flexDirection:"column",
+          transition:   "width .3s ease, min-width .3s ease",
+          flexShrink:   0,
+        }}
+      >
+        {editTarget !== undefined && (
+          <PlantEditDialog
+            plant={editTarget}
+            onClose={() => setEditTarget(undefined)}
+            onSaved={(saved) => {
+              // Refresh plant list and close dialog
+              apiClient.getGarden()
+                .then((g) => setPlants(g.plants))
+                .catch(() => {});
+              setEditTarget(undefined);
+              setSelected(saved);
+            }}
+          />
+        )}
+      </div>
+
       {/* Detail panel — right of content, left of AI panel, full height */}
       <div
         data-testid="detail-panel"
         style={{
-          width:        selected ? "300px" : "0",
+          width:        selected && editTarget === undefined ? "300px" : "0",
           overflow:     "hidden",
           background:   "var(--warm-white)",
-          borderLeft:   selected ? "1px solid var(--border)" : "none",
+          borderLeft:   selected && editTarget === undefined ? "1px solid var(--border)" : "none",
           display:      "flex",
           flexDirection:"column",
           transition:   "width .3s ease",
           flexShrink:   0,
         }}
       >
-        {selected && (
+        {selected && editTarget === undefined && (
           <PlantDetailPanel
             plant={selected}
             onClose={() => setSelected(null)}
-            onAssist={(p) => {
-              // AC #7: open AI panel with plant context
-              setAiPanelOpen(true);
-            }}
+            onAssist={() => setAiPanelOpen(true)}
+            onEdit={(p) => { setEditTarget(p); setSelected(null); }}
           />
         )}
       </div>
