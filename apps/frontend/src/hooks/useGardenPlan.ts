@@ -87,8 +87,11 @@ export function useGardenPlan(): GardenPlanState {
     try {
       if (pending.type === "upload") {
         const garden = await apiClient.uploadGardenPlan(pending.file);
+        // Prefer the server URL; the object URL will be revoked when pending clears.
+        // If the server URL fails to load (e.g. proxy not configured), the img
+        // onError handler falls back to the emoji icon gracefully.
         setSavedPlanUrl(garden.plan_url);
-        setSavedPlanName(garden.plan_name);
+        setSavedPlanName(garden.plan_name ?? pending.file.name);
       } else {
         await apiClient.deleteGardenPlan();
         setSavedPlanUrl(null);
