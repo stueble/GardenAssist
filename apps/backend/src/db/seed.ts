@@ -90,6 +90,7 @@ const DEFAULT_PLANTS: Array<{
   watering_zone: string;
   frost_tolerance_min_c: number | null;
   temperature_protected: boolean;
+  description: string | null;
   care_notes: string | null;
   purchase_date: string | null;
   schedules: Array<{
@@ -113,6 +114,7 @@ const DEFAULT_PLANTS: Array<{
     frost_tolerance_min_c: -15,
     temperature_protected: false,
     purchase_date:         "2022-03-15",
+    description:           "Klassische Gartenrose mit üppiger Blüte von Mai bis September. Bevorzugt sonnige, windgeschützte Standorte mit nährstoffreichem, leicht saurem Boden. Robust und langlebig bei richtiger Pflege.",
     care_notes:            "Nach Blüte entblättern. Kein Stickstoff nach August. Winterschutz ab November empfohlen.",
     schedules: [
       { id:"sched-001-bloom",  schedule_type:"bloom",         start_week:18, end_week:38, color:"#e74c3c", label:"Rot" },
@@ -133,6 +135,7 @@ const DEFAULT_PLANTS: Array<{
     frost_tolerance_min_c: -10,
     temperature_protected: false,
     purchase_date:         "2020-04-10",
+    description:           "Immergrüner Zierstrauch mit spektakulärer Frühlingsblüte in Lila und Pink. Benötigt sauren, humusreichen Boden ohne Kalk. Ideal als Solitärpflanze oder in Gruppen an halbschattigen Standorten.",
     care_notes:            "Kalkfreies Substrat wichtig. Rhododendron-Dünger verwenden. Kein Rückschnitt nötig.",
     schedules: [
       { id:"sched-002-bloom", schedule_type:"bloom",         start_week:14, end_week:22, color:"#9b59b6", label:"Lila" },
@@ -151,6 +154,7 @@ const DEFAULT_PLANTS: Array<{
     frost_tolerance_min_c: -20,
     temperature_protected: false,
     purchase_date:         "2016-05-01",
+    description:           "Großblättriger immergrüner Baum mit beeindruckenden weißen Blüten im April und Mai. Wächst langsam, wird aber mit den Jahren ein imposantes Exemplar. Kalkfreier, feuchter Boden ist wichtig.",
     care_notes:            "Kein Rückschnitt nötig. Frühjahrsblüher – nicht vor dem Frost düngen.",
     schedules: [
       { id:"sched-003-bloom",   schedule_type:"bloom",         start_week:14, end_week:19, color:"#ffffff", label:"Weiß" },
@@ -169,6 +173,7 @@ const DEFAULT_PLANTS: Array<{
     frost_tolerance_min_c: -25,
     temperature_protected: false,
     purchase_date:         "2012-03-20",
+    description:           "Bewährte Apfelsorte Elstar mit süß-säuerlichen Früchten, erntereif ab September. Der Baum ist robust, selbstfruchtend und erträgt Frost bis -25°C. Regelmäßiger Schnitt fördert Fruchtqualität und Vitalität.",
     care_notes:            "Schnitt im Winterschlaf. Ausdünnen der Früchte im Juni empfohlen. Sorte: Elstar.",
     schedules: [
       { id:"sched-004-bloom",  schedule_type:"bloom",         start_week:16, end_week:19, color:"#f8c8d0", label:"Zartrosa" },
@@ -189,6 +194,7 @@ const DEFAULT_PLANTS: Array<{
     frost_tolerance_min_c: -30,
     temperature_protected: false,
     purchase_date:         "2017-10-05",
+    description:           "Beliebter immergrüner Nadelbaum für Hecken und Sichtschutz. Wächst gleichmäßig und dicht, verträgt regelmäßigen Schnitt sehr gut. Extrem frosthart und anspruchslos in der Pflege.",
     care_notes:            "Schnitt zweimal jährlich. Nicht zu stark zurückschneiden – braune Stellen treiben nicht wieder aus.",
     schedules: [
       { id:"sched-005-foliage",  schedule_type:"foliage",  start_week:1,  end_week:52, color:"#2d5a1b", label:"Immergrün" },
@@ -260,6 +266,7 @@ async function seed() {
         watering_zone:           plant.watering_zone,
         frost_tolerance_min_c:   plant.frost_tolerance_min_c,
         temperature_protected:   plant.temperature_protected,
+        description:             plant.description,
         care_notes:              plant.care_notes,
         purchase_date:           plant.purchase_date,
         created_at:              NOW,
