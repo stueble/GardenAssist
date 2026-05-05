@@ -59,8 +59,10 @@ export function NavBar() {
           aria-label={t("nav.settings")}
           className={({ isActive }) =>
             cn(
-              "text-green-pale text-[18px] transition-opacity",
-              isActive ? "opacity-100" : "opacity-75 hover:opacity-100"
+              "flex items-center justify-center h-9 w-9 rounded-[6px] text-green-pale transition-all",
+              isActive
+                ? "opacity-100 bg-white/15"
+                : "opacity-75 hover:opacity-100 hover:bg-white/10"
             )
           }
         >
