@@ -117,7 +117,7 @@ const DEFAULT_PLANTS: Array<{
     schedules: [
       { id:"sched-001-bloom",  schedule_type:"bloom",         start_week:18, end_week:38, color:"#e74c3c", label:"Rot" },
       { id:"sched-001-prune1", schedule_type:"pruning",       start_week:9,  end_week:11, color:"#27ae60", label:"Frühlingsschnitt" },
-      { id:"sched-001-prune2", schedule_type:"pruning",       start_week:32, end_week:33, color:"#2ecc71", label:"Sommerschnitt" },
+      { id:"sched-001-prune2", schedule_type:"pruning",       start_week:32, end_week:33, color:"#2ecc71", label:"Herbstschnitt" },
       { id:"sched-001-fert",   schedule_type:"fertilization", start_week:15, end_week:20, color:"#3498db", label:"Düngen" },
     ],
   },
@@ -172,7 +172,7 @@ const DEFAULT_PLANTS: Array<{
     care_notes:            "Schnitt im Winterschlaf. Ausdünnen der Früchte im Juni empfohlen. Sorte: Elstar.",
     schedules: [
       { id:"sched-004-bloom",  schedule_type:"bloom",         start_week:16, end_week:19, color:"#f8c8d0", label:"Zartrosa" },
-      { id:"sched-004-prune",  schedule_type:"pruning",       start_week:6,  end_week:9,  color:"#27ae60", label:"Winterschnitt" },
+      { id:"sched-004-prune",  schedule_type:"pruning",       start_week:6,  end_week:9,  color:"#2ecc71", label:"Herbstschnitt" },
       { id:"sched-004-fert",   schedule_type:"fertilization", start_week:13, end_week:16, color:"#3498db", label:"Düngen" },
       { id:"sched-004-misc",   schedule_type:"misc",          start_week:36, end_week:41, color:"#3498db", label:"Ernte" },
     ],
