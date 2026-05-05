@@ -958,13 +958,7 @@ function DetailPanel({ plant, onClose, t }: DetailPanelProps) {
         {plant.care_notes && (
           <div>
             <div style={sectionTitleStyle}>{t("detail.section_notes")}</div>
-            <div
-              style={{
-                background: "var(--yellow-soft)", border: "1px solid #f0d9a0",
-                borderRadius: "8px", padding: "10px 12px",
-                fontSize: "12px", color: "var(--text-mid)", lineHeight: 1.5,
-              }}
-            >
+            <div style={{ fontSize: "12px", color: "var(--text-mid)", lineHeight: 1.5 }}>
               {plant.care_notes}
             </div>
           </div>
