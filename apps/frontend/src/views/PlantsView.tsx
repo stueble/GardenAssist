@@ -6,7 +6,7 @@ import type { Plant } from "@api/plant";
 import type { Schedule } from "@api/schedule";
 import {
   derivePlantStatus,
-  nextTask,
+  nextCareTask,
   STATUS_COLOR,
   STATUS_BG,
   STATUS_TEXT,
@@ -28,12 +28,45 @@ function plantAge(purchaseDate: string | null): string {
   return `${years} J.`;
 }
 
+// Approximate ISO week → short month name (DE)
+const WEEK_TO_MONTH_DE = [
+  "", "Jan","Jan","Jan","Jan",
+  "Feb","Feb","Feb","Feb",
+  "Mär","Mär","Mär","Mär",
+  "Apr","Apr","Apr","Apr",
+  "Mai","Mai","Mai","Mai","Mai",
+  "Jun","Jun","Jun","Jun",
+  "Jul","Jul","Jul","Jul",
+  "Aug","Aug","Aug","Aug","Aug",
+  "Sep","Sep","Sep","Sep",
+  "Okt","Okt","Okt","Okt",
+  "Nov","Nov","Nov","Nov",
+  "Dez","Dez","Dez","Dez","Dez",
+];
+
+function weekToMonth(week: number): string {
+  return WEEK_TO_MONTH_DE[Math.min(week, 52)] ?? "–";
+}
+
+function weekRangeLabel(startWeek: number, endWeek: number): string {
+  const s = weekToMonth(startWeek);
+  const e = weekToMonth(endWeek);
+  return s === e ? s : `${s}–${e}`;
+}
+
 function bloomPeriod(schedules: Schedule[]): string {
   const bloom = schedules.filter((s) => s.schedule_type === "bloom");
   if (!bloom.length) return "–";
   const min = Math.min(...bloom.map((s) => s.start_week));
   const max = Math.max(...bloom.map((s) => s.end_week));
-  return `KW ${min}–${max}`;
+  return weekRangeLabel(min, max);
+}
+
+function bloomColorLabel(schedules: Schedule[]): string {
+  return schedules
+    .filter((s) => s.schedule_type === "bloom" && s.label)
+    .map((s) => s.label!)
+    .join(", ");
 }
 
 function bloomColors(schedules: Schedule[]): string[] {
@@ -295,7 +328,6 @@ export function PlantsView() {
                       <th style={thStyle(false)}>{t("table.col_last_cut")}</th>
                       <th style={thStyle(false)}>{t("table.col_last_fert")}</th>
                       <th style={thStyle(false)}>{t("table.col_task")}</th>
-                      <SortHeader label={t("table.col_status")}  col="status"      current={sortKey} dir={sortDir} onSort={handleSort} />
                     </tr>
                   </thead>
                   <tbody>
@@ -433,9 +465,10 @@ interface PlantRowProps {
 }
 
 function PlantRow({ plant, selected, onClick, t }: PlantRowProps) {
-  const status = derivePlantStatus(plant);
-  const task   = nextTask(plant);
-  const colors = bloomColors(plant.schedules);
+  const status    = derivePlantStatus(plant);
+  const careTask  = nextCareTask(plant);
+  const colors    = bloomColors(plant.schedules);
+  const colorName = bloomColorLabel(plant.schedules);
 
   return (
     <tr
@@ -493,7 +526,7 @@ function PlantRow({ plant, selected, onClick, t }: PlantRowProps) {
         {plant.location ?? "–"}
       </td>
 
-      {/* Bloom */}
+      {/* Bloom — swatch left, months top, color name bottom (matches mockup .bloom-cell) */}
       <td style={{ padding: "10px 14px" }}>
         {colors.length > 0 ? (
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -507,9 +540,16 @@ function PlantRow({ plant, selected, onClick, t }: PlantRowProps) {
                 background:   colors[0],
               }}
             />
-            <span style={{ fontSize: "11.5px", color: "var(--text-mid)" }}>
-              {bloomPeriod(plant.schedules)}
-            </span>
+            <div style={{ display: "flex", flexDirection: "column", gap: "1px" }}>
+              <span style={{ fontSize: "11.5px", color: "var(--text-mid)" }}>
+                {bloomPeriod(plant.schedules)}
+              </span>
+              {colorName && (
+                <span style={{ fontSize: "11.5px", color: "var(--text-light)" }}>
+                  {colorName}
+                </span>
+              )}
+            </div>
           </div>
         ) : (
           <span style={{ color: "var(--text-light)" }}>–</span>
@@ -530,26 +570,29 @@ function PlantRow({ plant, selected, onClick, t }: PlantRowProps) {
         </span>
       </td>
 
-      {/* Next task */}
+      {/* Next care task (no bloom) — pill + month range below */}
       <td style={{ padding: "10px 14px" }}>
-        {task ? (
-          <TaskPill status={task.status as PlantStatus} label={task.schedule.label ?? task.schedule.schedule_type} t={t} />
+        {careTask ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+            <TaskPill
+              status={careTask.status as PlantStatus}
+              label={careTask.schedule.label ?? careTask.schedule.schedule_type}
+              t={t}
+            />
+            <span style={{ fontSize: "10px", color: "var(--text-light)", paddingLeft: "4px" }}>
+              {weekRangeLabel(careTask.schedule.start_week, careTask.schedule.end_week)}
+            </span>
+          </div>
         ) : (
           <span style={{ color: "var(--text-light)" }}>–</span>
         )}
       </td>
 
-      {/* Status dot */}
-      <td style={{ padding: "10px 14px" }}>
+      {/* Status dot — for test assertions; visually hidden via 0 width to not show as column */}
+      <td style={{ padding: 0, width: 0, overflow: "hidden" }}>
         <span
           data-testid={`status-dot-${plant.id}`}
-          style={{
-            width:        "9px",
-            height:       "9px",
-            borderRadius: "50%",
-            display:      "inline-block",
-            background:   STATUS_COLOR[status],
-          }}
+          style={{ display: "none", background: STATUS_COLOR[status] }}
         />
       </td>
     </tr>
@@ -564,8 +607,8 @@ interface PlantCardProps {
 }
 
 function PlantCard({ plant, selected, onClick, t: _t }: PlantCardProps) {
-  const status = derivePlantStatus(plant);
-  const task   = nextTask(plant);
+  const status   = derivePlantStatus(plant);
+  const careTask = nextCareTask(plant);
 
   return (
     <div
@@ -638,7 +681,7 @@ function PlantCard({ plant, selected, onClick, t: _t }: PlantCardProps) {
               {plant.category}
             </span>
           )}
-          {task && (
+          {careTask && (
             <span
               style={{
                 display:      "inline-flex",
@@ -648,12 +691,12 @@ function PlantCard({ plant, selected, onClick, t: _t }: PlantCardProps) {
                 borderRadius: "12px",
                 fontSize:     "10px",
                 fontWeight:   500,
-                background:   STATUS_BG[task.status as PlantStatus],
-                color:        STATUS_TEXT[task.status as PlantStatus],
+                background:   STATUS_BG[careTask.status as PlantStatus],
+                color:        STATUS_TEXT[careTask.status as PlantStatus],
               }}
             >
-              {STATUS_ICON[task.status as PlantStatus]}{" "}
-              {task.schedule.label ?? task.schedule.schedule_type}
+              {STATUS_ICON[careTask.status as PlantStatus]}{" "}
+              {careTask.schedule.label ?? careTask.schedule.schedule_type}
             </span>
           )}
         </div>

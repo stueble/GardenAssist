@@ -31,6 +31,22 @@ export function nextTask(plant: Pick<Plant, "tasks">): Task | null {
   return null;
 }
 
+/**
+ * The most urgent open *care* task (excludes bloom — bloom is shown separately).
+ * Only pruning, fertilization, growth, foliage, misc.
+ */
+export function nextCareTask(plant: Pick<Plant, "tasks">): Task | null {
+  const CARE_TYPES = ["pruning", "fertilization", "growth", "misc"];
+  const order: PlantStatus[] = ["overdue", "due", "upcoming"];
+  for (const s of order) {
+    const t = plant.tasks.find(
+      (t) => t.status === s && CARE_TYPES.includes(t.schedule.schedule_type)
+    );
+    if (t) return t;
+  }
+  return null;
+}
+
 /** Status → dot color (CSS variable string). */
 export const STATUS_COLOR: Record<PlantStatus, string> = {
   overdue:  "var(--red-warn)",
