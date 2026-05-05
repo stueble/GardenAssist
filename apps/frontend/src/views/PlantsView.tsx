@@ -127,12 +127,32 @@ export function PlantsView() {
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
     return plants.filter(
-      (p) =>
-        !q ||
-        p.name_common.toLowerCase().includes(q) ||
-        (p.name_botanical ?? "").toLowerCase().includes(q) ||
-        (p.location ?? "").toLowerCase().includes(q)
-    );
+      (p) => {
+        if (!q) return true;
+        // Collect all searchable text from all visible columns
+        const careTaskLabel = nextCareTask(p)?.schedule.label ?? "";
+        const taskMonth     = (() => {
+          const t = nextCareTask(p);
+          return t ? weekRangeLabel(t.schedule.start_week, t.schedule.end_week) : "";
+        })();
+        const fields = [
+          p.name_common,
+          p.name_botanical ?? "",
+          p.category ?? "",
+          p.location ?? "",
+          p.health_status ?? "",
+          p.watering_zone ?? "",
+          bloomPeriod(p.schedules),
+          bloomColorLabel(p.schedules),
+          lastJournalDate(p, "pruning"),
+          lastJournalDate(p, "fertilization"),
+          careTaskLabel,
+          taskMonth,
+          // schedule labels for all care tasks
+          ...p.schedules.map((s) => s.label ?? ""),
+        ];
+        return fields.some((f) => f.toLowerCase().includes(q));
+      });
   }, [plants, search]);
 
   // Sort
