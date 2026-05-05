@@ -205,15 +205,16 @@ function PresetEntry({
   draggable, onDragStart, onDragOver, onDrop, onDragEnd,
   onChangeName, onChangeColor, onDelete,
 }: PresetEntryProps) {
-  const colorInputRef = useRef<HTMLInputElement>(null);
+  const colorInputRef  = useRef<HTMLInputElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   return (
     <div
       draggable={draggable}
-      onDragStart={onDragStart}
+      onDragStart={() => { setIsDragging(true); onDragStart(); }}
       onDragOver={onDragOver}
       onDrop={onDrop}
-      onDragEnd={onDragEnd}
+      onDragEnd={() => { setIsDragging(false); onDragEnd(); }}
       data-testid="preset-entry"
       style={{
         display:       "flex",
@@ -225,8 +226,9 @@ function PresetEntry({
           : "1.5px solid var(--border)",
         borderRadius:  "8px",
         padding:       "7px 10px",
-        cursor:        "grab",
-        userSelect:    "none",
+        // Only apply grab cursor and userSelect:none while not interacting with text
+        cursor:        isDragging ? "grabbing" : "grab",
+        userSelect:    isDragging ? "none" : "auto",
       }}
     >
       {/* Color swatch — clicking it opens the hidden color input */}
@@ -264,10 +266,8 @@ function PresetEntry({
           fontFamily:   "var(--font-body)",
           color:        "var(--text-dark)",
           outline:      "none",
-          cursor:       "text",
-          userSelect:   "text",
         }}
-        // Prevent drag from triggering when typing
+        // Prevent drag from starting when clicking into the input
         onMouseDown={(e) => e.stopPropagation()}
         onDragStart={(e) => e.preventDefault()}
       />
