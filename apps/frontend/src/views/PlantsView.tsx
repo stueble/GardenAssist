@@ -891,15 +891,11 @@ function DetailPanel({ plant, onClose, t }: DetailPanelProps) {
           </div>
         </div>
 
-        {/* Facts — Herkunft + Lifecycle statt Alter */}
+        {/* Facts — only origin, lifecycle, temperature */}
         <div>
           <div style={sectionTitleStyle}>{t("detail.section_facts")}</div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
             {[
-              { label: t("detail.fact_type"),      value: plant.category ?? "–" },
-              { label: t("detail.fact_location"),   value: plant.location ?? "–" },
-              { label: t("detail.fact_bloom"),      value: bloom },
-              { label: t("detail.fact_color"),      value: bloomColor },
               { label: t("detail.fact_origin"),     value: plant.origin_type ? t(`origin_type.${plant.origin_type}`) : "–" },
               { label: t("detail.fact_lifecycle"),  value: plant.lifecycle   ? t(`lifecycle.${plant.lifecycle}`)     : "–" },
               { label: t("detail.fact_temp"),       value: plant.frost_tolerance_min_c != null ? `${plant.frost_tolerance_min_c}°C` : "–" },
@@ -911,26 +907,6 @@ function DetailPanel({ plant, onClose, t }: DetailPanelProps) {
                 <div style={{ fontSize: "12.5px", fontWeight: 500, color: "var(--text-dark)" }}>
                   {value}
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Care history */}
-        <div>
-          <div style={sectionTitleStyle}>{t("detail.section_history")}</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-            {[
-              { icon: "✂️", label: t("detail.last_cut"),  value: lastCut  },
-              { icon: "💧", label: t("detail.last_fert"), value: lastFert },
-            ].map(({ icon, label, value }) => (
-              <div
-                key={label}
-                style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 10px", background: "var(--green-mist)", borderRadius: "8px", gap: "8px" }}
-              >
-                <span>{icon}</span>
-                <span style={{ fontSize: "12.5px", fontWeight: 500, flex: 1 }}>{label}</span>
-                <span style={{ fontSize: "11px", color: "var(--text-light)" }}>{value}</span>
               </div>
             ))}
           </div>
@@ -990,6 +966,16 @@ function DetailPanel({ plant, onClose, t }: DetailPanelProps) {
             </div>
           </div>
         )}
+
+        {/* Weitere Infos — collapsible, contains table-redundant fields */}
+        <MoreInfoSection
+          plant={plant}
+          bloom={bloom}
+          bloomColor={bloomColor}
+          lastCut={lastCut}
+          lastFert={lastFert}
+          t={t}
+        />
       </div>
 
       {/* Actions */}
@@ -1010,6 +996,104 @@ function DetailPanel({ plant, onClose, t }: DetailPanelProps) {
         </button>
       </div>
     </>
+  );
+}
+
+// ── MoreInfoSection ───────────────────────────────────────────────────────────
+
+interface MoreInfoProps {
+  plant:      Plant;
+  bloom:      string;
+  bloomColor: string;
+  lastCut:    string;
+  lastFert:   string;
+  t:          ReturnType<typeof useTranslation<"plants">>["t"];
+}
+
+function MoreInfoSection({ plant, bloom, bloomColor, lastCut, lastFert, t }: MoreInfoProps) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div style={{ borderTop: "1px solid var(--border)", marginTop: "4px" }}>
+      {/* Toggle header */}
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        style={{
+          width:          "100%",
+          background:     "none",
+          border:         "none",
+          cursor:         "pointer",
+          display:        "flex",
+          alignItems:     "center",
+          justifyContent: "space-between",
+          padding:        "10px 0 6px",
+          fontSize:       "10px",
+          fontWeight:     700,
+          letterSpacing:  "0.8px",
+          textTransform:  "uppercase",
+          color:          "var(--text-light)",
+        }}
+      >
+        {t("detail.section_more")}
+        <span style={{
+          fontSize:   "11px",
+          transition: "transform .2s",
+          display:    "inline-block",
+          transform:  open ? "rotate(180deg)" : "rotate(0deg)",
+        }}>▾</span>
+      </button>
+
+      {/* Collapsible content */}
+      {open && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px", paddingBottom: "4px" }}>
+
+          {/* Typ + Standort */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+            {[
+              { label: t("detail.fact_type"),     value: plant.category ?? "–" },
+              { label: t("detail.fact_location"),  value: plant.location ?? "–" },
+            ].map(({ label, value }) => (
+              <div key={label} style={{ background: "var(--green-mist)", borderRadius: "8px", padding: "8px 10px" }}>
+                <div style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.5px", textTransform: "uppercase", color: "var(--text-light)", marginBottom: "3px" }}>{label}</div>
+                <div style={{ fontSize: "12.5px", fontWeight: 500, color: "var(--text-dark)" }}>{value}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Blütezeit + Blütenfarbe */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+            {[
+              { label: t("detail.fact_bloom"),  value: bloom },
+              { label: t("detail.fact_color"),  value: bloomColor },
+            ].map(({ label, value }) => (
+              <div key={label} style={{ background: "var(--green-mist)", borderRadius: "8px", padding: "8px 10px" }}>
+                <div style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.5px", textTransform: "uppercase", color: "var(--text-light)", marginBottom: "3px" }}>{label}</div>
+                <div style={{ fontSize: "12.5px", fontWeight: 500, color: "var(--text-dark)" }}>{value}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Pflege-Historie */}
+          <div>
+            <div style={sectionTitleStyle}>{t("detail.section_history")}</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              {[
+                { icon: "✂️", label: t("detail.last_cut"),  value: lastCut  },
+                { icon: "💧", label: t("detail.last_fert"), value: lastFert },
+              ].map(({ icon, label, value }) => (
+                <div key={label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 10px", background: "var(--green-mist)", borderRadius: "8px", gap: "8px" }}>
+                  <span>{icon}</span>
+                  <span style={{ fontSize: "12.5px", fontWeight: 500, flex: 1 }}>{label}</span>
+                  <span style={{ fontSize: "11px", color: "var(--text-light)" }}>{value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+        </div>
+      )}
+    </div>
   );
 }
 
