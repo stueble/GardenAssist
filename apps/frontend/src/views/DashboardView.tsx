@@ -399,7 +399,7 @@ function TodoList({ garden, loading, onTaskResolved }: TodoListProps) {
               gap:        "7px",
               padding:    "10px 14px 10px 12px",
               borderLeft: `3px solid ${STATUS_COLOR[todo.status]}`,
-              background: todo.status === "overdue" ? "var(--red-soft)" : "none",
+              background: todo.status === "overdue" ? "var(--red-soft)" : todo.status === "due" ? "var(--yellow-soft)" : "none",
               transition: "opacity .25s ease, transform .25s ease",
               opacity:    isResolving ? 0 : 1,
               transform:  isResolving ? "translateX(-20px)" : "none",
