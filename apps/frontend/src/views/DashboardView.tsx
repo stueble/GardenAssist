@@ -61,10 +61,16 @@ function relativeTaskSub(
   task: Task,
   status: "overdue" | "due" | "upcoming",
 ): string {
-  if (status === "due")      return "Aktuell";
-  if (status === "upcoming") return "Demnächst";
-  // overdue: count weeks since task.schedule.end_week
-  const cw    = currentWeek();
+  const cw = currentWeek();
+  if (status === "due") return "Aktuell";
+  if (status === "upcoming") {
+    // Weeks until end of the task window
+    const weeksLeft = task.schedule.end_week - cw;
+    if (weeksLeft <= 0) return "Diese Woche";
+    if (weeksLeft === 1) return "In 1 Woche";
+    return `In ${weeksLeft} Wochen`;
+  }
+  // overdue: weeks since end_week
   const weeks = Math.max(1, cw - task.schedule.end_week);
   return weeks === 1 ? "Überfällig seit 1 Woche" : `Überfällig seit ${weeks} Wochen`;
 }
