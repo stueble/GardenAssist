@@ -110,8 +110,9 @@ vi.mock("../api/client", () => ({
       ],
       attachments: [], journal_entries: [],
     }),
-    deletePlant:      vi.fn().mockResolvedValue(undefined),
-    deleteAttachment: vi.fn().mockResolvedValue(undefined),
+    deletePlant:         vi.fn().mockResolvedValue(undefined),
+    deleteAttachment:    vi.fn().mockResolvedValue(undefined),
+    createJournalEntry:  vi.fn().mockResolvedValue({ id: "je-1", entry_type: "done" }),
   },
 }));
 
