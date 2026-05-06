@@ -320,12 +320,12 @@ describe("PlantEditDialog — add schedule entry (AC #2)", () => {
     expect(within(entry).getByTestId("week-end")).toBeInTheDocument();
   });
 
-  it("clicking add-growth creates an entry without color swatch", () => {
+  it("clicking add-growth creates an entry with color swatch (all types have color)", () => {
     renderDialog(null);
     openSection("Wachstum");
     fireEvent.click(screen.getByTestId("add-schedule-growth"));
     const entry = screen.getByTestId("schedule-entry");
-    expect(within(entry).queryByTestId("color-swatch-btn")).not.toBeInTheDocument();
+    expect(within(entry).getByTestId("color-swatch-btn")).toBeInTheDocument();
   });
 });
 
@@ -337,11 +337,11 @@ describe("PlantEditDialog — color picker (AC #3)", () => {
     expect(screen.getByTestId("color-swatch-btn")).toBeInTheDocument();
   });
 
-  it("pruning entry does NOT show color swatch button", () => {
+  it("pruning entry shows color swatch button (all types have color)", () => {
     renderDialog(null);
     openSection("Schnittzeiten");
     fireEvent.click(screen.getByTestId("add-schedule-pruning"));
-    expect(screen.queryByTestId("color-swatch-btn")).not.toBeInTheDocument();
+    expect(screen.getByTestId("color-swatch-btn")).toBeInTheDocument();
   });
 
   it("opening color popup shows presets from Settings (AC #3)", async () => {

@@ -84,12 +84,12 @@ type ScheduleSectionConfig = {
 };
 
 const SCHEDULE_SECTIONS: ScheduleSectionConfig[] = [
-  { type: "bloom",         accent: "#c0392b", hasColor: true,  defaultColor: "#c0392b", i18nSection: "section_bloom",         i18nAdd: "add_bloom"         },
-  { type: "growth",        accent: "#2e7d32", hasColor: false, defaultColor: "#2e7d32", i18nSection: "section_growth",        i18nAdd: "add_growth"        },
-  { type: "foliage",       accent: "#1b5e20", hasColor: true,  defaultColor: "#a8d5a2", i18nSection: "section_foliage",       i18nAdd: "add_foliage"       },
-  { type: "pruning",       accent: "#27ae60", hasColor: false, defaultColor: "#27ae60", i18nSection: "section_pruning",       i18nAdd: "add_pruning"       },
-  { type: "fertilization", accent: "#2980b9", hasColor: false, defaultColor: "#2980b9", i18nSection: "section_fertilization", i18nAdd: "add_fertilization" },
-  { type: "misc",          accent: "#7f8c8d", hasColor: true,  defaultColor: "#e67e22", i18nSection: "section_misc",          i18nAdd: "add_misc"          },
+  { type: "bloom",         accent: "#c0392b", hasColor: true, defaultColor: "#c0392b", i18nSection: "section_bloom",         i18nAdd: "add_bloom"         },
+  { type: "growth",        accent: "#2e7d32", hasColor: true, defaultColor: "#2e7d32", i18nSection: "section_growth",        i18nAdd: "add_growth"        },
+  { type: "foliage",       accent: "#1b5e20", hasColor: true, defaultColor: "#a8d5a2", i18nSection: "section_foliage",       i18nAdd: "add_foliage"       },
+  { type: "pruning",       accent: "#27ae60", hasColor: true, defaultColor: "#27ae60", i18nSection: "section_pruning",       i18nAdd: "add_pruning"       },
+  { type: "fertilization", accent: "#2980b9", hasColor: true, defaultColor: "#2980b9", i18nSection: "section_fertilization", i18nAdd: "add_fertilization" },
+  { type: "misc",          accent: "#7f8c8d", hasColor: true, defaultColor: "#e67e22", i18nSection: "section_misc",          i18nAdd: "add_misc"          },
 ];
 
 function schedulesToRows(schedules: Schedule[]): ScheduleRow[] {
@@ -877,23 +877,31 @@ function ColorPopup({ color, presets, onChange, onClose }: ColorPopupProps) {
       }}
     >
       {presets.length > 0 && (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 8px", marginBottom: "10px" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px 10px", marginBottom: "10px" }}>
           {presets.map((p) => (
             <button
               key={p.color + p.name}
               type="button"
-              title={p.name}
               data-testid={`color-preset-${p.name}`}
               onClick={() => { onChange(p.color, p.name); onClose(); }}
               style={{
-                width: "24px", height: "24px", borderRadius: "4px",
-                border: p.color === color ? "2px solid var(--green-deep)" : "2px solid transparent",
-                boxShadow: p.color === color ? "0 0 0 2px var(--green-pale)" : "none",
-                background: p.color, cursor: "pointer", flexShrink: 0,
-                transition: "transform .12s",
+                display: "flex", flexDirection: "column", alignItems: "center", gap: "4px",
+                background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0,
               }}
-              className="hover:scale-110"
-            />
+            >
+              <span
+                style={{
+                  width: "24px", height: "24px", borderRadius: "4px",
+                  border: p.color === color ? "2px solid var(--green-deep)" : "2px solid transparent",
+                  boxShadow: p.color === color ? "0 0 0 2px var(--green-pale)" : "none",
+                  background: p.color, display: "block", transition: "transform .12s",
+                }}
+                className="hover:scale-110"
+              />
+              <span style={{ fontSize: "9px", color: "var(--text-light)", whiteSpace: "nowrap", maxWidth: "40px", overflow: "hidden", textOverflow: "ellipsis" }}>
+                {p.name}
+              </span>
+            </button>
           ))}
         </div>
       )}
