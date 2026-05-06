@@ -314,13 +314,48 @@ interface TodoListProps {
 }
 
 function TodoList({ garden, loading, onTaskResolved, onPlantSelect }: TodoListProps) {
-  // Keys of items currently animating out
-  const [resolving, setResolving] = useState<Set<string>>(new Set());
+  // Own stable copy of todos — only refreshed from garden when nothing is animating
+  const [stableTodos, setStableTodos] = useState<TodoEntry[]>([]);
+  // Keys currently animating out
+  const [removing, setRemoving] = useState<Set<string>>(new Set());
+
+  // Recompute stableTodos from garden whenever garden changes AND no animation is running
+  const computeTodos = useCallback((g: Garden): TodoEntry[] => {
+    const result: TodoEntry[] = [];
+    for (const plant of g.plants) {
+      const status = derivePlantStatus(plant);
+      if (status === "ok") continue;
+      const task = nextCareTask(plant);
+      if (!task) continue;
+      const key = `${plant.id}-${task.schedule.id}-${task.week}`;
+      const typeLabel: Record<string, string> = {
+        pruning: "Schneiden", fertilization: "Düngen", misc: "Aufgabe",
+      };
+      const taskName = task.schedule.label ?? typeLabel[task.schedule.schedule_type] ?? task.schedule.schedule_type;
+      result.push({
+        key,
+        plant,
+        task,
+        taskLabel: `${plant.name_common} — ${taskName}`,
+        taskSub:   relativeTaskSub(task),
+        status:    status as "overdue" | "due" | "upcoming",
+      });
+    }
+    const order = { overdue: 0, due: 1, upcoming: 2 };
+    result.sort((a, b) => order[a.status] - order[b.status]);
+    return result;
+  }, []);
+
+  useEffect(() => {
+    if (garden && removing.size === 0) {
+      setStableTodos(computeTodos(garden));
+    }
+  }, [garden, removing.size, computeTodos]);
 
   const resolve = useCallback(async (todo: TodoEntry, entryType: "done" | "skipped") => {
     const key = todo.key;
     // Start slide-out animation
-    setResolving((prev) => new Set([...prev, key]));
+    setRemoving((prev) => new Set([...prev, key]));
     try {
       await apiClient.createJournalEntry({
         plant_id:       todo.plant.id,
@@ -332,14 +367,15 @@ function TodoList({ garden, loading, onTaskResolved, onPlantSelect }: TodoListPr
         date:           new Date().toISOString().slice(0, 10),
         attachment_ids: [],
       });
-      // After animation (~300ms), reload
+      // Wait for animation, then remove from stable list and reload garden
       setTimeout(() => {
-        setResolving((prev) => { const s = new Set(prev); s.delete(key); return s; });
+        setStableTodos((prev) => prev.filter((t) => t.key !== key));
+        setRemoving((prev) => { const s = new Set(prev); s.delete(key); return s; });
         onTaskResolved?.();
-      }, 320);
+      }, 380);
     } catch {
-      // Revert animation on error
-      setResolving((prev) => { const s = new Set(prev); s.delete(key); return s; });
+      // Revert on error
+      setRemoving((prev) => { const s = new Set(prev); s.delete(key); return s; });
     }
   }, [onTaskResolved]);
 
@@ -351,33 +387,9 @@ function TodoList({ garden, loading, onTaskResolved, onPlantSelect }: TodoListPr
     );
   }
 
-  if (!garden) return null;
+  if (!garden && stableTodos.length === 0) return null;
 
-  const todos: TodoEntry[] = [];
-  for (const plant of garden.plants) {
-    const status = derivePlantStatus(plant);
-    if (status === "ok") continue;
-    const task = nextCareTask(plant);
-    if (!task) continue;
-    const key = `${plant.id}-${task.schedule.id}-${task.week}`;
-    const typeLabel: Record<string, string> = {
-      pruning: "Schneiden", fertilization: "Düngen", misc: "Aufgabe",
-    };
-    const taskName = task.schedule.label ?? typeLabel[task.schedule.schedule_type] ?? task.schedule.schedule_type;
-    todos.push({
-      key,
-      plant,
-      task,
-      taskLabel: `${plant.name_common} — ${taskName}`,
-      taskSub:   relativeTaskSub(task),
-      status:    status as "overdue" | "due" | "upcoming",
-    });
-  }
-
-  const order = { overdue: 0, due: 1, upcoming: 2 };
-  todos.sort((a, b) => order[a.status] - order[b.status]);
-
-  if (todos.length === 0) {
+  if (stableTodos.length === 0 && !loading) {
     return (
       <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px", color: "var(--text-light)", fontSize: "12px", textAlign: "center" }}>
         ✅ Keine offenen Aufgaben
@@ -396,8 +408,8 @@ function TodoList({ garden, loading, onTaskResolved, onPlantSelect }: TodoListPr
         Aufgaben
       </div>
 
-      {todos.map((todo) => {
-        const isResolving = resolving.has(todo.key);
+      {stableTodos.map((todo) => {
+        const isResolving = removing.has(todo.key);
         return (
           // Outer wrapper: handles slide-out animation (height + opacity + translate)
           <div
