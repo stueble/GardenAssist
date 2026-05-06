@@ -190,11 +190,18 @@ export function DashboardView() {
         <div style={{ height: "1px", background: "var(--border)", flexShrink: 0 }} />
 
         {/* Todo list always in left column */}
-        <TodoList garden={garden} loading={loading} onTaskResolved={() => {
-          apiClient.getGarden()
-            .then((g) => setGarden(g))
-            .catch(() => {});
-        }} />
+        <TodoList
+          garden={garden}
+          loading={loading}
+          onTaskResolved={() => {
+            apiClient.getGarden()
+              .then((g) => setGarden(g))
+              .catch(() => {});
+          }}
+          onPlantSelect={(plant) => {
+            setSelected((prev) => prev?.id === plant.id ? null : plant);
+          }}
+        />
       </div>
 
       {/* ── Center: garden plan + monthly band ── */}
@@ -303,9 +310,10 @@ interface TodoListProps {
   garden:          Garden | null;
   loading:         boolean;
   onTaskResolved?: () => void;
+  onPlantSelect?:  (plant: Plant) => void;
 }
 
-function TodoList({ garden, loading, onTaskResolved }: TodoListProps) {
+function TodoList({ garden, loading, onTaskResolved, onPlantSelect }: TodoListProps) {
   // Keys of items currently animating out
   const [resolving, setResolving] = useState<Set<string>>(new Set());
 
@@ -394,6 +402,7 @@ function TodoList({ garden, loading, onTaskResolved }: TodoListProps) {
           <div
             key={todo.key}
             data-testid="todo-item"
+            onClick={() => onPlantSelect?.(todo.plant)}
             style={{
               display:    "flex",
               gap:        "7px",
@@ -404,6 +413,7 @@ function TodoList({ garden, loading, onTaskResolved }: TodoListProps) {
               opacity:    isResolving ? 0 : 1,
               transform:  isResolving ? "translateX(-20px)" : "none",
               overflow:   "hidden",
+              cursor:     "pointer",
             }}
           >
             {/* Icon column — acts as bullet point */}
@@ -436,7 +446,7 @@ function TodoList({ garden, loading, onTaskResolved }: TodoListProps) {
                     type="button"
                     data-testid="todo-btn-done"
                     disabled={isResolving}
-                    onClick={() => void resolve(todo, "done")}
+                    onClick={(e) => { e.stopPropagation(); void resolve(todo, "done"); }}
                     style={{
                       padding:      "3px 9px",
                       borderRadius: "5px",
@@ -458,7 +468,7 @@ function TodoList({ garden, loading, onTaskResolved }: TodoListProps) {
                     type="button"
                     data-testid="todo-btn-skip"
                     disabled={isResolving}
-                    onClick={() => void resolve(todo, "skipped")}
+                    onClick={(e) => { e.stopPropagation(); void resolve(todo, "skipped"); }}
                     style={{
                       padding:      "3px 9px",
                       borderRadius: "5px",
