@@ -19,6 +19,7 @@
  * - AC #6: Entry count badge shown in section header
  */
 
+import React, { useState } from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
@@ -104,12 +105,57 @@ beforeEach(async () => {
   resetAiPanelState();
 });
 
-function renderDialog(plant: Plant | null = null, onClose = vi.fn(), onSaved = vi.fn()) {
+function renderDialog(
+  plant: Plant | null = null,
+  onClose = vi.fn(),
+  onSaved = vi.fn(),
+  extraProps: Partial<React.ComponentProps<typeof PlantEditDialog>> = {},
+) {
   return render(
     <I18nextProvider i18n={i18n}>
-      <PlantEditDialog plant={plant} onClose={onClose} onSaved={onSaved} />
+      <PlantEditDialog
+        plant={plant}
+        onClose={onClose}
+        onSaved={onSaved}
+        positions={[]}
+        onPositionsChange={vi.fn()}
+        initialPositions={[]}
+        pickMode={false}
+        onPickModeChange={vi.fn()}
+        {...extraProps}
+      />
     </I18nextProvider>
   );
+}
+
+/**
+ * Stateful wrapper for PlantEditDialog — positions state is managed here
+ * so that onPositionsChange calls actually re-render the component.
+ */
+function renderDialogWithState(
+  plant: Plant | null = null,
+  initialPositions: Array<{ x: number; y: number }> = [],
+  extraProps: Partial<React.ComponentProps<typeof PlantEditDialog>> = {},
+) {
+  function Wrapper() {
+    const [positions, setPositions] = useState(initialPositions);
+    return (
+      <I18nextProvider i18n={i18n}>
+        <PlantEditDialog
+          plant={plant}
+          onClose={vi.fn()}
+          onSaved={vi.fn()}
+          positions={positions}
+          onPositionsChange={setPositions}
+          initialPositions={initialPositions}
+          pickMode={false}
+          onPickModeChange={vi.fn()}
+          {...extraProps}
+        />
+      </I18nextProvider>
+    );
+  }
+  return render(<Wrapper />);
 }
 
 /** Opens a collapsible section by clicking the role=button that contains the given text. */
@@ -472,5 +518,104 @@ describe("PlantEditDialog — schedules included in save payload (AC #2)", () =>
     const payload = (apiClient.createPlant as ReturnType<typeof vi.fn>).mock.calls[0][0];
     expect(payload.schedules).toHaveLength(1);
     expect(payload.schedules[0].schedule_type).toBe("bloom");
+  });
+});
+
+// ── story-028: Positions section ─────────────────────────────────────────────
+
+describe("PlantEditDialog — positions section renders (story-028 AC #3)", () => {
+  it("shows Add-Position button after opening section", () => {
+    renderDialog(null);
+    openSection("Positionen im Plan");
+    expect(screen.getByTestId("positions-add-btn")).toBeInTheDocument();
+  });
+
+  it("shows Pick-Mode button", () => {
+    renderDialog(null);
+    openSection("Positionen im Plan");
+    expect(screen.getByTestId("positions-pick-mode-btn")).toBeInTheDocument();
+  });
+});
+
+describe("PlantEditDialog — add position row (story-028 AC #3)", () => {
+  it("clicking add creates a position row with X and Y inputs", () => {
+    renderDialogWithState(null, []);
+    openSection("Positionen im Plan");
+    fireEvent.click(screen.getByTestId("positions-add-btn"));
+    expect(screen.getAllByTestId("position-row")).toHaveLength(1);
+    expect(screen.getByTestId("position-x")).toBeInTheDocument();
+    expect(screen.getByTestId("position-y")).toBeInTheDocument();
+  });
+
+  it("adding two rows creates two position rows", () => {
+    renderDialogWithState(null, []);
+    openSection("Positionen im Plan");
+    fireEvent.click(screen.getByTestId("positions-add-btn"));
+    fireEvent.click(screen.getByTestId("positions-add-btn"));
+    expect(screen.getAllByTestId("position-row")).toHaveLength(2);
+  });
+});
+
+describe("PlantEditDialog — delete position row (story-028 AC #3)", () => {
+  it("delete button removes the position row", () => {
+    renderDialogWithState(null, [{ x: 10, y: 20 }]);
+    openSection("Positionen im Plan");
+    expect(screen.getAllByTestId("position-row")).toHaveLength(1);
+    fireEvent.click(screen.getByTestId("position-delete"));
+    expect(screen.queryAllByTestId("position-row")).toHaveLength(0);
+  });
+});
+
+describe("PlantEditDialog — pick mode toggle (story-028 AC #1)", () => {
+  it("pick mode button calls onPickModeChange(true) when inactive", () => {
+    const onPickModeChange = vi.fn();
+    renderDialog(null, vi.fn(), vi.fn(), { pickMode: false, onPickModeChange });
+    openSection("Positionen im Plan");
+    fireEvent.click(screen.getByTestId("positions-pick-mode-btn"));
+    expect(onPickModeChange).toHaveBeenCalledWith(true);
+  });
+
+  it("pick mode button calls onPickModeChange(false) when active", () => {
+    const onPickModeChange = vi.fn();
+    renderDialog(null, vi.fn(), vi.fn(), { pickMode: true, onPickModeChange });
+    openSection("Positionen im Plan");
+    fireEvent.click(screen.getByTestId("positions-pick-mode-btn"));
+    expect(onPickModeChange).toHaveBeenCalledWith(false);
+  });
+});
+
+describe("PlantEditDialog — positions in save payload (story-028 AC #5)", () => {
+  it("createPlant called with positions from prop", async () => {
+    const { apiClient } = await import("../api/client");
+    const positions = [{ x: 25, y: 40 }, { x: 60, y: 75 }];
+    renderDialog(null, vi.fn(), vi.fn(), { positions });
+    fireEvent.change(screen.getByTestId("field-name"), { target: { value: "Farn" } });
+    fireEvent.click(screen.getByTestId("edit-save"));
+    await waitFor(() => expect(apiClient.createPlant).toHaveBeenCalledOnce());
+    const payload = (apiClient.createPlant as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    expect(payload.positions).toHaveLength(2);
+    expect(payload.positions[0]).toEqual({ x_percent: 25, y_percent: 40 });
+    expect(payload.positions[1]).toEqual({ x_percent: 60, y_percent: 75 });
+  });
+});
+
+describe("PlantEditDialog — positions count badge (story-028 AC #3)", () => {
+  it("count badge shows correct number when positions are provided", () => {
+    const positions = [{ x: 10, y: 20 }, { x: 30, y: 40 }];
+    renderDialog(null, vi.fn(), vi.fn(), { positions });
+    // Badge shows "2" next to section header
+    expect(screen.getByText("2")).toBeInTheDocument();
+  });
+});
+
+describe("PlantEditDialog — pre-filled positions (story-028 AC #3)", () => {
+  it("renders pre-filled position rows when positions prop has entries", () => {
+    const positions = [{ x: 8, y: 34 }];
+    renderDialog(null, vi.fn(), vi.fn(), { positions });
+    openSection("Positionen im Plan");
+    const rows = screen.getAllByTestId("position-row");
+    expect(rows).toHaveLength(1);
+    const xInput = screen.getByTestId("position-x") as HTMLInputElement;
+    expect(Number(xInput.value)).toBe(8);
   });
 });

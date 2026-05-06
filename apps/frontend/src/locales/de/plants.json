@@ -150,6 +150,16 @@
     "yes":               "Ja",
     "no":                "Nein",
     "name_required":     "Name ist erforderlich",
+    "positions": {
+      "section_title":  "Positionen im Plan",
+      "hint":           "Koordinaten auf dem Gartenplan (0–100%). Mehrere Positionen möglich.",
+      "pick_btn_idle":  "📍 Klick-Modus aktivieren",
+      "pick_btn_active":"📍 Klick-Modus aktiv",
+      "add_btn":        "＋ Position hinzufügen",
+      "no_plan":        "Kein Gartenplan vorhanden",
+      "col_x":          "X %",
+      "col_y":          "Y %"
+    },
     "schedule": {
       "section_bloom":       "Blütezeiten",
       "section_growth":      "Wachstum",

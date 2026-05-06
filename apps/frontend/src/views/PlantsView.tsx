@@ -2,7 +2,8 @@ import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { AiPanel } from "@/components/AiPanel";
 import { useAiPanelState } from "@/hooks/useAiPanelState";
-import { PlantEditDialog } from "@/components/PlantEditDialog";
+import { PlantEditDialog, type PositionRow } from "@/components/PlantEditDialog";
+import { GardenPlanWidget } from "@/components/GardenPlanWidget";
 import { apiClient } from "@/api/client";
 import type { Plant } from "@api/plant";
 import type { Schedule } from "@api/schedule";
@@ -55,10 +56,16 @@ export function PlantsView() {
   // null = closed, undefined = new plant, Plant = edit existing
   const [editTarget, setEditTarget] = useState<Plant | null | undefined>(undefined);
 
+  // story-028: plan widget state (owned here so GardenPlanWidget and PlantEditDialog share it)
+  const [planUrl,          setPlanUrl]          = useState<string | null>(null);
+  const [positions,        setPositions]        = useState<PositionRow[]>([]);
+  const [initialPositions, setInitialPositions] = useState<PositionRow[]>([]);
+  const [pickMode,         setPickMode]         = useState(false);
+
   // Load plants on mount
   useEffect(() => {
     apiClient.getGarden()
-      .then((g) => { setPlants(g.plants); setLoading(false); })
+      .then((g) => { setPlants(g.plants); setPlanUrl(g.plan_url); setLoading(false); })
       .catch(() => { setError(true); setLoading(false); });
   }, []);
 
@@ -249,11 +256,21 @@ export function PlantsView() {
           </div>
         )}
 
-        {/* Main area: table/card only (detail panel moved outside content column) */}
+        {/* Main area: garden plan (when editing) or table/card list */}
         <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
 
-          {/* Table view */}
-          {view === "table" && (
+          {/* Garden plan — shown when edit dialog is open (story-028 AC #1) */}
+          {editTarget !== undefined && (
+            <GardenPlanWidget
+              planUrl={planUrl}
+              pins={positions.map((p, i) => ({ x: p.x, y: p.y, label: String(i + 1) }))}
+              pickMode={pickMode}
+              onPick={(x, y) => setPositions((prev) => [...prev, { x, y }])}
+            />
+          )}
+
+          {/* Table view — hidden when edit dialog open */}
+          {editTarget === undefined && view === "table" && (
             <div style={{ flex: 1, overflow: "auto" }} data-testid="plants-table">
               {sorted.length === 0 ? (
                 <EmptyState search={search} t={t} />
@@ -288,8 +305,8 @@ export function PlantsView() {
             </div>
           )}
 
-          {/* Card view */}
-          {view === "card" && (
+          {/* Card view — hidden when edit dialog open */}
+          {editTarget === undefined && view === "card" && (
             <div
               style={{
                 flex:                1,
@@ -326,7 +343,13 @@ export function PlantsView() {
           type="button"
           title={t("overview.add_plant")}
           data-testid="fab-add-plant"
-          onClick={() => setEditTarget(null)}
+          onClick={() => {
+            const empty: PositionRow[] = [];
+            setPositions(empty);
+            setInitialPositions(empty);
+            setPickMode(false);
+            setEditTarget(null);
+          }}
           style={{
             position:       "absolute",
             bottom:         "24px",
@@ -372,15 +395,25 @@ export function PlantsView() {
         {editTarget !== undefined && (
           <PlantEditDialog
             plant={editTarget}
-            onClose={() => setEditTarget(undefined)}
+            onClose={() => {
+              setPickMode(false);
+              setPositions([]);
+              setEditTarget(undefined);
+            }}
             onSaved={(saved) => {
-              // Refresh plant list and close dialog
               apiClient.getGarden()
                 .then((g) => setPlants(g.plants))
                 .catch(() => {});
+              setPickMode(false);
+              setPositions([]);
               setEditTarget(undefined);
               setSelected(saved);
             }}
+            positions={positions}
+            onPositionsChange={setPositions}
+            initialPositions={initialPositions}
+            pickMode={pickMode}
+            onPickModeChange={setPickMode}
           />
         )}
       </div>
@@ -403,7 +436,14 @@ export function PlantsView() {
           <PlantDetailPanel
             plant={selected}
             onClose={() => setSelected(null)}
-            onEdit={(p) => { setEditTarget(p); setSelected(null); }}
+            onEdit={(p) => {
+              const rows: PositionRow[] = (p.positions ?? []).map((pos) => ({ x: pos.x_percent, y: pos.y_percent }));
+              setPositions(rows);
+              setInitialPositions(rows);
+              setPickMode(false);
+              setEditTarget(p);
+              setSelected(null);
+            }}
             onDelete={() => {
               setPlants((prev) => prev.filter((p) => p.id !== selected.id));
               setSelected(null);

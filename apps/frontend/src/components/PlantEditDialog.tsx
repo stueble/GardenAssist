@@ -202,18 +202,32 @@ function formToInput(form: EditForm): PlantInput {
   };
 }
 
+// ── Position row type ─────────────────────────────────────────────────────────
+
+export type PositionRow = { x: number; y: number };
+
 // ── Props ─────────────────────────────────────────────────────────────────────
 
 export interface PlantEditDialogProps {
   /** null = new plant, Plant = edit existing */
-  plant:    Plant | null;
-  onClose:  () => void;
-  onSaved:  (plant: Plant) => void;
+  plant:               Plant | null;
+  onClose:             () => void;
+  onSaved:             (plant: Plant) => void;
+  /** story-028: positions are owned by PlantsView so GardenPlanWidget can use them */
+  positions:           PositionRow[];
+  onPositionsChange:   (rows: PositionRow[]) => void;
+  initialPositions:    PositionRow[];   // snapshot at dialog open — for dirty check
+  pickMode:            boolean;
+  onPickModeChange:    (active: boolean) => void;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export function PlantEditDialog({ plant, onClose, onSaved }: PlantEditDialogProps) {
+export function PlantEditDialog({
+  plant, onClose, onSaved,
+  positions, onPositionsChange, initialPositions,
+  pickMode, onPickModeChange,
+}: PlantEditDialogProps) {
   const { t } = useTranslation("plants");
 
   const [form,         setForm]         = useState<EditForm>(() => plantToForm(plant));
@@ -263,7 +277,8 @@ export function PlantEditDialog({ plant, onClose, onSaved }: PlantEditDialogProp
 
   const dirty =
     JSON.stringify(form) !== JSON.stringify(plantToForm(plant)) ||
-    JSON.stringify(scheduleRows) !== JSON.stringify(schedulesToRows(plant?.schedules ?? []));
+    JSON.stringify(scheduleRows) !== JSON.stringify(schedulesToRows(plant?.schedules ?? [])) ||
+    JSON.stringify(positions) !== JSON.stringify(initialPositions);
 
   function handleClose() {
     if (dirty && !confirm(t("edit.unsaved_confirm"))) return;
@@ -285,7 +300,8 @@ export function PlantEditDialog({ plant, onClose, onSaved }: PlantEditDialogProp
     try {
       const input: ReturnType<typeof formToInput> = {
         ...formToInput(form),
-        schedules: rowsToScheduleInputs(scheduleRows),
+        schedules:  rowsToScheduleInputs(scheduleRows),
+        positions:  positions.map((r) => ({ x_percent: r.x, y_percent: r.y })),
       };
       const saved = plant
         ? await apiClient.updatePlant(plant.id, input)
@@ -372,8 +388,22 @@ export function PlantEditDialog({ plant, onClose, onSaved }: PlantEditDialogProp
         </EditSection>
 
         {/* Placeholder sections for later stories */}
-        <EditSection title="Bilder"     accent="#4a78c0" />
-        <EditSection title="Positionen" accent="#8b6f47" />
+        <EditSection title="Bilder" accent="#4a78c0" />
+
+        {/* Positionen section — story-028 */}
+        <EditSection
+          title={t("edit.positions.section_title")}
+          accent="#7d3c98"
+          count={positions.length}
+        >
+          <PositionenSection
+            positions={positions}
+            pickMode={pickMode}
+            onPickModeChange={onPickModeChange}
+            onPositionsChange={onPositionsChange}
+            t={t}
+          />
+        </EditSection>
 
         {/* Schedule sections — story-027 (AC #1–#6) */}
         {SCHEDULE_SECTIONS.map((cfg) => (
@@ -828,6 +858,160 @@ function GrunddatenFields({
           style={fieldTextareaStyle}
         />
       </FieldRow>
+    </div>
+  );
+}
+
+// ── PositionenSection ─────────────────────────────────────────────────────────
+
+interface PositionenSectionProps {
+  positions:          PositionRow[];
+  pickMode:           boolean;
+  onPickModeChange:   (active: boolean) => void;
+  onPositionsChange:  (rows: PositionRow[]) => void;
+  t:                  TFunction<"plants">;
+}
+
+function PositionenSection({ positions, pickMode, onPickModeChange, onPositionsChange, t }: PositionenSectionProps) {
+  function updateRow(idx: number, field: "x" | "y", raw: string) {
+    const v = parseFloat(raw);
+    if (isNaN(v)) return;
+    const clamped = Math.max(0, Math.min(100, v));
+    onPositionsChange(positions.map((r, i) => i === idx ? { ...r, [field]: clamped } : r));
+  }
+
+  function deleteRow(idx: number) {
+    onPositionsChange(positions.filter((_, i) => i !== idx));
+  }
+
+  function addRow() {
+    onPositionsChange([...positions, { x: 50, y: 50 }]);
+  }
+
+  return (
+    <div>
+      {/* Hint */}
+      <div style={{ fontSize: "11px", color: "var(--text-light)", marginBottom: "10px", lineHeight: 1.5 }}>
+        {t("edit.positions.hint")}
+      </div>
+
+      {/* Pick-mode toggle */}
+      <button
+        type="button"
+        data-testid="positions-pick-mode-btn"
+        onClick={() => onPickModeChange(!pickMode)}
+        style={{
+          display:        "flex",
+          alignItems:     "center",
+          justifyContent: "center",
+          gap:            "6px",
+          background:     pickMode ? "var(--green-deep)" : "none",
+          border:         pickMode ? "1.5px solid var(--green-deep)" : "1.5px dashed var(--border)",
+          borderRadius:   "8px",
+          padding:        "7px 12px",
+          fontSize:       "12px",
+          fontWeight:     500,
+          fontFamily:     "var(--font-body)",
+          color:          pickMode ? "white" : "var(--text-light)",
+          cursor:         "pointer",
+          width:          "100%",
+          marginBottom:   "10px",
+          transition:     "all .15s",
+        }}
+      >
+        {pickMode ? t("edit.positions.pick_btn_active") : t("edit.positions.pick_btn_idle")}
+      </button>
+
+      {/* Position rows */}
+      {positions.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "10px" }}>
+          {positions.map((row, idx) => (
+            <div
+              key={idx}
+              data-testid="position-row"
+              style={{
+                display:      "flex",
+                alignItems:   "center",
+                gap:          "6px",
+                background:   "var(--green-mist)",
+                border:       "1.5px solid var(--border)",
+                borderRadius: "8px",
+                padding:      "7px 10px",
+              }}
+            >
+              {/* Number label */}
+              <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--text-light)", minWidth: "16px" }}>
+                {idx + 1}
+              </span>
+              {/* X input */}
+              <span style={{ fontSize: "11px", color: "var(--text-light)" }}>X</span>
+              <input
+                type="number"
+                min={0} max={100} step={0.1}
+                value={row.x}
+                data-testid="position-x"
+                onChange={(e) => updateRow(idx, "x", e.target.value)}
+                style={{
+                  flex: 1, background: "white", border: "1.5px solid var(--border)",
+                  borderRadius: "6px", padding: "4px 6px", fontSize: "12px",
+                  fontFamily: "var(--font-body)", color: "var(--text-dark)",
+                  outline: "none", textAlign: "center", minWidth: 0,
+                }}
+              />
+              <span style={{ fontSize: "12px", color: "var(--text-light)" }}>%</span>
+              <span style={{ fontSize: "12px", color: "var(--text-light)", margin: "0 2px" }}>·</span>
+              {/* Y input */}
+              <span style={{ fontSize: "11px", color: "var(--text-light)" }}>Y</span>
+              <input
+                type="number"
+                min={0} max={100} step={0.1}
+                value={row.y}
+                data-testid="position-y"
+                onChange={(e) => updateRow(idx, "y", e.target.value)}
+                style={{
+                  flex: 1, background: "white", border: "1.5px solid var(--border)",
+                  borderRadius: "6px", padding: "4px 6px", fontSize: "12px",
+                  fontFamily: "var(--font-body)", color: "var(--text-dark)",
+                  outline: "none", textAlign: "center", minWidth: 0,
+                }}
+              />
+              <span style={{ fontSize: "12px", color: "var(--text-light)" }}>%</span>
+              {/* Delete */}
+              <button
+                type="button"
+                data-testid="position-delete"
+                onClick={() => deleteRow(idx)}
+                style={{
+                  background: "none", border: "none", cursor: "pointer",
+                  color: "var(--text-light)", fontSize: "13px", lineHeight: 1,
+                  padding: 0, flexShrink: 0,
+                }}
+                className="hover:text-red-warn"
+                aria-label="Position löschen"
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Add button */}
+      <button
+        type="button"
+        data-testid="positions-add-btn"
+        onClick={addRow}
+        style={{
+          display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
+          background: "none", border: "1.5px dashed var(--border)", borderRadius: "8px",
+          padding: "7px 12px", fontSize: "12px", fontWeight: 500,
+          fontFamily: "var(--font-body)", color: "var(--text-light)",
+          cursor: "pointer", width: "100%", transition: "all .15s",
+        }}
+        className="hover:border-green-mid hover:text-green-deep hover:bg-green-mist"
+      >
+        {t("edit.positions.add_btn")}
+      </button>
     </div>
   );
 }

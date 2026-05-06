@@ -150,6 +150,16 @@
     "yes":               "Yes",
     "no":                "No",
     "name_required":     "Name is required",
+    "positions": {
+      "section_title":  "Positions on plan",
+      "hint":           "Coordinates on the garden plan (0–100%). Multiple positions supported.",
+      "pick_btn_idle":  "📍 Enable pick mode",
+      "pick_btn_active":"📍 Pick mode active",
+      "add_btn":        "＋ Add position",
+      "no_plan":        "No garden plan uploaded",
+      "col_x":          "X %",
+      "col_y":          "Y %"
+    },
     "schedule": {
       "section_bloom":       "Bloom periods",
       "section_growth":      "Growth",
