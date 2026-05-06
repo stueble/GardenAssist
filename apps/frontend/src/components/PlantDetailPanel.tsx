@@ -227,32 +227,71 @@ export function PlantDetailPanel({ plant, onClose, onEdit, onDelete }: PlantDeta
         )}
 
         {/* Images — AC #2 */}
-        <div>
-          <div style={sectionTitleStyle}>{t("detail.section_images")}</div>
-          <div style={{ display: "flex", gap: "8px" }}>
-            {[
-              { emoji: plant.icon ?? "🌿", label: t("detail.img_plant") },
-              { emoji: "🌸",               label: t("detail.img_bloom") },
-              { emoji: "🍃",               label: t("detail.img_leaf")  },
-            ].map(({ emoji, label }) => (
-              <div
-                key={label}
-                style={{
-                  flex: 1, aspectRatio: "1", borderRadius: "10px",
-                  background: "var(--green-mist)", border: "1.5px solid var(--border)",
-                  display: "flex", flexDirection: "column",
-                  alignItems: "center", justifyContent: "center",
-                  gap: "4px", fontSize: "26px", cursor: "pointer",
-                }}
-              >
-                {emoji}
-                <span style={{ fontSize: "9px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", color: "var(--text-light)" }}>
-                  {label}
-                </span>
+        {(() => {
+          const imgs = plant.attachments.filter((a) => a.attachment_type === "image");
+          // Pick first of each category
+          const byCategory = (cat: string) => imgs.find((a) => a.category === cat);
+          const slots = [
+            { label: t("detail.img_plant"), preferred: byCategory("main")  },
+            { label: t("detail.img_bloom"), preferred: byCategory("bloom") },
+            { label: t("detail.img_leaf"),  preferred: byCategory("leaf")  },
+          ];
+          // Fill empty slots with remaining images in order, no duplicates
+          const used = new Set(slots.map((s) => s.preferred?.id).filter(Boolean));
+          const remaining = imgs.filter((a) => !used.has(a.id));
+          const resolved = slots.map((s) => {
+            if (s.preferred) return { label: s.label, url: s.preferred.url };
+            const fallback = remaining.shift();
+            if (fallback) used.add(fallback.id);
+            return { label: s.label, url: fallback?.url ?? null };
+          });
+          return (
+            <div>
+              <div style={sectionTitleStyle}>{t("detail.section_images")}</div>
+              <div style={{ display: "flex", gap: "8px" }}>
+                {resolved.map(({ label, url }) => (
+                  <div
+                    key={label}
+                    style={{
+                      flex: 1, aspectRatio: "1", borderRadius: "10px",
+                      background: "var(--green-mist)", border: "1.5px solid var(--border)",
+                      display: "flex", flexDirection: "column",
+                      alignItems: "center", justifyContent: "center",
+                      gap: "4px", overflow: "hidden", position: "relative",
+                    }}
+                  >
+                    {url ? (
+                      <img
+                        src={url}
+                        alt={label}
+                        style={{ width: "100%", height: "100%", objectFit: "cover", position: "absolute", inset: 0 }}
+                      />
+                    ) : (
+                      <>
+                        <span style={{ fontSize: "26px" }}>
+                          {label === t("detail.img_plant") ? (plant.icon ?? "🌿") : label === t("detail.img_bloom") ? "🌸" : "🍃"}
+                        </span>
+                        <span style={{ fontSize: "9px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", color: "var(--text-light)" }}>
+                          {label}
+                        </span>
+                      </>
+                    )}
+                    {url && (
+                      <span style={{
+                        position: "absolute", bottom: "4px", left: 0, right: 0,
+                        textAlign: "center", fontSize: "9px", fontWeight: 600,
+                        textTransform: "uppercase", letterSpacing: "0.5px",
+                        color: "white", textShadow: "0 1px 3px rgba(0,0,0,.5)",
+                      }}>
+                        {label}
+                      </span>
+                    )}
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
+          );
+        })()}
 
         {/* Facts — AC #3 */}
         <div>
