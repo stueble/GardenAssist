@@ -882,6 +882,7 @@ function ColorPopup({ color, presets, onChange, onClose }: ColorPopupProps) {
             <button
               key={p.color + p.name}
               type="button"
+              title={p.name}
               data-testid={`color-preset-${p.name}`}
               onClick={() => { onChange(p.color, p.name); onClose(); }}
               style={{
