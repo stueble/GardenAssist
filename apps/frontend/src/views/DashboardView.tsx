@@ -61,7 +61,7 @@ function relativeTaskSub(
   task: Task,
   status: "overdue" | "due" | "upcoming",
 ): string {
-  if (status === "due")      return "Jetzt fällig";
+  if (status === "due")      return "Aktuell";
   if (status === "upcoming") return "Demnächst";
   // overdue: count weeks since task.schedule.end_week
   const cw    = currentWeek();
@@ -86,8 +86,8 @@ function plantToPin(plant: Plant, posIdx: number, selectedId: string | null): Pl
     y:        pos.y_percent,
     emoji:    plant.icon ?? "🌿",
     name:     plant.name_common,
-    color:    "rgba(255,255,255,.15)",
-    hasTask:  status === "overdue" || status === "due",
+    color:      "rgba(255,255,255,.15)",
+    taskStatus: (status === "overdue" || status === "due") ? status : undefined,
     selected: selectedId === plant.id,
     tooltip:  { status: statusLabel, nextTask: taskStr },
   };

@@ -23,7 +23,7 @@ export interface PlanPin {
   emoji?:     string;   // shown inside pin circle — used in Dashboard mode
   name?:      string;   // plant name — shown as label below pin + in tooltip
   color?:     string;   // pin background color; default: var(--green-deep)
-  hasTask?:   boolean;  // red dot indicator (overdue / current task)
+  taskStatus?: "overdue" | "due";  // dot indicator: red=overdue, yellow=due
   selected?:  boolean;  // green highlight ring
   /** Tooltip content — shown on hover */
   tooltip?: {
@@ -449,8 +449,8 @@ export function GardenPlanWidget({
                 }}>
                   {isDashboard ? pin.emoji : pin.label}
 
-                  {/* Red dot for overdue / has-task (AC #3) */}
-                  {pin.hasTask && (
+                  {/* Status dot: red=overdue, yellow=due (AC #3) */}
+                  {pin.taskStatus && (
                     <div style={{
                       position:     "absolute",
                       top:          "-2px",
@@ -458,7 +458,7 @@ export function GardenPlanWidget({
                       width:        "11px",
                       height:       "11px",
                       borderRadius: "50%",
-                      background:   "var(--red-warn)",
+                      background:   pin.taskStatus === "overdue" ? "var(--red-warn)" : "var(--yellow-warn)",
                       border:       "2px solid white",
                     }} />
                   )}
