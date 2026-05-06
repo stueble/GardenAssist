@@ -371,8 +371,8 @@ function TodoList({ garden, loading, onTaskResolved }: TodoListProps) {
             data-testid="todo-item"
             style={{
               display:    "flex",
-              gap:        "10px",
-              padding:    "10px 14px 10px 18px",
+              gap:        "7px",
+              padding:    "10px 14px 10px 12px",
               borderLeft: `3px solid ${STATUS_COLOR[todo.status]}`,
               background: todo.status === "overdue" ? "var(--red-soft)" : "none",
               transition: "opacity .25s ease, transform .25s ease",
