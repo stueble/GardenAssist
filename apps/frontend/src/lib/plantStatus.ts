@@ -23,15 +23,44 @@ function isCareTask(t: Task): boolean {
   return CARE_TYPES.includes(t.schedule.schedule_type);
 }
 
+/** Current ISO week number (1–53). */
+function currentIsoWeek(): number {
+  const now  = new Date();
+  const jan4 = new Date(now.getFullYear(), 0, 4);
+  const diff = now.getTime() - jan4.getTime();
+  return Math.ceil((diff / 86400000 + jan4.getDay() + 1) / 7);
+}
+
 /**
- * Derives plant status from care tasks only (excludes bloom/foliage).
+ * Derives the status of a schedule window relative to the current week.
+ * - overdue:  end_week < currentWeek  (window has passed)
+ * - due:      start_week <= currentWeek <= end_week  (currently active)
+ * - upcoming: start_week > currentWeek  (not yet started)
+ */
+function scheduleWindowStatus(schedule: Task["schedule"]): PlantStatus {
+  const cw = currentIsoWeek();
+  if (schedule.end_week < cw)   return "overdue";
+  if (schedule.start_week > cw) return "upcoming";
+  return "due";
+}
+
+/**
+ * Derives plant status from care schedule windows (not per-week task entries).
  * Priority: overdue > due > upcoming > ok
  */
 export function derivePlantStatus(plant: Pick<Plant, "tasks">): PlantStatus {
-  const tasks = plant.tasks.filter(isCareTask);
-  if (tasks.some((t) => t.status === "overdue"))  return "overdue";
-  if (tasks.some((t) => t.status === "due"))       return "due";
-  if (tasks.some((t) => t.status === "upcoming"))  return "upcoming";
+  // Deduplicate by schedule id — one status per schedule window
+  const seen = new Set<string>();
+  const statuses: PlantStatus[] = [];
+  for (const t of plant.tasks) {
+    if (!isCareTask(t)) continue;
+    if (seen.has(t.schedule.id)) continue;
+    seen.add(t.schedule.id);
+    statuses.push(scheduleWindowStatus(t.schedule));
+  }
+  if (statuses.includes("overdue"))  return "overdue";
+  if (statuses.includes("due"))      return "due";
+  if (statuses.includes("upcoming")) return "upcoming";
   return "ok";
 }
 
@@ -40,13 +69,24 @@ export function nextTask(plant: Pick<Plant, "tasks">): Task | null {
   return nextCareTask(plant);
 }
 
-/** The most urgent open care task (pruning, fertilization, growth, misc). */
+/**
+ * The most urgent open care task based on schedule window status.
+ * Returns one representative task per schedule (the first occurrence).
+ */
 export function nextCareTask(plant: Pick<Plant, "tasks">): Task | null {
+  const seen = new Set<string>();
+  // Collect one task per schedule, deduplicated
+  const careTasks: Task[] = [];
+  for (const t of plant.tasks) {
+    if (!isCareTask(t)) continue;
+    if (seen.has(t.schedule.id)) continue;
+    seen.add(t.schedule.id);
+    careTasks.push(t);
+  }
+  // Sort by window status: overdue > due > upcoming
   const order: PlantStatus[] = ["overdue", "due", "upcoming"];
   for (const s of order) {
-    const t = plant.tasks.find(
-      (t) => t.status === s && isCareTask(t)
-    );
+    const t = careTasks.find((t) => scheduleWindowStatus(t.schedule) === s);
     if (t) return t;
   }
   return null;

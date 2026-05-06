@@ -56,23 +56,23 @@ const MONTHS_DE = ["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt",
  * - due:     "Jetzt fällig · Pflanzename"
  * - upcoming:"Demnächst · Pflanzename"
  */
-/** Returns just the time/status part — location is appended in the render. */
-function relativeTaskSub(
-  task: Task,
-  status: "overdue" | "due" | "upcoming",
-): string {
+/** Returns the time/status part based on schedule window vs. current week. */
+function relativeTaskSub(task: Task): string {
   const cw = currentWeek();
-  if (status === "due") return "Aktuell";
-  if (status === "upcoming") {
-    // Weeks until end of the task window
-    const weeksLeft = task.schedule.end_week - cw;
-    if (weeksLeft <= 0) return "Diese Woche";
-    if (weeksLeft === 1) return "In 1 Woche";
+  const { start_week, end_week } = task.schedule;
+  if (end_week < cw) {
+    // overdue: window has passed
+    const weeks = Math.max(1, cw - end_week);
+    return weeks === 1 ? "Überfällig seit 1 Woche" : `Überfällig seit ${weeks} Wochen`;
+  }
+  if (start_week > cw) {
+    // upcoming: not yet started — weeks until end of window
+    const weeksLeft = end_week - cw;
+    if (weeksLeft <= 1) return "In 1 Woche";
     return `In ${weeksLeft} Wochen`;
   }
-  // overdue: weeks since end_week
-  const weeks = Math.max(1, cw - task.schedule.end_week);
-  return weeks === 1 ? "Überfällig seit 1 Woche" : `Überfällig seit ${weeks} Wochen`;
+  // due: currently within window
+  return "Aktuell";
 }
 
 /** Build a PlanPin from a plant position for the Dashboard. */
@@ -342,7 +342,7 @@ function TodoList({ garden, loading, onTaskResolved }: TodoListProps) {
       plant,
       task,
       taskLabel: `${plant.name_common} — ${taskName}`,
-      taskSub:   relativeTaskSub(task, status as "overdue" | "due" | "upcoming"),
+      taskSub:   relativeTaskSub(task),
       status:    status as "overdue" | "due" | "upcoming",
     });
   }
