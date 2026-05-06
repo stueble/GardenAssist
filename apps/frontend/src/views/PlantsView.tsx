@@ -681,6 +681,11 @@ function PlantCard({ plant, selected, onClick, t: _t }: PlantCardProps) {
   const status   = derivePlantStatus(plant);
   const careTask = nextCareTask(plant);
 
+  // First image attachment (prefer thumbnail_attachment_id, else first image)
+  const firstImage = plant.thumbnail_attachment_id
+    ? plant.attachments.find((a) => a.id === plant.thumbnail_attachment_id && a.attachment_type === "image")
+    : plant.attachments.find((a) => a.attachment_type === "image");
+
   return (
     <div
       onClick={onClick}
@@ -708,9 +713,18 @@ function PlantCard({ plant, selected, onClick, t: _t }: PlantCardProps) {
           justifyContent: "center",
           fontSize:       "42px",
           position:       "relative",
+          overflow:       "hidden",
         }}
       >
-        {plant.icon ?? "🌿"}
+        {firstImage ? (
+          <img
+            src={firstImage.url}
+            alt={plant.name_common}
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          />
+        ) : (
+          plant.icon ?? "🌿"
+        )}
         <div
           style={{
             position:     "absolute",
