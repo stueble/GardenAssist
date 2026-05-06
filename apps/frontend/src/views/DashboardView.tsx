@@ -399,49 +399,54 @@ function TodoList({ garden, loading, onTaskResolved, onPlantSelect }: TodoListPr
       {todos.map((todo) => {
         const isResolving = resolving.has(todo.key);
         return (
+          // Outer wrapper: handles slide-out animation (height + opacity + translate)
           <div
             key={todo.key}
             data-testid="todo-item"
             onClick={() => onPlantSelect?.(todo.plant)}
             style={{
+              maxHeight:  isResolving ? "0" : "200px",
+              opacity:    isResolving ? 0 : 1,
+              transform:  isResolving ? "translateX(-24px)" : "none",
+              overflow:   "hidden",
+              transition: "max-height .35s ease, opacity .25s ease, transform .25s ease",
+              cursor:     "pointer",
+            }}
+          >
+            {/* Inner: visual styling (border, background, layout) */}
+            <div style={{
               display:    "flex",
               gap:        "7px",
               padding:    "10px 14px 10px 12px",
               borderLeft: `3px solid ${STATUS_COLOR[todo.status]}`,
               background: todo.status === "overdue" ? "var(--red-soft)" : todo.status === "due" ? "var(--yellow-soft)" : "none",
-              transition: "opacity .25s ease, transform .25s ease",
-              opacity:    isResolving ? 0 : 1,
-              transform:  isResolving ? "translateX(-20px)" : "none",
-              overflow:   "hidden",
-              cursor:     "pointer",
-            }}
-          >
-            {/* Icon column — acts as bullet point */}
-            <div style={{
-              width:      "20px",
-              flexShrink: 0,
-              fontSize:   "15px",
-              lineHeight: "1.35",
-              paddingTop: "1px",
-              userSelect: "none",
             }}>
-              {SCHEDULE_ICON[todo.task.schedule.schedule_type] ?? "📋"}
-            </div>
-
-            {/* Content column */}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              {/* Line 1: plant name — task */}
-              <div style={{ fontSize: "13px", fontWeight: 500, color: "var(--text-dark)", lineHeight: 1.35, marginBottom: "2px" }}>
-                {todo.taskLabel}
+              {/* Icon column — bullet point */}
+              <div style={{
+                width:      "20px",
+                flexShrink: 0,
+                fontSize:   "15px",
+                lineHeight: "1.35",
+                paddingTop: "1px",
+                userSelect: "none",
+              }}>
+                {SCHEDULE_ICON[todo.task.schedule.schedule_type] ?? "📋"}
               </div>
 
-              {/* Line 2: relative time · location */}
-              <div style={{ fontSize: "11px", color: "var(--text-light)", marginBottom: "7px" }}>
-                {todo.taskSub}{todo.plant.location ? ` · ${todo.plant.location}` : ""}
-              </div>
+              {/* Content column */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                {/* Line 1: plant name — task */}
+                <div style={{ fontSize: "13px", fontWeight: 500, color: "var(--text-dark)", lineHeight: 1.35, marginBottom: "2px" }}>
+                  {todo.taskLabel}
+                </div>
 
-              {/* Action buttons */}
-              <div style={{ display: "flex", gap: "5px" }}>
+                {/* Line 2: relative time · location */}
+                <div style={{ fontSize: "11px", color: "var(--text-light)", marginBottom: "7px" }}>
+                  {todo.taskSub}{todo.plant.location ? ` · ${todo.plant.location}` : ""}
+                </div>
+
+                {/* Action buttons */}
+                <div style={{ display: "flex", gap: "5px" }}>
                   <button
                     type="button"
                     data-testid="todo-btn-done"
@@ -486,7 +491,8 @@ function TodoList({ garden, loading, onTaskResolved, onPlantSelect }: TodoListPr
                     → Überspringen
                   </button>
                 </div>
-            </div>{/* /content column */}
+              </div>
+            </div>
           </div>
         );
       })}
