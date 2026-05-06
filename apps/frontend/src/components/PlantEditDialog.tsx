@@ -14,10 +14,12 @@
  * Later stories add: Bilder, Positionen, Schedule sections (story-027, #028, #029).
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import type { Plant } from "@api/plant";
+import type { Schedule, ScheduleType } from "@api/schedule";
+import type { ColorPreset } from "@api/color-preset";
 import type { PlantInput } from "@api/api";
 import { apiClient } from "@/api/client";
 
@@ -41,6 +43,79 @@ function autoIcon(category: string | null): string {
   if (c.includes("blume"))       return "🌼";
   if (c.includes("einjährig"))   return "🌱";
   return "🌿";
+}
+
+// ── Schedule helpers ──────────────────────────────────────────────────────────
+
+const MONTH_ABBR = ["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"];
+/** 48 week labels: W1 Jan … W4 Dez */
+export const WEEK_LABELS: string[] = MONTH_ABBR.flatMap((m) =>
+  [1,2,3,4].map((w) => `W${w} ${m}`)
+);
+
+/** week number (1-based ISO) → index in WEEK_LABELS (0-based) */
+export function weekToIdx(week: number): number {
+  return Math.max(0, Math.min(47, week - 1));
+}
+/** index (0-based) → ISO week number (1-based, 1–48) */
+export function idxToWeek(idx: number): number {
+  return idx + 1;
+}
+
+/** Local form representation of one schedule entry. */
+export type ScheduleRow = {
+  /** Client-generated UUID for new entries; server id for existing ones. */
+  id:           string;
+  scheduleType: ScheduleType;
+  startIdx:   number;   // 0-based index into WEEK_LABELS
+  endIdx:     number;   // 0-based index into WEEK_LABELS
+  color:      string;
+  label:      string;
+  notes:      string;
+};
+
+type ScheduleSectionConfig = {
+  type:         ScheduleType;
+  accent:       string;
+  hasColor:     boolean;
+  defaultColor: string;
+  i18nSection:  string;  // key under edit.schedule.*
+  i18nAdd:      string;
+};
+
+const SCHEDULE_SECTIONS: ScheduleSectionConfig[] = [
+  { type: "bloom",         accent: "#c0392b", hasColor: true,  defaultColor: "#c0392b", i18nSection: "section_bloom",         i18nAdd: "add_bloom"         },
+  { type: "growth",        accent: "#2e7d32", hasColor: false, defaultColor: "#2e7d32", i18nSection: "section_growth",        i18nAdd: "add_growth"        },
+  { type: "foliage",       accent: "#1b5e20", hasColor: true,  defaultColor: "#a8d5a2", i18nSection: "section_foliage",       i18nAdd: "add_foliage"       },
+  { type: "pruning",       accent: "#27ae60", hasColor: false, defaultColor: "#27ae60", i18nSection: "section_pruning",       i18nAdd: "add_pruning"       },
+  { type: "fertilization", accent: "#2980b9", hasColor: false, defaultColor: "#2980b9", i18nSection: "section_fertilization", i18nAdd: "add_fertilization" },
+  { type: "misc",          accent: "#7f8c8d", hasColor: true,  defaultColor: "#e67e22", i18nSection: "section_misc",          i18nAdd: "add_misc"          },
+];
+
+function schedulesToRows(schedules: Schedule[]): ScheduleRow[] {
+  return schedules.map((s) => ({
+    id:           s.id ?? crypto.randomUUID(),
+    scheduleType: s.schedule_type,
+    startIdx:     weekToIdx(s.start_week),
+    endIdx:       weekToIdx(s.end_week),
+    color:        s.color ?? SCHEDULE_SECTIONS.find((c) => c.type === s.schedule_type)?.defaultColor ?? "#7f8c8d",
+    label:        s.label ?? "",
+    notes:        s.notes ?? "",
+  }));
+}
+
+function rowsToScheduleInputs(rows: ScheduleRow[]): PlantInput["schedules"] {
+  return rows.map((r) => ({
+    id:            r.id,
+    schedule_type: r.scheduleType,
+    start_week:    idxToWeek(r.startIdx),
+    end_week:      idxToWeek(r.endIdx),
+    color:         r.color || null,
+    label:         r.label.trim() || null,
+    notes:         r.notes.trim() || null,
+    created_at:    "",
+    updated_at:    "",
+  }));
 }
 
 // ── Form state type ───────────────────────────────────────────────────────────
@@ -142,21 +217,42 @@ export function PlantEditDialog({ plant, onClose, onSaved }: PlantEditDialogProp
   const { t } = useTranslation("plants");
 
   const [form,         setForm]         = useState<EditForm>(() => plantToForm(plant));
-  const [saving,       setSaving]       = useState(false);
-  const [error,        setError]        = useState<string | null>(null);
-  const [iconManual,   setIconManual]   = useState(!!plant?.icon);
-  const [pickerOpen,   setPickerOpen]   = useState(false);
-  const [categories,   setCategories]   = useState<string[]>([]);
-  const [zones,        setZones]        = useState<string[]>([]);
-  const [nameError,    setNameError]    = useState(false);
+  const [saving,        setSaving]        = useState(false);
+  const [error,         setError]         = useState<string | null>(null);
+  const [iconManual,    setIconManual]    = useState(!!plant?.icon);
+  const [pickerOpen,    setPickerOpen]    = useState(false);
+  const [categories,    setCategories]    = useState<string[]>([]);
+  const [zones,         setZones]         = useState<string[]>([]);
+  const [nameError,     setNameError]     = useState(false);
+  const [scheduleRows,  setScheduleRows]  = useState<ScheduleRow[]>(() => schedulesToRows(plant?.schedules ?? []));
+  const [colorPresets,  setColorPresets]  = useState<ColorPreset[]>([]);
 
-  // Load settings for category + zone dropdowns (AC #5)
+  // Load settings for category + zone dropdowns (AC #5) and color presets (AC #3)
   useEffect(() => {
     apiClient.getSettings().then((s) => {
       setCategories(s.plant_categories);
       setZones(s.irrigation_zones);
+      setColorPresets(s.color_presets);
     }).catch(() => {});
   }, []);
+
+  // Schedule state handlers
+  function addScheduleRow(type: ScheduleType) {
+    const cfg = SCHEDULE_SECTIONS.find((c) => c.type === type)!;
+    setScheduleRows((prev) => [...prev, {
+      id: crypto.randomUUID(), scheduleType: type,
+      startIdx: 0, endIdx: 3,
+      color: cfg.defaultColor, label: "", notes: "",
+    }]);
+  }
+
+  function updateScheduleRow(idx: number, patch: Partial<ScheduleRow>) {
+    setScheduleRows((prev) => prev.map((r, i) => i === idx ? { ...r, ...patch } : r));
+  }
+
+  function deleteScheduleRow(idx: number) {
+    setScheduleRows((prev) => prev.filter((_, i) => i !== idx));
+  }
 
   // Auto-update icon when category changes, unless manually overridden (AC #3)
   useEffect(() => {
@@ -165,7 +261,9 @@ export function PlantEditDialog({ plant, onClose, onSaved }: PlantEditDialogProp
     }
   }, [form.category, iconManual]);
 
-  const dirty = JSON.stringify(form) !== JSON.stringify(plantToForm(plant));
+  const dirty =
+    JSON.stringify(form) !== JSON.stringify(plantToForm(plant)) ||
+    JSON.stringify(scheduleRows) !== JSON.stringify(schedulesToRows(plant?.schedules ?? []));
 
   function handleClose() {
     if (dirty && !confirm(t("edit.unsaved_confirm"))) return;
@@ -185,7 +283,10 @@ export function PlantEditDialog({ plant, onClose, onSaved }: PlantEditDialogProp
     setSaving(true);
     setError(null);
     try {
-      const input = formToInput(form);
+      const input: ReturnType<typeof formToInput> = {
+        ...formToInput(form),
+        schedules: rowsToScheduleInputs(scheduleRows),
+      };
       const saved = plant
         ? await apiClient.updatePlant(plant.id, input)
         : await apiClient.createPlant(input);
@@ -271,14 +372,35 @@ export function PlantEditDialog({ plant, onClose, onSaved }: PlantEditDialogProp
         </EditSection>
 
         {/* Placeholder sections for later stories */}
-        <EditSection title="Bilder"        accent="#4a78c0" />
-        <EditSection title="Positionen"    accent="#8b6f47" />
-        <EditSection title="Blütezeiten"   accent="#c0392b" />
-        <EditSection title="Wachstum"      accent="#2e7d32" />
-        <EditSection title="Blätter"       accent="#1b5e20" />
-        <EditSection title="Schnittzeiten" accent="#27ae60" />
-        <EditSection title="Düngezeiten"   accent="#2980b9" />
-        <EditSection title="Sonstiges"     accent="#7f8c8d" />
+        <EditSection title="Bilder"     accent="#4a78c0" />
+        <EditSection title="Positionen" accent="#8b6f47" />
+
+        {/* Schedule sections — story-027 (AC #1–#6) */}
+        {SCHEDULE_SECTIONS.map((cfg) => (
+          <ScheduleSection
+            key={cfg.type}
+            config={cfg}
+            rows={scheduleRows.filter((r) => r.scheduleType === cfg.type)}
+            colorPresets={colorPresets}
+            onAdd={() => addScheduleRow(cfg.type)}
+            onChange={(idx, patch) => {
+              // idx is local to this type — convert to global index
+              const globalIdx = scheduleRows.reduce<number[]>((acc, r, i) => {
+                if (r.scheduleType === cfg.type) acc.push(i);
+                return acc;
+              }, [])[idx];
+              updateScheduleRow(globalIdx, patch);
+            }}
+            onDelete={(idx) => {
+              const globalIdx = scheduleRows.reduce<number[]>((acc, r, i) => {
+                if (r.scheduleType === cfg.type) acc.push(i);
+                return acc;
+              }, [])[idx];
+              deleteScheduleRow(globalIdx);
+            }}
+            t={t}
+          />
+        ))}
 
       </div>
 
@@ -301,7 +423,7 @@ export function PlantEditDialog({ plant, onClose, onSaved }: PlantEditDialogProp
           style={actionBtnStyle}
           data-testid="edit-cancel"
         >
-          {t("edit.btn_cancel")}
+          <span>✕</span>{t("edit.btn_cancel")}
         </button>
         <button
           type="button"
@@ -310,7 +432,7 @@ export function PlantEditDialog({ plant, onClose, onSaved }: PlantEditDialogProp
           style={{ ...actionBtnStyle, background: "var(--green-deep)", color: "white", borderColor: "var(--green-deep)" }}
           data-testid="edit-save"
         >
-          {saving ? "⏳ …" : t("edit.btn_save")}
+          {saving ? <><span>⏳</span>…</> : <><span>✓</span>{t("edit.btn_save")}</>}
         </button>
       </div>
     </>
@@ -320,13 +442,14 @@ export function PlantEditDialog({ plant, onClose, onSaved }: PlantEditDialogProp
 // ── EditSection ───────────────────────────────────────────────────────────────
 
 interface EditSectionProps {
-  title:       string;
-  accent:      string;
+  title:        string;
+  accent:       string;
   defaultOpen?: boolean;
-  children?:   React.ReactNode;
+  count?:       number;
+  children?:    React.ReactNode;
 }
 
-function EditSection({ title, accent, defaultOpen = false, children }: EditSectionProps) {
+function EditSection({ title, accent, defaultOpen = false, count, children }: EditSectionProps) {
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div style={{ borderBottom: "1px solid var(--border)" }}>
@@ -346,8 +469,13 @@ function EditSection({ title, accent, defaultOpen = false, children }: EditSecti
         className="hover:bg-green-mist"
       >
         <span style={{ width: "10px", height: "10px", borderRadius: "3px", background: accent, flexShrink: 0 }} />
-        <span style={{ fontSize: "11px", fontWeight: 700, letterSpacing: ".8px", textTransform: "uppercase", color: "var(--text-light)", flex: 1 }}>
+        <span style={{ fontSize: "11px", fontWeight: 700, letterSpacing: ".8px", textTransform: "uppercase", color: "var(--text-light)", flex: 1, display: "flex", alignItems: "center", gap: "6px" }}>
           {title}
+          {count !== undefined && count > 0 && (
+            <span style={{ fontSize: "10px", background: "var(--green-mist)", color: "var(--text-mid)", padding: "2px 6px", borderRadius: "10px", fontWeight: 600, letterSpacing: 0 }}>
+              {count}
+            </span>
+          )}
         </span>
         <span style={{ fontSize: "11px", color: "var(--text-light)", transition: "transform .2s", display: "inline-block", transform: open ? "rotate(180deg)" : "none" }}>▾</span>
       </div>
@@ -715,6 +843,292 @@ function FieldRow({ label, children }: { label: string; children: React.ReactNod
   );
 }
 
+// ── ColorPopup ────────────────────────────────────────────────────────────────
+
+interface ColorPopupProps {
+  color:    string;
+  presets:  ColorPreset[];
+  onChange: (hex: string, name?: string) => void;
+  onClose:  () => void;
+}
+
+function ColorPopup({ color, presets, onChange, onClose }: ColorPopupProps) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        onClose();
+      }
+    }
+    document.addEventListener("mousedown", handleOutside);
+    return () => document.removeEventListener("mousedown", handleOutside);
+  }, [onClose]);
+
+  return (
+    <div
+      ref={ref}
+      data-testid="color-popup"
+      style={{
+        position: "absolute", top: "26px", left: 0, zIndex: 200,
+        background: "white", border: "1.5px solid var(--border)",
+        borderRadius: "10px", padding: "10px",
+        boxShadow: "var(--shadow-ga-lg)", minWidth: "220px",
+      }}
+    >
+      {presets.length > 0 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 8px", marginBottom: "10px" }}>
+          {presets.map((p) => (
+            <button
+              key={p.color + p.name}
+              type="button"
+              title={p.name}
+              data-testid={`color-preset-${p.name}`}
+              onClick={() => { onChange(p.color, p.name); onClose(); }}
+              style={{
+                width: "24px", height: "24px", borderRadius: "4px",
+                border: p.color === color ? "2px solid var(--green-deep)" : "2px solid transparent",
+                boxShadow: p.color === color ? "0 0 0 2px var(--green-pale)" : "none",
+                background: p.color, cursor: "pointer", flexShrink: 0,
+                transition: "transform .12s",
+              }}
+              className="hover:scale-110"
+            />
+          ))}
+        </div>
+      )}
+      <div style={{ display: "flex", alignItems: "center", gap: "6px", borderTop: presets.length > 0 ? "1px solid var(--border)" : "none", paddingTop: presets.length > 0 ? "7px" : 0 }}>
+        <span style={{ fontSize: "10px", color: "var(--text-light)", fontWeight: 600, whiteSpace: "nowrap" }}>
+          Eigene Farbe
+        </span>
+        <input
+          type="text"
+          defaultValue={color}
+          placeholder="#rrggbb"
+          data-testid="color-hex-input"
+          style={{
+            flex: 1, border: "1.5px solid var(--border)", borderRadius: "6px",
+            padding: "3px 6px", fontSize: "11px", fontFamily: "var(--font-body)",
+            outline: "none", color: "var(--text-dark)",
+          }}
+          onBlur={(e) => {
+            const v = e.target.value.trim();
+            if (/^#[0-9a-fA-F]{3,6}$/.test(v)) onChange(v);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              const v = (e.target as HTMLInputElement).value.trim();
+              if (/^#[0-9a-fA-F]{3,6}$/.test(v)) { onChange(v); onClose(); }
+            }
+          }}
+        />
+        <div style={{ width: "22px", height: "22px", borderRadius: "4px", background: color, border: "1.5px solid var(--border)", flexShrink: 0 }} />
+      </div>
+    </div>
+  );
+}
+
+// ── ScheduleEntryRow ──────────────────────────────────────────────────────────
+
+interface ScheduleEntryRowProps {
+  row:        ScheduleRow;
+  hasColor:   boolean;
+  presets:    ColorPreset[];
+  onChange:   (patch: Partial<ScheduleRow>) => void;
+  onDelete:   () => void;
+  t:          TFunction<"plants">;
+}
+
+function ScheduleEntryRow({ row, hasColor, presets, onChange, onDelete, t }: ScheduleEntryRowProps) {
+  const [popupOpen, setPopupOpen] = useState(false);
+  const colorWrapRef = useRef<HTMLDivElement>(null);
+
+  const handleColorChange = useCallback((hex: string, name?: string) => {
+    onChange({ color: hex });
+    // Auto-fill label for bloom if empty or matches a preset name
+    if (name !== undefined) {
+      onChange({ color: hex, label: row.label.trim() === "" || isPresetName(row.label, presets) ? name : row.label });
+    }
+  }, [row.label, presets, onChange]);
+
+  const isWrap = row.startIdx > row.endIdx;
+
+  return (
+    <div
+      data-testid="schedule-entry"
+      style={{
+        background: "var(--green-mist)", border: "1.5px solid var(--border)",
+        borderRadius: "10px", padding: "10px 11px", display: "flex", flexDirection: "column", gap: "8px",
+      }}
+    >
+      {/* Top row: color swatch | week range | delete */}
+      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+        {hasColor && (
+          <div ref={colorWrapRef} style={{ position: "relative", flexShrink: 0 }}>
+            <button
+              type="button"
+              data-testid="color-swatch-btn"
+              onClick={() => setPopupOpen((o) => !o)}
+              style={{
+                width: "22px", height: "22px", borderRadius: "5px",
+                border: "2px solid rgba(0,0,0,.12)", cursor: "pointer",
+                background: row.color, transition: "transform .15s",
+              }}
+              className="hover:scale-110"
+              aria-label="Farbe wählen"
+            />
+            {popupOpen && (
+              <ColorPopup
+                color={row.color}
+                presets={presets}
+                onChange={handleColorChange}
+                onClose={() => setPopupOpen(false)}
+              />
+            )}
+          </div>
+        )}
+
+        {/* Week selects */}
+        <select
+          value={row.startIdx}
+          data-testid="week-start"
+          onChange={(e) => onChange({ startIdx: Number(e.target.value) })}
+          style={weekSelectStyle}
+        >
+          {WEEK_LABELS.map((lbl, i) => (
+            <option key={i} value={i}>{lbl}</option>
+          ))}
+        </select>
+
+        <span style={{ fontSize: "11px", color: "var(--text-light)", flexShrink: 0 }}>
+          {t("edit.schedule.week_arrow")}
+        </span>
+
+        <select
+          value={row.endIdx}
+          data-testid="week-end"
+          onChange={(e) => onChange({ endIdx: Number(e.target.value) })}
+          style={weekSelectStyle}
+        >
+          {WEEK_LABELS.map((lbl, i) => (
+            <option key={i} value={i}>{lbl}</option>
+          ))}
+        </select>
+
+        {/* Year-wrap indicator (AC #4) */}
+        {isWrap && (
+          <span
+            data-testid="wrap-indicator"
+            title={t("edit.schedule.wrap_hint")}
+            style={{ fontSize: "11px", color: "var(--text-light)", flexShrink: 0 }}
+          >
+            ↻
+          </span>
+        )}
+
+        {/* Delete */}
+        <button
+          type="button"
+          data-testid="schedule-entry-delete"
+          onClick={onDelete}
+          style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-light)", fontSize: "13px", lineHeight: 1, marginLeft: "auto", flexShrink: 0, padding: 0 }}
+          className="hover:text-red-warn"
+          aria-label="Eintrag löschen"
+        >
+          ✕
+        </button>
+      </div>
+
+      {/* Label + Notes */}
+      <input
+        type="text"
+        value={row.label}
+        placeholder={t("edit.schedule.field_label_placeholder")}
+        data-testid="schedule-label"
+        onChange={(e) => onChange({ label: e.target.value })}
+        style={{
+          width: "100%", background: "white", border: "1.5px solid var(--border)",
+          borderRadius: "6px", padding: "5px 8px", fontSize: "12px",
+          fontFamily: "var(--font-body)", color: "var(--text-dark)", outline: "none",
+          boxSizing: "border-box",
+        }}
+      />
+      <textarea
+        value={row.notes}
+        placeholder={t("edit.schedule.field_notes_placeholder")}
+        data-testid="schedule-notes"
+        rows={2}
+        onChange={(e) => onChange({ notes: e.target.value })}
+        style={{
+          width: "100%", background: "white", border: "1.5px solid var(--border)",
+          borderRadius: "6px", padding: "5px 8px", fontSize: "12px",
+          fontFamily: "var(--font-body)", color: "var(--text-dark)", outline: "none",
+          resize: "vertical", minHeight: "48px", lineHeight: "1.5",
+          boxSizing: "border-box",
+        }}
+      />
+    </div>
+  );
+}
+
+function isPresetName(label: string, presets: ColorPreset[]): boolean {
+  return presets.some((p) => p.name === label.trim());
+}
+
+// ── ScheduleSection ───────────────────────────────────────────────────────────
+
+interface ScheduleSectionProps {
+  config:       ScheduleSectionConfig;
+  rows:         ScheduleRow[];
+  colorPresets: ColorPreset[];
+  onAdd:        () => void;
+  onChange:     (idx: number, patch: Partial<ScheduleRow>) => void;
+  onDelete:     (idx: number) => void;
+  t:            TFunction<"plants">;
+}
+
+function ScheduleSection({ config, rows, colorPresets, onAdd, onChange, onDelete, t }: ScheduleSectionProps) {
+  const typePresets = colorPresets.filter((p) => p.schedule_type === config.type);
+
+  return (
+    <EditSection
+      title={(t as (k: string) => string)(`edit.schedule.${config.i18nSection}`)}
+      accent={config.accent}
+      count={rows.length}
+      data-testid={`section-${config.type}`}
+    >
+      <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: rows.length > 0 ? "10px" : 0 }}>
+        {rows.map((row, idx) => (
+          <ScheduleEntryRow
+            key={row.id}
+            row={row}
+            hasColor={config.hasColor}
+            presets={typePresets}
+            onChange={(patch) => onChange(idx, patch)}
+            onDelete={() => onDelete(idx)}
+            t={t}
+          />
+        ))}
+      </div>
+      <button
+        type="button"
+        data-testid={`add-schedule-${config.type}`}
+        onClick={onAdd}
+        style={{
+          display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
+          background: "none", border: "1.5px dashed var(--border)", borderRadius: "8px",
+          padding: "7px 12px", fontSize: "12px", fontWeight: 500,
+          fontFamily: "var(--font-body)", color: "var(--text-light)",
+          cursor: "pointer", width: "100%", transition: "all .15s",
+        }}
+        className="hover:border-green-mid hover:text-green-deep hover:bg-green-mist"
+      >
+        {(t as (k: string) => string)(`edit.schedule.${config.i18nAdd}`)}
+      </button>
+    </EditSection>
+  );
+}
+
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const fieldLabelStyle: React.CSSProperties = {
@@ -750,16 +1164,35 @@ const fieldTextareaStyle: React.CSSProperties = {
   lineHeight: "1.55",
 };
 
-const actionBtnStyle: React.CSSProperties = {
-  height:       "32px",
-  padding:      "0 18px",
-  borderRadius: "8px",
-  fontSize:     "13px",
-  fontWeight:   500,
-  fontFamily:   "var(--font-body)",
-  cursor:       "pointer",
+const weekSelectStyle: React.CSSProperties = {
+  background:   "white",
   border:       "1.5px solid var(--border)",
-  background:   "none",
-  color:        "var(--text-mid)",
+  borderRadius: "6px",
+  padding:      "3px 4px",
+  fontSize:     "11px",
+  fontFamily:   "var(--font-body)",
+  color:        "var(--text-dark)",
+  outline:      "none",
+  cursor:       "pointer",
   flex:         1,
+  minWidth:     0,
+};
+
+const actionBtnStyle: React.CSSProperties = {
+  height:         "32px",
+  padding:        "0 18px",
+  borderRadius:   "8px",
+  fontSize:       "13px",
+  fontWeight:     500,
+  fontFamily:     "var(--font-body)",
+  cursor:         "pointer",
+  border:         "1.5px solid var(--border)",
+  background:     "none",
+  color:          "var(--text-mid)",
+  flex:           1,
+  display:        "flex",
+  alignItems:     "center",
+  justifyContent: "center",
+  gap:            "4px",
+  whiteSpace:     "nowrap",
 };

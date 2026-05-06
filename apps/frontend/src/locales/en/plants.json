@@ -52,7 +52,7 @@
     "last_cut":        "Last pruning",
     "last_fert":       "Last fertilization",
     "section_notes":   "Care notes",
-    "btn_assistant":   "💬 Ask assistant",
+    "btn_assistant":   "Assistant",
     "btn_edit":        "✏️ Edit",
     "no_date":         "–"
   },
@@ -144,6 +144,28 @@
     "select_none":       "– none –",
     "yes":               "Yes",
     "no":                "No",
-    "name_required":     "Name is required"
+    "name_required":     "Name is required",
+    "schedule": {
+      "section_bloom":       "Bloom periods",
+      "section_growth":      "Growth",
+      "section_foliage":     "Foliage",
+      "section_pruning":     "Pruning windows",
+      "section_fertilization": "Fertilization windows",
+      "section_misc":        "Other",
+      "add_bloom":           "＋ Add bloom period",
+      "add_growth":          "＋ Add growth period",
+      "add_foliage":         "＋ Add foliage period",
+      "add_pruning":         "＋ Add pruning window",
+      "add_fertilization":   "＋ Add fertilization window",
+      "add_misc":            "＋ Add entry",
+      "field_label":         "Label",
+      "field_notes":         "Notes",
+      "field_label_placeholder": "e.g. Main bloom",
+      "field_notes_placeholder": "Additional info, notes …",
+      "week_arrow":          "→",
+      "wrap_hint":           "Year wrap",
+      "color_custom_label":  "Custom color",
+      "color_hex_placeholder": "#rrggbb"
+    }
   }
 }

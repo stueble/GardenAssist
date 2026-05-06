@@ -52,7 +52,7 @@
     "last_cut":        "Letzter Schnitt",
     "last_fert":       "Letzte Düngung",
     "section_notes":   "Pflegehinweise",
-    "btn_assistant":   "💬 Assistent fragen",
+    "btn_assistant":   "Assistent",
     "btn_edit":        "✏️ Bearbeiten",
     "no_date":         "–"
   },
@@ -144,6 +144,28 @@
     "select_none":       "– keine –",
     "yes":               "Ja",
     "no":                "Nein",
-    "name_required":     "Name ist erforderlich"
+    "name_required":     "Name ist erforderlich",
+    "schedule": {
+      "section_bloom":       "Blütezeiten",
+      "section_growth":      "Wachstum",
+      "section_foliage":     "Blätter",
+      "section_pruning":     "Schnittzeiten",
+      "section_fertilization": "Düngezeiten",
+      "section_misc":        "Sonstiges",
+      "add_bloom":           "＋ Blütezeit hinzufügen",
+      "add_growth":          "＋ Wachstumsperiode hinzufügen",
+      "add_foliage":         "＋ Blattperiode hinzufügen",
+      "add_pruning":         "＋ Schnittzeit hinzufügen",
+      "add_fertilization":   "＋ Düngezeit hinzufügen",
+      "add_misc":            "＋ Eintrag hinzufügen",
+      "field_label":         "Bezeichnung",
+      "field_notes":         "Hinweise",
+      "field_label_placeholder": "z.B. Hauptblüte",
+      "field_notes_placeholder": "Zusätzliche Infos, Hinweise …",
+      "week_arrow":          "→",
+      "wrap_hint":           "Jahresübergang",
+      "color_custom_label":  "Eigene Farbe",
+      "color_hex_placeholder": "#rrggbb"
+    }
   }
 }

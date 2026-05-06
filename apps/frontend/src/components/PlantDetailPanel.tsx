@@ -105,7 +105,8 @@ const sectionTitleStyle: React.CSSProperties = {
 
 const detailBtnStyle: React.CSSProperties = {
   flex:           1,
-  padding:        "8px",
+  padding:        "0 12px",
+  lineHeight:     "32px",
   borderRadius:   "8px",
   fontSize:       "12px",
   fontWeight:     500,
@@ -118,6 +119,7 @@ const detailBtnStyle: React.CSSProperties = {
   alignItems:     "center",
   justifyContent: "center",
   gap:            "4px",
+  whiteSpace:     "nowrap",
 };
 
 // ── CollapsibleSection ────────────────────────────────────────────────────────
@@ -357,7 +359,7 @@ export function PlantDetailPanel({ plant, onClose, onEdit, onAssist }: PlantDeta
           onClick={() => onAssist?.(plant)}
           data-testid="detail-btn-assistant"
         >
-          {t("detail.btn_assistant")}
+          <span>💬</span>{t("detail.btn_assistant")}
         </button>
         <button
           type="button"

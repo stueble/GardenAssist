@@ -325,7 +325,40 @@ Settings-style views with deferred persistence (changes saved only on explicit u
 - Active when `dirty === true`
 - Shows status feedback after save attempt (success / error) with auto-clear
 
-### 6.3 List with Add/Delete (`ListEntry` + `AddRowButton`)
+### 6.3 Dialog Action Buttons
+
+Buttons in the footer bar of side-panel dialogs (Detail panel, Edit dialog) must follow these rules:
+
+**Height:** Determined by a single line of text. Use `padding: 0 12px–18px` (horizontal only) combined with `line-height: "32px"` **or** `height: "32px"` with `display: flex; align-items: center`. Never use vertical padding (`padding: "8px"`) — this causes the button to grow to two lines when text wraps on narrow panels.
+
+**Icon + Label:** Every action button must show an icon and a label. No icon-only or text-only buttons in dialog footers. Standard icon assignments:
+
+| Action | Icon | Notes |
+|---|---|---|
+| Save / Confirm | `✓` | Unicode checkmark |
+| Cancel / Close | `✕` | Unicode multiplication sign |
+| AI Assistant | `💬` | Speech bubble emoji |
+| Edit | `✏️` | Pencil emoji |
+
+**Layout:** Always `display: flex; align-items: center; justify-content: center; gap: 4px`. Add `white-space: nowrap` to prevent unintended line breaks.
+
+**Icon placement in JSX:** Render the icon as a `<span>` sibling of the translated label text. Do **not** embed icons in i18n strings — this keeps translations clean and icon swaps trivial.
+
+```tsx
+// ✅ correct
+<button style={actionBtnStyle}>
+  <span>✓</span>{t("edit.btn_save")}
+</button>
+
+// ❌ avoid — icon in i18n string
+// "btn_save": "✓ Speichern"
+```
+
+**Consistent sizing across dialogs:** All dialog footer buttons — regardless of which panel they appear in — must use the same effective height. When both the Detail panel and Edit dialog are visible in sequence, their footer buttons must be visually indistinguishable in height.
+
+---
+
+### 6.4 List with Add/Delete (`ListEntry` + `AddRowButton`)
 
 Pattern for user-managed lists:
 
