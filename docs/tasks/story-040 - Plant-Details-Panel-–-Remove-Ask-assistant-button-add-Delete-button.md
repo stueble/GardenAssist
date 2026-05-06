@@ -1,11 +1,11 @@
 ---
 id: STORY-040
 title: 'Plant Details Panel – Remove Ask-assistant button, add Delete button'
-status: In Progress
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-06 18:39'
-updated_date: '2026-05-06 18:49'
+updated_date: '2026-05-06 18:54'
 labels: []
 dependencies:
   - STORY-025
@@ -13,6 +13,7 @@ documentation:
   - docs/docs/doc-005 - 005-UX-UI-Concept-Plants-Overview.md
   - docs/docs/doc-006 - 006-UX-UI-Concept-Garden-Calendar.md
   - docs/docs/doc-008 - 008-UX-UI-Concept-Plant-Edit-Dialog.md
+ordinal: 31000
 ---
 
 ## Description

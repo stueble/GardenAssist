@@ -1,16 +1,17 @@
 ---
 id: STORY-028
 title: Plant Edit Dialog – Positionen
-status: In Progress
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-04 22:46'
-updated_date: '2026-05-06 19:23'
+updated_date: '2026-05-06 20:58'
 labels: []
 dependencies: []
 documentation:
   - docs/docs/doc-008 - 008-UX-UI-Concept-Plant-Edit-Dialog.md
   - docs/api/plant-position.ts
+ordinal: 32000
 ---
 
 ## Description

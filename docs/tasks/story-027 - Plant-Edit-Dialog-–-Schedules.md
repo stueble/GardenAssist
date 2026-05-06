@@ -1,17 +1,18 @@
 ---
 id: STORY-027
 title: Plant Edit Dialog – Schedules
-status: In Progress
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-04 22:45'
-updated_date: '2026-05-06 18:34'
+updated_date: '2026-05-06 18:46'
 labels: []
 dependencies: []
 documentation:
   - docs/docs/doc-008 - 008-UX-UI-Concept-Plant-Edit-Dialog.md
   - docs/api/schedule.ts
   - docs/api/color-preset.ts
+ordinal: 30000
 ---
 
 ## Description
