@@ -250,12 +250,15 @@ export function GardenPlanWidget({
     const onTouchEnd = () => { s.dragging = false; };
 
     // Resize — re-apply current fit mode, or re-fit-inside if free
-    const onResize = () => {
+    // ResizeObserver on the area element catches ALL size changes:
+    // window resize, CSS transitions (AI panel open/close), panel toggles.
+    const resizeObserver = new ResizeObserver(() => {
       const fitH = modeFitHRef.current;
       const fitW = modeFitWRef.current;
       if (fitH || fitW) applyCurrentMode(fitH, fitW, false);
       else initPlan();
-    };
+    });
+    resizeObserver.observe(area);
 
     area.addEventListener("mousedown", onMouseDown);
     window.addEventListener("mousemove", onMouseMove);
@@ -264,9 +267,9 @@ export function GardenPlanWidget({
     area.addEventListener("touchstart",  onTouchStart, { passive: false });
     area.addEventListener("touchmove",   onTouchMove,  { passive: false });
     area.addEventListener("touchend",    onTouchEnd);
-    window.addEventListener("resize",    onResize);
 
     return () => {
+      resizeObserver.disconnect();
       area.removeEventListener("mousedown", onMouseDown);
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("mouseup",   onMouseUp);
@@ -274,7 +277,6 @@ export function GardenPlanWidget({
       area.removeEventListener("touchstart",  onTouchStart);
       area.removeEventListener("touchmove",   onTouchMove);
       area.removeEventListener("touchend",    onTouchEnd);
-      window.removeEventListener("resize",    onResize);
     };
   }, [applyT, zoomAt, initPlan, pickMode]);
 

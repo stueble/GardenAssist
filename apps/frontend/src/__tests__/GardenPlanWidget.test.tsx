@@ -9,9 +9,20 @@
  * - onPick called with correct percent coords when pickMode=true and plan clicked
  */
 
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeAll } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { GardenPlanWidget, type PlanPin } from "../components/GardenPlanWidget";
+
+// JSDOM does not implement ResizeObserver — provide a no-op stub
+beforeAll(() => {
+  if (!("ResizeObserver" in window)) {
+    (window as unknown as Record<string, unknown>).ResizeObserver = class {
+      observe()    {}
+      unobserve()  {}
+      disconnect() {}
+    };
+  }
+});
 
 function renderWidget(props: Partial<React.ComponentProps<typeof GardenPlanWidget>> = {}) {
   return render(
