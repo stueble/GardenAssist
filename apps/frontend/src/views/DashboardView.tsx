@@ -1,14 +1,444 @@
+/**
+ * DashboardView — story-030.
+ *
+ * Layout: 280px left column (weather + todo list OR plant detail) +
+ *         flex center (garden plan + monthly band) +
+ *         AI chat strip (right).
+ *
+ * AC #1  Garden plan from Garden.plan_url; placeholder if not uploaded
+ * AC #2  Plant pins at x/y positions with emoji + colored ring
+ * AC #3  Red dot on pin if plant has overdue/current tasks
+ * AC #4  Hover tooltip: name, status, next task
+ * AC #5  Click pin opens PlantDetailPanel in left column
+ * AC #6  ↕ ↔ zoom buttons
+ * AC #7  Legend bottom-left
+ */
+
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { AiPanel } from "@/components/AiPanel";
+import { useAiPanelState } from "@/hooks/useAiPanelState";
+import { GardenPlanWidget, type PlanPin } from "@/components/GardenPlanWidget";
+import { PlantDetailPanel } from "@/components/PlantDetailPanel";
+import { apiClient } from "@/api/client";
+import type { Plant } from "@api/plant";
+import type { Garden } from "@api/garden";
+import {
+  derivePlantStatus,
+  nextCareTask,
+  STATUS_COLOR,
+  STATUS_TEXT,
+  STATUS_ICON,
+} from "@/lib/plantStatus";
+import { weekRangeLabel, SCHEDULE_ICON } from "@/components/PlantDetailPanel";
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+/** Current ISO week number (1–53). */
+function currentWeek(): number {
+  const now  = new Date();
+  const jan4 = new Date(now.getFullYear(), 0, 4);
+  const diff = now.getTime() - jan4.getTime();
+  return Math.ceil((diff / 86400000 + jan4.getDay() + 1) / 7);
+}
+
+/** Week number → approximate month index (0-based). */
+function weekToMonthIdx(week: number): number {
+  return Math.min(11, Math.floor((week - 1) / 4.33));
+}
+
+const MONTHS_DE = ["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"];
+
+/** Build a PlanPin from a plant position for the Dashboard. */
+function plantToPin(plant: Plant, posIdx: number, selectedId: string | null): PlanPin {
+  const pos    = plant.positions[posIdx];
+  const status = derivePlantStatus(plant);
+  const task   = nextCareTask(plant);
+
+  const taskStr = task
+    ? `${SCHEDULE_ICON[task.schedule.schedule_type] ?? "📌"} ${task.schedule.label ?? ""} (${weekRangeLabel(task.schedule.start_week, task.schedule.end_week)})`
+    : undefined;
+
+  const statusLabel = { overdue: "Überfällig", due: "Aktuell", upcoming: "Geplant", ok: "OK" }[status];
+
+  return {
+    x:        pos.x_percent,
+    y:        pos.y_percent,
+    emoji:    plant.icon ?? "🌿",
+    name:     plant.name_common,
+    color:    "rgba(255,255,255,.15)",
+    hasTask:  status === "overdue" || status === "due",
+    selected: selectedId === plant.id,
+    tooltip:  { status: statusLabel, nextTask: taskStr },
+  };
+}
+
+// ── Main component ─────────────────────────────────────────────────────────────
 
 export function DashboardView() {
-  const { t } = useTranslation("common");
+  const { t }             = useTranslation("common");
+  const { setOpen: setAiOpen } = useAiPanelState();
+
+  const [garden,   setGarden]   = useState<Garden | null>(null);
+  const [loading,  setLoading]  = useState(true);
+  const [selected, setSelected] = useState<Plant | null>(null);
+
+  // currentWeek month index (0-based)
+  const cw = currentWeek();
+
+  useEffect(() => {
+    apiClient.getGarden()
+      .then((g) => { setGarden(g); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, []);
+
+  // Build pin list: one pin per position per plant
+  const pins: Array<{ pin: PlanPin; plant: Plant }> = [];
+  if (garden) {
+    for (const plant of garden.plants) {
+      for (let i = 0; i < plant.positions.length; i++) {
+        pins.push({ pin: plantToPin(plant, i, selected?.id ?? null), plant });
+      }
+    }
+  }
+
+  function handlePinClick(_pin: PlanPin, idx: number) {
+    const { plant } = pins[idx];
+    setSelected((prev) => prev?.id === plant.id ? null : plant);
+  }
+
+  function handleDetailClose() {
+    setSelected(null);
+  }
+
+  // Build monthly schedule summary
+  const monthTasks: Array<Array<{ icon: string; label: string; color: string }>> =
+    Array.from({ length: 12 }, () => []);
+  if (garden) {
+    for (const plant of garden.plants) {
+      for (const s of plant.schedules) {
+        const mIdx = weekToMonthIdx(s.start_week);
+        monthTasks[mIdx].push({
+          icon:  SCHEDULE_ICON[s.schedule_type] ?? "📌",
+          label: s.label ? `${plant.name_common} — ${s.label}` : plant.name_common,
+          color: s.color ?? "var(--green-mid)",
+        });
+      }
+    }
+  }
+
+  const aiContext = selected
+    ? `${selected.icon ?? "🌿"} ${selected.name_common}`
+    : `🏠 ${t("nav.dashboard")}`;
+
   return (
-    <div className="flex flex-1 min-h-0 overflow-hidden bg-cream">
-      <div className="flex-1 overflow-y-auto p-6">
-        <h1 className="text-2xl font-semibold text-green-deep font-display">{t("nav.dashboard")}</h1>
+    <div
+      data-testid="dashboard-view"
+      style={{
+        display:   "flex",
+        flex:      1,
+        minHeight: 0,
+        overflow:  "hidden",
+        background:"var(--cream)",
+      }}
+    >
+      {/* ── Left column ── */}
+      <div
+        data-testid="dashboard-sidebar"
+        style={{
+          width:         "280px",
+          flexShrink:    0,
+          background:    "var(--warm-white)",
+          borderRight:   "1px solid var(--border)",
+          display:       "flex",
+          flexDirection: "column",
+          overflow:      "hidden",
+        }}
+      >
+        {/* Weather widget (stub) */}
+        <WeatherWidget />
+
+        <div style={{ height: "1px", background: "var(--border)", flexShrink: 0 }} />
+
+        {/* Detail panel OR todo list */}
+        {selected ? (
+          <PlantDetailPanel
+            plant={selected}
+            onClose={handleDetailClose}
+            onEdit={() => {/* navigate to plants view in future story */}}
+            onDelete={() => {
+              setGarden((g) => g
+                ? { ...g, plants: g.plants.filter((p) => p.id !== selected.id) }
+                : g
+              );
+              setSelected(null);
+            }}
+          />
+        ) : (
+          <TodoList garden={garden} loading={loading} />
+        )}
       </div>
-      <AiPanel context={`🏠 ${t("nav.dashboard")}`} />
+
+      {/* ── Center: garden plan + monthly band ── */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, overflow: "hidden" }}>
+
+        {/* Garden plan (AC #1) */}
+        <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+          {loading ? (
+            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-light)", fontSize: "13px" }}>
+              Wird geladen …
+            </div>
+          ) : (
+            <GardenPlanWidget
+              planUrl={garden?.plan_url ?? null}
+              pins={pins.map((p) => p.pin)}
+              onPinClick={handlePinClick}
+              legend
+            />
+          )}
+        </div>
+
+        {/* Monthly band */}
+        <MonthBand monthTasks={monthTasks} currentMonthIdx={weekToMonthIdx(cw)} />
+      </div>
+
+      <AiPanel context={aiContext} />
+    </div>
+  );
+}
+
+// ── WeatherWidget (stub) ──────────────────────────────────────────────────────
+
+function WeatherWidget() {
+  return (
+    <div
+      data-testid="weather-widget"
+      style={{ padding: "14px 18px 12px", flexShrink: 0 }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
+        <span style={{ fontSize: "26px" }}>🌤</span>
+        <div>
+          <div style={{ fontFamily: "var(--font-display)", fontSize: "22px", fontWeight: 600, color: "var(--green-deep)", lineHeight: 1 }}>
+            —°C
+          </div>
+          <div style={{ fontSize: "11px", color: "var(--text-light)", marginTop: "2px" }}>
+            Wetterdaten folgen
+          </div>
+        </div>
+      </div>
+      <div style={{ display: "flex", gap: "4px" }}>
+        {["Mo","Di","Mi","Do","Fr"].map((d) => (
+          <div key={d} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", background: "var(--green-mist)", borderRadius: "7px", padding: "5px 2px" }}>
+            <div style={{ fontSize: "10px", fontWeight: 600, color: "var(--text-light)" }}>{d}</div>
+            <span style={{ fontSize: "14px" }}>—</span>
+            <div style={{ fontSize: "10px", color: "var(--text-light)" }}>—°</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── TodoList ──────────────────────────────────────────────────────────────────
+
+interface TodoListProps {
+  garden:  Garden | null;
+  loading: boolean;
+}
+
+function TodoList({ garden, loading }: TodoListProps) {
+  if (loading) {
+    return (
+      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-light)", fontSize: "12px" }}>
+        Wird geladen …
+      </div>
+    );
+  }
+
+  if (!garden) return null;
+
+  // Collect all tasks across all plants
+  type TodoEntry = {
+    plant:   Plant;
+    taskLabel: string;
+    taskSub:   string;
+    status:    "overdue" | "due" | "upcoming";
+  };
+
+  const todos: TodoEntry[] = [];
+  for (const plant of garden.plants) {
+    const status = derivePlantStatus(plant);
+    if (status === "ok") continue;
+    const task = nextCareTask(plant);
+    if (!task) continue;
+    todos.push({
+      plant,
+      taskLabel: `${SCHEDULE_ICON[task.schedule.schedule_type] ?? "📌"} ${task.schedule.label ?? task.schedule.schedule_type}`,
+      taskSub:   `${plant.name_common} · ${weekRangeLabel(task.schedule.start_week, task.schedule.end_week)}`,
+      status:    status as "overdue" | "due" | "upcoming",
+    });
+  }
+
+  // Sort: overdue first, then due, then upcoming
+  const order = { overdue: 0, due: 1, upcoming: 2 };
+  todos.sort((a, b) => order[a.status] - order[b.status]);
+
+  const groups: Array<{ label: string; items: TodoEntry[] }> = [
+    { label: "Überfällig",  items: todos.filter((t) => t.status === "overdue")  },
+    { label: "Diese Woche", items: todos.filter((t) => t.status === "due")      },
+    { label: "Demnächst",   items: todos.filter((t) => t.status === "upcoming") },
+  ].filter((g) => g.items.length > 0);
+
+  if (groups.length === 0) {
+    return (
+      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px", color: "var(--text-light)", fontSize: "12px", textAlign: "center" }}>
+        ✅ Keine offenen Aufgaben
+      </div>
+    );
+  }
+
+  return (
+    <div data-testid="todo-list" style={{ flex: 1, overflowY: "auto", padding: "10px 0" }}>
+      {groups.map((group) => (
+        <div key={group.label}>
+          <div style={{
+            fontSize: "10px", fontWeight: 600, letterSpacing: "1px",
+            textTransform: "uppercase", color: "var(--text-light)",
+            padding: "8px 18px 4px",
+          }}>
+            {group.label}
+          </div>
+          {group.items.map((todo, i) => (
+            <div
+              key={`${todo.plant.id}-${i}`}
+              data-testid="todo-item"
+              style={{
+                padding:      "10px 14px 10px 18px",
+                borderLeft:   `3px solid ${STATUS_COLOR[todo.status]}`,
+                background:   todo.status === "overdue" ? "var(--red-soft)" : "none",
+                cursor:       "pointer",
+                transition:   "background .15s",
+              }}
+              className="hover:bg-green-mist"
+            >
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "8px", marginBottom: "4px" }}>
+                <div style={{
+                  width: "8px", height: "8px", borderRadius: "50%",
+                  background: STATUS_COLOR[todo.status],
+                  flexShrink: 0, marginTop: "3px",
+                }} />
+                <div style={{ fontSize: "13px", fontWeight: 500, color: "var(--text-dark)", lineHeight: 1.35, flex: 1 }}>
+                  {todo.taskLabel}
+                </div>
+              </div>
+              <div style={{ fontSize: "11px", color: "var(--text-light)", marginLeft: "16px" }}>
+                {todo.taskSub}
+              </div>
+            </div>
+          ))}
+          <div style={{ height: "1px", background: "var(--border)", margin: "6px 18px" }} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── MonthBand ─────────────────────────────────────────────────────────────────
+
+interface MonthBandProps {
+  monthTasks:      Array<Array<{ icon: string; label: string; color: string }>>;
+  currentMonthIdx: number;
+}
+
+function MonthBand({ monthTasks, currentMonthIdx }: MonthBandProps) {
+  return (
+    <div
+      data-testid="month-band"
+      style={{
+        background:  "var(--warm-white)",
+        borderTop:   "1px solid var(--border)",
+        display:     "flex",
+        alignItems:  "center",
+        padding:     "8px 12px",
+        gap:         "4px",
+        height:      "90px",
+        flexShrink:  0,
+        overflowX:   "auto",
+        position:    "relative",
+        zIndex:      10,
+      }}
+    >
+      {/* Vertical label */}
+      <div style={{
+        fontSize:        "10px",
+        fontWeight:      600,
+        letterSpacing:   ".8px",
+        textTransform:   "uppercase",
+        color:           "var(--text-light)",
+        writingMode:     "vertical-rl",
+        textOrientation: "mixed",
+        transform:       "rotate(180deg)",
+        padding:         "8px 0",
+        marginRight:     "4px",
+        flexShrink:      0,
+      }}>
+        Überblick
+      </div>
+
+      {MONTHS_DE.map((month, idx) => {
+        const tasks   = monthTasks[idx];
+        const current = idx === currentMonthIdx;
+        return (
+          <div
+            key={month}
+            data-testid={`month-cell-${idx}`}
+            style={{
+              flex:          1,
+              minWidth:      "44px",
+              height:        "100%",
+              display:       "flex",
+              flexDirection: "column",
+              alignItems:    "center",
+              justifyContent:"center",
+              gap:           "3px",
+              borderRadius:  "8px",
+              background:    current ? "var(--green-deep)" : "var(--green-mist)",
+              padding:       "4px 2px",
+              cursor:        tasks.length > 0 ? "default" : "default",
+              position:      "relative",
+            }}
+          >
+            <div style={{
+              fontSize:   "11px",
+              fontWeight: 600,
+              color:      current ? "var(--green-pale)" : "var(--text-light)",
+            }}>
+              {month}
+            </div>
+            {/* Task dots */}
+            <div style={{ display: "flex", gap: "2px", flexWrap: "wrap", justifyContent: "center", maxWidth: "40px" }}>
+              {tasks.slice(0, 6).map((task, ti) => (
+                <div
+                  key={ti}
+                  title={task.label}
+                  style={{
+                    width:        "6px",
+                    height:       "6px",
+                    borderRadius: "50%",
+                    background:   current ? "rgba(255,255,255,.6)" : task.color,
+                    flexShrink:   0,
+                  }}
+                />
+              ))}
+            </div>
+            {tasks.length > 6 && (
+              <div style={{ fontSize: "9px", color: current ? "var(--green-pale)" : "var(--text-light)" }}>
+                +{tasks.length - 6}
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

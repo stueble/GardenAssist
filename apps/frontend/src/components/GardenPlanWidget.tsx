@@ -17,10 +17,19 @@ import { useEffect, useRef, useState, useCallback } from "react";
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export interface PlanPin {
-  x:      number;   // 0–100, percent of plan image width
-  y:      number;   // 0–100, percent of plan image height
-  label?: string;   // shown inside the pin dot (e.g. "1", "🌹")
-  color?: string;   // pin background color; default: var(--green-deep)
+  x:          number;   // 0–100, percent of plan image width
+  y:          number;   // 0–100, percent of plan image height
+  label?:     string;   // shown inside pin dot (e.g. "1") — used in Edit mode
+  emoji?:     string;   // shown inside pin circle — used in Dashboard mode
+  name?:      string;   // plant name — shown as label below pin + in tooltip
+  color?:     string;   // pin background color; default: var(--green-deep)
+  hasTask?:   boolean;  // red dot indicator (overdue / current task)
+  selected?:  boolean;  // green highlight ring
+  /** Tooltip content — shown on hover */
+  tooltip?: {
+    status?:   string;  // e.g. "Überfällig", "OK"
+    nextTask?: string;  // e.g. "✂️ Schneiden (KW 18–20)"
+  };
 }
 
 export interface GardenPlanWidgetProps {
@@ -29,6 +38,8 @@ export interface GardenPlanWidgetProps {
   pickMode?:   boolean;
   onPick?:     (x: number, y: number) => void;
   onPinClick?: (pin: PlanPin, index: number) => void;
+  /** Show status legend (overdue / current / ok) bottom-left */
+  legend?:     boolean;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -39,6 +50,7 @@ export function GardenPlanWidget({
   pickMode = false,
   onPick,
   onPinClick,
+  legend = false,
 }: GardenPlanWidgetProps) {
   const areaRef = useRef<HTMLDivElement>(null);
   const planRef = useRef<HTMLDivElement>(null);
@@ -354,54 +366,139 @@ export function GardenPlanWidget({
           />
 
           {/* Pins */}
-          {pins.map((pin, i) => (
-            <div
-              key={i}
-              data-pin
-              data-testid={`plan-pin-${i}`}
-              onClick={(e) => { e.stopPropagation(); onPinClick?.(pin, i); }}
-              style={{
-                position:  "absolute",
-                left:      `${pin.x}%`,
-                top:       `${pin.y}%`,
-                transform: `translate(-50%, -50%) scale(${1 / currentScale})`,
-                zIndex:    10,
-                cursor:    onPinClick ? "pointer" : "default",
-              }}
-            >
-              {/* Pulsing ring */}
-              <div style={{
-                position:     "absolute",
-                width:        "32px",
-                height:       "32px",
-                borderRadius: "50%",
-                border:       "2px solid rgba(45,74,45,.4)",
-                top:          "50%",
-                left:         "50%",
-                transform:    "translate(-50%, -50%)",
-                animation:    "gpw-pulse 1.5s ease-out infinite",
-                pointerEvents:"none",
-              }} />
-              {/* Dot */}
-              <div style={{
-                width:          "20px",
-                height:         "20px",
-                borderRadius:   "50%",
-                background:     pin.color ?? "var(--green-deep)",
-                border:         "3px solid white",
-                boxShadow:      "0 2px 8px rgba(0,0,0,.4)",
-                display:        "flex",
-                alignItems:     "center",
-                justifyContent: "center",
-                fontSize:       "9px",
-                fontWeight:     700,
-                color:          "white",
-                fontFamily:     "var(--font-body)",
-              }}>
-                {pin.label}
+          {pins.map((pin, i) => {
+            const isDashboard = !!pin.emoji;
+            return (
+              <div
+                key={i}
+                data-pin
+                data-testid={`plan-pin-${i}`}
+                onClick={(e) => { e.stopPropagation(); onPinClick?.(pin, i); }}
+                style={{
+                  position:  "absolute",
+                  left:      `${pin.x}%`,
+                  top:       `${pin.y}%`,
+                  transform: `translate(-50%, -50%) scale(${1 / currentScale})`,
+                  zIndex:    10,
+                  cursor:    onPinClick ? "pointer" : "default",
+                  display:   "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                }}
+              >
+                {/* Tooltip (Dashboard mode) */}
+                {isDashboard && pin.tooltip && (
+                  <div className="gpw-tooltip" style={{
+                    display:       "none",
+                    position:      "absolute",
+                    bottom:        "calc(100% + 6px)",
+                    left:          "50%",
+                    transform:     "translateX(-50%)",
+                    background:    "var(--green-deep)",
+                    color:         "white",
+                    borderRadius:  "8px",
+                    padding:       "8px 10px",
+                    minWidth:      "160px",
+                    zIndex:        100,
+                    boxShadow:     "0 4px 16px rgba(0,0,0,.25)",
+                    fontSize:      "11px",
+                    lineHeight:    "1.5",
+                    pointerEvents: "none",
+                    whiteSpace:    "nowrap",
+                  }}>
+                    <div style={{ fontWeight: 600, fontSize: "12px", marginBottom: "3px", color: "var(--green-pale)" }}>
+                      {pin.name}
+                    </div>
+                    {pin.tooltip.status && (
+                      <div style={{ color: "rgba(255,255,255,.8)" }}>{pin.tooltip.status}</div>
+                    )}
+                    {pin.tooltip.nextTask && (
+                      <div style={{ color: "#f5c0b8", marginTop: "3px", fontWeight: 500 }}>{pin.tooltip.nextTask}</div>
+                    )}
+                    {/* Arrow */}
+                    <div style={{
+                      position: "absolute", top: "100%", left: "50%",
+                      transform: "translateX(-50%)",
+                      border: "5px solid transparent",
+                      borderTopColor: "var(--green-deep)",
+                    }} />
+                  </div>
+                )}
+
+                {/* Pin circle */}
+                <div style={{
+                  width:          isDashboard ? "38px" : "20px",
+                  height:         isDashboard ? "38px" : "20px",
+                  borderRadius:   "50%",
+                  background:     pin.color ?? (isDashboard ? "rgba(255,255,255,.15)" : "var(--green-deep)"),
+                  border:         pin.selected
+                    ? `3px solid var(--green-mid)`
+                    : "3px solid white",
+                  boxShadow:      pin.selected
+                    ? "0 0 0 3px var(--green-pale), 0 4px 16px rgba(0,0,0,.4)"
+                    : "0 3px 10px rgba(0,0,0,.3)",
+                  display:        "flex",
+                  alignItems:     "center",
+                  justifyContent: "center",
+                  fontSize:       isDashboard ? "18px" : "9px",
+                  fontWeight:     700,
+                  color:          isDashboard ? "inherit" : "white",
+                  fontFamily:     "var(--font-body)",
+                  position:       "relative",
+                  transition:     "box-shadow .2s",
+                }}>
+                  {isDashboard ? pin.emoji : pin.label}
+
+                  {/* Red dot for overdue / has-task (AC #3) */}
+                  {pin.hasTask && (
+                    <div style={{
+                      position:     "absolute",
+                      top:          "-2px",
+                      right:        "-2px",
+                      width:        "11px",
+                      height:       "11px",
+                      borderRadius: "50%",
+                      background:   "var(--red-warn)",
+                      border:       "2px solid white",
+                    }} />
+                  )}
+                </div>
+
+                {/* Edit-mode pulsing ring (non-dashboard) */}
+                {!isDashboard && (
+                  <div style={{
+                    position:     "absolute",
+                    width:        "32px",
+                    height:       "32px",
+                    borderRadius: "50%",
+                    border:       "2px solid rgba(45,74,45,.4)",
+                    top:          "50%",
+                    left:         "50%",
+                    transform:    "translate(-50%, -50%)",
+                    animation:    "gpw-pulse 1.5s ease-out infinite",
+                    pointerEvents:"none",
+                  }} />
+                )}
+
+                {/* Plant name label below pin (Dashboard mode, AC #2) */}
+                {isDashboard && pin.name && (
+                  <div style={{
+                    fontSize:   "10px",
+                    fontWeight: 600,
+                    color:      "var(--green-deep)",
+                    background: "rgba(255,255,255,.85)",
+                    padding:    "2px 5px",
+                    borderRadius: "4px",
+                    marginTop:  "3px",
+                    whiteSpace: "nowrap",
+                    fontFamily: "var(--font-body)",
+                  }}>
+                    {pin.name}
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       ) : (
         /* Placeholder */
@@ -472,12 +569,50 @@ export function GardenPlanWidget({
         ))}
       </div>
 
-      {/* CSS animation for pin pulse ring */}
+      {/* Legend (AC #7) */}
+      {legend && (
+        <div
+          data-testid="plan-legend"
+          style={{
+            position:      "absolute",
+            bottom:        "12px",
+            left:          "12px",
+            background:    "rgba(255,255,255,.85)",
+            borderRadius:  "8px",
+            padding:       "8px 10px",
+            fontSize:      "10px",
+            color:         "var(--text-mid)",
+            display:       "flex",
+            flexDirection: "column",
+            gap:           "4px",
+            backdropFilter:"blur(4px)",
+            border:        "1px solid rgba(255,255,255,.6)",
+            boxShadow:     "var(--shadow-ga)",
+            zIndex:        50,
+            pointerEvents: "none",
+            fontFamily:    "var(--font-body)",
+          }}
+        >
+          {[
+            { color: "var(--red-warn)",    label: "Überfällig" },
+            { color: "var(--yellow-warn)", label: "Aktuell" },
+            { color: "var(--green-mid)",   label: "OK" },
+          ].map(({ color, label }) => (
+            <div key={label} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: color, flexShrink: 0 }} />
+              {label}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* CSS: animation + tooltip hover */}
       <style>{`
         @keyframes gpw-pulse {
           0%   { transform: translate(-50%, -50%) scale(1);   opacity: .8; }
           100% { transform: translate(-50%, -50%) scale(2.2); opacity: 0;  }
         }
+        [data-pin]:hover .gpw-tooltip { display: block !important; }
       `}</style>
     </div>
   );

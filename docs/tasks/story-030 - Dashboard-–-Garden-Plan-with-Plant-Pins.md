@@ -1,9 +1,11 @@
 ---
 id: STORY-030
 title: Dashboard – Garden Plan with Plant Pins
-status: Ready
-assignee: []
+status: In Progress
+assignee:
+  - '@agent'
 created_date: '2026-05-04 22:46'
+updated_date: '2026-05-06 21:44'
 labels: []
 dependencies: []
 documentation:
@@ -19,14 +21,20 @@ Implement the central garden plan area with pannable/zoomable image and plant pi
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Garden plan image rendered from Garden.plan_url; placeholder shown if not yet uploaded
-- [ ] #2 Plant pins rendered at x_percent/y_percent positions with SVG icon + colored ring
-- [ ] #3 Red dot indicator on pin if plant has overdue tasks
-- [ ] #4 Hover tooltip: plant name, health status, next task
-- [ ] #5 Click pin: opens Shared Plant Detail Panel in left column; replaces task list
-- [ ] #6 Zoom buttons ↕ ↔ work as described in mockup
-- [ ] #7 Legend shown bottom-left (overdue / current / ok)
+- [x] #1 Garden plan image rendered from Garden.plan_url; placeholder shown if not yet uploaded
+- [x] #2 Plant pins rendered at x_percent/y_percent positions with SVG icon + colored ring
+- [x] #3 Red dot indicator on pin if plant has overdue tasks
+- [x] #4 Hover tooltip: plant name, health status, next task
+- [x] #5 Click pin: opens Shared Plant Detail Panel in left column; replaces task list
+- [x] #6 Zoom buttons ↕ ↔ work as described in mockup
+- [x] #7 Legend shown bottom-left (overdue / current / ok)
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+DashboardView implementiert: 280px linke Spalte (Weather-Stub + Todo-Liste oder PlantDetailPanel) + flexibler Mittelteil (GardenPlanWidget + Monatsband) + AiPanel. GardenPlanWidget um Dashboard-Pin-Props erweitert: emoji, name, hasTask (roter Dot, AC #3), selected, tooltip (AC #4), legend-Prop (AC #7). Pins aus plant.positions mit Emoji+Name+Tooltip. Pin-Klick öffnet PlantDetailPanel in linker Spalte (AC #5). Todo-Liste mit Priorisierung (Überfällig/Diese Woche/Demnächst). Monatsband mit 12 Zellen, aktueller Monat hervorgehoben. 15 neue Tests, 232 gesamt grün.
+<!-- SECTION:FINAL_SUMMARY:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->

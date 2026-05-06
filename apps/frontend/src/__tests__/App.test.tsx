@@ -43,7 +43,7 @@ function renderAt(path: string) {
 describe("App routing", () => {
   it("/ renders the Dashboard view", () => {
     renderAt("/");
-    expect(screen.getByRole("heading", { name: /Dashboard/i })).toBeInTheDocument();
+    expect(screen.getByTestId("dashboard-view")).toBeInTheDocument();
   });
 
   it("/plants renders the Plants view", () => {
