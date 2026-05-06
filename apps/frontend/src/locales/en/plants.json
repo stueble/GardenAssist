@@ -150,6 +150,19 @@
     "yes":               "Yes",
     "no":                "No",
     "name_required":     "Name is required",
+    "attachments": {
+      "section_title":   "Images & Documents",
+      "add_btn":         "＋ Add file",
+      "hint":            "The first image in the \"Plant\" category is used as the thumbnail.",
+      "category_main":   "Plant",
+      "category_bloom":  "Bloom",
+      "category_leaf":   "Leaf",
+      "category_problem":"Problem",
+      "category_invoice":"Invoice",
+      "upload_error":    "Upload failed. Please try again.",
+      "delete_error":    "Deletion failed.",
+      "size_error":      "File is too large."
+    },
     "positions": {
       "section_title":  "Positions on plan",
       "hint":           "Coordinates on the garden plan (0–100%). Multiple positions supported.",

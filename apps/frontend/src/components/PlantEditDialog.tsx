@@ -20,6 +20,7 @@ import type { TFunction } from "i18next";
 import type { Plant } from "@api/plant";
 import type { Schedule, ScheduleType } from "@api/schedule";
 import type { ColorPreset } from "@api/color-preset";
+import type { Attachment, AttachmentCategory } from "@api/attachment";
 import type { PlantInput } from "@api/api";
 import { apiClient } from "@/api/client";
 
@@ -206,6 +207,20 @@ function formToInput(form: EditForm): PlantInput {
 
 export type PositionRow = { x: number; y: number };
 
+// ── Attachment row type ───────────────────────────────────────────────────────
+
+/** An existing saved attachment (from plant.attachments). */
+type SavedAttachment = Attachment & { _kind: "saved" };
+/** A new local file not yet uploaded. */
+type LocalAttachment = {
+  _kind:    "local";
+  localId:  string;   // crypto.randomUUID() — used as React key
+  file:     File;
+  previewUrl: string; // blob: URL for image preview
+  category: AttachmentCategory;
+};
+export type AttachmentRow = SavedAttachment | LocalAttachment;
+
 // ── Props ─────────────────────────────────────────────────────────────────────
 
 export interface PlantEditDialogProps {
@@ -240,6 +255,10 @@ export function PlantEditDialog({
   const [nameError,     setNameError]     = useState(false);
   const [scheduleRows,  setScheduleRows]  = useState<ScheduleRow[]>(() => schedulesToRows(plant?.schedules ?? []));
   const [colorPresets,  setColorPresets]  = useState<ColorPreset[]>([]);
+  const [attachmentRows, setAttachmentRows] = useState<AttachmentRow[]>(
+    () => (plant?.attachments ?? []).map((a) => ({ ...a, _kind: "saved" as const }))
+  );
+  const [attachmentError, setAttachmentError] = useState<string | null>(null);
 
   // Load settings for category + zone dropdowns (AC #5) and color presets (AC #3)
   useEffect(() => {
@@ -278,7 +297,10 @@ export function PlantEditDialog({
   const dirty =
     JSON.stringify(form) !== JSON.stringify(plantToForm(plant)) ||
     JSON.stringify(scheduleRows) !== JSON.stringify(schedulesToRows(plant?.schedules ?? [])) ||
-    JSON.stringify(positions) !== JSON.stringify(initialPositions);
+    JSON.stringify(positions) !== JSON.stringify(initialPositions) ||
+    attachmentRows.some((r) => r._kind === "local") ||
+    // a saved attachment was deleted
+    (plant?.attachments ?? []).some((a) => !attachmentRows.find((r) => r._kind === "saved" && r.id === a.id));
 
   function handleClose() {
     if (dirty && !confirm(t("edit.unsaved_confirm"))) return;
@@ -297,15 +319,47 @@ export function PlantEditDialog({
     }
     setSaving(true);
     setError(null);
+    setAttachmentError(null);
     try {
+      // 1. Determine thumbnail: first saved "main" attachment, else first saved
+      const savedRows = attachmentRows.filter((r) => r._kind === "saved") as SavedAttachment[];
+      const firstMain = savedRows.find((r) => r.category === "main");
+      const thumbnailId = firstMain?.id ?? savedRows[0]?.id ?? null;
+
       const input: ReturnType<typeof formToInput> = {
         ...formToInput(form),
-        schedules:  rowsToScheduleInputs(scheduleRows),
-        positions:  positions.map((r) => ({ x_percent: r.x, y_percent: r.y })),
+        schedules:               rowsToScheduleInputs(scheduleRows),
+        positions:               positions.map((r) => ({ x_percent: r.x, y_percent: r.y })),
+        attachments:             savedRows,
+        thumbnail_attachment_id: thumbnailId,
       };
+
+      // 2. Save plant (create or update)
       const saved = plant
         ? await apiClient.updatePlant(plant.id, input)
         : await apiClient.createPlant(input);
+
+      // 3. Upload new local files
+      const localRows = attachmentRows.filter((r) => r._kind === "local") as LocalAttachment[];
+      if (localRows.length > 0) {
+        try {
+          await Promise.all(localRows.map((r) =>
+            apiClient.uploadAttachment("plant", saved.id, {
+              file:       r.file,
+              category:   r.category,
+              updated_at: "",
+            })
+          ));
+        } catch {
+          // Uploads failed — plant is saved, but images are missing
+          setAttachmentError(t("edit.attachments.upload_error"));
+          setSaving(false);
+          // Still close dialog — plant data is saved; images can be re-added later
+          onSaved(saved);
+          return;
+        }
+      }
+
       onSaved(saved);
     } catch {
       setError("Speichern fehlgeschlagen. Bitte versuche es erneut.");
@@ -360,10 +414,15 @@ export function PlantEditDialog({
       {/* ── Body ── */}
       <div style={{ flex: 1, overflowY: "auto" }}>
 
-        {/* Error banner */}
+        {/* Error banners */}
         {error && (
           <div style={{ margin: "12px 16px 0", padding: "8px 12px", borderRadius: "8px", background: "var(--red-soft)", border: "1px solid var(--red-warn)", fontSize: "12px", color: "var(--red-warn)" }}>
             {error}
+          </div>
+        )}
+        {attachmentError && (
+          <div data-testid="attachment-error" style={{ margin: "12px 16px 0", padding: "8px 12px", borderRadius: "8px", background: "var(--yellow-soft)", border: "1px solid var(--yellow-warn)", fontSize: "12px", color: "var(--yellow-warn)" }}>
+            {attachmentError}
           </div>
         )}
 
@@ -387,8 +446,19 @@ export function PlantEditDialog({
           />
         </EditSection>
 
-        {/* Placeholder sections for later stories */}
-        <EditSection title="Bilder" accent="#4a78c0" />
+        {/* Bilder section — story-029 */}
+        <EditSection
+          title={t("edit.attachments.section_title")}
+          accent="#4a78c0"
+          count={attachmentRows.length}
+        >
+          <BilderSection
+            rows={attachmentRows}
+            onRowsChange={setAttachmentRows}
+            maxSizeMb={10}
+            t={t}
+          />
+        </EditSection>
 
         {/* Positionen section — story-028 */}
         <EditSection
@@ -1011,6 +1081,198 @@ function PositionenSection({ positions, pickMode, onPickModeChange, onPositionsC
         className="hover:border-green-mid hover:text-green-deep hover:bg-green-mist"
       >
         {t("edit.positions.add_btn")}
+      </button>
+    </div>
+  );
+}
+
+// ── BilderSection ─────────────────────────────────────────────────────────────
+
+const ATTACHMENT_CATEGORIES: AttachmentCategory[] = ["main", "bloom", "leaf", "problem", "invoice"];
+const ATTACHMENT_ACCEPT = "image/png,image/jpeg,image/webp,application/pdf";
+
+interface BilderSectionProps {
+  rows:        AttachmentRow[];
+  onRowsChange:(rows: AttachmentRow[]) => void;
+  maxSizeMb:   number;
+  t:           TFunction<"plants">;
+}
+
+function BilderSection({ rows, onRowsChange, maxSizeMb, t }: BilderSectionProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [sizeError, setSizeError] = useState<string | null>(null);
+
+  function categoryLabel(cat: AttachmentCategory | null): string {
+    if (!cat) return "—";
+    return (t as (k: string) => string)(`edit.attachments.category_${cat}`);
+  }
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";  // reset so same file can be picked again
+    if (file.size > maxSizeMb * 1024 * 1024) {
+      setSizeError(t("edit.attachments.size_error"));
+      return;
+    }
+    setSizeError(null);
+    const isImage = file.type.startsWith("image/");
+    const newRow: LocalAttachment = {
+      _kind:      "local",
+      localId:    crypto.randomUUID(),
+      file,
+      previewUrl: isImage ? URL.createObjectURL(file) : "",
+      category:   "main",
+    };
+    onRowsChange([...rows, newRow]);
+  }
+
+  function updateCategory(idx: number, cat: AttachmentCategory) {
+    onRowsChange(rows.map((r, i) => i === idx ? { ...r, category: cat } : r));
+  }
+
+  async function handleDelete(idx: number) {
+    const row = rows[idx];
+    if (row._kind === "saved") {
+      try {
+        await apiClient.deleteAttachment(row.id);
+      } catch {
+        // Deletion failed — leave row in place, don't remove from state
+        return;
+      }
+    } else {
+      // Revoke blob URL to free memory
+      if (row.previewUrl) URL.revokeObjectURL(row.previewUrl);
+    }
+    onRowsChange(rows.filter((_, i) => i !== idx));
+  }
+
+  function thumbnailContent(row: AttachmentRow): React.ReactNode {
+    if (row._kind === "saved") {
+      if (row.attachment_type === "pdf") return <span style={{ fontSize: "24px" }}>📄</span>;
+      return <img src={row.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "6px" }} />;
+    }
+    // local
+    if (row.file.type === "application/pdf") return <span style={{ fontSize: "24px" }}>📄</span>;
+    if (row.previewUrl) return <img src={row.previewUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "6px" }} />;
+    return <span style={{ fontSize: "24px" }}>📷</span>;
+  }
+
+  return (
+    <div>
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept={ATTACHMENT_ACCEPT}
+        style={{ display: "none" }}
+        data-testid="attachment-file-input"
+        onChange={handleFileChange}
+      />
+
+      {/* Size error */}
+      {sizeError && (
+        <div style={{ fontSize: "11px", color: "var(--red-warn)", marginBottom: "8px" }}>
+          {sizeError}
+        </div>
+      )}
+
+      {/* Attachment rows */}
+      {rows.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "7px", marginBottom: "10px" }}>
+          {rows.map((row, idx) => (
+            <div
+              key={row._kind === "saved" ? row.id : row.localId}
+              data-testid="attachment-row"
+              style={{
+                display:      "flex",
+                alignItems:   "center",
+                gap:          "8px",
+                background:   "var(--green-mist)",
+                border:       "1.5px solid var(--border)",
+                borderRadius: "8px",
+                padding:      "7px 10px",
+              }}
+            >
+              {/* Thumbnail */}
+              <div
+                style={{
+                  width: "48px", height: "48px", borderRadius: "8px",
+                  background: "white", border: "1.5px solid var(--border)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  flexShrink: 0, overflow: "hidden",
+                }}
+              >
+                {thumbnailContent(row)}
+              </div>
+
+              {/* Category select */}
+              <select
+                value={row.category ?? "main"}
+                data-testid="attachment-category"
+                onChange={(e) => updateCategory(idx, e.target.value as AttachmentCategory)}
+                style={{
+                  flex: 1, background: "white", border: "1.5px solid var(--border)",
+                  borderRadius: "6px", padding: "5px 8px", fontSize: "12px",
+                  fontFamily: "var(--font-body)", color: "var(--text-dark)", outline: "none",
+                }}
+              >
+                {ATTACHMENT_CATEGORIES.map((c) => (
+                  <option key={c} value={c}>{categoryLabel(c)}</option>
+                ))}
+              </select>
+
+              {/* Badge for local (not yet uploaded) */}
+              {row._kind === "local" && (
+                <span style={{
+                  fontSize: "9px", fontWeight: 700,
+                  background: "var(--blue-soft)", color: "var(--blue-mid)",
+                  padding: "2px 5px", borderRadius: "4px", whiteSpace: "nowrap",
+                }}>
+                  neu
+                </span>
+              )}
+
+              {/* Delete */}
+              <button
+                type="button"
+                data-testid="attachment-delete"
+                onClick={() => void handleDelete(idx)}
+                style={{
+                  background: "none", border: "none", cursor: "pointer",
+                  color: "var(--text-light)", fontSize: "13px", lineHeight: 1,
+                  padding: 0, flexShrink: 0,
+                }}
+                className="hover:text-red-warn"
+                aria-label="Anhang löschen"
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Hint */}
+      <div style={{ fontSize: "11px", color: "var(--text-light)", marginBottom: "8px", lineHeight: 1.4 }}>
+        {t("edit.attachments.hint")}
+      </div>
+
+      {/* Add button */}
+      <button
+        type="button"
+        data-testid="attachment-add-btn"
+        onClick={() => fileInputRef.current?.click()}
+        style={{
+          display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
+          background: "none", border: "1.5px dashed var(--border)", borderRadius: "8px",
+          padding: "7px 12px", fontSize: "12px", fontWeight: 500,
+          fontFamily: "var(--font-body)", color: "var(--text-light)",
+          cursor: "pointer", width: "100%", transition: "all .15s",
+        }}
+        className="hover:border-green-mid hover:text-green-deep hover:bg-green-mist"
+      >
+        {t("edit.attachments.add_btn")}
       </button>
     </div>
   );

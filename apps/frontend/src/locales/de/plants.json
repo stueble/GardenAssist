@@ -150,6 +150,19 @@
     "yes":               "Ja",
     "no":                "Nein",
     "name_required":     "Name ist erforderlich",
+    "attachments": {
+      "section_title":   "Bilder & Dokumente",
+      "add_btn":         "＋ Datei hinzufügen",
+      "hint":            "Das erste Bild der Kategorie 'Pflanze' wird als Vorschau verwendet.",
+      "category_main":   "Pflanze",
+      "category_bloom":  "Blüte",
+      "category_leaf":   "Blatt",
+      "category_problem":"Problem",
+      "category_invoice":"Rechnung",
+      "upload_error":    "Upload fehlgeschlagen. Bitte erneut versuchen.",
+      "delete_error":    "Löschen fehlgeschlagen.",
+      "size_error":      "Datei ist zu groß."
+    },
     "positions": {
       "section_title":  "Positionen im Plan",
       "hint":           "Koordinaten auf dem Gartenplan (0–100%). Mehrere Positionen möglich.",
