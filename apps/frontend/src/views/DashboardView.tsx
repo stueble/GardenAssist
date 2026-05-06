@@ -66,13 +66,16 @@ function relativeTaskSub(task: Task): string {
     return weeks === 1 ? "Überfällig seit 1 Woche" : `Überfällig seit ${weeks} Wochen`;
   }
   if (start_week > cw) {
-    // upcoming: not yet started — weeks until end of window
-    const weeksLeft = end_week - cw;
-    if (weeksLeft <= 1) return "In 1 Woche";
-    return `In ${weeksLeft} Wochen`;
+    // upcoming: fällig in N Wochen (weeks until start_week)
+    const weeksUntil = start_week - cw;
+    if (weeksUntil <= 1) return "Fällig in 1 Woche";
+    return `Fällig in ${weeksUntil} Wochen`;
   }
-  // due: currently within window
-  return "Aktuell";
+  // due: currently within window — innerhalb N Wochen (weeks remaining until end)
+  const weeksLeft = end_week - cw;
+  if (weeksLeft <= 0) return "Aktuell (letzte Woche)";
+  if (weeksLeft === 1) return "Innerhalb 1 Woche";
+  return `Innerhalb ${weeksLeft} Wochen`;
 }
 
 /** Build a PlanPin from a plant position for the Dashboard. */
@@ -186,27 +189,12 @@ export function DashboardView() {
 
         <div style={{ height: "1px", background: "var(--border)", flexShrink: 0 }} />
 
-        {/* Detail panel OR todo list */}
-        {selected ? (
-          <PlantDetailPanel
-            plant={selected}
-            onClose={handleDetailClose}
-            onEdit={() => {/* navigate to plants view in future story */}}
-            onDelete={() => {
-              setGarden((g) => g
-                ? { ...g, plants: g.plants.filter((p) => p.id !== selected.id) }
-                : g
-              );
-              setSelected(null);
-            }}
-          />
-        ) : (
-          <TodoList garden={garden} loading={loading} onTaskResolved={() => {
-            apiClient.getGarden()
-              .then((g) => setGarden(g))
-              .catch(() => {});
-          }} />
-        )}
+        {/* Todo list always in left column */}
+        <TodoList garden={garden} loading={loading} onTaskResolved={() => {
+          apiClient.getGarden()
+            .then((g) => setGarden(g))
+            .catch(() => {});
+        }} />
       </div>
 
       {/* ── Center: garden plan + monthly band ── */}
@@ -230,6 +218,37 @@ export function DashboardView() {
 
         {/* Monthly band */}
         <MonthBand monthTasks={monthTasks} currentMonthIdx={weekToMonthIdx(cw)} />
+      </div>
+
+      {/* ── Detail panel — right of center, left of AiPanel (like PlantsView) ── */}
+      <div
+        data-testid="dashboard-detail-panel"
+        style={{
+          width:         selected ? "300px" : "0",
+          minWidth:      selected ? "300px" : "0",
+          overflow:      "hidden",
+          background:    "var(--warm-white)",
+          borderLeft:    selected ? "1px solid var(--border)" : "none",
+          display:       "flex",
+          flexDirection: "column",
+          transition:    "width .3s ease, min-width .3s ease",
+          flexShrink:    0,
+        }}
+      >
+        {selected && (
+          <PlantDetailPanel
+            plant={selected}
+            onClose={handleDetailClose}
+            onEdit={() => {/* navigate to plants view in future story */}}
+            onDelete={() => {
+              setGarden((g) => g
+                ? { ...g, plants: g.plants.filter((p) => p.id !== selected.id) }
+                : g
+              );
+              setSelected(null);
+            }}
+          />
+        )}
       </div>
 
       <AiPanel context={aiContext} />
