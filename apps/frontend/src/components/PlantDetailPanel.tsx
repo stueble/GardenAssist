@@ -391,27 +391,46 @@ export function PlantDetailPanel({ plant, onClose, onEdit, onDelete }: PlantDeta
           </div>
         </CollapsibleSection>
 
-        {/* Weitere Bilder — collapsible */}
-        <CollapsibleSection label={t("detail.section_gallery")}>
-          <div style={{ display: "flex", gap: "8px" }}>
-            {[...Array(3)].map((_, i) => (
-              <div
-                key={i}
-                style={{
-                  flex: 1, aspectRatio: "1", borderRadius: "8px",
-                  background: "var(--green-mist)", border: "1.5px dashed var(--border)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: "22px", cursor: "pointer", color: "var(--text-light)",
-                }}
-              >
-                +
-              </div>
-            ))}
-          </div>
-          <div style={{ fontSize: "11px", color: "var(--text-light)", marginTop: "6px" }}>
-            Bilder-Upload folgt in einer späteren Version.
-          </div>
-        </CollapsibleSection>
+         {/* Weitere Bilder — only shown when additional images exist beyond the first 3 slots */}
+         {(() => {
+           const imgs = plant.attachments.filter((a) => a.attachment_type === "image");
+           // Determine which IDs are already shown in the 3 main slots
+           const catPriority = ["main", "bloom", "leaf"];
+           const usedIds = new Set<string>();
+           for (const cat of catPriority) {
+             const found = imgs.find((a) => a.category === cat && !usedIds.has(a.id));
+             if (found) usedIds.add(found.id);
+           }
+           // Fill remaining main slots from absolute order
+           for (const img of imgs) {
+             if (usedIds.size >= 3) break;
+             if (!usedIds.has(img.id)) usedIds.add(img.id);
+           }
+           const extras = imgs.filter((a) => !usedIds.has(a.id));
+           if (extras.length === 0) return null;
+           return (
+             <CollapsibleSection label={t("detail.section_gallery")}>
+               <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                 {extras.map((img) => (
+                   <div
+                     key={img.id}
+                     style={{
+                       width: "72px", height: "72px", borderRadius: "8px",
+                       overflow: "hidden", border: "1.5px solid var(--border)",
+                       flexShrink: 0,
+                     }}
+                   >
+                     <img
+                       src={img.url}
+                       alt={img.category ?? ""}
+                       style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                     />
+                   </div>
+                 ))}
+               </div>
+             </CollapsibleSection>
+           );
+         })()}
 
       </div>
 
