@@ -238,8 +238,13 @@ export function GardenPlanWidget({
     };
     const onTouchEnd = () => { s.dragging = false; };
 
-    // Resize
-    const onResize = () => initPlan();
+    // Resize — re-apply current fit mode, or re-fit-inside if free
+    const onResize = () => {
+      const fitH = modeFitHRef.current;
+      const fitW = modeFitWRef.current;
+      if (fitH || fitW) applyCurrentMode(fitH, fitW, false);
+      else initPlan();
+    };
 
     area.addEventListener("mousedown", onMouseDown);
     window.addEventListener("mousemove", onMouseMove);
@@ -287,18 +292,20 @@ export function GardenPlanWidget({
   // ── fit buttons ───────────────────────────────────────────────────────────────
 
   const handleFitH = () => {
-    const next = !modeFitH;
-    modeFitHRef.current = next;
-    setModeFitH(next);
-    if (!next && !modeFitW) initPlan();
-    else applyCurrentMode(next, modeFitW, true);
+    const nextH = !modeFitHRef.current;
+    const curW  = modeFitWRef.current;
+    modeFitHRef.current = nextH;
+    setModeFitH(nextH);
+    if (!nextH && !curW) initPlan();
+    else applyCurrentMode(nextH, curW, true);
   };
   const handleFitW = () => {
-    const next = !modeFitW;
-    modeFitWRef.current = next;
-    setModeFitW(next);
-    if (!modeFitH && !next) initPlan();
-    else applyCurrentMode(modeFitH, next, true);
+    const nextW = !modeFitWRef.current;
+    const curH  = modeFitHRef.current;
+    modeFitWRef.current = nextW;
+    setModeFitW(nextW);
+    if (!curH && !nextW) initPlan();
+    else applyCurrentMode(curH, nextW, true);
   };
 
   // ── render ────────────────────────────────────────────────────────────────────
