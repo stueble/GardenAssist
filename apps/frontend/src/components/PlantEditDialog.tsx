@@ -1099,8 +1099,52 @@ interface BilderSectionProps {
 }
 
 function BilderSection({ rows, onRowsChange, maxSizeMb, t }: BilderSectionProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [sizeError, setSizeError] = useState<string | null>(null);
+  const fileInputRef  = useRef<HTMLInputElement>(null);
+  const dragIndexRef  = useRef<number | null>(null);
+  const [insertBefore, setInsertBefore] = useState<number | null>(null);
+  const [sizeError,    setSizeError]    = useState<string | null>(null);
+
+  // ── drag handlers (same pattern as ColorPresetsSection) ──────────────────────
+
+  function handleDragStart(index: number) {
+    dragIndexRef.current = index;
+  }
+
+  function handleDragOver(e: React.DragEvent, index: number) {
+    e.preventDefault();
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const mid  = rect.top + rect.height / 2;
+    setInsertBefore(e.clientY < mid ? index : index + 1);
+  }
+
+  function handleDragLeaveList() {
+    setInsertBefore(null);
+  }
+
+  function handleDropOnList(e: React.DragEvent) {
+    e.preventDefault();
+    const from = dragIndexRef.current;
+    if (from === null || insertBefore === null) {
+      dragIndexRef.current = null;
+      setInsertBefore(null);
+      return;
+    }
+    const to = insertBefore > from ? insertBefore - 1 : insertBefore;
+    dragIndexRef.current = null;
+    setInsertBefore(null);
+    if (from === to) return;
+    const updated = [...rows];
+    const [item] = updated.splice(from, 1);
+    updated.splice(to, 0, item);
+    onRowsChange(updated);
+  }
+
+  function handleDragEnd() {
+    dragIndexRef.current = null;
+    setInsertBefore(null);
+  }
+
+  // ── other handlers ────────────────────────────────────────────────────────────
 
   function categoryLabel(cat: AttachmentCategory | null): string {
     if (!cat) return "—";
@@ -1110,7 +1154,7 @@ function BilderSection({ rows, onRowsChange, maxSizeMb, t }: BilderSectionProps)
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    e.target.value = "";  // reset so same file can be picked again
+    e.target.value = "";
     if (file.size > maxSizeMb * 1024 * 1024) {
       setSizeError(t("edit.attachments.size_error"));
       return;
@@ -1137,11 +1181,9 @@ function BilderSection({ rows, onRowsChange, maxSizeMb, t }: BilderSectionProps)
       try {
         await apiClient.deleteAttachment(row.id);
       } catch {
-        // Deletion failed — leave row in place, don't remove from state
         return;
       }
     } else {
-      // Revoke blob URL to free memory
       if (row.previewUrl) URL.revokeObjectURL(row.previewUrl);
     }
     onRowsChange(rows.filter((_, i) => i !== idx));
@@ -1152,7 +1194,6 @@ function BilderSection({ rows, onRowsChange, maxSizeMb, t }: BilderSectionProps)
       if (row.attachment_type === "pdf") return <span style={{ fontSize: "24px" }}>📄</span>;
       return <img src={row.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "6px" }} />;
     }
-    // local
     if (row.file.type === "application/pdf") return <span style={{ fontSize: "24px" }}>📄</span>;
     if (row.previewUrl) return <img src={row.previewUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "6px" }} />;
     return <span style={{ fontSize: "24px" }}>📷</span>;
@@ -1177,79 +1218,119 @@ function BilderSection({ rows, onRowsChange, maxSizeMb, t }: BilderSectionProps)
         </div>
       )}
 
-      {/* Attachment rows */}
+      {/* Sortable attachment rows */}
       {rows.length > 0 && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "7px", marginBottom: "10px" }}>
+        <div
+          onDragOver={(e) => e.preventDefault()}
+          onDragLeave={handleDragLeaveList}
+          onDrop={handleDropOnList}
+          style={{ marginBottom: "10px" }}
+        >
           {rows.map((row, idx) => (
-            <div
-              key={row._kind === "saved" ? row.id : row.localId}
-              data-testid="attachment-row"
-              style={{
-                display:      "flex",
-                alignItems:   "center",
-                gap:          "8px",
-                background:   "var(--green-mist)",
-                border:       "1.5px solid var(--border)",
-                borderRadius: "8px",
-                padding:      "7px 10px",
-              }}
-            >
-              {/* Thumbnail */}
+            <div key={row._kind === "saved" ? row.id : row.localId}>
+              {/* Insert-line ABOVE this item */}
+              <AttachmentInsertLine
+                visible={insertBefore === idx && dragIndexRef.current !== idx}
+              />
+
               <div
+                draggable
+                data-testid="attachment-row"
+                onDragStart={() => handleDragStart(idx)}
+                onDragOver={(e) => handleDragOver(e, idx)}
+                onDragEnd={handleDragEnd}
                 style={{
-                  width: "48px", height: "48px", borderRadius: "8px",
-                  background: "white", border: "1.5px solid var(--border)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  flexShrink: 0, overflow: "hidden",
+                  display:      "flex",
+                  alignItems:   "center",
+                  gap:          "8px",
+                  background:   "var(--green-mist)",
+                  border:       "1.5px solid var(--border)",
+                  borderRadius: "8px",
+                  padding:      "7px 10px",
+                  marginBottom: "7px",
+                  cursor:       "grab",
                 }}
               >
-                {thumbnailContent(row)}
-              </div>
-
-              {/* Category select */}
-              <select
-                value={row.category ?? "main"}
-                data-testid="attachment-category"
-                onChange={(e) => updateCategory(idx, e.target.value as AttachmentCategory)}
-                style={{
-                  flex: 1, background: "white", border: "1.5px solid var(--border)",
-                  borderRadius: "6px", padding: "5px 8px", fontSize: "12px",
-                  fontFamily: "var(--font-body)", color: "var(--text-dark)", outline: "none",
-                }}
-              >
-                {ATTACHMENT_CATEGORIES.map((c) => (
-                  <option key={c} value={c}>{categoryLabel(c)}</option>
-                ))}
-              </select>
-
-              {/* Badge for local (not yet uploaded) */}
-              {row._kind === "local" && (
-                <span style={{
-                  fontSize: "9px", fontWeight: 700,
-                  background: "var(--blue-soft)", color: "var(--blue-mid)",
-                  padding: "2px 5px", borderRadius: "4px", whiteSpace: "nowrap",
-                }}>
-                  neu
+                {/* Drag handle */}
+                <span
+                  style={{
+                    color:      "var(--text-light)",
+                    fontSize:   "14px",
+                    cursor:     "grab",
+                    flexShrink: 0,
+                    lineHeight: 1,
+                    userSelect: "none",
+                  }}
+                  title="Verschieben"
+                >
+                  ⠿
                 </span>
-              )}
 
-              {/* Delete */}
-              <button
-                type="button"
-                data-testid="attachment-delete"
-                onClick={() => void handleDelete(idx)}
-                style={{
-                  background: "none", border: "none", cursor: "pointer",
-                  color: "var(--text-light)", fontSize: "13px", lineHeight: 1,
-                  padding: 0, flexShrink: 0,
-                }}
-                className="hover:text-red-warn"
-                aria-label="Anhang löschen"
-              >
-                ✕
-              </button>
+                {/* Thumbnail */}
+                <div
+                  style={{
+                    width: "48px", height: "48px", borderRadius: "8px",
+                    background: "white", border: "1.5px solid var(--border)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    flexShrink: 0, overflow: "hidden",
+                  }}
+                >
+                  {thumbnailContent(row)}
+                </div>
+
+                {/* Category select */}
+                <select
+                  value={row.category ?? "main"}
+                  data-testid="attachment-category"
+                  onChange={(e) => updateCategory(idx, e.target.value as AttachmentCategory)}
+                  style={{
+                    flex: 1, background: "white", border: "1.5px solid var(--border)",
+                    borderRadius: "6px", padding: "5px 8px", fontSize: "12px",
+                    fontFamily: "var(--font-body)", color: "var(--text-dark)", outline: "none",
+                  }}
+                >
+                  {ATTACHMENT_CATEGORIES.map((c) => (
+                    <option key={c} value={c}>{categoryLabel(c)}</option>
+                  ))}
+                </select>
+
+                {/* Badge for local (not yet uploaded) */}
+                {row._kind === "local" && (
+                  <span style={{
+                    fontSize: "9px", fontWeight: 700,
+                    background: "var(--blue-soft)", color: "var(--blue-mid)",
+                    padding: "2px 5px", borderRadius: "4px", whiteSpace: "nowrap",
+                  }}>
+                    neu
+                  </span>
+                )}
+
+                {/* Delete */}
+                <button
+                  type="button"
+                  data-testid="attachment-delete"
+                  onClick={() => void handleDelete(idx)}
+                  style={{
+                    background: "none", border: "none", cursor: "pointer",
+                    color: "var(--text-light)", fontSize: "13px", lineHeight: 1,
+                    padding: 0, flexShrink: 0,
+                  }}
+                  className="hover:text-red-warn"
+                  aria-label="Anhang löschen"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
           ))}
+
+          {/* Insert-line AFTER the last item */}
+          <AttachmentInsertLine
+            visible={
+              insertBefore === rows.length &&
+              dragIndexRef.current !== rows.length - 1
+            }
+          />
         </div>
       )}
 
@@ -1274,6 +1355,23 @@ function BilderSection({ rows, onRowsChange, maxSizeMb, t }: BilderSectionProps)
       >
         {t("edit.attachments.add_btn")}
       </button>
+    </div>
+  );
+}
+
+function AttachmentInsertLine({ visible }: { visible: boolean }) {
+  if (!visible) return null;
+  return (
+    <div style={{
+      height: "2px", background: "var(--green-mid)",
+      borderRadius: "2px", margin: "2px 0", position: "relative",
+    }}>
+      <div style={{
+        position: "absolute", left: "-3px", top: "50%",
+        transform: "translateY(-50%)",
+        width: "8px", height: "8px", borderRadius: "50%",
+        background: "var(--green-mid)",
+      }} />
     </div>
   );
 }
