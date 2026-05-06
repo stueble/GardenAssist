@@ -52,9 +52,14 @@
     "last_cut":        "Last pruning",
     "last_fert":       "Last fertilization",
     "section_notes":   "Care notes",
-    "btn_assistant":   "Assistant",
-    "btn_edit":        "✏️ Edit",
-    "no_date":         "–"
+    "btn_edit":              "✏️ Edit",
+    "btn_delete":            "Delete plant",
+    "delete_confirm_title":  "Permanently delete this plant?",
+    "delete_confirm_body":   "This action cannot be undone.",
+    "delete_confirm_cancel": "Cancel",
+    "delete_confirm_ok":     "Delete",
+    "delete_error":          "Deletion failed. Please try again.",
+    "no_date":               "–"
   },
   "status": {
     "overdue":  "Overdue",

@@ -108,8 +108,8 @@ Interactive HTML mockup: `ui-mockups/plants-overview/plants-overview-mockup.html
 | **Fact sheet** | 2-column grid: Type, Location, Bloom period, Flower color, Age, Min. temperature | Read-only |
 | **Care history** | Last pruning date + last fertilization date | Read-only |
 | **Care notes** | Free-text with yellow background | Read-only; shows care instructions |
-| **Button: Ask assistant** | Opens chat panel with plant as context | Injects context pill for the selected plant into the chat |
-| **Button: Edit** | Opens edit mode | Placeholder — not yet implemented |
+| **Button: Edit** | Opens the Plant Edit Dialog | Pre-fills all fields from the selected plant |
+| **Button: Delete plant** | Red text-link below the action bar | Opens inline confirmation; on confirm calls DELETE /api/plants/:id; on success closes panel and removes plant from list |
 
 ### FAB (Floating Action Button)
 
@@ -137,7 +137,8 @@ Interactive HTML mockup: `ui-mockups/plants-overview/plants-overview-mockup.html
 - **Click table row / plant card** → Detail panel slides open from the right; row/card highlighted
 - **Click ✕ in detail panel** → Detail panel closes; row/card deselected
 - **Click column header** → Sort ascending; second click: descending
-- **Click "Ask assistant" in detail panel** → Chat panel opens; context pill for the selected plant injected
+- **Select a plant (row/card click)** → Chat panel automatically gains plant context; no explicit "Ask assistant" button needed
+- **Click "Delete plant" in detail panel** → Inline confirmation appears; Cancel dismisses it; Delete calls API; on success panel closes, plant removed from list; on failure inline error shown
 - **Click chat strip** → Chat panel expands; strip hidden
 - **Click ✕ in chat** → Chat panel collapses; strip reappears
 
@@ -155,7 +156,7 @@ Interactive HTML mockup: `ui-mockups/plants-overview/plants-overview-mockup.html
 
 ## 7. AI Assistant Integration
 
-- **Context-aware entry:** Clicking "Ask assistant" in the detail panel opens the chat with a context pill for the selected plant
+- **Automatic context:** Selecting a plant (clicking a row or card) automatically sets the plant as the assistant's context — no "Ask assistant" button is needed in the detail panel
 - **Add plant via AI:** The FAB (＋) opens an AI-assisted dialog where the user can describe a plant in natural language or upload a photo for identification *(not yet implemented)*
 - **Data modification:** The assistant can update plant data (care dates, notes, attributes) through conversation
 - **Always reachable:** Chat strip permanently visible on the right edge, same as all views

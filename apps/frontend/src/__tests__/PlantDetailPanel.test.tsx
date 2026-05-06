@@ -1,20 +1,26 @@
 /**
- * PlantDetailPanel tests — story-025.
+ * PlantDetailPanel tests — story-025 + story-040.
  *
- * Verifies:
+ * story-025 coverage:
  * - AC #1: name, botanical name, close button
  * - AC #2: image slots rendered
  * - AC #3: fact sheet fields visible
  * - AC #4: care notes rendered
  * - AC #5: tasks list rendered
  * - AC #6: Bearbeiten button calls onEdit prop
- * - AC #7: Assistent button calls onAssist prop
  * - AC #8: ✕ button calls onClose
- * - AC #9: component accepts Plant as prop (no API calls)
+ *
+ * story-040 coverage:
+ * - AC #1: Ask-assistant button removed
+ * - AC #3: Delete button rendered (red text-link style)
+ * - AC #4: Clicking Delete shows confirmation dialog
+ * - AC #5: Confirming calls deletePlant(id)
+ * - AC #6: On success onDelete callback fired
+ * - AC #7: On API failure inline error shown, panel stays open
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { I18nextProvider } from "react-i18next";
 import i18n from "../i18n/index";
 import { PlantDetailPanel } from "../components/PlantDetailPanel";
@@ -63,6 +69,12 @@ const MOCK_PLANT: Plant = {
   updated_at: "2022-04-01T00:00:00Z",
 };
 
+vi.mock("../api/client", () => ({
+  apiClient: {
+    deletePlant: vi.fn().mockResolvedValue(undefined),
+  },
+}));
+
 beforeEach(async () => {
   await i18n.changeLanguage("de");
   vi.clearAllMocks();
@@ -71,19 +83,19 @@ beforeEach(async () => {
 function renderPanel(overrides?: Partial<Parameters<typeof PlantDetailPanel>[0]>) {
   const onClose  = vi.fn();
   const onEdit   = vi.fn();
-  const onAssist = vi.fn();
+  const onDelete = vi.fn();
   render(
     <I18nextProvider i18n={i18n}>
       <PlantDetailPanel
         plant={MOCK_PLANT}
         onClose={onClose}
         onEdit={onEdit}
-        onAssist={onAssist}
+        onDelete={onDelete}
         {...overrides}
       />
     </I18nextProvider>
   );
-  return { onClose, onEdit, onAssist };
+  return { onClose, onEdit, onDelete };
 }
 
 describe("PlantDetailPanel — header (AC #1)", () => {
@@ -164,29 +176,104 @@ describe("PlantDetailPanel — tasks (AC #5)", () => {
   });
 });
 
-describe("PlantDetailPanel — actions (AC #6, #7)", () => {
+describe("PlantDetailPanel — actions (AC #6)", () => {
   it("calls onEdit when Bearbeiten is clicked (AC #6)", () => {
     const { onEdit } = renderPanel();
     fireEvent.click(screen.getByTestId("detail-btn-edit"));
     expect(onEdit).toHaveBeenCalledOnce();
     expect(onEdit).toHaveBeenCalledWith(MOCK_PLANT);
   });
+});
 
-  it("calls onAssist when Assistent fragen is clicked (AC #7)", () => {
-    const { onAssist } = renderPanel();
-    fireEvent.click(screen.getByTestId("detail-btn-assistant"));
-    expect(onAssist).toHaveBeenCalledOnce();
-    expect(onAssist).toHaveBeenCalledWith(MOCK_PLANT);
+// ── story-040: Ask-assistant removed, Delete added ────────────────────────────
+
+describe("PlantDetailPanel — ask-assistant button removed (story-040 AC #1)", () => {
+  it("does NOT render an assistant button", () => {
+    renderPanel();
+    expect(screen.queryByTestId("detail-btn-assistant")).not.toBeInTheDocument();
   });
 });
 
-describe("PlantDetailPanel — no API calls (AC #9)", () => {
-  it("renders purely from Plant prop without any API calls", () => {
-    // If no apiClient mock is needed, the component makes no API calls
-    const apiModule = import("../api/client");
+describe("PlantDetailPanel — delete button (story-040 AC #3)", () => {
+  it("renders delete button", () => {
     renderPanel();
-    // Verify plant data is shown — means prop was used, not API
+    expect(screen.getByTestId("detail-btn-delete")).toBeInTheDocument();
+  });
+
+  it("delete button has red color and no filled background", () => {
+    renderPanel();
+    const btn = screen.getByTestId("detail-btn-delete");
+    expect(btn.style.background).toBe("none");
+    expect(btn.style.color).toContain("red-warn");
+  });
+});
+
+describe("PlantDetailPanel — confirmation dialog (story-040 AC #4)", () => {
+  it("confirmation not visible initially", () => {
+    renderPanel();
+    expect(screen.queryByTestId("detail-delete-confirm")).not.toBeInTheDocument();
+  });
+
+  it("shows confirmation after clicking delete button", () => {
+    renderPanel();
+    fireEvent.click(screen.getByTestId("detail-btn-delete"));
+    expect(screen.getByTestId("detail-delete-confirm")).toBeInTheDocument();
+  });
+
+  it("shows cancel and confirm buttons in dialog", () => {
+    renderPanel();
+    fireEvent.click(screen.getByTestId("detail-btn-delete"));
+    expect(screen.getByTestId("detail-delete-cancel")).toBeInTheDocument();
+    expect(screen.getByTestId("detail-delete-ok")).toBeInTheDocument();
+  });
+
+  it("cancel hides confirmation dialog", () => {
+    renderPanel();
+    fireEvent.click(screen.getByTestId("detail-btn-delete"));
+    fireEvent.click(screen.getByTestId("detail-delete-cancel"));
+    expect(screen.queryByTestId("detail-delete-confirm")).not.toBeInTheDocument();
+  });
+});
+
+describe("PlantDetailPanel — delete confirmed (story-040 AC #5, #6)", () => {
+  it("calls deletePlant with plant id on confirm", async () => {
+    const { apiClient } = await import("../api/client");
+    renderPanel();
+    fireEvent.click(screen.getByTestId("detail-btn-delete"));
+    fireEvent.click(screen.getByTestId("detail-delete-ok"));
+    await waitFor(() => expect(apiClient.deletePlant).toHaveBeenCalledWith("p1"));
+  });
+
+  it("calls onDelete callback after successful deletion", async () => {
+    const { onDelete } = renderPanel();
+    fireEvent.click(screen.getByTestId("detail-btn-delete"));
+    fireEvent.click(screen.getByTestId("detail-delete-ok"));
+    await waitFor(() => expect(onDelete).toHaveBeenCalledOnce());
+  });
+});
+
+describe("PlantDetailPanel — delete failure (story-040 AC #7)", () => {
+  it("shows inline error when deletePlant rejects", async () => {
+    const { apiClient } = await import("../api/client");
+    (apiClient.deletePlant as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error("Network error"));
+    renderPanel();
+    fireEvent.click(screen.getByTestId("detail-btn-delete"));
+    fireEvent.click(screen.getByTestId("detail-delete-ok"));
+    await waitFor(() =>
+      expect(screen.getByTestId("detail-delete-error")).toBeInTheDocument()
+    );
+  });
+
+  it("hides confirmation dialog on failure but keeps panel open", async () => {
+    const { apiClient } = await import("../api/client");
+    (apiClient.deletePlant as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error("fail"));
+    renderPanel();
+    fireEvent.click(screen.getByTestId("detail-btn-delete"));
+    fireEvent.click(screen.getByTestId("detail-delete-ok"));
+    await waitFor(() =>
+      expect(screen.queryByTestId("detail-delete-confirm")).not.toBeInTheDocument()
+    );
+    // Panel still shows plant name — it's still open
     expect(screen.getByText("Rote Rose")).toBeInTheDocument();
-    void apiModule; // suppress unused warning
   });
 });

@@ -403,8 +403,11 @@ export function PlantsView() {
           <PlantDetailPanel
             plant={selected}
             onClose={() => setSelected(null)}
-            onAssist={() => setAiPanelOpen(true)}
             onEdit={(p) => { setEditTarget(p); setSelected(null); }}
+            onDelete={() => {
+              setPlants((prev) => prev.filter((p) => p.id !== selected.id));
+              setSelected(null);
+            }}
           />
         )}
       </div>

@@ -1,20 +1,21 @@
 /**
- * PlantDetailPanel — shared component (story-025).
+ * PlantDetailPanel — shared component (story-025, story-040).
  *
- * Accepts a Plant object as prop — no direct API calls (AC #9).
+ * Accepts a Plant object as prop and an apiClient for deletePlant (AC #5).
  * Used in: Plants Overview, Calendar (future), Dashboard (future).
  *
  * Props:
  *   plant    — the plant to display
- *   onClose  — called when the ✕ button is clicked (AC #8)
- *   onEdit   — called when "Bearbeiten" is clicked (AC #6); stub until story-026
- *   onAssist — called when "Assistent fragen" is clicked (AC #7); injects context pill
+ *   onClose  — called when the ✕ button is clicked
+ *   onEdit   — called when "Bearbeiten" is clicked
+ *   onDelete — called after the plant has been successfully deleted
  */
 
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Plant } from "@api/plant";
 import type { Schedule } from "@api/schedule";
+import { apiClient } from "@/api/client";
 import { nextCareTask, STATUS_COLOR, type PlantStatus } from "@/lib/plantStatus";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -155,12 +156,16 @@ function CollapsibleSection({ label, children }: { label: string; children: Reac
 export interface PlantDetailPanelProps {
   plant:      Plant;
   onClose:    () => void;
-  onEdit?:    (plant: Plant) => void;   // AC #6 — stub until story-026
-  onAssist?:  (plant: Plant) => void;   // AC #7 — opens AI chat with context pill
+  onEdit?:    (plant: Plant) => void;
+  onDelete?:  () => void;   // called after successful deletion (AC #6)
 }
 
-export function PlantDetailPanel({ plant, onClose, onEdit, onAssist }: PlantDetailPanelProps) {
+export function PlantDetailPanel({ plant, onClose, onEdit, onDelete }: PlantDetailPanelProps) {
   const { t } = useTranslation("plants");
+
+  const [confirmOpen,  setConfirmOpen]  = useState(false);
+  const [deleting,     setDeleting]     = useState(false);
+  const [deleteError,  setDeleteError]  = useState<string | null>(null);
 
   const bloom      = bloomPeriod(plant.schedules);
   const lastCut    = lastJournalDate(plant, "pruning");
@@ -351,16 +356,8 @@ export function PlantDetailPanel({ plant, onClose, onEdit, onAssist }: PlantDeta
 
       </div>
 
-      {/* Actions — AC #6, #7 */}
+      {/* Actions — AC #6 */}
       <div style={{ display: "flex", gap: "8px", padding: "12px 18px", borderTop: "1px solid var(--border)", flexShrink: 0 }}>
-        <button
-          type="button"
-          style={detailBtnStyle}
-          onClick={() => onAssist?.(plant)}
-          data-testid="detail-btn-assistant"
-        >
-          <span>💬</span>{t("detail.btn_assistant")}
-        </button>
         <button
           type="button"
           style={{ ...detailBtnStyle, background: "var(--green-deep)", color: "white", borderColor: "var(--green-deep)" }}
@@ -369,6 +366,84 @@ export function PlantDetailPanel({ plant, onClose, onEdit, onAssist }: PlantDeta
         >
           {t("detail.btn_edit")}
         </button>
+      </div>
+
+      {/* Delete — AC #3, #4, #5, #7 */}
+      <div style={{ padding: "0 18px 14px", flexShrink: 0 }}>
+        {deleteError && (
+          <div
+            data-testid="detail-delete-error"
+            style={{ fontSize: "11px", color: "var(--red-warn)", marginBottom: "8px",
+                     background: "var(--red-soft)", borderRadius: "6px", padding: "6px 10px" }}
+          >
+            {deleteError}
+          </div>
+        )}
+        {!confirmOpen ? (
+          <button
+            type="button"
+            data-testid="detail-btn-delete"
+            onClick={() => { setDeleteError(null); setConfirmOpen(true); }}
+            style={{
+              background: "none", border: "none", cursor: "pointer", padding: 0,
+              fontSize: "12px", color: "var(--red-warn)", fontFamily: "var(--font-body)",
+              textDecoration: "underline", textUnderlineOffset: "2px",
+            }}
+          >
+            {t("detail.btn_delete")}
+          </button>
+        ) : (
+          <div
+            data-testid="detail-delete-confirm"
+            style={{
+              background: "var(--red-soft)", border: "1px solid var(--red-warn)",
+              borderRadius: "8px", padding: "10px 12px", display: "flex",
+              flexDirection: "column", gap: "8px",
+            }}
+          >
+            <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--red-warn)" }}>
+              {t("detail.delete_confirm_title")}
+            </div>
+            <div style={{ fontSize: "11px", color: "var(--text-mid)" }}>
+              {t("detail.delete_confirm_body")}
+            </div>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button
+                type="button"
+                data-testid="detail-delete-cancel"
+                onClick={() => setConfirmOpen(false)}
+                disabled={deleting}
+                style={{ ...detailBtnStyle, flex: 1 }}
+              >
+                {t("detail.delete_confirm_cancel")}
+              </button>
+              <button
+                type="button"
+                data-testid="detail-delete-ok"
+                onClick={async () => {
+                  setDeleting(true);
+                  setDeleteError(null);
+                  try {
+                    await apiClient.deletePlant(plant.id);
+                    onDelete?.();
+                  } catch {
+                    setDeleteError(t("detail.delete_error"));
+                    setConfirmOpen(false);
+                  } finally {
+                    setDeleting(false);
+                  }
+                }}
+                disabled={deleting}
+                style={{
+                  ...detailBtnStyle, flex: 1,
+                  background: "var(--red-warn)", color: "white", borderColor: "var(--red-warn)",
+                }}
+              >
+                {deleting ? "…" : t("detail.delete_confirm_ok")}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

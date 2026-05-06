@@ -52,9 +52,14 @@
     "last_cut":        "Letzter Schnitt",
     "last_fert":       "Letzte Düngung",
     "section_notes":   "Pflegehinweise",
-    "btn_assistant":   "Assistent",
-    "btn_edit":        "✏️ Bearbeiten",
-    "no_date":         "–"
+    "btn_edit":              "✏️ Bearbeiten",
+    "btn_delete":            "Pflanze löschen",
+    "delete_confirm_title":  "Pflanze dauerhaft löschen?",
+    "delete_confirm_body":   "Diese Aktion kann nicht rückgängig gemacht werden.",
+    "delete_confirm_cancel": "Abbrechen",
+    "delete_confirm_ok":     "Löschen",
+    "delete_error":          "Löschen fehlgeschlagen. Bitte erneut versuchen.",
+    "no_date":               "–"
   },
   "status": {
     "overdue":  "Überfällig",

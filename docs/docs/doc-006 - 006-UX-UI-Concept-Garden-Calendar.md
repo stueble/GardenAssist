@@ -124,8 +124,8 @@ Same component as in Plants Overview (doc-005, Section 5). Overlays the table fr
 | Fact sheet grid | Type, location, bloom period, flower color, age, min. temperature |
 | Care history | Last pruning date, last fertilization date |
 | Care notes | Yellow background; read-only |
-| "Ask assistant" button | Opens chat with plant context pill |
-| "Edit" button | Placeholder — not yet implemented |
+| "Edit" button | Opens the Plant Edit Dialog pre-filled with the selected plant |
+| "Delete plant" button | Red text-link; opens inline confirmation; on confirm calls DELETE /api/plants/:id |
 
 ---
 
@@ -138,7 +138,8 @@ Same component as in Plants Overview (doc-005, Section 5). Overlays the table fr
 - **Click table row** → Detail panel slides in from left overlaying the table; row highlighted; first click opens, second click closes
 - **Click ✕ in detail panel** → Panel closes; row deselected
 - **Hover over bar** → Tooltip appears above bar with month range and label
-- **Click "Ask assistant"** in detail panel → Chat panel opens with plant context pill
+- **Select a plant (row click)** → Assistant automatically receives plant context; no explicit button needed
+- **Click "Delete plant"** in detail panel → Inline confirmation; Cancel dismisses; Delete calls API; on success panel closes, plant removed
 - **Click chat strip** → Chat expands; strip hidden
 - **Click ✕ in chat** → Chat collapses; strip reappears
 
@@ -183,7 +184,7 @@ Multiple bars per plant per schedule type are supported (e.g. a rose that is pru
 
 ## 8. AI Assistant Integration
 
-- **Context-aware entry:** "Ask assistant" in the detail panel opens the chat with a context pill for the selected plant
+- **Automatic context:** Selecting a plant row automatically sets that plant as the assistant's context — no "Ask assistant" button is required in the detail panel
 - **Data access:** The assistant can answer questions about any plant's schedule shown in the current view
 - **Always reachable:** Chat strip permanently visible on the right edge
 
