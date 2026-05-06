@@ -401,13 +401,21 @@ export function PlantsView() {
               setEditTarget(undefined);
             }}
             onSaved={(saved) => {
-              apiClient.getGarden()
-                .then((g) => setPlants(g.plants))
-                .catch(() => {});
               setPickMode(false);
               setPositions([]);
               setEditTarget(undefined);
-              setSelected(saved);
+              // Reload from API so selected plant has fresh attachments, positions etc.
+              apiClient.getGarden()
+                .then((g) => {
+                  setPlants(g.plants);
+                  // Use the fresh plant object from the DB (includes uploaded attachments)
+                  const fresh = g.plants.find((p) => p.id === saved.id) ?? saved;
+                  setSelected(fresh);
+                })
+                .catch(() => {
+                  // Fallback to the save response if reload fails
+                  setSelected(saved);
+                });
             }}
             positions={positions}
             onPositionsChange={setPositions}
