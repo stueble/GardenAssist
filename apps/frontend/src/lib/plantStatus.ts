@@ -13,34 +13,39 @@ import type { Task } from "@api/task";
 
 export type PlantStatus = "overdue" | "due" | "upcoming" | "ok";
 
+/**
+ * Schedule types that represent actionable care tasks.
+ * bloom and foliage are informational/decorative — never shown as todos.
+ */
+const CARE_TYPES = ["pruning", "fertilization", "growth", "misc"];
+
+function isCareTask(t: Task): boolean {
+  return CARE_TYPES.includes(t.schedule.schedule_type);
+}
+
+/**
+ * Derives plant status from care tasks only (excludes bloom/foliage).
+ * Priority: overdue > due > upcoming > ok
+ */
 export function derivePlantStatus(plant: Pick<Plant, "tasks">): PlantStatus {
-  const tasks: Task[] = plant.tasks;
+  const tasks = plant.tasks.filter(isCareTask);
   if (tasks.some((t) => t.status === "overdue"))  return "overdue";
   if (tasks.some((t) => t.status === "due"))       return "due";
   if (tasks.some((t) => t.status === "upcoming"))  return "upcoming";
   return "ok";
 }
 
-/** The most urgent open task for a plant (overdue > due > upcoming). */
+/** The most urgent open *care* task (overdue > due > upcoming). */
 export function nextTask(plant: Pick<Plant, "tasks">): Task | null {
-  const order: PlantStatus[] = ["overdue", "due", "upcoming"];
-  for (const s of order) {
-    const t = plant.tasks.find((t) => t.status === s);
-    if (t) return t;
-  }
-  return null;
+  return nextCareTask(plant);
 }
 
-/**
- * The most urgent open *care* task (excludes bloom — bloom is shown separately).
- * Only pruning, fertilization, growth, foliage, misc.
- */
+/** The most urgent open care task (pruning, fertilization, growth, misc). */
 export function nextCareTask(plant: Pick<Plant, "tasks">): Task | null {
-  const CARE_TYPES = ["pruning", "fertilization", "growth", "misc"];
   const order: PlantStatus[] = ["overdue", "due", "upcoming"];
   for (const s of order) {
     const t = plant.tasks.find(
-      (t) => t.status === s && CARE_TYPES.includes(t.schedule.schedule_type)
+      (t) => t.status === s && isCareTask(t)
     );
     if (t) return t;
   }

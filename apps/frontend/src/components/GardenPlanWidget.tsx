@@ -480,22 +480,7 @@ export function GardenPlanWidget({
                   }} />
                 )}
 
-                {/* Plant name label below pin (Dashboard mode, AC #2) */}
-                {isDashboard && pin.name && (
-                  <div style={{
-                    fontSize:   "10px",
-                    fontWeight: 600,
-                    color:      "var(--green-deep)",
-                    background: "rgba(255,255,255,.85)",
-                    padding:    "2px 5px",
-                    borderRadius: "4px",
-                    marginTop:  "3px",
-                    whiteSpace: "nowrap",
-                    fontFamily: "var(--font-body)",
-                  }}>
-                    {pin.name}
-                  </div>
-                )}
+                {/* Name label intentionally omitted — tooltip shows name on hover */}
               </div>
             );
           })}
@@ -596,7 +581,6 @@ export function GardenPlanWidget({
           {[
             { color: "var(--red-warn)",    label: "Überfällig" },
             { color: "var(--yellow-warn)", label: "Aktuell" },
-            { color: "var(--green-mid)",   label: "OK" },
           ].map(({ color, label }) => (
             <div key={label} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
               <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: color, flexShrink: 0 }} />
