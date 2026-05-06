@@ -56,19 +56,17 @@ const MONTHS_DE = ["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt",
  * - due:     "Jetzt fällig · Pflanzename"
  * - upcoming:"Demnächst · Pflanzename"
  */
+/** Returns just the time/status part — location is appended in the render. */
 function relativeTaskSub(
   task: Task,
-  plant: Plant,
   status: "overdue" | "due" | "upcoming",
 ): string {
-  const plantName = plant.name_common;
-  if (status === "due")      return `Jetzt fällig · ${plantName}`;
-  if (status === "upcoming") return `Demnächst · ${plantName}`;
+  if (status === "due")      return "Jetzt fällig";
+  if (status === "upcoming") return "Demnächst";
   // overdue: count weeks since task.schedule.end_week
   const cw    = currentWeek();
   const weeks = Math.max(1, cw - task.schedule.end_week);
-  const weekLabel = weeks === 1 ? "1 Woche" : `${weeks} Wochen`;
-  return `Überfällig seit ${weekLabel} · ${plantName}`;
+  return weeks === 1 ? "Überfällig seit 1 Woche" : `Überfällig seit ${weeks} Wochen`;
 }
 
 /** Build a PlanPin from a plant position for the Dashboard. */
@@ -329,12 +327,16 @@ function TodoList({ garden, loading, onTaskResolved }: TodoListProps) {
     const task = nextCareTask(plant);
     if (!task) continue;
     const key = `${plant.id}-${task.schedule.id}-${task.week}`;
+    const typeLabel: Record<string, string> = {
+      pruning: "Schneiden", fertilization: "Düngen", misc: "Aufgabe",
+    };
+    const taskName = task.schedule.label ?? typeLabel[task.schedule.schedule_type] ?? task.schedule.schedule_type;
     todos.push({
       key,
       plant,
       task,
-      taskLabel: `${SCHEDULE_ICON[task.schedule.schedule_type] ?? "📌"} ${task.schedule.label ?? task.schedule.schedule_type}`,
-      taskSub:   relativeTaskSub(task, plant, status as "overdue" | "due" | "upcoming"),
+      taskLabel: `${plant.name_common} — ${taskName}`,
+      taskSub:   relativeTaskSub(task, status as "overdue" | "due" | "upcoming"),
       status:    status as "overdue" | "due" | "upcoming",
     });
   }
@@ -368,6 +370,8 @@ function TodoList({ garden, loading, onTaskResolved }: TodoListProps) {
             key={todo.key}
             data-testid="todo-item"
             style={{
+              display:    "flex",
+              gap:        "10px",
               padding:    "10px 14px 10px 18px",
               borderLeft: `3px solid ${STATUS_COLOR[todo.status]}`,
               background: todo.status === "overdue" ? "var(--red-soft)" : "none",
@@ -377,18 +381,32 @@ function TodoList({ garden, loading, onTaskResolved }: TodoListProps) {
               overflow:   "hidden",
             }}
           >
-            {/* Task name */}
-            <div style={{ fontSize: "13px", fontWeight: 500, color: "var(--text-dark)", lineHeight: 1.35, marginBottom: "3px" }}>
-              {todo.taskLabel}
+            {/* Icon column — acts as bullet point */}
+            <div style={{
+              width:      "20px",
+              flexShrink: 0,
+              fontSize:   "15px",
+              lineHeight: "1.35",
+              paddingTop: "1px",
+              userSelect: "none",
+            }}>
+              {SCHEDULE_ICON[todo.task.schedule.schedule_type] ?? "📋"}
             </div>
 
-            {/* Sub-line: relative time + plant name */}
-            <div style={{ fontSize: "11px", color: "var(--text-light)", marginBottom: "8px" }}>
-              {todo.taskSub}
-            </div>
+            {/* Content column */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              {/* Line 1: plant name — task */}
+              <div style={{ fontSize: "13px", fontWeight: 500, color: "var(--text-dark)", lineHeight: 1.35, marginBottom: "2px" }}>
+                {todo.taskLabel}
+              </div>
 
-            {/* Action buttons */}
-            <div style={{ display: "flex", gap: "5px" }}>
+              {/* Line 2: relative time · location */}
+              <div style={{ fontSize: "11px", color: "var(--text-light)", marginBottom: "7px" }}>
+                {todo.taskSub}{todo.plant.location ? ` · ${todo.plant.location}` : ""}
+              </div>
+
+              {/* Action buttons */}
+              <div style={{ display: "flex", gap: "5px" }}>
                   <button
                     type="button"
                     data-testid="todo-btn-done"
@@ -430,9 +448,10 @@ function TodoList({ garden, loading, onTaskResolved }: TodoListProps) {
                       transition:   "opacity .15s",
                     }}
                   >
-                    →
+                    → Überspringen
                   </button>
                 </div>
+            </div>{/* /content column */}
           </div>
         );
       })}
