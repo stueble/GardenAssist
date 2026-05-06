@@ -338,8 +338,8 @@ export function PlantsView() {
           )}
         </div>
 
-        {/* FAB (AC #6) */}
-        <button
+        {/* FAB (AC #6) — hidden while edit dialog is open (would overlap the plan) */}
+        {editTarget === undefined && <button
           type="button"
           title={t("overview.add_plant")}
           data-testid="fab-add-plant"
@@ -374,7 +374,7 @@ export function PlantsView() {
           className="hover:bg-green-mid"
         >
           ＋
-        </button>
+        </button>}
       </div>
 
       {/* Edit dialog — AC #1: left panel per ADR-006, slides open */}

@@ -57,6 +57,9 @@ export function GardenPlanWidget({
 
   const [modeFitH, setModeFitH] = useState(false);
   const [modeFitW, setModeFitW] = useState(false);
+  // Refs so the wheel handler always reads the current mode without being re-registered
+  const modeFitHRef = useRef(false);
+  const modeFitWRef = useRef(false);
   // Trigger re-render for pin positions after transform change
   const [, forceUpdate] = useState(0);
 
@@ -172,9 +175,26 @@ export function GardenPlanWidget({
       area.style.cursor = pickMode ? "crosshair" : "grab";
     };
 
-    // Wheel zoom
+    // Wheel: zoom (free), pan H (fit-height), pan V (fit-width), locked (both)
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
+      const fitH = modeFitHRef.current;
+      const fitW = modeFitWRef.current;
+      if (fitH && fitW) return;                           // both active: locked
+      const s = stateRef.current;
+      if (fitH) {
+        // Fit-Height: image fills height, wheel scrolls left/right
+        s.tx -= e.deltaY * 1.5;
+        applyT(false);
+        return;
+      }
+      if (fitW) {
+        // Fit-Width: image fills width, wheel scrolls up/down
+        s.ty -= e.deltaY * 1.5;
+        applyT(false);
+        return;
+      }
+      // Free mode: zoom toward cursor
       const r = area.getBoundingClientRect();
       zoomAt(e.clientX - r.left, e.clientY - r.top, e.deltaY < 0 ? 1.12 : 0.89);
       applyT(false);
@@ -268,12 +288,14 @@ export function GardenPlanWidget({
 
   const handleFitH = () => {
     const next = !modeFitH;
+    modeFitHRef.current = next;
     setModeFitH(next);
     if (!next && !modeFitW) initPlan();
     else applyCurrentMode(next, modeFitW, true);
   };
   const handleFitW = () => {
     const next = !modeFitW;
+    modeFitWRef.current = next;
     setModeFitW(next);
     if (!modeFitH && !next) initPlan();
     else applyCurrentMode(modeFitH, next, true);
