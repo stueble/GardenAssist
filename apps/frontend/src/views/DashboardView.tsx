@@ -50,6 +50,27 @@ function weekToMonthIdx(week: number): number {
 
 const MONTHS_DE = ["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"];
 
+/**
+ * Build the sub-line text for a todo item.
+ * - overdue: "Überfällig seit N Wochen · Pflanzename"  (weeks since end_week)
+ * - due:     "Jetzt fällig · Pflanzename"
+ * - upcoming:"Demnächst · Pflanzename"
+ */
+function relativeTaskSub(
+  task: Task,
+  plant: Plant,
+  status: "overdue" | "due" | "upcoming",
+): string {
+  const plantName = plant.name_common;
+  if (status === "due")      return `Jetzt fällig · ${plantName}`;
+  if (status === "upcoming") return `Demnächst · ${plantName}`;
+  // overdue: count weeks since task.schedule.end_week
+  const cw    = currentWeek();
+  const weeks = Math.max(1, cw - task.schedule.end_week);
+  const weekLabel = weeks === 1 ? "1 Woche" : `${weeks} Wochen`;
+  return `Überfällig seit ${weekLabel} · ${plantName}`;
+}
+
 /** Build a PlanPin from a plant position for the Dashboard. */
 function plantToPin(plant: Plant, posIdx: number, selectedId: string | null): PlanPin {
   const pos    = plant.positions[posIdx];
@@ -313,7 +334,7 @@ function TodoList({ garden, loading, onTaskResolved }: TodoListProps) {
       plant,
       task,
       taskLabel: `${SCHEDULE_ICON[task.schedule.schedule_type] ?? "📌"} ${task.schedule.label ?? task.schedule.schedule_type}`,
-      taskSub:   `${plant.name_common} · ${weekRangeLabel(task.schedule.start_week, task.schedule.end_week)}`,
+      taskSub:   relativeTaskSub(task, plant, status as "overdue" | "due" | "upcoming"),
       status:    status as "overdue" | "due" | "upcoming",
     });
   }
@@ -321,13 +342,7 @@ function TodoList({ garden, loading, onTaskResolved }: TodoListProps) {
   const order = { overdue: 0, due: 1, upcoming: 2 };
   todos.sort((a, b) => order[a.status] - order[b.status]);
 
-  const groups: Array<{ label: string; items: TodoEntry[] }> = [
-    { label: "Überfällig",  items: todos.filter((t) => t.status === "overdue")  },
-    { label: "Diese Woche", items: todos.filter((t) => t.status === "due")      },
-    { label: "Demnächst",   items: todos.filter((t) => t.status === "upcoming") },
-  ].filter((g) => g.items.length > 0);
-
-  if (groups.length === 0) {
+  if (todos.length === 0) {
     return (
       <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px", color: "var(--text-light)", fontSize: "12px", textAlign: "center" }}>
         ✅ Keine offenen Aufgaben
@@ -337,69 +352,62 @@ function TodoList({ garden, loading, onTaskResolved }: TodoListProps) {
 
   return (
     <div data-testid="todo-list" style={{ flex: 1, overflowY: "auto", padding: "10px 0" }}>
-      {groups.map((group) => (
-        <div key={group.label}>
-          <div style={{
-            fontSize: "10px", fontWeight: 600, letterSpacing: "1px",
-            textTransform: "uppercase", color: "var(--text-light)",
-            padding: "8px 18px 4px",
-          }}>
-            {group.label}
-          </div>
+      {/* Single "Aufgaben" heading */}
+      <div style={{
+        fontSize: "10px", fontWeight: 600, letterSpacing: "1px",
+        textTransform: "uppercase", color: "var(--text-light)",
+        padding: "8px 18px 4px",
+      }}>
+        Aufgaben
+      </div>
 
-          {group.items.map((todo) => {
-            const isResolving = resolving.has(todo.key);
-            return (
-              <div
-                key={todo.key}
-                data-testid="todo-item"
-                style={{
-                  padding:     "10px 14px 10px 18px",
-                  borderLeft:  `3px solid ${STATUS_COLOR[todo.status]}`,
-                  background:  todo.status === "overdue" ? "var(--red-soft)" : "none",
-                  transition:  "opacity .25s ease, transform .25s ease",
-                  opacity:     isResolving ? 0 : 1,
-                  transform:   isResolving ? "translateX(-20px)" : "none",
-                  overflow:    "hidden",
-                }}
-              >
-                {/* Top row: dot + label */}
-                <div style={{ display: "flex", alignItems: "flex-start", gap: "8px", marginBottom: "4px" }}>
-                  <div style={{
-                    width: "8px", height: "8px", borderRadius: "50%",
-                    background: STATUS_COLOR[todo.status],
-                    flexShrink: 0, marginTop: "4px",
-                  }} />
-                  <div style={{ fontSize: "13px", fontWeight: 500, color: "var(--text-dark)", lineHeight: 1.35, flex: 1 }}>
-                    {todo.taskLabel}
-                  </div>
-                </div>
+      {todos.map((todo) => {
+        const isResolving = resolving.has(todo.key);
+        return (
+          <div
+            key={todo.key}
+            data-testid="todo-item"
+            style={{
+              padding:    "10px 14px 10px 18px",
+              borderLeft: `3px solid ${STATUS_COLOR[todo.status]}`,
+              background: todo.status === "overdue" ? "var(--red-soft)" : "none",
+              transition: "opacity .25s ease, transform .25s ease",
+              opacity:    isResolving ? 0 : 1,
+              transform:  isResolving ? "translateX(-20px)" : "none",
+              overflow:   "hidden",
+            }}
+          >
+            {/* Task name */}
+            <div style={{ fontSize: "13px", fontWeight: 500, color: "var(--text-dark)", lineHeight: 1.35, marginBottom: "3px" }}>
+              {todo.taskLabel}
+            </div>
 
-                {/* Sub-line: plant + week range */}
-                <div style={{ fontSize: "11px", color: "var(--text-light)", marginLeft: "16px", marginBottom: "8px" }}>
-                  {todo.taskSub}
-                </div>
+            {/* Sub-line: relative time + plant name */}
+            <div style={{ fontSize: "11px", color: "var(--text-light)", marginBottom: "8px" }}>
+              {todo.taskSub}
+            </div>
 
-                {/* Action buttons */}
-                <div style={{ display: "flex", gap: "5px", marginLeft: "16px" }}>
+            {/* Action buttons */}
+            <div style={{ display: "flex", gap: "5px" }}>
                   <button
                     type="button"
                     data-testid="todo-btn-done"
                     disabled={isResolving}
                     onClick={() => void resolve(todo, "done")}
                     style={{
-                      padding:      "4px 10px",
-                      borderRadius: "6px",
+                      padding:      "3px 9px",
+                      borderRadius: "5px",
                       border:       "none",
-                      background:   "var(--green-deep)",
-                      color:        "white",
+                      background:   "var(--green-pale)",
+                      color:        "var(--green-deep)",
                       fontSize:     "11px",
                       fontWeight:   600,
                       fontFamily:   "var(--font-body)",
                       cursor:       isResolving ? "default" : "pointer",
                       opacity:      isResolving ? 0.5 : 1,
-                      transition:   "opacity .15s",
+                      transition:   "all .15s",
                     }}
+                    className="hover:bg-green-mid hover:text-white"
                   >
                     ✓ Erledigt
                   </button>
@@ -409,11 +417,11 @@ function TodoList({ garden, loading, onTaskResolved }: TodoListProps) {
                     disabled={isResolving}
                     onClick={() => void resolve(todo, "skipped")}
                     style={{
-                      padding:      "4px 10px",
-                      borderRadius: "6px",
-                      border:       "1.5px solid var(--border)",
+                      padding:      "3px 9px",
+                      borderRadius: "5px",
+                      border:       "1px solid var(--border)",
                       background:   "none",
-                      color:        "var(--text-mid)",
+                      color:        "var(--text-light)",
                       fontSize:     "11px",
                       fontWeight:   500,
                       fontFamily:   "var(--font-body)",
@@ -422,16 +430,14 @@ function TodoList({ garden, loading, onTaskResolved }: TodoListProps) {
                       transition:   "opacity .15s",
                     }}
                   >
-                    → Überspringen
+                    →
                   </button>
                 </div>
-              </div>
-            );
-          })}
+          </div>
+        );
+      })}
 
-          <div style={{ height: "1px", background: "var(--border)", margin: "6px 18px" }} />
-        </div>
-      ))}
+      <div style={{ height: "1px", background: "var(--border)", margin: "6px 18px" }} />
     </div>
   );
 }
