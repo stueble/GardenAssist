@@ -224,7 +224,7 @@ async function seed() {
       location_zip:             null,
       irrigation_zones:         DEFAULT_IRRIGATION_ZONES,
       plant_categories:         DEFAULT_PLANT_CATEGORIES,
-      task_lookback_weeks:      2,
+      task_lookback_weeks:      8,
       task_lookahead_weeks:     4,
       attachment_size_limit_mb: 10,
       ai_provider:              null,

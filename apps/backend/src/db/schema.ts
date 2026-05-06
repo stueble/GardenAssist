@@ -128,7 +128,7 @@ export const settings = sqliteTable("settings", {
   location_zip:             text("location_zip"),
   irrigation_zones:         text("irrigation_zones").default(sql`'[]'`),       // JSON array
   plant_categories:         text("plant_categories").default(sql`'[]'`),       // JSON array
-  task_lookback_weeks:      integer("task_lookback_weeks").notNull().default(2),
+  task_lookback_weeks:      integer("task_lookback_weeks").notNull().default(8),
   task_lookahead_weeks:     integer("task_lookahead_weeks").notNull().default(4),
   attachment_size_limit_mb: integer("attachment_size_limit_mb").notNull().default(10),
   ai_provider:              text("ai_provider"),

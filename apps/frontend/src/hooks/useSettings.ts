@@ -32,7 +32,7 @@ const DEFAULT_SETTINGS: Settings = {
   irrigation_zones:         [],
   plant_categories:         [],
   color_presets:            [],
-  task_lookback_weeks:      2,
+  task_lookback_weeks:      8,
   task_lookahead_weeks:     4,
   attachment_size_limit_mb: 10,
   ai_provider:              null,

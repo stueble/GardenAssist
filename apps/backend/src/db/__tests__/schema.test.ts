@@ -50,7 +50,7 @@ describe("Database schema", () => {
       const rows = await db.select().from(settings);
       expect(rows).toHaveLength(1);
       expect(rows[0].id).toBe("settings");
-      expect(rows[0].task_lookback_weeks).toBe(2);
+      expect(rows[0].task_lookback_weeks).toBe(8);
       expect(rows[0].task_lookahead_weeks).toBe(4);
       expect(rows[0].attachment_size_limit_mb).toBe(10);
     });

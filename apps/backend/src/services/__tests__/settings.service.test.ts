@@ -48,7 +48,7 @@ describe("getSettings()", () => {
   it("returns default settings from seeded row", () => {
     const s = getSettings(db as any);
     expect(s.language).toBe("de");
-    expect(s.task_lookback_weeks).toBe(2);
+    expect(s.task_lookback_weeks).toBe(8);
     expect(s.task_lookahead_weeks).toBe(4);
     expect(s.attachment_size_limit_mb).toBe(10);
     expect(s.irrigation_zones).toEqual([]);
@@ -60,7 +60,7 @@ describe("getSettings()", () => {
     db.delete(schema.settings).run();
     const s = getSettings(db as any);
     expect(s.language).toBe("de");
-    expect(s.task_lookback_weeks).toBe(2);
+    expect(s.task_lookback_weeks).toBe(8);
   });
 });
 
