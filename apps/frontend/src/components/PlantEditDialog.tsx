@@ -853,7 +853,8 @@ interface ColorPopupProps {
 }
 
 function ColorPopup({ color, presets, onChange, onClose }: ColorPopupProps) {
-  const ref = useRef<HTMLDivElement>(null);
+  const ref    = useRef<HTMLDivElement>(null);
+  const hexRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     function handleOutside(e: MouseEvent) {
@@ -865,6 +866,17 @@ function ColorPopup({ color, presets, onChange, onClose }: ColorPopupProps) {
     return () => document.removeEventListener("mousedown", handleOutside);
   }, [onClose]);
 
+  // Sync hex text field when native picker changes
+  function handleNativePicker(hex: string) {
+    if (hexRef.current) hexRef.current.value = hex;
+    onChange(hex);
+  }
+
+  // Validate and apply hex text field input
+  function handleHexInput(v: string) {
+    if (/^#[0-9a-fA-F]{6}$/.test(v)) onChange(v);
+  }
+
   return (
     <div
       ref={ref}
@@ -873,9 +885,10 @@ function ColorPopup({ color, presets, onChange, onClose }: ColorPopupProps) {
         position: "absolute", top: "26px", left: 0, zIndex: 200,
         background: "white", border: "1.5px solid var(--border)",
         borderRadius: "10px", padding: "10px",
-        boxShadow: "var(--shadow-ga-lg)", minWidth: "220px",
+        boxShadow: "var(--shadow-ga-lg)", minWidth: "240px",
       }}
     >
+      {/* Preset swatches */}
       {presets.length > 0 && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: "8px 10px", marginBottom: "10px" }}>
           {presets.map((p) => (
@@ -906,11 +919,32 @@ function ColorPopup({ color, presets, onChange, onClose }: ColorPopupProps) {
           ))}
         </div>
       )}
-      <div style={{ display: "flex", alignItems: "center", gap: "6px", borderTop: presets.length > 0 ? "1px solid var(--border)" : "none", paddingTop: presets.length > 0 ? "7px" : 0 }}>
+
+      {/* Custom color row: native picker + hex input */}
+      <div style={{
+        borderTop: presets.length > 0 ? "1px solid var(--border)" : "none",
+        paddingTop: presets.length > 0 ? "8px" : 0,
+        display: "flex", alignItems: "center", gap: "6px",
+      }}>
         <span style={{ fontSize: "10px", color: "var(--text-light)", fontWeight: 600, whiteSpace: "nowrap" }}>
           Eigene Farbe
         </span>
+        {/* Native color picker — opens system color chooser */}
         <input
+          type="color"
+          value={color}
+          data-testid="color-native-picker"
+          onChange={(e) => handleNativePicker(e.target.value)}
+          style={{
+            width: "28px", height: "28px", padding: "1px",
+            border: "1.5px solid var(--border)", borderRadius: "6px",
+            cursor: "pointer", background: "none", flexShrink: 0,
+          }}
+          title="Farbe wählen"
+        />
+        {/* Hex text input — synced with native picker */}
+        <input
+          ref={hexRef}
           type="text"
           defaultValue={color}
           placeholder="#rrggbb"
@@ -920,18 +954,14 @@ function ColorPopup({ color, presets, onChange, onClose }: ColorPopupProps) {
             padding: "3px 6px", fontSize: "11px", fontFamily: "var(--font-body)",
             outline: "none", color: "var(--text-dark)",
           }}
-          onBlur={(e) => {
-            const v = e.target.value.trim();
-            if (/^#[0-9a-fA-F]{3,6}$/.test(v)) onChange(v);
-          }}
+          onInput={(e) => handleHexInput((e.target as HTMLInputElement).value.trim())}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
-              const v = (e.target as HTMLInputElement).value.trim();
-              if (/^#[0-9a-fA-F]{3,6}$/.test(v)) { onChange(v); onClose(); }
+              handleHexInput((e.target as HTMLInputElement).value.trim());
+              onClose();
             }
           }}
         />
-        <div style={{ width: "22px", height: "22px", borderRadius: "4px", background: color, border: "1.5px solid var(--border)", flexShrink: 0 }} />
       </div>
     </div>
   );
