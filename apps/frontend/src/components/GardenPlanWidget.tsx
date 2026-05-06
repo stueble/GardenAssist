@@ -109,7 +109,13 @@ export function GardenPlanWidget({
   }, [applyT]);
 
   const applyFitH = useCallback(() => {
+    const plan = planRef.current;
+    if (!plan) return;
     const s = stateRef.current;
+    // Reset plan element to natural image dimensions first (may have been
+    // stretched by applyFitBoth), then compute scale from those dimensions.
+    plan.style.width  = s.imgW + "px";
+    plan.style.height = s.imgH + "px";
     const { w, h } = getAreaSize();
     s.scale = h / s.imgH;
     s.tx    = (w - s.imgW * s.scale) / 2;
@@ -118,7 +124,12 @@ export function GardenPlanWidget({
   }, [applyT]);
 
   const applyFitW = useCallback(() => {
+    const plan = planRef.current;
+    if (!plan) return;
     const s = stateRef.current;
+    // Same: reset to natural dimensions before computing scale.
+    plan.style.width  = s.imgW + "px";
+    plan.style.height = s.imgH + "px";
     const { w, h } = getAreaSize();
     s.scale = w / s.imgW;
     s.tx    = 0;
