@@ -317,16 +317,30 @@ function EntryCard({ entry, plant }: EntryCardProps) {
             >
               {plant.icon ?? "🌿"} {plant.name_common}
               {(() => {
-                const bloom = plant.schedules.find((s) => s.schedule_type === "bloom" && s.label);
-                const parts: string[] = [];
-                if (bloom?.label) parts.push(bloom.label);
-                if (plant.location) parts.push(plant.location);
-                if (parts.length === 0) return null;
-                return (
-                  <span style={{ opacity: 0.7 }}>
-                    · {parts.join(" · ")}
-                  </span>
-                );
+                const bloom = plant.schedules.find((s) => s.schedule_type === "bloom" && s.color);
+                const parts: React.ReactNode[] = [];
+                if (bloom) {
+                  parts.push(
+                    <span key="bloom" style={{ display: "flex", alignItems: "center", gap: "3px", opacity: 0.85 }}>
+                      ·
+                      <span style={{
+                        width:        "9px",
+                        height:       "9px",
+                        borderRadius: "2px",
+                        background:   bloom.color ?? "#ccc",
+                        flexShrink:   0,
+                        display:      "inline-block",
+                      }} />
+                      {bloom.label ?? ""}
+                    </span>
+                  );
+                }
+                if (plant.location) {
+                  parts.push(
+                    <span key="loc" style={{ opacity: 0.7 }}>· {plant.location}</span>
+                  );
+                }
+                return parts.length > 0 ? <>{parts}</> : null;
               })()}
             </span>
           )}
