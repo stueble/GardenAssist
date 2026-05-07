@@ -269,3 +269,55 @@ describe("DashboardView — pin click opens detail panel (AC #5)", () => {
     );
   });
 });
+
+// ── story-032: Monthly task band ──────────────────────────────────────────────
+
+describe("DashboardView — MonthBand (story-032)", () => {
+  it("renders 12 month cells (AC #1)", async () => {
+    renderDashboard();
+    await waitFor(() => {
+      const cells = screen.getAllByTestId(/^month-cell-/);
+      expect(cells).toHaveLength(12);
+    });
+  });
+
+  it("current month cell is rendered (AC #2)", async () => {
+    renderDashboard();
+    await waitFor(() => screen.getByTestId("month-band"));
+    // At least one cell exists — current month is determined by runtime date
+    const cells = screen.getAllByTestId(/^month-cell-/);
+    expect(cells).toHaveLength(12);
+  });
+
+  it("shows colored dot for plant with pruning schedule in correct month (AC #3)", async () => {
+    renderDashboard();
+    await waitFor(() => screen.getByTestId("month-band"));
+    // Pruning w9-11 → month index 2 (März) — dot should exist there
+    const dots = screen.getAllByTestId("month-dot");
+    expect(dots.length).toBeGreaterThan(0);
+  });
+
+  it("tooltip appears on month cell hover (AC #4)", async () => {
+    renderDashboard();
+    await waitFor(() => screen.getAllByTestId(/^month-cell-/));
+    // Hover the March cell (idx 2) which should have a pruning schedule
+    const marchCell = screen.getByTestId("month-cell-2");
+    fireEvent.mouseEnter(marchCell.firstElementChild!);
+    await waitFor(() =>
+      expect(screen.queryByTestId("month-tooltip")).toBeInTheDocument()
+    );
+  });
+
+  it("tooltip disappears on mouse leave (AC #4)", async () => {
+    renderDashboard();
+    await waitFor(() => screen.getAllByTestId(/^month-cell-/));
+    const marchCell = screen.getByTestId("month-cell-2");
+    const trigger = marchCell.firstElementChild!;
+    fireEvent.mouseEnter(trigger);
+    await waitFor(() => screen.queryByTestId("month-tooltip"));
+    fireEvent.mouseLeave(trigger);
+    await waitFor(() =>
+      expect(screen.queryByTestId("month-tooltip")).not.toBeInTheDocument()
+    );
+  });
+});

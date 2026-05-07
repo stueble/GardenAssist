@@ -138,18 +138,55 @@ export function DashboardView() {
     setSelected(null);
   }
 
-  // Build monthly schedule summary
-  const monthTasks: Array<Array<{ icon: string; label: string; color: string }>> =
-    Array.from({ length: 12 }, () => []);
+  // Build monthly schedule data for the MonthBand (AC #3, #4, #5)
+  // One dot per schedule type per month (deduplicated); spans all months the schedule covers.
+  const CARE_SCHEDULE_TYPES = new Set(["pruning", "fertilization", "growth", "misc"]);
+  type MonthGroup = { icon: string; color: string; plants: string[] };
+  type MonthData = { dots: Array<{ type: string; color: string }>; groups: Map<string, MonthGroup> };
+
+  const monthData: MonthData[] = Array.from({ length: 12 }, () => ({
+    dots:   [],
+    groups: new Map<string, MonthGroup>(),
+  }));
+
   if (garden) {
     for (const plant of garden.plants) {
       for (const s of plant.schedules) {
-        const mIdx = weekToMonthIdx(s.start_week);
-        monthTasks[mIdx].push({
-          icon:  SCHEDULE_ICON[s.schedule_type] ?? "📌",
-          label: s.label ? `${plant.name_common} — ${s.label}` : plant.name_common,
-          color: s.color ?? "var(--green-mid)",
-        });
+        if (!CARE_SCHEDULE_TYPES.has(s.schedule_type)) continue;
+        const icon  = SCHEDULE_ICON[s.schedule_type] ?? "📋";
+        const color = s.color ?? "var(--green-mid)";
+        const typeLabel: Record<string, string> = {
+          pruning: "Schneiden", fertilization: "Düngen",
+          growth: "Wachstum", misc: "Sonstiges",
+        };
+
+        // Determine all months this schedule spans (start_week → end_week)
+        const startM = weekToMonthIdx(s.start_week);
+        const endM   = weekToMonthIdx(s.end_week);
+        const months: number[] = [];
+        if (endM >= startM) {
+          for (let m = startM; m <= endM; m++) months.push(m);
+        } else {
+          // Year-wrap: e.g. Nov → Feb
+          for (let m = startM; m <= 11; m++) months.push(m);
+          for (let m = 0; m <= endM; m++) months.push(m);
+        }
+
+        for (const mIdx of months) {
+          const md = monthData[mIdx];
+          // One dot per type (deduplicated)
+          if (!md.dots.find((d) => d.type === s.schedule_type)) {
+            md.dots.push({ type: s.schedule_type, color });
+          }
+          // Tooltip group
+          const grpKey = s.schedule_type;
+          if (!md.groups.has(grpKey)) {
+            md.groups.set(grpKey, { icon, color, plants: [] });
+          }
+          const grp = md.groups.get(grpKey)!;
+          const plantLabel = s.label ? `${plant.name_common} — ${s.label}` : plant.name_common;
+          if (!grp.plants.includes(plantLabel)) grp.plants.push(plantLabel);
+        }
       }
     }
   }
@@ -227,7 +264,7 @@ export function DashboardView() {
         </div>
 
         {/* Monthly band */}
-        <MonthBand monthTasks={monthTasks} currentMonthIdx={weekToMonthIdx(cw)} />
+        <MonthBand monthData={monthData} currentMonthIdx={weekToMonthIdx(cw)} />
       </div>
 
       {/* ── Detail panel — right of center, left of AiPanel (like PlantsView) ── */}
@@ -585,12 +622,20 @@ function TodoList({ garden, loading, onTaskResolved, onPlantSelect }: TodoListPr
 
 // ── MonthBand ─────────────────────────────────────────────────────────────────
 
+type MonthDotEntry  = { type: string; color: string };
+type MonthGroupEntry = { icon: string; color: string; plants: string[] };
+
 interface MonthBandProps {
-  monthTasks:      Array<Array<{ icon: string; label: string; color: string }>>;
+  monthData:       Array<{ dots: MonthDotEntry[]; groups: Map<string, MonthGroupEntry> }>;
   currentMonthIdx: number;
 }
 
-function MonthBand({ monthTasks, currentMonthIdx }: MonthBandProps) {
+const MONTHS_FULL_DE = [
+  "Januar","Februar","März","April","Mai","Juni",
+  "Juli","August","September","Oktober","November","Dezember",
+];
+
+function MonthBand({ monthData, currentMonthIdx }: MonthBandProps) {
   return (
     <div
       data-testid="month-band"
@@ -603,9 +648,9 @@ function MonthBand({ monthTasks, currentMonthIdx }: MonthBandProps) {
         gap:         "4px",
         height:      "90px",
         flexShrink:  0,
-        overflowX:   "auto",
+        overflow:    "visible",   // allow tooltips to escape
         position:    "relative",
-        zIndex:      10,
+        zIndex:      200,
       }}
     >
       {/* Vertical label */}
@@ -626,12 +671,14 @@ function MonthBand({ monthTasks, currentMonthIdx }: MonthBandProps) {
       </div>
 
       {MONTHS_DE.map((month, idx) => {
-        const tasks   = monthTasks[idx];
+        const md      = monthData[idx];
         const current = idx === currentMonthIdx;
+        const groups  = [...md.groups.entries()];
         return (
           <div
             key={month}
             data-testid={`month-cell-${idx}`}
+            className={current ? "" : "hover:bg-green-mist"}
             style={{
               flex:          1,
               minWidth:      "44px",
@@ -643,11 +690,19 @@ function MonthBand({ monthTasks, currentMonthIdx }: MonthBandProps) {
               gap:           "3px",
               borderRadius:  "8px",
               background:    current ? "var(--green-deep)" : "var(--green-mist)",
+              boxShadow:     current ? "var(--shadow-ga)" : "none",
               padding:       "4px 2px",
-              cursor:        tasks.length > 0 ? "default" : "default",
               position:      "relative",
+              cursor:        "default",
+              transition:    "background .2s",
             }}
           >
+            {/* Tooltip (CSS :hover via sibling — use React state for reliability) */}
+            <MonthTooltip
+              monthName={MONTHS_FULL_DE[idx]}
+              groups={groups}
+            />
+
             <div style={{
               fontSize:   "11px",
               fontWeight: 600,
@@ -655,30 +710,132 @@ function MonthBand({ monthTasks, currentMonthIdx }: MonthBandProps) {
             }}>
               {month}
             </div>
-            {/* Task dots */}
+
+            {/* Colored dots — one per schedule type, keep real color on current month */}
             <div style={{ display: "flex", gap: "2px", flexWrap: "wrap", justifyContent: "center", maxWidth: "40px" }}>
-              {tasks.slice(0, 6).map((task, ti) => (
+              {md.dots.map((dot) => (
                 <div
-                  key={ti}
-                  title={task.label}
+                  key={dot.type}
+                  data-testid="month-dot"
                   style={{
                     width:        "6px",
                     height:       "6px",
                     borderRadius: "50%",
-                    background:   current ? "rgba(255,255,255,.6)" : task.color,
+                    background:   dot.color,
                     flexShrink:   0,
                   }}
                 />
               ))}
+              {md.dots.length === 0 && (
+                <div style={{
+                  width: "6px", height: "6px", borderRadius: "50%",
+                  background: current ? "rgba(255,255,255,.2)" : "var(--border)",
+                  flexShrink: 0,
+                }} />
+              )}
             </div>
-            {tasks.length > 6 && (
-              <div style={{ fontSize: "9px", color: current ? "var(--green-pale)" : "var(--text-light)" }}>
-                +{tasks.length - 6}
-              </div>
-            )}
           </div>
         );
       })}
+
+      {/* CSS for hover-triggered tooltip */}
+      <style>{`
+        .month-cell-wrap:hover .month-tooltip-popup { display: block !important; }
+      `}</style>
+    </div>
+  );
+}
+
+// ── MonthTooltip ──────────────────────────────────────────────────────────────
+
+interface MonthTooltipProps {
+  monthName: string;
+  groups:    Array<[string, MonthGroupEntry]>;
+}
+
+function MonthTooltip({ monthName, groups }: MonthTooltipProps) {
+  const [visible, setVisible] = useState(false);
+
+  return (
+    <div
+      style={{ position: "absolute", inset: 0, zIndex: 201 }}
+      onMouseEnter={() => setVisible(true)}
+      onMouseLeave={() => setVisible(false)}
+    >
+      {visible && (
+        <div
+          data-testid="month-tooltip"
+          style={{
+            position:     "absolute",
+            bottom:       "calc(100% + 8px)",
+            left:         "50%",
+            transform:    "translateX(-50%)",
+            background:   "var(--green-deep)",
+            color:        "white",
+            borderRadius: "8px",
+            padding:      "10px 12px",
+            minWidth:     "160px",
+            maxWidth:     "220px",
+            zIndex:       201,
+            boxShadow:    "var(--shadow-ga-lg)",
+            fontSize:     "11px",
+            lineHeight:   "1.6",
+            whiteSpace:   "nowrap",
+            pointerEvents:"none",
+          }}
+        >
+          {/* Arrow */}
+          <div style={{
+            position:    "absolute",
+            top:         "100%",
+            left:        "50%",
+            transform:   "translateX(-50%)",
+            border:      "6px solid transparent",
+            borderTopColor: "var(--green-deep)",
+          }} />
+
+          {/* Title */}
+          <div style={{
+            fontWeight:    600,
+            fontSize:      "12px",
+            marginBottom:  "6px",
+            color:         "var(--green-pale)",
+            borderBottom:  "1px solid rgba(255,255,255,.15)",
+            paddingBottom: "5px",
+          }}>
+            {monthName}
+          </div>
+
+          {/* Groups */}
+          {groups.length === 0 ? (
+            <div style={{ fontSize: "11px", color: "rgba(255,255,255,.4)", fontStyle: "italic" }}>
+              Keine Aufgaben
+            </div>
+          ) : (
+            groups.map(([type, grp]) => (
+              <div key={type}>
+                <div style={{
+                  fontSize:      "10px",
+                  fontWeight:    700,
+                  letterSpacing: ".8px",
+                  textTransform: "uppercase",
+                  color:         "rgba(255,255,255,.5)",
+                  marginTop:     "7px",
+                  marginBottom:  "2px",
+                }}>
+                  {grp.icon} {type === "pruning" ? "Schneiden" : type === "fertilization" ? "Düngen" : type === "growth" ? "Wachstum" : "Sonstiges"}
+                </div>
+                {grp.plants.map((name) => (
+                  <div key={name} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "1px 0", fontSize: "11.5px", color: "rgba(255,255,255,.92)" }}>
+                    <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "rgba(255,255,255,.5)", flexShrink: 0 }} />
+                    {name}
+                  </div>
+                ))}
+              </div>
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 }
