@@ -70,7 +70,7 @@ export const apiClient: Api = {
   // ── Attachments ─────────────────────────────────────────────────────────────
 
   uploadAttachment(
-    owner_type: "plant" | "garden",
+    owner_type: "plant" | "garden" | "journal_entry",
     owner_id: string | null,
     input: AttachmentInput,
   ): Promise<Attachment> {

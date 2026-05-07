@@ -513,13 +513,17 @@ function EntryPanel({ entry, plants, onClose, onSaved }: EntryPanelProps) {
     return 1; // manual → Beobachtung
   }
 
-  const [typeIdx,  setTypeIdx]  = useState<PanelTypeIdx>(entry ? entryTypeToIdx(entry.entry_type) : 0);
-  const [plantId,  setPlantId]  = useState<string>(entry?.plant_id ?? "");
-  const [date,     setDate]     = useState(entry?.date ?? new Date().toISOString().slice(0, 10));
-  const [title,    setTitle]    = useState(entry?.title ?? "");
-  const [notes,    setNotes]    = useState(entry?.notes ?? "");
-  const [saving,   setSaving]   = useState(false);
-  const [error,    setError]    = useState<string | null>(null);
+  const [typeIdx,    setTypeIdx]    = useState<PanelTypeIdx>(entry ? entryTypeToIdx(entry.entry_type) : 0);
+  const [plantId,    setPlantId]    = useState<string>(entry?.plant_id ?? "");
+  const [date,       setDate]       = useState(entry?.date ?? new Date().toISOString().slice(0, 10));
+  const [title,      setTitle]      = useState(entry?.title ?? "");
+  const [notes,      setNotes]      = useState(entry?.notes ?? "");
+  const [saving,     setSaving]     = useState(false);
+  const [error,      setError]      = useState<string | null>(null);
+  // Local files to upload (new) + existing attachment ids
+  const [localFiles,    setLocalFiles]    = useState<Array<{ file: File; previewUrl: string }>>([]);
+  const [existingAttIds, setExistingAttIds] = useState<string[]>(entry?.attachment_ids ?? []);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const selectedType = PANEL_TYPES[typeIdx];
 
@@ -550,7 +554,8 @@ function EntryPanel({ entry, plants, onClose, onSaved }: EntryPanelProps) {
     setError(null);
     const apiType = selectedType.value;
     try {
-      const payload = {
+      // 1. Create or update the journal entry
+      const basePayload = {
         plant_id:       plantId || null,
         schedule_id:    null,
         week:           null,
@@ -558,13 +563,31 @@ function EntryPanel({ entry, plants, onClose, onSaved }: EntryPanelProps) {
         date,
         title:          title.trim() || null,
         notes:          notes.trim() || null,
-        attachment_ids: entry?.attachment_ids ?? [],
+        attachment_ids: existingAttIds,
       };
-      if (isNew) {
-        await apiClient.createJournalEntry(payload);
-      } else {
-        await apiClient.updateJournalEntry(entry!.id, payload);
+
+      const saved = isNew
+        ? await apiClient.createJournalEntry(basePayload)
+        : await apiClient.updateJournalEntry(entry!.id, basePayload);
+
+      // 2. Upload local files and collect new attachment ids
+      if (localFiles.length > 0) {
+        const uploaded = await Promise.all(
+          localFiles.map((lf) =>
+            apiClient.uploadAttachment("journal_entry", saved.id, {
+              file:       lf.file,
+              category:   null,
+              updated_at: "",
+            })
+          )
+        );
+        const allAttIds = [...existingAttIds, ...uploaded.map((a) => a.id)];
+        await apiClient.updateJournalEntry(saved.id, {
+          ...basePayload,
+          attachment_ids: allAttIds,
+        });
       }
+
       onSaved();
     } catch {
       setError("Speichern fehlgeschlagen. Bitte erneut versuchen.");
@@ -695,6 +718,111 @@ function EntryPanel({ entry, plants, onClose, onSaved }: EntryPanelProps) {
             data-testid="panel-notes"
             style={{ ...fieldStyle, resize: "vertical", minHeight: "90px", lineHeight: "1.5" }}
           />
+        </div>
+
+        {/* Photo upload */}
+        <div>
+          <div style={labelStyle}>
+            Fotos
+            {(existingAttIds.length + localFiles.length) > 0 && (
+              <span style={{ marginLeft: "6px", fontSize: "10px", background: "var(--green-mist)", color: "var(--text-mid)", padding: "1px 6px", borderRadius: "10px", fontWeight: 600 }}>
+                {existingAttIds.length + localFiles.length}
+              </span>
+            )}
+          </div>
+
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/webp,application/pdf"
+            style={{ display: "none" }}
+            data-testid="panel-file-input"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              e.target.value = "";
+              const previewUrl = file.type.startsWith("image/") ? URL.createObjectURL(file) : "";
+              setLocalFiles((prev) => [...prev, { file, previewUrl }]);
+            }}
+          />
+
+          {/* Previews */}
+          {(existingAttIds.length > 0 || localFiles.length > 0) && (
+            <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "8px" }}>
+              {existingAttIds.map((id) => (
+                <div key={id} style={{ position: "relative" }}>
+                  <div style={{
+                    width: "52px", height: "52px", borderRadius: "7px",
+                    background: "var(--green-mist)", border: "1.5px solid var(--border)",
+                    display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px",
+                  }}>📷</div>
+                  <button
+                    type="button"
+                    onClick={() => setExistingAttIds((prev) => prev.filter((a) => a !== id))}
+                    style={{
+                      position: "absolute", top: "-4px", right: "-4px",
+                      width: "16px", height: "16px", borderRadius: "50%",
+                      background: "var(--red-warn)", color: "white", border: "none",
+                      cursor: "pointer", fontSize: "9px", lineHeight: 1,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                    }}
+                  >✕</button>
+                </div>
+              ))}
+              {localFiles.map((lf, i) => (
+                <div key={i} style={{ position: "relative" }}>
+                  <div style={{
+                    width: "52px", height: "52px", borderRadius: "7px",
+                    background: "var(--green-mist)", border: "1.5px solid var(--border)",
+                    overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px",
+                  }}>
+                    {lf.previewUrl
+                      ? <img src={lf.previewUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      : "📄"
+                    }
+                  </div>
+                  {/* "neu" badge */}
+                  <span style={{
+                    position: "absolute", bottom: "-2px", right: "-2px",
+                    fontSize: "8px", fontWeight: 700, background: "var(--blue-mid)", color: "white",
+                    padding: "1px 3px", borderRadius: "3px",
+                  }}>neu</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (lf.previewUrl) URL.revokeObjectURL(lf.previewUrl);
+                      setLocalFiles((prev) => prev.filter((_, j) => j !== i));
+                    }}
+                    style={{
+                      position: "absolute", top: "-4px", right: "-4px",
+                      width: "16px", height: "16px", borderRadius: "50%",
+                      background: "var(--red-warn)", color: "white", border: "none",
+                      cursor: "pointer", fontSize: "9px", lineHeight: 1,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                    }}
+                  >✕</button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Add photo button */}
+          <button
+            type="button"
+            data-testid="panel-add-photo"
+            onClick={() => fileInputRef.current?.click()}
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
+              background: "none", border: "1.5px dashed var(--border)", borderRadius: "8px",
+              padding: "6px 10px", fontSize: "12px", fontWeight: 500,
+              fontFamily: "var(--font-body)", color: "var(--text-light)",
+              cursor: "pointer", width: "100%", transition: "all .15s",
+            }}
+            className="hover:border-green-mid hover:text-green-deep hover:bg-green-mist"
+          >
+            ＋ Foto hinzufügen
+          </button>
         </div>
       </div>
 

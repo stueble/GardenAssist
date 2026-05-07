@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { JournalEntryInputSchema } from "../schemas/index.js";
 import { db } from "../db/index.js";
-import { journalEntries, plants, schedules } from "../db/schema.js";
+import { journalEntries, journalEntryAttachments, plants, schedules } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import type { JournalEntry } from "@api/journal-entry.js";
 
@@ -116,6 +116,16 @@ export const journalRoutes = new Hono()
       updated_at:  now,
     }).where(eq(journalEntries.id, id)).run();
 
+    // Sync attachment_ids: delete all existing junctions and re-insert
+    db.delete(journalEntryAttachments)
+      .where(eq(journalEntryAttachments.journal_entry_id, id))
+      .run();
+    for (const attId of data.attachment_ids) {
+      db.insert(journalEntryAttachments)
+        .values({ journal_entry_id: id, attachment_id: attId })
+        .run();
+    }
+
     const row = db.select().from(journalEntries).where(eq(journalEntries.id, id)).get()!;
-    return c.json(mapRow(row));
+    return c.json({ ...mapRow(row), attachment_ids: data.attachment_ids });
   });
