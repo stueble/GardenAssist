@@ -343,8 +343,13 @@ interface PlantRowProps {
 function PlantRow({ plant, activeType, currentMonth, selected, onClick }: PlantRowProps) {
   const bars = plant.schedules.filter((s) => s.schedule_type === activeType);
 
-  // Thumbnail: first image attachment or icon
-  const firstImg = plant.attachments.find((a) => a.attachment_type === "image");
+  // Thumbnail: prefer thumbnail_attachment_id, then first 'main' image, then first image
+  const firstImg = plant.thumbnail_attachment_id
+    ? plant.attachments.find((a) => a.id === plant.thumbnail_attachment_id && a.attachment_type === "image")
+      ?? plant.attachments.find((a) => a.attachment_type === "image" && a.category === "main")
+      ?? plant.attachments.find((a) => a.attachment_type === "image")
+    : plant.attachments.find((a) => a.attachment_type === "image" && a.category === "main")
+      ?? plant.attachments.find((a) => a.attachment_type === "image");
 
   return (
     <tr
