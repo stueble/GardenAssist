@@ -115,7 +115,7 @@ describe("Plant routes", () => {
 });
 
 describe("Journal routes", () => {
-  const validEntry = {
+  const manualEntry = {
     plant_id:       null,
     schedule_id:    null,
     week:           null,
@@ -126,16 +126,96 @@ describe("Journal routes", () => {
     attachment_ids: [],
   };
 
-  it("POST /api/journal creates an entry and returns 201", async () => {
+  it("POST /api/journal creates a manual entry and returns 201 (AC #1)", async () => {
     const res = await app.request("/api/journal", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(validEntry),
+      body: JSON.stringify(manualEntry),
     });
     expect(res.status).toBe(201);
     const body = await json(res);
     expect(body).toHaveProperty("id");
-    expect(body).toHaveProperty("entry_type");
+    expect(body.entry_type).toBe("manual");
+    expect(body.title).toBe("Test");
+  });
+
+  it("POST /api/journal persists entry — appears in getGarden() journal_entries (AC #3, #4)", async () => {
+    const before = await app.request("/api/garden");
+    const gardenBefore = await before.json() as Record<string, unknown>;
+    const countBefore = (gardenBefore.journal_entries as unknown[]).length;
+
+    await app.request("/api/journal", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(manualEntry),
+    });
+
+    const after = await app.request("/api/garden");
+    const gardenAfter = await after.json() as Record<string, unknown>;
+    expect((gardenAfter.journal_entries as unknown[]).length).toBeGreaterThan(countBefore);
+  });
+
+  it("POST /api/journal 'done' auto-generates title from entry_type (AC #5)", async () => {
+    const res = await app.request("/api/journal", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...manualEntry,
+        entry_type: "done",
+        title:      null,
+      }),
+    });
+    expect(res.status).toBe(201);
+    const body = await json(res);
+    // Title should start with "Erledigt" when no plant/schedule available
+    expect(typeof body.title).toBe("string");
+    expect((body.title as string)).toContain("Erledigt");
+  });
+
+  it("POST /api/journal 'skipped' auto-generates title (AC #2, #5)", async () => {
+    const res = await app.request("/api/journal", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...manualEntry,
+        entry_type: "skipped",
+        title:      null,
+      }),
+    });
+    expect(res.status).toBe(201);
+    const body = await json(res);
+    expect((body.title as string)).toContain("Übersprungen");
+  });
+
+  it("PUT /api/journal/:id updates an existing entry", async () => {
+    // Create first
+    const create = await app.request("/api/journal", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(manualEntry),
+    });
+    const created = await create.json() as Record<string, unknown>;
+    const id = created.id as string;
+
+    // Update
+    const res = await app.request(`/api/journal/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...manualEntry, title: "Updated title" }),
+    });
+    expect(res.status).toBe(200);
+    const body = await json(res);
+    expect(body.id).toBe(id);
+    expect(body.title).toBe("Updated title");
+  });
+
+  it("PUT /api/journal/:nonexistent returns 404", async () => {
+    const res = await app.request("/api/journal/00000000-0000-0000-0000-000000000000", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(manualEntry),
+    });
+    expect(res.status).toBe(404);
   });
 });
 

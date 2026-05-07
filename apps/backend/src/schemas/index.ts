@@ -66,8 +66,8 @@ export const PlantInputSchema = z.object({
 // ── JournalEntryInput ─────────────────────────────────────────────────────────
 
 export const JournalEntryInputSchema = z.object({
-  plant_id:       uuid.nullable(),
-  schedule_id:    uuid.nullable(),
+  plant_id:       z.string().nullable(),
+  schedule_id:    z.string().nullable(),
   week:           isoWeek.nullable(),
   entry_type:     z.enum(["manual", "done", "skipped"]),
   date:           isoDate,
