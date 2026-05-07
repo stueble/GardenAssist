@@ -262,7 +262,13 @@ export function DashboardView() {
           ) : (
             <GardenPlanWidget
               planUrl={garden?.plan_url ?? null}
-              pins={pins.map((p) => p.pin)}
+              pins={
+                editTarget !== undefined
+                  // Edit mode: show positions of the plant being edited as numbered edit-pins
+                  ? positions.map((p, i) => ({ x: p.x, y: p.y, label: String(i + 1) }))
+                  // View mode: show all garden plant pins
+                  : pins.map((p) => p.pin)
+              }
               onPinClick={editTarget === undefined ? handlePinClick : undefined}
               pickMode={pickMode}
               onPick={(x, y) => setPositions((prev) => [...prev, { x, y }])}
