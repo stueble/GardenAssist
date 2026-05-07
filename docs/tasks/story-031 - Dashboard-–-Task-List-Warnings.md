@@ -1,17 +1,18 @@
 ---
 id: STORY-031
 title: Dashboard – Task List & Warnings
-status: In Progress
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-04 22:47'
-updated_date: '2026-05-07 15:55'
+updated_date: '2026-05-07 15:58'
 labels: []
 dependencies: []
 documentation:
   - docs/docs/doc-004 - 004-UX-UI-Concept-Dashboard.md
   - docs/api/task.ts
   - docs/api/journal-entry.ts
+ordinal: 36000
 ---
 
 ## Description

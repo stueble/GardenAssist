@@ -1,16 +1,17 @@
 ---
 id: STORY-030
 title: Dashboard – Garden Plan with Plant Pins
-status: In Progress
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-04 22:46'
-updated_date: '2026-05-06 21:44'
+updated_date: '2026-05-06 23:10'
 labels: []
 dependencies: []
 documentation:
   - docs/docs/doc-004 - 004-UX-UI-Concept-Dashboard.md
   - ui-mockups/dashboard/dashboard-mockup.html
+ordinal: 34000
 ---
 
 ## Description

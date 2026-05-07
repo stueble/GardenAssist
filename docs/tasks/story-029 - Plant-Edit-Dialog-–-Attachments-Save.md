@@ -1,16 +1,17 @@
 ---
 id: STORY-029
 title: Plant Edit Dialog – Attachments & Save
-status: In Progress
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-04 22:46'
-updated_date: '2026-05-06 21:10'
+updated_date: '2026-05-06 21:35'
 labels: []
 dependencies: []
 documentation:
   - docs/api/api.ts
   - docs/api/attachment.ts
+ordinal: 33000
 ---
 
 ## Description

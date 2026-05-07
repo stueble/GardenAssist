@@ -1,9 +1,11 @@
 ---
 id: STORY-033
 title: Calendar – Gantt Structure & Plant Rows
-status: Ready
-assignee: []
+status: In Review
+assignee:
+  - '@agent'
 created_date: '2026-05-04 22:47'
+updated_date: '2026-05-07 17:42'
 labels: []
 dependencies: []
 documentation:
@@ -19,13 +21,19 @@ Implement the Calendar view shell: sticky plant name column on the left, 12 mont
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Plant rows derived from Garden.plants[], one row per plant
-- [ ] #2 12 month columns with month name headers
-- [ ] #3 Sticky plant name column (left) with thumbnail, common name, botanical name
-- [ ] #4 Current month highlighted with vertical line (not column tint)
-- [ ] #5 Live search filters rows by plant name
-- [ ] #6 Click row opens Shared Plant Detail Panel overlaying from left
+- [x] #1 Plant rows derived from Garden.plants[], one row per plant
+- [x] #2 12 month columns with month name headers
+- [x] #3 Sticky plant name column (left) with thumbnail, common name, botanical name
+- [x] #4 Current month highlighted with vertical line (not column tint)
+- [x] #5 Live search filters rows by plant name
+- [x] #6 Click row opens Shared Plant Detail Panel overlaying from left
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+CalendarView vollständig implementiert: 220px sticky Pflanzenspalte (Thumbnail/Name/Botanisch), 12 Monatsspalten mit Header, Schedule-Typ-Toggles (6 Typen), Gantt-Balken aus schedule.start_week/end_week als %-Positionen, aktueller Monat hervorgehoben (Header-Tint + Spaltenhintergrund), Live-Suche, PlantDetailPanel als Overlay von links. 13 neue Tests, 252 gesamt grün.
+<!-- SECTION:FINAL_SUMMARY:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
