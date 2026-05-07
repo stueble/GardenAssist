@@ -814,20 +814,27 @@ function MonthTooltip({ monthName, groups }: MonthTooltipProps) {
           ) : (
             groups.map(([type, grp]) => (
               <div key={type}>
+                {/* Type heading — flush left, prominent */}
                 <div style={{
                   fontSize:      "10px",
                   fontWeight:    700,
                   letterSpacing: ".8px",
                   textTransform: "uppercase",
-                  color:         "rgba(255,255,255,.5)",
-                  marginTop:     "7px",
-                  marginBottom:  "2px",
+                  color:         "rgba(255,255,255,.75)",
+                  marginTop:     "8px",
+                  marginBottom:  "3px",
+                  display:       "flex",
+                  alignItems:    "center",
+                  gap:           "5px",
                 }}>
-                  {grp.icon} {type === "pruning" ? "Schneiden" : type === "fertilization" ? "Düngen" : type === "growth" ? "Wachstum" : "Sonstiges"}
+                  {/* Colored dot matching the month band dot */}
+                  <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: grp.color, flexShrink: 0 }} />
+                  {type === "pruning" ? "Schneiden" : type === "fertilization" ? "Düngen" : type === "growth" ? "Wachstum" : "Sonstiges"}
                 </div>
+                {/* Plant entries — indented */}
                 {grp.plants.map((name) => (
-                  <div key={name} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "1px 0", fontSize: "11.5px", color: "rgba(255,255,255,.92)" }}>
-                    <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "rgba(255,255,255,.5)", flexShrink: 0 }} />
+                  <div key={name} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "1px 0", fontSize: "11.5px", color: "rgba(255,255,255,.92)", paddingLeft: "14px" }}>
+                    <div style={{ width: "4px", height: "4px", borderRadius: "50%", background: "rgba(255,255,255,.4)", flexShrink: 0 }} />
                     {name}
                   </div>
                 ))}
