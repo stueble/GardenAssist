@@ -484,6 +484,14 @@ function PlantRow({ plant, selected, onClick, t }: PlantRowProps) {
   const colors    = bloomColors(plant.schedules);
   const colorName = bloomColorLabel(plant.schedules);
 
+  // Thumbnail: prefer thumbnail_attachment_id, then main, then first image
+  const thumbImg = plant.thumbnail_attachment_id
+    ? plant.attachments.find((a) => a.id === plant.thumbnail_attachment_id && a.attachment_type === "image")
+      ?? plant.attachments.find((a) => a.attachment_type === "image" && a.category === "main")
+      ?? plant.attachments.find((a) => a.attachment_type === "image")
+    : plant.attachments.find((a) => a.attachment_type === "image" && a.category === "main")
+      ?? plant.attachments.find((a) => a.attachment_type === "image");
+
   return (
     <tr
       onClick={onClick}
@@ -510,9 +518,13 @@ function PlantRow({ plant, selected, onClick, t }: PlantRowProps) {
             justifyContent: "center",
             background:     "var(--green-mist)",
             flexShrink:     0,
+            overflow:       "hidden",
           }}
         >
-          {plant.icon ?? "🌿"}
+          {thumbImg
+            ? <img src={thumbImg.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            : plant.icon ?? "🌿"
+          }
         </div>
       </td>
 
