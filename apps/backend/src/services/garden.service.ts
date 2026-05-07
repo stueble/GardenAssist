@@ -186,9 +186,11 @@ export async function getGarden(db: Db): Promise<Garden> {
     ...gardenJournalEntries,
   ].sort((a, b) => b.date.localeCompare(a.date));
 
-  // 8. Garden-wide attachments
+  // 8. Garden-wide and journal-entry attachments
+  // Both are included in Garden.attachments[] so the frontend can resolve
+  // attachment URLs by ID for journal entries.
   const gardenAttachments: Attachment[] = attachmentRows
-    .filter((a) => a.owner_type === "garden")
+    .filter((a) => a.owner_type === "garden" || a.owner_type === "journal_entry")
     .map(mapAttachment);
 
   // Hardcoded warnings — will be replaced by weather API integration in a future story

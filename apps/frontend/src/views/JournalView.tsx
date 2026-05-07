@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import { AiPanel } from "@/components/AiPanel";
 import { apiClient } from "@/api/client";
 import type { JournalEntry, JournalEntryType } from "@api/journal-entry";
+import type { Attachment } from "@api/attachment";
 import type { Plant } from "@api/plant";
 
 // ── Type colors (AC #6) ───────────────────────────────────────────────────────
@@ -49,11 +50,12 @@ function monthLabel(key: string): string {
 export function JournalView() {
   const { t } = useTranslation("journal");
 
-  const [entries,    setEntries]    = useState<JournalEntry[]>([]);
-  const [plants,     setPlants]     = useState<Plant[]>([]);
-  const [loading,    setLoading]    = useState(true);
-  const [search,     setSearch]     = useState("");
-  const [activeType, setActiveType] = useState<JournalEntryType | null>(null);
+  const [entries,      setEntries]      = useState<JournalEntry[]>([]);
+  const [plants,       setPlants]       = useState<Plant[]>([]);
+  const [attachmentMap, setAttachmentMap] = useState<Map<string, Attachment>>(new Map());
+  const [loading,      setLoading]      = useState(true);
+  const [search,       setSearch]       = useState("");
+  const [activeType,   setActiveType]   = useState<JournalEntryType | null>(null);
   // Panel state: null=closed, undefined=new, JournalEntry=edit
   const [panelEntry, setPanelEntry] = useState<JournalEntry | null | undefined>(undefined);
 
@@ -62,6 +64,10 @@ export function JournalView() {
       const sorted = [...g.journal_entries].sort((a, b) => b.date.localeCompare(a.date));
       setEntries(sorted);
       setPlants(g.plants);
+      // Build attachment lookup: garden + journal_entry attachments
+      const map = new Map<string, Attachment>();
+      g.attachments.forEach((a) => map.set(a.id, a));
+      setAttachmentMap(map);
       setLoading(false);
     }).catch(() => setLoading(false));
   }
@@ -217,6 +223,7 @@ export function JournalView() {
                       key={entry.id}
                       entry={entry}
                       plant={entry.plant_id ? plantById.get(entry.plant_id) ?? null : null}
+                      attachmentMap={attachmentMap}
                       onEdit={(e) => setPanelEntry(e)}
                     />
                   ))}
@@ -295,12 +302,13 @@ export function JournalView() {
 // ── EntryCard ─────────────────────────────────────────────────────────────────
 
 interface EntryCardProps {
-  entry:   JournalEntry;
-  plant:   Plant | null;
-  onEdit?: (entry: JournalEntry) => void;
+  entry:         JournalEntry;
+  plant:         Plant | null;
+  attachmentMap: Map<string, Attachment>;
+  onEdit?:       (entry: JournalEntry) => void;
 }
 
-function EntryCard({ entry, plant, onEdit }: EntryCardProps) {
+function EntryCard({ entry, plant, attachmentMap, onEdit }: EntryCardProps) {
   const [expanded, setExpanded] = useState(false);
 
   const colors = TYPE_COLOR[entry.entry_type] ?? TYPE_COLOR.manual;
@@ -456,24 +464,39 @@ function EntryCard({ entry, plant, onEdit }: EntryCardProps) {
             )}
             {entry.attachment_ids.length > 0 && (
               <div style={{ display: "flex", gap: "8px", marginTop: "10px", flexWrap: "wrap" }}>
-                {entry.attachment_ids.map((id) => (
-                  <div
-                    key={id}
-                    style={{
-                      width:        "52px",
-                      height:       "52px",
-                      borderRadius: "7px",
-                      background:   "var(--green-mist)",
-                      border:       "1.5px solid var(--border)",
-                      display:      "flex",
-                      alignItems:   "center",
-                      justifyContent: "center",
-                      fontSize:     "24px",
-                    }}
-                  >
-                    📷
-                  </div>
-                ))}
+                {entry.attachment_ids.map((id) => {
+                  const att = attachmentMap.get(id);
+                  return (
+                    <div
+                      key={id}
+                      style={{
+                        width:        "64px",
+                        height:       "64px",
+                        borderRadius: "7px",
+                        background:   "var(--green-mist)",
+                        border:       "1.5px solid var(--border)",
+                        display:      "flex",
+                        alignItems:   "center",
+                        justifyContent: "center",
+                        fontSize:     "24px",
+                        overflow:     "hidden",
+                        flexShrink:   0,
+                      }}
+                    >
+                      {att?.attachment_type === "image" && att.url ? (
+                        <img
+                          src={att.url}
+                          alt=""
+                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        />
+                      ) : att?.attachment_type === "pdf" ? (
+                        "📄"
+                      ) : (
+                        "📷"
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
