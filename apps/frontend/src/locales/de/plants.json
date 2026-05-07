@@ -16,7 +16,7 @@
   },
   "table": {
     "col_thumb":    "",
-    "col_name":     "Name",
+    "col_name":     "Pflanze",
     "col_category": "Kategorie",
     "col_location": "Standort",
     "col_bloom":    "Blütezeit",

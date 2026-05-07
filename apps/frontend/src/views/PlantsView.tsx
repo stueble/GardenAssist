@@ -273,7 +273,7 @@ export function PlantsView() {
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12.5px" }}>
                   <thead style={{ position: "sticky", top: 0, zIndex: 10, background: "var(--warm-white)" }}>
                     <tr>
-                      <SortHeader label={t("table.col_name")}     col="name_common" current={sortKey} dir={sortDir} onSort={handleSort} />
+                      <SortHeader label={t("table.col_name")}     col="name_common" current={sortKey} dir={sortDir} onSort={handleSort} width="220px" />
                       <SortHeader label={t("table.col_category")} col="category"    current={sortKey} dir={sortDir} onSort={handleSort} />
                       <SortHeader label={t("table.col_location")} col="location"    current={sortKey} dir={sortDir} onSort={handleSort} />
                       <th style={thStyle(false)}>{t("table.col_health")}</th>
@@ -448,18 +448,19 @@ function thStyle(sorted: boolean): React.CSSProperties {
 }
 
 interface SortHeaderProps {
-  label:   string;
-  col:     SortKey;
-  current: SortKey;
-  dir:     SortDir;
-  onSort:  (k: SortKey) => void;
+  label:    string;
+  col:      SortKey;
+  current:  SortKey;
+  dir:      SortDir;
+  onSort:   (k: SortKey) => void;
+  width?:   string;
 }
 
-function SortHeader({ label, col, current, dir, onSort }: SortHeaderProps) {
+function SortHeader({ label, col, current, dir, onSort, width }: SortHeaderProps) {
   const active = col === current;
   return (
     <th
-      style={{ ...thStyle(active), cursor: "pointer" }}
+      style={{ ...thStyle(active), cursor: "pointer", ...(width ? { width, minWidth: width } : {}) }}
       onClick={() => onSort(col)}
     >
       {label}

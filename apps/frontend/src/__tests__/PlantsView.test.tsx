@@ -213,7 +213,7 @@ describe("PlantsView — sorting (AC #3)", () => {
     renderView();
     await waitFor(() => expect(screen.getAllByTestId("plant-row")).toHaveLength(3));
     // First click: already asc → switches to desc
-    fireEvent.click(screen.getByText(/^Name/));
+    fireEvent.click(screen.getByText(/^Pflanze/));
     const rows = screen.getAllByTestId("plant-row");
     const names = rows.map((r) => within(r).getAllByRole("cell")[0].textContent);
     expect(names[0]).toContain("Rose");
@@ -222,8 +222,8 @@ describe("PlantsView — sorting (AC #3)", () => {
   it("second click on Name reverts to asc — Gingko first again", async () => {
     renderView();
     await waitFor(() => expect(screen.getAllByTestId("plant-row")).toHaveLength(3));
-    fireEvent.click(screen.getByText(/^Name/));
-    fireEvent.click(screen.getByText(/^Name/));
+    fireEvent.click(screen.getByText(/^Pflanze/));
+    fireEvent.click(screen.getByText(/^Pflanze/));
     const rows = screen.getAllByTestId("plant-row");
     const names = rows.map((r) => within(r).getAllByRole("cell")[0].textContent);
     expect(names[0]).toContain("Gingko");

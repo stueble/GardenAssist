@@ -16,7 +16,7 @@
   },
   "table": {
     "col_thumb":    "",
-    "col_name":     "Name",
+    "col_name":     "Plant",
     "col_category": "Category",
     "col_location": "Location",
     "col_bloom":    "Bloom",
