@@ -57,7 +57,7 @@ describe("App routing", () => {
 
   it("/calendar renders the Calendar view", () => {
     renderAt("/calendar");
-    expect(screen.getByRole("heading", { name: /Kalender/i })).toBeInTheDocument();
+    expect(screen.getByTestId("calendar-view")).toBeInTheDocument();
   });
 
   it("/journal renders the Journal view", () => {
