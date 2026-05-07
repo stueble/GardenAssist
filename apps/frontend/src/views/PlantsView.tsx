@@ -2,7 +2,8 @@ import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { AiPanel } from "@/components/AiPanel";
 import { useAiPanelState } from "@/hooks/useAiPanelState";
-import { PlantEditDialog, type PositionRow } from "@/components/PlantEditDialog";
+import { PlantEditDialog } from "@/components/PlantEditDialog";
+import { usePlantEditDialog } from "@/hooks/usePlantEditDialog";
 import { GardenPlanWidget } from "@/components/GardenPlanWidget";
 import { apiClient } from "@/api/client";
 import type { Plant } from "@api/plant";
@@ -53,16 +54,10 @@ export function PlantsView() {
   const [sortKey,   setSortKey]   = useState<SortKey>("name_common");
   const [sortDir,   setSortDir]   = useState<SortDir>("asc");
   const [selected,  setSelected]  = useState<Plant | null>(null);
-  // null = closed, undefined = new plant, Plant = edit existing
-  const [editTarget, setEditTarget] = useState<Plant | null | undefined>(undefined);
+  const [planUrl,   setPlanUrl]   = useState<string | null>(null);
 
-  // story-028: plan widget state (owned here so GardenPlanWidget and PlantEditDialog share it)
-  const [planUrl,          setPlanUrl]          = useState<string | null>(null);
-  const [positions,        setPositions]        = useState<PositionRow[]>([]);
-  const [initialPositions, setInitialPositions] = useState<PositionRow[]>([]);
-  const [pickMode,         setPickMode]         = useState(false);
+  const edit = usePlantEditDialog();
 
-  // Load plants on mount
   useEffect(() => {
     apiClient.getGarden()
       .then((g) => { setPlants(g.plants); setPlanUrl(g.plan_url); setLoading(false); })
@@ -260,17 +255,17 @@ export function PlantsView() {
         <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
 
           {/* Garden plan — shown when edit dialog is open (story-028 AC #1) */}
-          {editTarget !== undefined && (
+          {edit.editTarget !== undefined && (
             <GardenPlanWidget
               planUrl={planUrl}
-              pins={positions.map((p, i) => ({ x: p.x, y: p.y, label: String(i + 1) }))}
-              pickMode={pickMode}
-              onPick={(x, y) => setPositions((prev) => [...prev, { x, y }])}
+              pins={edit.positions.map((p, i) => ({ x: p.x, y: p.y, label: String(i + 1) }))}
+              pickMode={edit.pickMode}
+              onPick={(x, y) => edit.addPosition(x, y)}
             />
           )}
 
           {/* Table view — hidden when edit dialog open */}
-          {editTarget === undefined && view === "table" && (
+          {edit.editTarget === undefined && view === "table" && (
             <div style={{ flex: 1, overflow: "auto" }} data-testid="plants-table">
               {sorted.length === 0 ? (
                 <EmptyState search={search} t={t} />
@@ -306,7 +301,7 @@ export function PlantsView() {
           )}
 
           {/* Card view — hidden when edit dialog open */}
-          {editTarget === undefined && view === "card" && (
+          {edit.editTarget === undefined && view === "card" && (
             <div
               style={{
                 flex:                1,
@@ -339,17 +334,11 @@ export function PlantsView() {
         </div>
 
         {/* FAB (AC #6) — hidden while edit dialog is open (would overlap the plan) */}
-        {editTarget === undefined && <button
+        {edit.editTarget === undefined && <button
           type="button"
           title={t("overview.add_plant")}
           data-testid="fab-add-plant"
-          onClick={() => {
-            const empty: PositionRow[] = [];
-            setPositions(empty);
-            setInitialPositions(empty);
-            setPickMode(false);
-            setEditTarget(null);
-          }}
+          onClick={() => edit.openNew()}
           style={{
             position:       "absolute",
             bottom:         "24px",
@@ -381,47 +370,31 @@ export function PlantsView() {
       <div
         data-testid="edit-dialog"
         style={{
-          width:        editTarget !== undefined ? "360px" : "0",
-          minWidth:     editTarget !== undefined ? "360px" : "0",
+          width:        edit.editTarget !== undefined ? "360px" : "0",
+          minWidth:     edit.editTarget !== undefined ? "360px" : "0",
           overflow:     "hidden",
           background:   "var(--warm-white)",
-          borderLeft:   editTarget !== undefined ? "1px solid var(--border)" : "none",
+          borderLeft:   edit.editTarget !== undefined ? "1px solid var(--border)" : "none",
           display:      "flex",
           flexDirection:"column",
           transition:   "width .3s ease, min-width .3s ease",
           flexShrink:   0,
         }}
       >
-        {editTarget !== undefined && (
+        {edit.editTarget !== undefined && (
           <PlantEditDialog
-            plant={editTarget}
-            onClose={() => {
-              setPickMode(false);
-              setPositions([]);
-              setEditTarget(undefined);
-            }}
+            plant={edit.editTarget}
+            onClose={edit.close}
             onSaved={(saved) => {
-              setPickMode(false);
-              setPositions([]);
-              setEditTarget(undefined);
-              // Reload from API so selected plant has fresh attachments, positions etc.
-              apiClient.getGarden()
-                .then((g) => {
-                  setPlants(g.plants);
-                  // Use the fresh plant object from the DB (includes uploaded attachments)
-                  const fresh = g.plants.find((p) => p.id === saved.id) ?? saved;
-                  setSelected(fresh);
-                })
-                .catch(() => {
-                  // Fallback to the save response if reload fails
-                  setSelected(saved);
-                });
+              void edit.handleSaved(saved, (g) => {
+                setPlants(g.plants);
+              }).then((fresh) => setSelected(fresh));
             }}
-            positions={positions}
-            onPositionsChange={setPositions}
-            initialPositions={initialPositions}
-            pickMode={pickMode}
-            onPickModeChange={setPickMode}
+            positions={edit.positions}
+            onPositionsChange={edit.onPositionsChange}
+            initialPositions={edit.initialPositions}
+            pickMode={edit.pickMode}
+            onPickModeChange={edit.onPickModeChange}
           />
         )}
       </div>
@@ -430,28 +403,21 @@ export function PlantsView() {
       <div
         data-testid="detail-panel"
         style={{
-          width:        selected && editTarget === undefined ? "300px" : "0",
+          width:        selected && edit.editTarget === undefined ? "300px" : "0",
           overflow:     "hidden",
           background:   "var(--warm-white)",
-          borderLeft:   selected && editTarget === undefined ? "1px solid var(--border)" : "none",
+          borderLeft:   selected && edit.editTarget === undefined ? "1px solid var(--border)" : "none",
           display:      "flex",
           flexDirection:"column",
           transition:   "width .3s ease",
           flexShrink:   0,
         }}
       >
-        {selected && editTarget === undefined && (
+        {selected && edit.editTarget === undefined && (
           <PlantDetailPanel
             plant={selected}
             onClose={() => setSelected(null)}
-            onEdit={(p) => {
-              const rows: PositionRow[] = (p.positions ?? []).map((pos) => ({ x: pos.x_percent, y: pos.y_percent }));
-              setPositions(rows);
-              setInitialPositions(rows);
-              setPickMode(false);
-              setEditTarget(p);
-              setSelected(null);
-            }}
+            onEdit={(p) => { edit.openEdit(p); setSelected(null); }}
             onDelete={() => {
               setPlants((prev) => prev.filter((p) => p.id !== selected.id));
               setSelected(null);

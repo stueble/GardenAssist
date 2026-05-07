@@ -14,6 +14,8 @@ import { useTranslation } from "react-i18next";
 import { AiPanel } from "@/components/AiPanel";
 import { useAiPanelState } from "@/hooks/useAiPanelState";
 import { PlantDetailPanel } from "@/components/PlantDetailPanel";
+import { PlantEditDialog } from "@/components/PlantEditDialog";
+import { usePlantEditDialog } from "@/hooks/usePlantEditDialog";
 import { apiClient } from "@/api/client";
 import type { Plant } from "@api/plant";
 import type { Schedule } from "@api/schedule";
@@ -72,6 +74,8 @@ export function CalendarView() {
   const [activeType, setActiveType] = useState<Schedule["schedule_type"]>("bloom");
   const [selected, setSelected] = useState<Plant | null>(null);
 
+  const edit = usePlantEditDialog();
+
   const cw           = currentWeekNumber();
   const currentMonth = weekToMonthIdx(cw);
 
@@ -95,7 +99,9 @@ export function CalendarView() {
     return a.name_common.localeCompare(b.name_common);
   });
 
-  const aiContext = selected
+  const aiContext = edit.editTarget
+    ? `✏️ ${edit.editTarget.name_common}`
+    : selected
     ? `${selected.icon ?? "🌿"} ${selected.name_common}`
     : `📅 ${t("title")}`;
 
@@ -263,30 +269,46 @@ export function CalendarView() {
         )}
       </div>
 
-      {/* ── Detail panel — right of center, left of AiPanel (AC #6) ── */}
+      {/* ── Detail/Edit panel — right of center, left of AiPanel (AC #6) ── */}
       <div
         data-testid="calendar-detail-panel"
         style={{
-          width:         selected ? "300px" : "0",
-          minWidth:      selected ? "300px" : "0",
+          width:         (selected && edit.editTarget === undefined) || edit.editTarget !== undefined ? "360px" : "0",
+          minWidth:      (selected && edit.editTarget === undefined) || edit.editTarget !== undefined ? "360px" : "0",
           overflow:      "hidden",
           background:    "var(--warm-white)",
-          borderLeft:    selected ? "1px solid var(--border)" : "none",
+          borderLeft:    selected || edit.editTarget !== undefined ? "1px solid var(--border)" : "none",
           display:       "flex",
           flexDirection: "column",
           transition:    "width .3s ease, min-width .3s ease",
           flexShrink:    0,
         }}
       >
-        {selected && (
+        {selected && edit.editTarget === undefined && (
           <PlantDetailPanel
             plant={selected}
             onClose={() => setSelected(null)}
-            onEdit={() => {}}
+            onEdit={(p) => { edit.openEdit(p); setSelected(null); }}
             onDelete={() => {
               setPlants((prev) => prev.filter((p) => p.id !== selected.id));
               setSelected(null);
             }}
+          />
+        )}
+        {edit.editTarget !== undefined && (
+          <PlantEditDialog
+            plant={edit.editTarget}
+            onClose={edit.close}
+            onSaved={(saved) => {
+              void edit.handleSaved(saved, (g) => {
+                setPlants(g.plants);
+              }).then((fresh) => setSelected(fresh));
+            }}
+            positions={edit.positions}
+            onPositionsChange={edit.onPositionsChange}
+            initialPositions={edit.initialPositions}
+            pickMode={edit.pickMode}
+            onPickModeChange={edit.onPickModeChange}
           />
         )}
       </div>
