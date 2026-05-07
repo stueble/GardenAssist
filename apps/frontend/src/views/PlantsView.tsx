@@ -273,7 +273,6 @@ export function PlantsView() {
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12.5px" }}>
                   <thead style={{ position: "sticky", top: 0, zIndex: 10, background: "var(--warm-white)" }}>
                     <tr>
-                      <th style={thStyle(false)} />
                       <SortHeader label={t("table.col_name")}     col="name_common" current={sortKey} dir={sortDir} onSort={handleSort} />
                       <SortHeader label={t("table.col_category")} col="category"    current={sortKey} dir={sortDir} onSort={handleSort} />
                       <SortHeader label={t("table.col_location")} col="location"    current={sortKey} dir={sortDir} onSort={handleSort} />
@@ -504,41 +503,39 @@ function PlantRow({ plant, selected, onClick, t }: PlantRowProps) {
       }}
       className={selected ? "" : "hover:bg-green-mist"}
     >
-      {/* Thumbnail */}
+      {/* Thumbnail + Name (combined, like Calendar) */}
       <td style={{ padding: "10px 14px" }}>
-        <div
-          style={{
-            width:          "40px",
-            height:         "40px",
-            borderRadius:   "8px",
-            border:         "1.5px solid var(--border)",
-            fontSize:       "22px",
-            display:        "flex",
-            alignItems:     "center",
-            justifyContent: "center",
-            background:     "var(--green-mist)",
-            flexShrink:     0,
-            overflow:       "hidden",
-          }}
-        >
-          {thumbImg
-            ? <img src={thumbImg.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-            : plant.icon ?? "🌿"
-          }
-        </div>
-      </td>
-
-      {/* Name */}
-      <td style={{ padding: "10px 14px" }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-          <span style={{ fontWeight: 600, color: "var(--text-dark)", fontSize: "13px" }}>
-            {plant.name_common}
-          </span>
-          {plant.name_botanical && (
-            <span style={{ fontSize: "10px", color: "var(--text-light)", fontStyle: "italic" }}>
-              {plant.name_botanical}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <div
+            style={{
+              width:          "40px",
+              height:         "40px",
+              borderRadius:   "8px",
+              border:         "1.5px solid var(--border)",
+              fontSize:       "22px",
+              display:        "flex",
+              alignItems:     "center",
+              justifyContent: "center",
+              background:     "var(--green-mist)",
+              flexShrink:     0,
+              overflow:       "hidden",
+            }}
+          >
+            {thumbImg
+              ? <img src={thumbImg.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              : plant.icon ?? "🌿"
+            }
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "2px", minWidth: 0 }}>
+            <span style={{ fontWeight: 600, color: "var(--text-dark)", fontSize: "13px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              {plant.name_common}
             </span>
-          )}
+            {plant.name_botanical && (
+              <span style={{ fontSize: "10px", color: "var(--text-light)", fontStyle: "italic", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                {plant.name_botanical}
+              </span>
+            )}
+          </div>
         </div>
       </td>
 
