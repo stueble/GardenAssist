@@ -323,15 +323,23 @@ function WarningsSection({ warnings }: { warnings: Warning[] }) {
             borderLeft: "3px solid #e67e22",
           }}
         >
-          {/* Orange dot */}
+          {/* Orange dot — 20px wide to align with task icon column */}
           <div style={{
-            width:      "8px",
-            height:     "8px",
-            borderRadius: "50%",
-            background: "#e67e22",
-            flexShrink: 0,
-            marginTop:  "4px",
-          }} />
+            width:          "20px",
+            flexShrink:     0,
+            display:        "flex",
+            alignItems:     "flex-start",
+            justifyContent: "center",
+            paddingTop:     "5px",
+          }}>
+            <div style={{
+              width:        "8px",
+              height:       "8px",
+              borderRadius: "50%",
+              background:   "#e67e22",
+              flexShrink:   0,
+            }} />
+          </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: "13px", fontWeight: 500, color: "var(--text-dark)", lineHeight: 1.35 }}>
               {w.message}
