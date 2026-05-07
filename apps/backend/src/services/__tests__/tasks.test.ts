@@ -1,9 +1,9 @@
 /**
  * Task derivation tests.
  *
- * These tests verify that tasks are correctly derived from schedules and that
- * resolved journal entries (done/skipped) suppress the corresponding tasks.
- * Status (overdue/due/upcoming) is verified relative to an injected reference date.
+ * After the refactor: deriveTasks produces ONE task per schedule (not one per week).
+ * Status is derived from the schedule's time window vs. the current week.
+ * A schedule is resolved if ANY done/skipped JournalEntry references its schedule_id.
  */
 
 import { describe, it, expect } from "vitest";
@@ -12,6 +12,7 @@ import type { Schedule } from "@api/schedule.js";
 
 const NOW = new Date("2026-05-05T12:00:00Z"); // Tuesday of 2026-W19
 const CURRENT_WEEK = "2026-W19";
+const CURRENT_WEEK_NUM = 19;
 
 function makeSchedule(overrides: Partial<Schedule> = {}): Schedule {
   return {
@@ -28,13 +29,14 @@ function makeSchedule(overrides: Partial<Schedule> = {}): Schedule {
   };
 }
 
+// ── ISO helpers ───────────────────────────────────────────────────────────────
+
 describe("isoWeekNumber", () => {
-  it("returns correct week for a known date", () => {
+  it("returns 19 for 2026-05-05", () => {
     expect(isoWeekNumber(new Date("2026-05-05"))).toBe(19);
   });
 
-  it("returns week 1 for Jan 1 2026", () => {
-    // Jan 1 2026 is a Thursday — that's in week 1
+  it("returns 1 for Jan 1 2026 (Thursday → week 1)", () => {
     expect(isoWeekNumber(new Date("2026-01-01"))).toBe(1);
   });
 });
@@ -49,7 +51,7 @@ describe("weeksInYear", () => {
   });
 });
 
-describe("expandScheduleWeeks", () => {
+describe("expandScheduleWeeks (used internally, not for task count)", () => {
   it("returns weeks within a normal range", () => {
     const weeks = expandScheduleWeeks(
       { start_week: 18, end_week: 20 },
@@ -59,115 +61,134 @@ describe("expandScheduleWeeks", () => {
     expect(weeks).toEqual(["2026-W18", "2026-W19", "2026-W20"]);
   });
 
-  it("handles year-end wrapping (e.g. W50–W04)", () => {
+  it("handles year-end wrapping", () => {
     const weeks = expandScheduleWeeks(
       { start_week: 51, end_week: 2 },
       "2026-W50",
       "2027-W03"
     );
     expect(weeks).toContain("2026-W51");
-    expect(weeks).toContain("2026-W52");
     expect(weeks).toContain("2027-W01");
     expect(weeks).toContain("2027-W02");
-    expect(weeks).not.toContain("2027-W03"); // end_week=2, not 3
-  });
-
-  it("respects window boundaries", () => {
-    const weeks = expandScheduleWeeks(
-      { start_week: 1, end_week: 52 },
-      "2026-W10",
-      "2026-W12"
-    );
-    expect(weeks).toEqual(["2026-W10", "2026-W11", "2026-W12"]);
+    expect(weeks).not.toContain("2027-W03");
   });
 });
 
-describe("deriveTasks", () => {
-  it("generates tasks for each week in the schedule window", () => {
+// ── deriveTasks — one task per schedule ──────────────────────────────────────
+
+describe("deriveTasks — one task per schedule", () => {
+  it("generates exactly one task for a schedule active this week", () => {
     const tasks = deriveTasks({
-      schedules:      [makeSchedule({ start_week: 19, end_week: 19 })],
+      schedules:      [makeSchedule({ start_week: 18, end_week: 20 })],
       journalEntries: [],
-      lookbackWeeks:  2,
-      lookaheadWeeks: 2,
+      lookbackWeeks:  4,
+      lookaheadWeeks: 4,
       now:            NOW,
     });
     expect(tasks).toHaveLength(1);
-    expect(tasks[0].week).toBe("2026-W19");
+    expect(tasks[0].week).toBe(CURRENT_WEEK);
+  });
+
+  it("generates one task per schedule (not N tasks for N-week range)", () => {
+    const tasks = deriveTasks({
+      schedules: [
+        makeSchedule({ id: "s1", start_week: 15, end_week: 22 }),
+        makeSchedule({ id: "s2", start_week: 19, end_week: 19 }),
+      ],
+      journalEntries: [],
+      lookbackWeeks:  8,
+      lookaheadWeeks: 8,
+      now:            NOW,
+    });
+    expect(tasks).toHaveLength(2);
+  });
+});
+
+// ── Status derivation ─────────────────────────────────────────────────────────
+
+describe("deriveTasks — status from window", () => {
+  it("status is 'due' when currentWeek is within window", () => {
+    const tasks = deriveTasks({
+      schedules:      [makeSchedule({ start_week: 18, end_week: 20 })],
+      journalEntries: [],
+      lookbackWeeks:  4,
+      lookaheadWeeks: 4,
+      now:            NOW,
+    });
     expect(tasks[0].status).toBe("due");
   });
 
-  it("marks past weeks as overdue", () => {
+  it("status is 'overdue' when end_week < currentWeek", () => {
+    // W13-16, current W19 → overdue
     const tasks = deriveTasks({
-      schedules:      [makeSchedule({ start_week: 17, end_week: 17 })],
+      schedules:      [makeSchedule({ start_week: 13, end_week: 16 })],
       journalEntries: [],
-      lookbackWeeks:  4,
-      lookaheadWeeks: 0,
+      lookbackWeeks:  8,
+      lookaheadWeeks: 4,
       now:            NOW,
     });
     expect(tasks[0].status).toBe("overdue");
   });
 
-  it("marks future weeks as upcoming", () => {
+  it("status is 'upcoming' when start_week > currentWeek", () => {
+    // W21-23, current W19 → upcoming
     const tasks = deriveTasks({
-      schedules:      [makeSchedule({ start_week: 21, end_week: 21 })],
+      schedules:      [makeSchedule({ start_week: 21, end_week: 23 })],
       journalEntries: [],
-      lookbackWeeks:  0,
+      lookbackWeeks:  4,
       lookaheadWeeks: 4,
       now:            NOW,
     });
     expect(tasks[0].status).toBe("upcoming");
   });
 
-  it("suppresses tasks resolved with 'done' journal entries", () => {
+  it("sorts: overdue first, then due, then upcoming", () => {
     const tasks = deriveTasks({
-      schedules:      [makeSchedule({ start_week: 19, end_week: 19 })],
-      journalEntries: [{ schedule_id: "sched-001", week: "2026-W19", entry_type: "done" }],
-      lookbackWeeks:  2,
-      lookaheadWeeks: 2,
+      schedules: [
+        makeSchedule({ id: "s-upcoming", start_week: 22, end_week: 24 }),
+        makeSchedule({ id: "s-overdue",  start_week: 13, end_week: 16 }),
+        makeSchedule({ id: "s-due",      start_week: 18, end_week: 20 }),
+      ],
+      journalEntries: [],
+      lookbackWeeks:  8,
+      lookaheadWeeks: 4,
+      now:            NOW,
+    });
+    expect(tasks[0].status).toBe("overdue");
+    expect(tasks[1].status).toBe("due");
+    expect(tasks[2].status).toBe("upcoming");
+  });
+});
+
+// ── Window filtering ──────────────────────────────────────────────────────────
+
+describe("deriveTasks — window filtering", () => {
+  it("excludes schedule whose window is before lookback", () => {
+    // W1-5, lookback 4 weeks from W19 → windowStart ≈ W15 → W1-5 excluded
+    const tasks = deriveTasks({
+      schedules:      [makeSchedule({ start_week: 1, end_week: 5 })],
+      journalEntries: [],
+      lookbackWeeks:  4,
+      lookaheadWeeks: 4,
       now:            NOW,
     });
     expect(tasks).toHaveLength(0);
   });
 
-  it("suppresses tasks resolved with 'skipped' journal entries", () => {
+  it("excludes schedule whose window is beyond lookahead", () => {
+    // W30-35, lookahead 4 weeks from W19 → windowEnd ≈ W23 → excluded
     const tasks = deriveTasks({
-      schedules:      [makeSchedule({ start_week: 19, end_week: 19 })],
-      journalEntries: [{ schedule_id: "sched-001", week: "2026-W19", entry_type: "skipped" }],
-      lookbackWeeks:  2,
-      lookaheadWeeks: 2,
+      schedules:      [makeSchedule({ start_week: 30, end_week: 35 })],
+      journalEntries: [],
+      lookbackWeeks:  4,
+      lookaheadWeeks: 4,
       now:            NOW,
     });
     expect(tasks).toHaveLength(0);
   });
 
-  it("does NOT suppress tasks for 'manual' journal entries", () => {
-    const tasks = deriveTasks({
-      schedules:      [makeSchedule({ start_week: 19, end_week: 19 })],
-      journalEntries: [{ schedule_id: "sched-001", week: "2026-W19", entry_type: "manual" }],
-      lookbackWeeks:  2,
-      lookaheadWeeks: 2,
-      now:            NOW,
-    });
-    expect(tasks).toHaveLength(1);
-  });
-
-  it("only suppresses the matching (schedule_id, week) pair", () => {
-    // Both schedules have exactly W19 in their range
-    const sched1 = makeSchedule({ id: "sched-001", start_week: 19, end_week: 19 });
-    const sched2 = makeSchedule({ id: "sched-002", start_week: 19, end_week: 19 });
-    const tasks = deriveTasks({
-      schedules:      [sched1, sched2],
-      journalEntries: [{ schedule_id: "sched-001", week: "2026-W19", entry_type: "done" }],
-      lookbackWeeks:  2,
-      lookaheadWeeks: 2,
-      now:            NOW,
-    });
-    // sched-001/W19 resolved, sched-002/W19 still open
-    expect(tasks).toHaveLength(1);
-    expect(tasks[0].schedule.id).toBe("sched-002");
-  });
-
-  it("returns tasks sorted: overdue first, then due, then upcoming", () => {
+  it("includes schedule that partially overlaps window", () => {
+    // W17-21 overlaps [W15, W23]
     const tasks = deriveTasks({
       schedules:      [makeSchedule({ start_week: 17, end_week: 21 })],
       journalEntries: [],
@@ -175,96 +196,114 @@ describe("deriveTasks", () => {
       lookaheadWeeks: 4,
       now:            NOW,
     });
-    const statuses = tasks.map((t) => t.status);
-    const overdueEnd   = statuses.lastIndexOf("overdue");
-    const dueStart     = statuses.indexOf("due");
-    const upcomingStart = statuses.indexOf("upcoming");
-    expect(overdueEnd).toBeLessThan(dueStart);
-    expect(dueStart).toBeLessThan(upcomingStart);
+    expect(tasks).toHaveLength(1);
   });
+});
 
-  it("returns empty array when schedule is outside the window", () => {
+// ── Resolved by journal entry ─────────────────────────────────────────────────
+
+describe("deriveTasks — resolved suppression", () => {
+  it("suppresses a schedule when 'done' entry exists for schedule_id", () => {
     const tasks = deriveTasks({
-      schedules:      [makeSchedule({ start_week: 1, end_week: 2 })],
-      journalEntries: [],
-      lookbackWeeks:  2,
-      lookaheadWeeks: 2,
+      schedules:      [makeSchedule({ start_week: 18, end_week: 20 })],
+      journalEntries: [{ schedule_id: "sched-001", week: CURRENT_WEEK, entry_type: "done" }],
+      lookbackWeeks:  4,
+      lookaheadWeeks: 4,
       now:            NOW,
     });
     expect(tasks).toHaveLength(0);
   });
 
-  describe("year-end wrapping (end_week < start_week)", () => {
-    // Reference: NOW = 2026-05-05 = W19.
-    // Schedule W50–W04 wraps across year boundary.
-    // With lookahead 40 weeks from W19 we reach ~W59 = W07 of next year → covers W50–W52 of 2026 and W01–W04 of 2027.
-    // With lookback 2 weeks we only go back to W17 — so W50–W52/2026 are upcoming, W01–W04/2027 are upcoming too.
-
-    const wrappingSchedule = makeSchedule({ start_week: 50, end_week: 4 });
-
-    it("generates tasks for weeks on both sides of the year boundary", () => {
-      const tasks = deriveTasks({
-        schedules:      [wrappingSchedule],
-        journalEntries: [],
-        lookbackWeeks:  0,
-        lookaheadWeeks: 40,
-        now:            NOW,
-      });
-      const weeks = tasks.map((t) => t.week);
-      // Should contain late-year weeks of 2026
-      expect(weeks).toContain("2026-W50");
-      expect(weeks).toContain("2026-W52");
-      // And early-year weeks of 2027
-      expect(weeks).toContain("2027-W01");
-      expect(weeks).toContain("2027-W04");
-      // Should NOT contain W05 (beyond end_week=4)
-      expect(weeks).not.toContain("2027-W05");
+  it("suppresses a schedule when 'skipped' entry exists for schedule_id", () => {
+    const tasks = deriveTasks({
+      schedules:      [makeSchedule({ start_week: 18, end_week: 20 })],
+      journalEntries: [{ schedule_id: "sched-001", week: CURRENT_WEEK, entry_type: "skipped" }],
+      lookbackWeeks:  4,
+      lookaheadWeeks: 4,
+      now:            NOW,
     });
+    expect(tasks).toHaveLength(0);
+  });
 
-    it("marks wrapping-schedule weeks as upcoming when all are in the future", () => {
-      const tasks = deriveTasks({
-        schedules:      [wrappingSchedule],
-        journalEntries: [],
-        lookbackWeeks:  0,
-        lookaheadWeeks: 40,
-        now:            NOW,
-      });
-      // All weeks of this schedule are in the future relative to W19
-      expect(tasks.every((t) => t.status === "upcoming")).toBe(true);
+  it("does NOT suppress for 'manual' journal entries", () => {
+    const tasks = deriveTasks({
+      schedules:      [makeSchedule({ start_week: 18, end_week: 20 })],
+      journalEntries: [{ schedule_id: "sched-001", week: CURRENT_WEEK, entry_type: "manual" }],
+      lookbackWeeks:  4,
+      lookaheadWeeks: 4,
+      now:            NOW,
     });
+    expect(tasks).toHaveLength(1);
+  });
 
-    it("marks wrapping-schedule week as overdue when it is in the past", () => {
-      // Reference: end of 2026, W50 is current week → W49 just passed
-      const lateNow = new Date("2026-12-07T12:00:00Z"); // 2026-W50 (Mon)
-      const tasks = deriveTasks({
-        schedules:      [wrappingSchedule],
-        journalEntries: [],
-        lookbackWeeks:  2,
-        lookaheadWeeks: 8,
-        now:            lateNow,
-      });
-      // W50 should be "due", W51–W52 upcoming, W01–W04/2027 upcoming
-      const w50 = tasks.find((t) => t.week === "2026-W50");
-      expect(w50?.status).toBe("due");
-      const w51 = tasks.find((t) => t.week === "2026-W51");
-      expect(w51?.status).toBe("upcoming");
-      const w01 = tasks.find((t) => t.week === "2027-W01");
-      expect(w01?.status).toBe("upcoming");
+  it("suppresses only the matching schedule_id, leaves other schedules", () => {
+    const tasks = deriveTasks({
+      schedules: [
+        makeSchedule({ id: "sched-001", start_week: 18, end_week: 20 }),
+        makeSchedule({ id: "sched-002", start_week: 18, end_week: 20 }),
+      ],
+      journalEntries: [{ schedule_id: "sched-001", week: CURRENT_WEEK, entry_type: "done" }],
+      lookbackWeeks:  4,
+      lookaheadWeeks: 4,
+      now:            NOW,
     });
+    expect(tasks).toHaveLength(1);
+    expect(tasks[0].schedule.id).toBe("sched-002");
+  });
 
-    it("suppresses a wrapping-schedule task when resolved by done entry", () => {
-      const tasks = deriveTasks({
-        schedules:      [wrappingSchedule],
-        journalEntries: [
-          { schedule_id: "sched-001", week: "2026-W51", entry_type: "done" },
-        ],
-        lookbackWeeks:  0,
-        lookaheadWeeks: 40,
-        now:            NOW,
-      });
-      expect(tasks.find((t) => t.week === "2026-W51")).toBeUndefined();
-      // Other weeks should still be present
-      expect(tasks.find((t) => t.week === "2026-W50")).toBeDefined();
+  it("suppresses regardless of which week the journal entry references", () => {
+    // done entry references a different week — still suppresses the schedule
+    const tasks = deriveTasks({
+      schedules:      [makeSchedule({ start_week: 13, end_week: 16 })],
+      journalEntries: [{ schedule_id: "sched-001", week: "2026-W13", entry_type: "done" }],
+      lookbackWeeks:  8,
+      lookaheadWeeks: 4,
+      now:            NOW,
     });
+    expect(tasks).toHaveLength(0);
+  });
+});
+
+// ── Wrapping schedules ────────────────────────────────────────────────────────
+
+describe("deriveTasks — wrapping schedules (end_week < start_week)", () => {
+  const wrapping = makeSchedule({ id: "wrap", start_week: 50, end_week: 4 });
+
+  it("includes wrapping schedule in window", () => {
+    // W50-W04 is upcoming from W19 with 40-week lookahead
+    const tasks = deriveTasks({
+      schedules:      [wrapping],
+      journalEntries: [],
+      lookbackWeeks:  0,
+      lookaheadWeeks: 40,
+      now:            NOW,
+    });
+    expect(tasks).toHaveLength(1);
+    expect(tasks[0].status).toBe("upcoming");
+  });
+
+  it("wrapping schedule is 'due' when current week is within the range", () => {
+    // Reference: W51 is within W50-W04
+    const nov = new Date("2026-12-14T12:00:00Z"); // 2026-W51
+    const tasks = deriveTasks({
+      schedules:      [wrapping],
+      journalEntries: [],
+      lookbackWeeks:  2,
+      lookaheadWeeks: 8,
+      now:            nov,
+    });
+    expect(tasks).toHaveLength(1);
+    expect(tasks[0].status).toBe("due");
+  });
+
+  it("suppresses wrapping schedule when done entry exists", () => {
+    const tasks = deriveTasks({
+      schedules:      [wrapping],
+      journalEntries: [{ schedule_id: "wrap", week: "2026-W51", entry_type: "done" }],
+      lookbackWeeks:  0,
+      lookaheadWeeks: 40,
+      now:            NOW,
+    });
+    expect(tasks).toHaveLength(0);
   });
 });

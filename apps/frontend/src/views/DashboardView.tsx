@@ -56,22 +56,20 @@ const MONTHS_DE = ["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt",
  * - due:     "Jetzt fällig · Pflanzename"
  * - upcoming:"Demnächst · Pflanzename"
  */
-/** Returns the time/status part based on schedule window vs. current week. */
+/** Returns the time/status part using task.status + schedule window for counts. */
 function relativeTaskSub(task: Task): string {
   const cw = currentWeek();
   const { start_week, end_week } = task.schedule;
-  if (end_week < cw) {
-    // overdue: window has passed
+  if (task.status === "overdue") {
     const weeks = Math.max(1, cw - end_week);
     return weeks === 1 ? "Überfällig seit 1 Woche" : `Überfällig seit ${weeks} Wochen`;
   }
-  if (start_week > cw) {
-    // upcoming: fällig in N Wochen (weeks until start_week)
+  if (task.status === "upcoming") {
     const weeksUntil = start_week - cw;
     if (weeksUntil <= 1) return "Fällig in 1 Woche";
     return `Fällig in ${weeksUntil} Wochen`;
   }
-  // due: currently within window — innerhalb N Wochen (weeks remaining until end)
+  // due: within window
   const weeksLeft = end_week - cw;
   if (weeksLeft <= 0) return "Aktuell (letzte Woche)";
   if (weeksLeft === 1) return "Innerhalb 1 Woche";

@@ -1,11 +1,20 @@
 /**
  * Task derivation logic (ADR-005).
  *
- * Tasks are never stored — they are computed by expanding each Schedule into
- * weekly occurrences within a time window and subtracting JournalEntry records
- * of type "done" or "skipped" that reference the same schedule_id and week.
+ * One task is generated per Schedule (not one per week). Status is derived
+ * from the schedule's time window relative to the current week:
+ * - overdue:  end_week < currentWeekNumber  (window has passed)
+ * - due:      start_week ≤ currentWeekNumber ≤ end_week  (active now)
+ * - upcoming: start_week > currentWeekNumber  (not yet started)
  *
- * Week identifiers follow ISO 8601: "YYYY-Www" (e.g. "2026-W12").
+ * A schedule is suppressed (no task generated) if any JournalEntry of type
+ * "done" or "skipped" references that schedule_id — regardless of the week
+ * field. This means one "Done" action resolves the entire schedule for the
+ * current period.
+ *
+ * task.week is set to the current ISO week (when the task was evaluated).
+ * Journal entries carry the concrete date (date field) of the action.
+ *
  * Week numbers are ISO 8601 weeks (Monday = first day, 1–53).
  */
 
@@ -140,64 +149,95 @@ export interface DeriveTasksOptions {
 }
 
 /**
- * Derives the open task list for a plant's schedules.
+ * Returns true when a schedule's time window overlaps with the lookback/lookahead
+ * window [windowStartWeek, windowEndWeek] (both are raw week numbers within one year).
  *
- * For each (schedule, week) pair in the time window, a task is generated
- * unless a matching JournalEntry of type "done" or "skipped" exists.
+ * Handles year-end wrapping (end_week < start_week) by treating those schedules
+ * as always active (they span across the year boundary).
+ */
+function scheduleInWindow(
+  schedule: Pick<Schedule, "start_week" | "end_week">,
+  windowStartWeek: number,
+  windowEndWeek: number,
+): boolean {
+  const { start_week: s, end_week: e } = schedule;
+  if (e >= s) {
+    // Normal range: active in [s, e]
+    return s <= windowEndWeek && e >= windowStartWeek;
+  } else {
+    // Wrapping range (e.g. W50–W04): active outside [e+1, s-1]
+    // → always overlaps unless window is entirely in [e+1, s-1]
+    const inGap = windowStartWeek > e && windowEndWeek < s;
+    return !inGap;
+  }
+}
+
+/**
+ * Derives the status of a schedule's time window relative to the current week.
+ */
+function windowStatus(
+  schedule: Pick<Schedule, "start_week" | "end_week">,
+  currentWeekNum: number,
+): TaskStatus {
+  const { start_week: s, end_week: e } = schedule;
+  if (e >= s) {
+    // Normal range
+    if (e < currentWeekNum)  return "overdue";
+    if (s > currentWeekNum)  return "upcoming";
+    return "due";
+  } else {
+    // Wrapping range (e.g. W50–W04)
+    const inRange = currentWeekNum >= s || currentWeekNum <= e;
+    if (!inRange) return "upcoming"; // in the gap between e+1 and s-1
+    if (e < currentWeekNum && currentWeekNum < s) return "upcoming"; // unreachable but safe
+    return "due";
+  }
+}
+
+/**
+ * Schedule types that represent actionable care tasks shown to the user.
+ * bloom and foliage are informational/decorative — never shown as tasks.
+ */
+const CARE_TYPES = new Set(["pruning", "fertilization", "growth", "misc"]);
+
+/**
+ * Derives one task per schedule for a plant.
  *
- * Status:
- * - overdue:  week is before current week
- * - due:      week is the current week
- * - upcoming: week is after current week
+ * A schedule produces a task if:
+ * 1. Its schedule_type is a care type (pruning/fertilization/growth/misc)
+ * 2. Its time window overlaps with [now - lookbackWeeks, now + lookaheadWeeks]
+ * 3. No JournalEntry of type "done" or "skipped" references that schedule_id
+ *
+ * task.week is the current ISO week (when the task was evaluated).
  */
 export function deriveTasks(opts: DeriveTasksOptions): Task[] {
-  const now = opts.now ?? new Date();
-  const currentWeek = toIsoWeek(now);
+  const now            = opts.now ?? new Date();
+  const currentWeekNum = isoWeekNumber(now);
+  const currentWeekStr = toIsoWeek(now);
 
-  // Compute window boundaries
-  const windowStartDate = new Date(now);
-  windowStartDate.setUTCDate(now.getUTCDate() - opts.lookbackWeeks * 7);
-  const windowEndDate = new Date(now);
-  windowEndDate.setUTCDate(now.getUTCDate() + opts.lookaheadWeeks * 7);
+  const windowStartWeek = Math.max(1, currentWeekNum - opts.lookbackWeeks);
+  const windowEndWeek   = Math.min(53, currentWeekNum + opts.lookaheadWeeks);
 
-  const windowStart = toIsoWeek(windowStartDate);
-  const windowEnd   = toIsoWeek(windowEndDate);
-
-  // Build a set of resolved (schedule_id, week) pairs
-  const resolved = new Set<string>(
+  // Resolved: any schedule_id with a done/skipped entry is suppressed entirely
+  const resolvedScheduleIds = new Set<string>(
     opts.journalEntries
       .filter((e) => e.entry_type === "done" || e.entry_type === "skipped")
-      .filter((e) => e.schedule_id != null && e.week != null)
-      .map((e) => `${e.schedule_id}::${e.week}`)
+      .filter((e) => e.schedule_id != null)
+      .map((e) => e.schedule_id!)
   );
 
   const tasks: Task[] = [];
 
   for (const schedule of opts.schedules) {
-    const weeks = expandScheduleWeeks(schedule, windowStart, windowEnd);
+    if (!CARE_TYPES.has(schedule.schedule_type)) continue;  // bloom/foliage → skip
+    if (resolvedScheduleIds.has(schedule.id)) continue;
+    if (!scheduleInWindow(schedule, windowStartWeek, windowEndWeek)) continue;
 
-    for (const week of weeks) {
-      const key = `${schedule.id}::${week}`;
-      if (resolved.has(key)) continue;
-
-      let status: TaskStatus;
-      if (week < currentWeek) {
-        status = "overdue";
-      } else if (week === currentWeek) {
-        status = "due";
-      } else {
-        status = "upcoming";
-      }
-
-      tasks.push({ schedule, week, status });
-    }
+    const status = windowStatus(schedule, currentWeekNum);
+    tasks.push({ schedule, week: currentWeekStr, status });
   }
 
-  // Sort: overdue first (oldest first), then due, then upcoming
-  return tasks.sort((a, b) => {
-    const order = { overdue: 0, due: 1, upcoming: 2 };
-    const statusDiff = order[a.status] - order[b.status];
-    if (statusDiff !== 0) return statusDiff;
-    return a.week.localeCompare(b.week);
-  });
+  // Sort: overdue first, then due, then upcoming
+  const order: Record<TaskStatus, number> = { overdue: 0, due: 1, upcoming: 2 };
+  return tasks.sort((a, b) => order[a.status] - order[b.status]);
 }
