@@ -120,9 +120,10 @@ export type ChatMessage = { role: "user" | "assistant"; content: string };
 export function chatWithAi(
   messages: ChatMessage[],
   language: "de" | "en" = "de",
+  systemPrompt?: string,
 ): Promise<{ content: string }> {
   return request("/ai/chat", {
     method: "POST",
-    body:   JSON.stringify({ messages, language }),
+    body:   JSON.stringify({ messages, language, system_prompt: systemPrompt }),
   });
 }

@@ -1,9 +1,11 @@
 ---
 id: STORY-043
 title: AI Assistant – Context-aware system prompt
-status: Ready
-assignee: []
+status: In Review
+assignee:
+  - '@agent'
 created_date: '2026-05-07 22:18'
+updated_date: '2026-05-07 22:47'
 labels:
   - frontend
   - ai
@@ -40,12 +42,18 @@ Layers 1 and 2 hardcoded in German and English. Active language from i18n.langua
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 AssistantContext type is defined and passed from each view to AiPanel: { view, selectedPlant?, garden }
-- [ ] #2 Every request includes the three-layer system prompt: persona, app description, current situation
-- [ ] #3 Garden serialization strips created_at, updated_at, attachment URLs, thumbnail_attachment_id, position coordinates, and icons
-- [ ] #4 When a plant is selected, only one identifying line is added to layer 3 (no duplication of data already in the garden list)
-- [ ] #5 System prompt layers 1 and 2 are available in German and English, driven by i18n.language
+- [x] #1 AssistantContext type is defined and passed from each view to AiPanel: { view, selectedPlant?, garden }
+- [x] #2 Every request includes the three-layer system prompt: persona, app description, current situation
+- [x] #3 Garden serialization strips created_at, updated_at, attachment URLs, thumbnail_attachment_id, position coordinates, and icons
+- [x] #4 When a plant is selected, only one identifying line is added to layer 3 (no duplication of data already in the garden list)
+- [x] #5 System prompt layers 1 and 2 are available in German and English, driven by i18n.language
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+AssistantContext-Typ in docs/api/assistant-context.ts definiert (view, selectedPlant?, garden). Neues Modul apps/frontend/src/lib/aiPrompt.ts mit serializeGarden() (stripped: icon, positions, attachment-URLs, thumbnail_attachment_id, created_at, updated_at) und buildSystemPrompt() (3-Layer: Persona, App-Beschreibung, Situation — de/en). AiPanel erhält assistantContext-Prop; Prompt wird per Request an /api/ai/chat als system_prompt mitgeschickt und ersetzt den Stub. Backend-Route akzeptiert optionales system_prompt-Feld und bevorzugt es gegenüber dem Fallback. Alle Views (Dashboard, Plants, Calendar, Journal) leiten den AssistantContext weiter; Settings bleibt ohne Garden. 18 neue Tests für serializeGarden und buildSystemPrompt. 384 Tests gesamt grün.
+<!-- SECTION:FINAL_SUMMARY:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->

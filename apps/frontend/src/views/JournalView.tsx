@@ -11,8 +11,10 @@ import { AiPanel } from "@/components/AiPanel";
 import { useAiPanelState } from "@/hooks/useAiPanelState";
 import { apiClient } from "@/api/client";
 import type { JournalEntry, JournalEntryType } from "@api/journal-entry";
-import type { Attachment } from "@api/attachment";
-import type { Plant } from "@api/plant";
+import type { Attachment }      from "@api/attachment";
+import type { Plant }           from "@api/plant";
+import type { Garden }          from "@api/garden";
+import type { AssistantContext } from "@api/assistant-context";
 
 // ── Type colors (AC #6) ───────────────────────────────────────────────────────
 
@@ -65,6 +67,7 @@ export function JournalView() {
 
   const [entries,      setEntries]      = useState<JournalEntry[]>([]);
   const [plants,       setPlants]       = useState<Plant[]>([]);
+  const [garden,       setGarden]       = useState<Garden | null>(null);
   const [attachmentMap, setAttachmentMap] = useState<Map<string, Attachment>>(new Map());
   const [loading,      setLoading]      = useState(true);
   const [search,       setSearch]       = useState("");
@@ -74,6 +77,7 @@ export function JournalView() {
 
   function loadGarden() {
     return apiClient.getGarden().then((g) => {
+      setGarden(g);
       const sorted = [...g.journal_entries].sort((a, b) => b.date.localeCompare(a.date));
       setEntries(sorted);
       setPlants(g.plants);
@@ -275,7 +279,10 @@ export function JournalView() {
         )}
       </div>
 
-      <AiPanel context={`📔 ${t("title")}`} />
+      <AiPanel
+        context={`📔 ${t("title")}`}
+        assistantContext={garden ? { view: "journal", garden } : undefined}
+      />
 
       {/* FAB — hidden when panel open */}
       {panelEntry === undefined && (

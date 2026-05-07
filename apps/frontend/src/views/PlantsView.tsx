@@ -6,7 +6,9 @@ import { PlantEditDialog } from "@/components/PlantEditDialog";
 import { usePlantEditDialog } from "@/hooks/usePlantEditDialog";
 import { GardenPlanWidget } from "@/components/GardenPlanWidget";
 import { apiClient } from "@/api/client";
-import type { Plant } from "@api/plant";
+import type { Plant }            from "@api/plant";
+import type { Garden }           from "@api/garden";
+import type { AssistantContext } from "@api/assistant-context";
 import type { Schedule } from "@api/schedule";
 import {
   derivePlantStatus,
@@ -47,6 +49,7 @@ export function PlantsView() {
   const { setOpen: setAiPanelOpen } = useAiPanelState();
 
   const [plants,    setPlants]    = useState<Plant[]>([]);
+  const [garden,    setGarden]    = useState<Garden | null>(null);
   const [loading,   setLoading]   = useState(true);
   const [error,     setError]     = useState(false);
   const [search,    setSearch]    = useState("");
@@ -60,7 +63,7 @@ export function PlantsView() {
 
   useEffect(() => {
     apiClient.getGarden()
-      .then((g) => { setPlants(g.plants); setPlanUrl(g.plan_url); setLoading(false); })
+      .then((g) => { setGarden(g); setPlants(g.plants); setPlanUrl(g.plan_url); setLoading(false); })
       .catch(() => { setError(true); setLoading(false); });
   }, []);
 
@@ -134,6 +137,10 @@ export function PlantsView() {
   const aiContext = selected
     ? `${selected.icon ?? "🌿"} ${selected.name_common}`
     : `🌿 ${t("title")}`;
+
+  const assistantContext: AssistantContext | undefined = garden
+    ? { view: "plants", garden, selectedPlant: selected ?? undefined }
+    : undefined;
 
   if (loading) {
     return (
@@ -425,7 +432,7 @@ export function PlantsView() {
         )}
       </div>
 
-      <AiPanel context={aiContext} />
+      <AiPanel context={aiContext} assistantContext={assistantContext} />
     </div>
   );
 }

@@ -84,8 +84,9 @@ const chatMessageSchema = z.object({
 });
 
 export const AiChatRequestSchema = z.object({
-  messages: z.array(chatMessageSchema).min(1),
-  language: z.enum(["de", "en"]).default("de"),
+  messages:      z.array(chatMessageSchema).min(1),
+  language:      z.enum(["de", "en"]).default("de"),
+  system_prompt: z.string().optional(),
 });
 
 // ── GardenInput ───────────────────────────────────────────────────────────────

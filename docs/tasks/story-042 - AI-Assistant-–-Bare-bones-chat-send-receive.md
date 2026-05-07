@@ -1,16 +1,17 @@
 ---
 id: STORY-042
 title: AI Assistant – Bare-bones chat (send & receive)
-status: In Review
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-07 22:18'
-updated_date: '2026-05-07 22:32'
+updated_date: '2026-05-07 22:39'
 labels:
   - frontend
   - ai
 dependencies: []
 priority: high
+ordinal: 42000
 ---
 
 ## Description

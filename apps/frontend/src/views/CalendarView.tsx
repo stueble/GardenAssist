@@ -18,8 +18,10 @@ import { PlantEditDialog } from "@/components/PlantEditDialog";
 import { GardenPlanWidget } from "@/components/GardenPlanWidget";
 import { usePlantEditDialog } from "@/hooks/usePlantEditDialog";
 import { apiClient } from "@/api/client";
-import type { Plant } from "@api/plant";
-import type { Schedule } from "@api/schedule";
+import type { Plant }            from "@api/plant";
+import type { Garden }           from "@api/garden";
+import type { Schedule }         from "@api/schedule";
+import type { AssistantContext } from "@api/assistant-context";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -70,6 +72,7 @@ export function CalendarView() {
   const { setOpen: setAiOpen } = useAiPanelState();
 
   const [plants,    setPlants]   = useState<Plant[]>([]);
+  const [garden,    setGarden]   = useState<Garden | null>(null);
   const [loading,   setLoading]  = useState(true);
   const [search,    setSearch]   = useState("");
   const [activeType, setActiveType] = useState<Schedule["schedule_type"]>("bloom");
@@ -83,7 +86,7 @@ export function CalendarView() {
 
   useEffect(() => {
     apiClient.getGarden()
-      .then((g) => { setPlants(g.plants); setPlanUrl(g.plan_url); setLoading(false); })
+      .then((g) => { setGarden(g); setPlants(g.plants); setPlanUrl(g.plan_url); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
 
@@ -106,6 +109,10 @@ export function CalendarView() {
     : selected
     ? `${selected.icon ?? "🌿"} ${selected.name_common}`
     : `📅 ${t("title")}`;
+
+  const assistantContext: AssistantContext | undefined = garden
+    ? { view: "calendar", garden, selectedPlant: selected ?? undefined }
+    : undefined;
 
   return (
     <div
@@ -325,7 +332,7 @@ export function CalendarView() {
         )}
       </div>
 
-      <AiPanel context={aiContext} />
+      <AiPanel context={aiContext} assistantContext={assistantContext} />
     </div>
   );
 }

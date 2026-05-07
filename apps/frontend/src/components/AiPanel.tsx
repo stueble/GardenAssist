@@ -4,10 +4,14 @@ import { apiClient }               from "@/api/client";
 import { chatWithAi }              from "@/api/client";
 import type { ChatMessage }        from "@/api/client";
 import { useAiPanelState }         from "@/hooks/useAiPanelState";
+import { buildSystemPrompt }       from "@/lib/aiPrompt";
+import type { AssistantContext }   from "@api/assistant-context";
 
 interface AiPanelProps {
   /** Context bar text, e.g. "✏️ Bearbeite: 🌹 Rose" or "⚙️ Einstellungen" */
   context?: string;
+  /** Structured context for the AI system prompt (garden data, active view, selected plant) */
+  assistantContext?: AssistantContext;
 }
 
 /**
@@ -27,7 +31,7 @@ interface AiPanelProps {
  * - Context bar: rgba(255,255,255,.85) (§ 5.8)
  * - Strip hover: green-mid → green-light, 0.2s (§ 5.6)
  */
-export function AiPanel({ context }: AiPanelProps) {
+export function AiPanel({ context, assistantContext }: AiPanelProps) {
   const { open, setOpen }         = useAiPanelState();
   const { i18n }                  = useTranslation();
   const [configured, setConfigured] = useState<boolean | null>(null);
@@ -36,12 +40,16 @@ export function AiPanel({ context }: AiPanelProps) {
   const [loading,    setLoading]    = useState(false);
   const [error,      setError]      = useState<string | null>(null);
 
-  const inputRef    = useRef<HTMLInputElement>(null);
+  const inputRef    = useRef<HTMLTextAreaElement>(null);
   const messagesRef = useRef<HTMLDivElement>(null);
 
-  // Check AI configuration when panel opens
+  // Check AI configuration whenever the panel is open.
+  // Reset to null when closed so the next open always re-fetches.
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      setConfigured(null);
+      return;
+    }
     apiClient.getSettings().then((s) => {
       setConfigured(!!(s.ai_provider && s.ai_api_key));
     }).catch(() => setConfigured(false));
@@ -69,12 +77,19 @@ export function AiPanel({ context }: AiPanelProps) {
 
     setMessages(nextMessages);
     setInput("");
+    // reset textarea height after clearing
+    if (inputRef.current) {
+      inputRef.current.style.height = "auto";
+    }
     setLoading(true);
     setError(null);
 
     try {
       const lang = (i18n.language?.startsWith("en") ? "en" : "de") as "de" | "en";
-      const res = await chatWithAi(nextMessages, lang);
+      const systemPrompt = assistantContext
+        ? buildSystemPrompt(assistantContext, lang)
+        : undefined;
+      const res = await chatWithAi(nextMessages, lang, systemPrompt);
       setMessages((prev) => [...prev, { role: "assistant", content: res.content }]);
     } catch {
       setError(
@@ -87,7 +102,7 @@ export function AiPanel({ context }: AiPanelProps) {
     }
   }
 
-  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       void sendMessage();
@@ -257,9 +272,10 @@ export function AiPanel({ context }: AiPanelProps) {
           {/* Not configured hint */}
           {configured === false && (
             <BotMessage>
-              KI-Assistent ist noch nicht eingerichtet.{" "}
-              Bitte hinterlege einen API-Schlüssel unter{" "}
-              <strong>Einstellungen → KI-Assistent</strong>.
+              KI-Assistent ist noch nicht vollständig eingerichtet.{" "}
+              Bitte stelle sicher, dass unter{" "}
+              <strong>Einstellungen → KI-Assistent</strong>{" "}
+              ein Anbieter (z.&nbsp;B. Anthropic) und ein API-Schlüssel hinterlegt sind.
             </BotMessage>
           )}
 
@@ -301,8 +317,7 @@ export function AiPanel({ context }: AiPanelProps) {
           )}
         </div>
 
-        {/* Input area — height 53px: padding 10px top/bottom + send button 32px + 1px border-top.
-             Matches SaveBar height so both bottom bars align visually. */}
+        {/* Input area — textarea grows upward, send button aligned to bottom */}
         <div
           style={{
             padding:     "10px 12px",
@@ -310,31 +325,41 @@ export function AiPanel({ context }: AiPanelProps) {
             display:     "flex",
             gap:         "8px",
             flexShrink:  0,
-            alignItems:  "center",
+            alignItems:  "flex-end",
             background:  "rgba(255,255,255,.5)",
           }}
         >
-          <input
+          <textarea
             ref={inputRef}
-            type="text"
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            rows={1}
+            onChange={(e) => {
+              setInput(e.target.value);
+              // auto-grow: reset to 1 row, then expand to content height
+              e.target.style.height = "auto";
+              e.target.style.height = `${e.target.scrollHeight}px`;
+            }}
             onKeyDown={handleKeyDown}
             placeholder="Frage oder Anweisung …"
             aria-label="Nachricht an Assistenten"
             disabled={!configured || loading}
             data-testid="ai-input"
             style={{
-              flex:         1,
-              background:   "white",
-              border:       "1px solid var(--border)",
-              borderRadius: "20px",
-              padding:      "7px 12px",
-              fontSize:     "12px",
-              fontFamily:   "var(--font-body)",
-              color:        "var(--text-dark)",
-              outline:      "none",
-              opacity:      configured && !loading ? 1 : 0.5,
+              flex:        1,
+              background:  "white",
+              border:      "1px solid var(--border)",
+              borderRadius: "12px",
+              padding:     "7px 12px",
+              fontSize:    "12px",
+              fontFamily:  "var(--font-body)",
+              color:       "var(--text-dark)",
+              outline:     "none",
+              opacity:     configured && !loading ? 1 : 0.5,
+              resize:      "none",
+              overflow:    "hidden",
+              lineHeight:  "1.4",
+              maxHeight:   "120px",
+              overflowY:   "auto",
             }}
           />
           <button

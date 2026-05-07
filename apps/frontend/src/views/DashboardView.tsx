@@ -17,6 +17,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { AiPanel } from "@/components/AiPanel";
+import type { AssistantContext } from "@api/assistant-context";
 import { useAiPanelState } from "@/hooks/useAiPanelState";
 import { GardenPlanWidget, type PlanPin } from "@/components/GardenPlanWidget";
 import { PlantDetailPanel } from "@/components/PlantDetailPanel";
@@ -199,6 +200,10 @@ export function DashboardView() {
     ? `${selected.icon ?? "🌿"} ${selected.name_common}`
     : `🏠 ${t("nav.dashboard")}`;
 
+  const assistantContext: AssistantContext | undefined = garden
+    ? { view: "dashboard", garden, selectedPlant: selected ?? undefined }
+    : undefined;
+
   return (
     <div
       data-testid="dashboard-view"
@@ -325,7 +330,7 @@ export function DashboardView() {
         ) : null}
       </div>
 
-      <AiPanel context={aiContext} />
+      <AiPanel context={aiContext} assistantContext={assistantContext} />
     </div>
   );
 }

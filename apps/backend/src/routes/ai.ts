@@ -39,7 +39,7 @@ type ChatMessage = { role: "user" | "assistant"; content: string };
 // ── Route ─────────────────────────────────────────────────────────────────────
 
 aiRoutes.post("/chat", zValidator("json", AiChatRequestSchema), async (c) => {
-  const { messages, language } = c.req.valid("json");
+  const { messages, language, system_prompt } = c.req.valid("json");
 
   // Read AI config from settings
   const settings = getSettings(db);
@@ -49,7 +49,8 @@ aiRoutes.post("/chat", zValidator("json", AiChatRequestSchema), async (c) => {
     return c.json({ error: "AI provider not configured" }, 400);
   }
 
-  const persona = language === "en" ? PERSONA_EN : PERSONA_DE;
+  // Use the frontend-built system prompt when provided; fall back to stub persona
+  const persona = system_prompt ?? (language === "en" ? PERSONA_EN : PERSONA_DE);
 
   try {
     let content: string;
