@@ -16,15 +16,26 @@ import type { Plant } from "@api/plant";
 // ── Type colors (AC #6) ───────────────────────────────────────────────────────
 
 const TYPE_COLOR: Record<string, { border: string; bg: string; text: string; badge: string }> = {
-  done:    { border: "#27ae60", bg: "#edfaf3", text: "#27ae60", badge: "✅" },
-  skipped: { border: "#7f8c8d", bg: "#f4f6f7", text: "#7f8c8d", badge: "⏭" },
-  manual:  { border: "#4a78c0", bg: "#eef3fb", text: "#4a78c0", badge: "📝" },
+   done:        { border: "#27ae60", bg: "#edfaf3", text: "#27ae60", badge: "✅" },
+   skipped:     { border: "#7f8c8d", bg: "#f4f6f7", text: "#7f8c8d", badge: "⏭" },
+   manual:      { border: "#4a78c0", bg: "#eef3fb", text: "#4a78c0", badge: "📝" },
+   observation: { border: "#4a78c0", bg: "#eef3fb", text: "#4a78c0", badge: "👁" },
+   problem:     { border: "#c0392b", bg: "#fdf0ee", text: "#c0392b", badge: "⚠️" },
+};
+
+const TYPE_LABEL: Record<string, string> = {
+  done:        "Erledigt",
+  skipped:     "Übersprungen",
+  manual:      "Manuell",
+  observation: "Beobachtung",
+  problem:     "Problem",
 };
 
 const FILTER_CHIPS: Array<{ type: JournalEntryType; label: string }> = [
-  { type: "done",    label: "✅ Erledigt"    },
-  { type: "skipped", label: "⏭ Übersprungen" },
-  { type: "manual",  label: "📝 Manuell"     },
+  { type: "done",        label: "✅ Erledigt"     },
+  { type: "skipped",     label: "⏭ Übersprungen"  },
+  { type: "observation", label: "👁 Beobachtung"  },
+  { type: "problem",     label: "⚠️ Problem"       },
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -361,7 +372,7 @@ function EntryCard({ entry, plant, attachmentMap, onEdit }: EntryCardProps) {
               flexShrink:   0,
             }}
           >
-            {colors.badge} {entry.entry_type === "done" ? "Erledigt" : entry.entry_type === "skipped" ? "Übersprungen" : "Manuell"}
+            {colors.badge} {TYPE_LABEL[entry.entry_type] ?? entry.entry_type}
           </span>
 
           {/* Plant tag — icon + name + first bloom color + location */}
@@ -510,13 +521,12 @@ function EntryCard({ entry, plant, attachmentMap, onEdit }: EntryCardProps) {
 
 /** Panel form entry types (maps to API types) */
 const PANEL_TYPES: Array<{ value: JournalEntryType; label: string; style: string }> = [
-  { value: "done",    label: "✅ Erledigt",     style: "done"    },
-  { value: "manual",  label: "👁 Beobachtung",  style: "manual"  },
-  { value: "manual",  label: "⚠️ Problem",       style: "problem" },
-  { value: "skipped", label: "⏭ Übersprungen",  style: "skipped" },
+  { value: "done",        label: "✅ Erledigt",     style: "done"        },
+  { value: "observation", label: "👁 Beobachtung",  style: "observation" },
+  { value: "problem",     label: "⚠️ Problem",       style: "problem"     },
+  { value: "skipped",     label: "⏭ Übersprungen",  style: "skipped"     },
 ];
 
-// Single unified type for the selector (index-based to handle manual/manual)
 type PanelTypeIdx = 0 | 1 | 2 | 3;
 
 interface EntryPanelProps {
@@ -531,9 +541,11 @@ function EntryPanel({ entry, plants, onClose, onSaved }: EntryPanelProps) {
 
   // Determine initial type index from entry_type
   function entryTypeToIdx(type: JournalEntryType): PanelTypeIdx {
-    if (type === "done")    return 0;
-    if (type === "skipped") return 3;
-    return 1; // manual → Beobachtung
+    if (type === "done")        return 0;
+    if (type === "observation") return 1;
+    if (type === "problem")     return 2;
+    if (type === "skipped")     return 3;
+    return 1; // manual → Beobachtung as default
   }
 
   const [typeIdx,    setTypeIdx]    = useState<PanelTypeIdx>(entry ? entryTypeToIdx(entry.entry_type) : 0);

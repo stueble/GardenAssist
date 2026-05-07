@@ -2,9 +2,11 @@
   "title": "Tagebuch",
   "subtitle": "Chronologisches Protokoll deiner Gartenaktivitäten.",
   "entry_type": {
-    "manual": "Manuell",
-    "done": "Erledigt",
-    "skipped": "Übersprungen"
+    "manual":      "Manuell",
+    "observation": "Beobachtung",
+    "problem":     "Problem",
+    "done":        "Erledigt",
+    "skipped":     "Übersprungen"
   },
   "fields": {
     "date": "Datum",

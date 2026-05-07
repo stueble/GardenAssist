@@ -92,7 +92,8 @@ describe("JournalView — layout", () => {
     renderJournal();
     expect(screen.getByTestId("filter-chip-done")).toBeInTheDocument();
     expect(screen.getByTestId("filter-chip-skipped")).toBeInTheDocument();
-    expect(screen.getByTestId("filter-chip-manual")).toBeInTheDocument();
+    expect(screen.getByTestId("filter-chip-observation")).toBeInTheDocument();
+    expect(screen.getByTestId("filter-chip-problem")).toBeInTheDocument();
   });
 });
 

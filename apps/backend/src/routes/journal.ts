@@ -18,12 +18,12 @@ const SCHEDULE_TYPE_LABEL: Record<string, string> = {
 };
 
 function buildAutoTitle(
-  entryType: "done" | "skipped" | "manual",
+  entryType: "done" | "skipped" | "manual" | "observation" | "problem",
   scheduleType: string | null,
   plantName: string | null,
   scheduleLabel: string | null,
 ): string | null {
-  if (entryType === "manual") return null;
+  if (entryType === "manual" || entryType === "observation" || entryType === "problem") return null;
   const action    = entryType === "done" ? "Erledigt" : "Übersprungen";
   const taskLabel = scheduleLabel ?? (scheduleType ? SCHEDULE_TYPE_LABEL[scheduleType] : null) ?? "Aufgabe";
   if (plantName) return `${action}: ${taskLabel} – ${plantName}`;

@@ -2,9 +2,11 @@
   "title": "Journal",
   "subtitle": "Chronological record of your garden activities.",
   "entry_type": {
-    "manual": "Manual",
-    "done": "Done",
-    "skipped": "Skipped"
+    "manual":      "Manual",
+    "observation": "Observation",
+    "problem":     "Problem",
+    "done":        "Done",
+    "skipped":     "Skipped"
   },
   "fields": {
     "date": "Date",

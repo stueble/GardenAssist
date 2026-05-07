@@ -11,9 +11,11 @@
  * the enum values and their descriptions above.
  */
 export const JournalEntryType = {
-  Manual:  "manual",
-  Done:    "done",
-  Skipped: "skipped",
+  Manual:      "manual",
+  Observation: "observation",
+  Problem:     "problem",
+  Done:        "done",
+  Skipped:     "skipped",
 } as const;
 export type JournalEntryType = typeof JournalEntryType[keyof typeof JournalEntryType];
 
