@@ -299,7 +299,7 @@ function EntryCard({ entry, plant }: EntryCardProps) {
             {colors.badge} {entry.entry_type === "done" ? "Erledigt" : entry.entry_type === "skipped" ? "Übersprungen" : "Manuell"}
           </span>
 
-          {/* Plant tag */}
+          {/* Plant tag — icon + name + first bloom color + location */}
           {plant && (
             <span
               data-testid="entry-plant-tag"
@@ -316,6 +316,18 @@ function EntryCard({ entry, plant }: EntryCardProps) {
               }}
             >
               {plant.icon ?? "🌿"} {plant.name_common}
+              {(() => {
+                const bloom = plant.schedules.find((s) => s.schedule_type === "bloom" && s.label);
+                const parts: string[] = [];
+                if (bloom?.label) parts.push(bloom.label);
+                if (plant.location) parts.push(plant.location);
+                if (parts.length === 0) return null;
+                return (
+                  <span style={{ opacity: 0.7 }}>
+                    · {parts.join(" · ")}
+                  </span>
+                );
+              })()}
             </span>
           )}
 
