@@ -62,7 +62,7 @@ describe("App routing", () => {
 
   it("/journal renders the Journal view", () => {
     renderAt("/journal");
-    expect(screen.getByRole("heading", { name: /Tagebuch/i })).toBeInTheDocument();
+    expect(screen.getByTestId("journal-view")).toBeInTheDocument();
   });
 
   it("/settings renders the Settings view", () => {
