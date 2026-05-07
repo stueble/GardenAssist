@@ -381,15 +381,15 @@ function PlantRow({ plant, activeType, currentMonth, selected, onClick }: PlantR
           {/* Thumbnail */}
           <div
             style={{
-              width:       "36px",
-              height:      "36px",
+              width:       "40px",
+              height:      "40px",
               borderRadius:"8px",
               background:  "var(--green-mist)",
               border:      "1.5px solid var(--border)",
               display:     "flex",
               alignItems:  "center",
               justifyContent: "center",
-              fontSize:    "20px",
+              fontSize:    "22px",
               flexShrink:  0,
               overflow:    "hidden",
             }}
@@ -421,7 +421,7 @@ function PlantRow({ plant, activeType, currentMonth, selected, onClick }: PlantR
           position:      "relative",
           verticalAlign: "middle",
           overflow:      "visible",
-          height:        "56px",
+          height:        "60px",
         }}
       >
         {/* Month grid lines + current month tint */}
