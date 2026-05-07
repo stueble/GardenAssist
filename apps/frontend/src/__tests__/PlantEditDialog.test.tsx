@@ -95,7 +95,7 @@ vi.mock("../api/client", () => ({
     updatePlant: vi.fn().mockImplementation((_id: string, data: unknown) =>
       Promise.resolve({ id: "p1", ...data as object, tasks: [], journal_entries: [], schedules: [], attachments: [], positions: [], created_at: "", updated_at: "" })
     ),
-    getGarden: vi.fn().mockResolvedValue({ plan_url: null, plan_name: null, plants: [], attachments: [], journal_entries: [] }),
+    getGarden: vi.fn().mockResolvedValue({ plan_url: null, plan_name: null, plants: [], attachments: [], journal_entries: [], warnings: [] }),
     uploadAttachment: vi.fn().mockResolvedValue({
       id: "att-1", attachment_type: "image", category: "main",
       url: "/static/attachments/plants/new-p/main-1.jpg",

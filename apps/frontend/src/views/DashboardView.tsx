@@ -22,7 +22,7 @@ import { GardenPlanWidget, type PlanPin } from "@/components/GardenPlanWidget";
 import { PlantDetailPanel } from "@/components/PlantDetailPanel";
 import { apiClient } from "@/api/client";
 import type { Plant } from "@api/plant";
-import type { Garden } from "@api/garden";
+import type { Garden, Warning } from "@api/garden";
 import type { Task } from "@api/task";
 import {
   derivePlantStatus,
@@ -187,6 +187,11 @@ export function DashboardView() {
 
         <div style={{ height: "1px", background: "var(--border)", flexShrink: 0 }} />
 
+        {/* Warnings section — only shown when warnings exist (AC #1) */}
+        {garden?.warnings && garden.warnings.length > 0 && (
+          <WarningsSection warnings={garden.warnings} />
+        )}
+
         {/* Todo list always in left column */}
         <TodoList
           garden={garden}
@@ -289,6 +294,58 @@ function WeatherWidget() {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+// ── WarningsSection ───────────────────────────────────────────────────────────
+
+function WarningsSection({ warnings }: { warnings: Warning[] }) {
+  return (
+    <div data-testid="warnings-section">
+      {/* Section label */}
+      <div style={{
+        fontSize: "10px", fontWeight: 600, letterSpacing: "1px",
+        textTransform: "uppercase", color: "var(--text-light)",
+        padding: "8px 18px 4px",
+      }}>
+        ⚠️ Warnungen
+      </div>
+
+      {warnings.map((w, i) => (
+        <div
+          key={i}
+          data-testid="warning-item"
+          style={{
+            display:    "flex",
+            gap:        "7px",
+            padding:    "10px 14px 10px 12px",
+            borderLeft: "3px solid #e67e22",
+          }}
+        >
+          {/* Orange dot */}
+          <div style={{
+            width:      "8px",
+            height:     "8px",
+            borderRadius: "50%",
+            background: "#e67e22",
+            flexShrink: 0,
+            marginTop:  "4px",
+          }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: "13px", fontWeight: 500, color: "var(--text-dark)", lineHeight: 1.35 }}>
+              {w.message}
+            </div>
+            {w.sub && (
+              <div style={{ fontSize: "11px", color: "var(--text-light)", marginTop: "2px" }}>
+                {w.sub}
+              </div>
+            )}
+          </div>
+        </div>
+      ))}
+
+      <div style={{ height: "1px", background: "var(--border)", margin: "6px 18px" }} />
     </div>
   );
 }

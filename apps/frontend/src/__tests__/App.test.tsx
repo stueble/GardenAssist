@@ -15,7 +15,7 @@ import { App } from "../App";
 // PlantsView loads data via apiClient — mock to prevent real requests
 vi.mock("../api/client", () => ({
   apiClient: {
-    getGarden:    vi.fn().mockResolvedValue({ plan_url:null, plan_name:null, plants:[], attachments:[], journal_entries:[] }),
+    getGarden:    vi.fn().mockResolvedValue({ plan_url:null, plan_name:null, plants:[], attachments:[], journal_entries:[], warnings:[] }),
     getSettings:  vi.fn().mockResolvedValue({ language:"de", location_city:null, location_zip:null, irrigation_zones:[], plant_categories:[], color_presets:[], task_lookback_weeks:2, task_lookahead_weeks:4, attachment_size_limit_mb:10, ai_provider:null, ai_model:null, ai_api_key:null }),
     updateSettings: vi.fn().mockImplementation((s) => Promise.resolve(s)),
     exportJson:   vi.fn().mockResolvedValue(new Blob()),

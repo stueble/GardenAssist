@@ -9,7 +9,7 @@ import { eq, inArray } from "drizzle-orm";
 import { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import * as schema from "../db/schema.js";
 import type * as Schema from "../db/schema.js";
-import type { Garden }       from "@api/garden.js";
+import type { Garden, Warning } from "@api/garden.js";
 import type { Plant }        from "@api/plant.js";
 import type { PlantPosition } from "@api/plant-position.js";
 import type { Schedule }     from "@api/schedule.js";
@@ -191,12 +191,21 @@ export async function getGarden(db: Db): Promise<Garden> {
     .filter((a) => a.owner_type === "garden")
     .map(mapAttachment);
 
+  // Hardcoded warnings — will be replaced by weather API integration in a future story
+  const warnings: Warning[] = [
+    {
+      message: "Wettermodul nicht verfügbar",
+      sub:     "Wetterinformationen und Frostwarnungen folgen in einer späteren Version.",
+    },
+  ];
+
   return {
     plan_url:        gardenRow?.plan_url   ?? null,
     plan_name:       gardenRow?.plan_name  ?? null,
     plants,
     journal_entries: allJournalEntries,
     attachments:     gardenAttachments,
+    warnings,
   };
 }
 

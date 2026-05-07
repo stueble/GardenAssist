@@ -92,6 +92,7 @@ export function mockGarden(): Garden {
     plants:          [mockPlant()],
     journal_entries: [mockJournalEntry()],
     attachments:     [],
+    warnings:        [],
   };
 }
 

@@ -109,6 +109,7 @@ vi.mock("../api/client", () => ({
         },
       ],
       attachments: [], journal_entries: [],
+      warnings: [{ message: "Wettermodul nicht verfügbar", sub: "Folgt in einer späteren Version." }],
     }),
     deletePlant:         vi.fn().mockResolvedValue(undefined),
     deleteAttachment:    vi.fn().mockResolvedValue(undefined),
@@ -157,6 +158,23 @@ describe("DashboardView — layout", () => {
       const cells = screen.getAllByTestId(/^month-cell-/);
       expect(cells).toHaveLength(12);
     });
+  });
+});
+
+describe("DashboardView — warnings section (story-031 AC #1)", () => {
+  it("renders warnings section when warnings are present", async () => {
+    renderDashboard();
+    await waitFor(() =>
+      expect(screen.getByTestId("warnings-section")).toBeInTheDocument()
+    );
+  });
+
+  it("renders warning item with message text", async () => {
+    renderDashboard();
+    await waitFor(() =>
+      expect(screen.getByTestId("warning-item")).toBeInTheDocument()
+    );
+    expect(screen.getByText("Wettermodul nicht verfügbar")).toBeInTheDocument();
   });
 });
 

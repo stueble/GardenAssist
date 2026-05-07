@@ -2,6 +2,19 @@ import { Attachment } from "./attachment";
 import { JournalEntry } from "./journal-entry";
 import { Plant } from "./plant";
 
+// ── Warning ───────────────────────────────────────────────────────────────────
+
+/**
+ * A system or weather warning shown in the Dashboard left column.
+ * Warnings are informational — they have no Done/Skip action.
+ */
+export type Warning = {
+  /** Short headline, e.g. "Wettermodul nicht verfügbar" */
+  message: string;
+  /** Optional sub-line with more detail */
+  sub: string | null;
+};
+
 // ── Garden ────────────────────────────────────────────────────────────────────
 
 /**
@@ -52,4 +65,11 @@ export type Garden = {
    * Referenced by JournalEntry.attachment_ids when JournalEntry.plant_id is null.
    */
   attachments: Attachment[];
+
+  /**
+   * System and weather warnings to display in the Dashboard left column.
+   * Empty array when no warnings are active.
+   * Currently hardcoded; will be driven by weather API in a future story.
+   */
+  warnings: Warning[];
 };

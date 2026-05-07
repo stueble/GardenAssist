@@ -60,6 +60,7 @@ const MOCK_GARDEN: Garden = {
   plan_name:       null,
   attachments:     [],
   journal_entries: [],
+  warnings:        [],
   plants: [
     makePlant({ id: "p1", name_common: "Rose",         name_botanical: "Rosa",      location: "Westbeet", tasks: [] }),
     makePlant({ id: "p2", name_common: "Rhododendron", name_botanical: "Rhodo hyb.", location: "Terrasse", category: "Strauch",
@@ -75,7 +76,7 @@ vi.mock("../api/client", () => ({
   apiClient: {
     // Data inlined — vi.mock is hoisted, cannot reference module-level variables
     getGarden: vi.fn().mockResolvedValue({
-      plan_url: null, plan_name: null, attachments: [], journal_entries: [],
+      plan_url: null, plan_name: null, attachments: [], journal_entries: [], warnings: [],
       plants: [
         {
           id:"p1", name_common:"Rose", name_botanical:"Rosa", icon:"🌹",
