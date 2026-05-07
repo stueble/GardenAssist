@@ -250,22 +250,50 @@ export function DashboardView() {
         />
       </div>
 
-      {/* ── Edit dialog — slides in from left of center (like PlantsView) ── */}
+      {/* ── Center: garden plan + monthly band ── */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, overflow: "hidden" }}>
+
+        {/* Garden plan */}
+        <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+          {loading ? (
+            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-light)", fontSize: "13px" }}>
+              Wird geladen …
+            </div>
+          ) : (
+            <GardenPlanWidget
+              planUrl={garden?.plan_url ?? null}
+              pins={pins.map((p) => p.pin)}
+              onPinClick={editTarget === undefined ? handlePinClick : undefined}
+              pickMode={pickMode}
+              onPick={(x, y) => setPositions((prev) => [...prev, { x, y }])}
+              legend={editTarget === undefined}
+            />
+          )}
+        </div>
+
+        {/* Monthly band — hidden while editing */}
+        {editTarget === undefined && (
+          <MonthBand monthData={monthData} currentMonthIdx={weekToMonthIdx(cw)} />
+        )}
+      </div>
+
+      {/* ── Right panel: Detail view OR Edit dialog (same slot, right of center) ── */}
       <div
-        data-testid="dashboard-edit-dialog"
+        data-testid="dashboard-detail-panel"
         style={{
-          width:         editTarget !== undefined ? "360px" : "0",
-          minWidth:      editTarget !== undefined ? "360px" : "0",
+          width:         (selected && editTarget === undefined) || editTarget !== undefined ? "360px" : "0",
+          minWidth:      (selected && editTarget === undefined) || editTarget !== undefined ? "360px" : "0",
           overflow:      "hidden",
           background:    "var(--warm-white)",
-          borderLeft:    editTarget !== undefined ? "1px solid var(--border)" : "none",
+          borderLeft:    selected || editTarget !== undefined ? "1px solid var(--border)" : "none",
           display:       "flex",
           flexDirection: "column",
           transition:    "width .3s ease, min-width .3s ease",
           flexShrink:    0,
         }}
       >
-        {editTarget !== undefined && (
+        {/* Edit dialog replaces detail panel */}
+        {editTarget !== undefined ? (
           <PlantEditDialog
             plant={editTarget}
             onClose={() => {
@@ -291,52 +319,7 @@ export function DashboardView() {
             pickMode={pickMode}
             onPickModeChange={setPickMode}
           />
-        )}
-      </div>
-
-      {/* ── Center: garden plan + monthly band ── */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, overflow: "hidden" }}>
-
-        {/* Garden plan (AC #1) */}
-        <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
-          {loading ? (
-            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-light)", fontSize: "13px" }}>
-              Wird geladen …
-            </div>
-          ) : (
-            <GardenPlanWidget
-              planUrl={garden?.plan_url ?? null}
-              pins={pins.map((p) => p.pin)}
-              onPinClick={editTarget === undefined ? handlePinClick : undefined}
-              pickMode={pickMode}
-              onPick={(x, y) => setPositions((prev) => [...prev, { x, y }])}
-              legend={editTarget === undefined}
-            />
-          )}
-        </div>
-
-        {/* Monthly band — hidden when edit dialog is open */}
-        {editTarget === undefined && (
-          <MonthBand monthData={monthData} currentMonthIdx={weekToMonthIdx(cw)} />
-        )}
-      </div>
-
-      {/* ── Detail panel — hidden when edit dialog open ── */}
-      <div
-        data-testid="dashboard-detail-panel"
-        style={{
-          width:         selected && editTarget === undefined ? "300px" : "0",
-          minWidth:      selected && editTarget === undefined ? "300px" : "0",
-          overflow:      "hidden",
-          background:    "var(--warm-white)",
-          borderLeft:    selected ? "1px solid var(--border)" : "none",
-          display:       "flex",
-          flexDirection: "column",
-          transition:    "width .3s ease, min-width .3s ease",
-          flexShrink:    0,
-        }}
-      >
-        {selected && editTarget === undefined && (
+        ) : selected ? (
           <PlantDetailPanel
             plant={selected}
             onClose={handleDetailClose}
@@ -346,7 +329,6 @@ export function DashboardView() {
               setInitialPositions(rows);
               setPickMode(false);
               setEditTarget(p);
-              setSelected(null);
             }}
             onDelete={() => {
               setGarden((g) => g
@@ -356,7 +338,7 @@ export function DashboardView() {
               setSelected(null);
             }}
           />
-        )}
+        ) : null}
       </div>
 
       <AiPanel context={aiContext} />
