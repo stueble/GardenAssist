@@ -445,45 +445,79 @@ function PlantRow({ plant, activeType, currentMonth, selected, onClick }: PlantR
           ))}
         </div>
 
-        {/* Bars */}
+        {/* Bars — wrapping schedules (end < start) rendered as two segments */}
         <div style={{ position: "relative", height: "100%", padding: "8px 0" }}>
           {bars.length === 0 ? null : (
-            bars.map((s) => {
-              const left  = weekToPercent(s.start_week);
-              const width = durationToPercent(s.start_week, s.end_week);
+            bars.flatMap((s) => {
               const color = s.color ?? "var(--green-mid)";
-              return (
-                <div
-                  key={s.id}
-                  data-testid="calendar-bar"
-                  title={s.label ?? ""}
-                  style={{
-                    position:    "absolute",
-                    left:        `${left}%`,
-                    width:       `${width}%`,
-                    top:         "50%",
-                    transform:   "translateY(-50%)",
-                    height:      "28px",
-                    background:  color,
-                    borderRadius:"6px",
-                    display:     "flex",
-                    alignItems:  "center",
-                    padding:     "0 8px",
-                    fontSize:    "10px",
-                    fontWeight:  600,
-                    color:       "white",
-                    boxShadow:   "0 1px 4px rgba(0,0,0,.15)",
-                    overflow:    "hidden",
-                    whiteSpace:  "nowrap",
-                    textOverflow:"ellipsis",
-                    textShadow:  "0 1px 2px rgba(0,0,0,.2)",
-                    cursor:      "pointer",
-                    zIndex:      10,
-                  }}
-                >
-                  {s.label ?? ""}
-                </div>
-              );
+              const barStyle = (left: number, width: number, showLabel: boolean): React.CSSProperties => ({
+                position:    "absolute",
+                left:        `${left}%`,
+                width:       `${width}%`,
+                top:         "50%",
+                transform:   "translateY(-50%)",
+                height:      "28px",
+                background:  color,
+                borderRadius:"6px",
+                display:     "flex",
+                alignItems:  "center",
+                padding:     "0 8px",
+                fontSize:    "10px",
+                fontWeight:  600,
+                color:       "white",
+                boxShadow:   "0 1px 4px rgba(0,0,0,.15)",
+                overflow:    "hidden",
+                whiteSpace:  "nowrap",
+                textOverflow:"ellipsis",
+                textShadow:  "0 1px 2px rgba(0,0,0,.2)",
+                cursor:      "pointer",
+                zIndex:      10,
+                ...(showLabel ? {} : {}),
+              });
+
+              if (s.end_week >= s.start_week) {
+                // Normal (non-wrapping) schedule — single bar
+                return [(
+                  <div
+                    key={s.id}
+                    data-testid="calendar-bar"
+                    title={s.label ?? ""}
+                    style={barStyle(weekToPercent(s.start_week), durationToPercent(s.start_week, s.end_week), true)}
+                  >
+                    {s.label ?? ""}
+                  </div>
+                )];
+              } else {
+                // Wrapping schedule — two segments
+                const leftW1  = weekToPercent(s.start_week);
+                const widthW1 = durationToPercent(s.start_week, TOTAL_WEEKS);   // start → W52
+                const leftW2  = weekToPercent(1);                               // W1 → end
+                const widthW2 = durationToPercent(1, s.end_week);
+                return [
+                  <div
+                    key={`${s.id}-a`}
+                    data-testid="calendar-bar"
+                    title={s.label ?? ""}
+                    style={{
+                      ...barStyle(leftW1, widthW1, true),
+                      borderTopRightRadius:    0,
+                      borderBottomRightRadius: 0,
+                    }}
+                  >
+                    {s.label ?? ""}
+                  </div>,
+                  <div
+                    key={`${s.id}-b`}
+                    data-testid="calendar-bar"
+                    title={s.label ?? ""}
+                    style={{
+                      ...barStyle(leftW2, widthW2, false),
+                      borderTopLeftRadius:    0,
+                      borderBottomLeftRadius: 0,
+                    }}
+                  />,
+                ];
+              }
             })
           )}
         </div>
