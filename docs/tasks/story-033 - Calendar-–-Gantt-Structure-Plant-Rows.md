@@ -1,16 +1,17 @@
 ---
 id: STORY-033
 title: Calendar – Gantt Structure & Plant Rows
-status: In Review
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-04 22:47'
-updated_date: '2026-05-07 17:42'
+updated_date: '2026-05-07 21:11'
 labels: []
 dependencies: []
 documentation:
   - docs/docs/doc-006 - 006-UX-UI-Concept-Garden-Calendar.md
   - ui-mockups/calendar/calendar-mockup.html
+ordinal: 38000
 ---
 
 ## Description

@@ -8,6 +8,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { AiPanel } from "@/components/AiPanel";
+import { useAiPanelState } from "@/hooks/useAiPanelState";
 import { apiClient } from "@/api/client";
 import type { JournalEntry, JournalEntryType } from "@api/journal-entry";
 import type { Attachment } from "@api/attachment";
@@ -60,6 +61,7 @@ function monthLabel(key: string): string {
 
 export function JournalView() {
   const { t } = useTranslation("journal");
+  const { open: aiOpen } = useAiPanelState();
 
   const [entries,      setEntries]      = useState<JournalEntry[]>([]);
   const [plants,       setPlants]       = useState<Plant[]>([]);
@@ -284,7 +286,8 @@ export function JournalView() {
           style={{
             position:       "absolute",
             bottom:         "24px",
-            right:          "60px", // leave room for AI strip
+            right:          aiOpen ? "346px" : "60px", // shifts with AI panel (36px strip / 36+310px open)
+            transition:     "right .3s ease",
             width:          "48px",
             height:         "48px",
             borderRadius:   "12px",

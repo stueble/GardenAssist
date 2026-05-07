@@ -1,14 +1,16 @@
 ---
 id: STORY-034
 title: Calendar – Schedule Bars & Filter Toggles
-status: Ready
+status: Done
 assignee: []
 created_date: '2026-05-04 22:47'
+updated_date: '2026-05-07 21:16'
 labels: []
 dependencies: []
 documentation:
   - docs/docs/doc-006 - 006-UX-UI-Concept-Garden-Calendar.md
   - docs/api/schedule.ts
+ordinal: 39000
 ---
 
 ## Description

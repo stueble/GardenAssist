@@ -112,3 +112,17 @@ export const apiClient: Api = {
     return request("/export/import/json", { method: "POST", headers: {}, body: form });
   },
 };
+
+// ── AI chat (outside Api interface — not part of the typed contract yet) ──────
+
+export type ChatMessage = { role: "user" | "assistant"; content: string };
+
+export function chatWithAi(
+  messages: ChatMessage[],
+  language: "de" | "en" = "de",
+): Promise<{ content: string }> {
+  return request("/ai/chat", {
+    method: "POST",
+    body:   JSON.stringify({ messages, language }),
+  });
+}

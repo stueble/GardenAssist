@@ -1,6 +1,9 @@
 import { useState, useRef, useEffect } from "react";
-import { apiClient } from "@/api/client";
-import { useAiPanelState } from "@/hooks/useAiPanelState";
+import { useTranslation } from "react-i18next";
+import { apiClient }               from "@/api/client";
+import { chatWithAi }              from "@/api/client";
+import type { ChatMessage }        from "@/api/client";
+import { useAiPanelState }         from "@/hooks/useAiPanelState";
 
 interface AiPanelProps {
   /** Context bar text, e.g. "✏️ Bearbeite: 🌹 Rose" or "⚙️ Einstellungen" */
@@ -25,10 +28,16 @@ interface AiPanelProps {
  * - Strip hover: green-mid → green-light, 0.2s (§ 5.6)
  */
 export function AiPanel({ context }: AiPanelProps) {
-  const { open, setOpen } = useAiPanelState();
+  const { open, setOpen }         = useAiPanelState();
+  const { i18n }                  = useTranslation();
   const [configured, setConfigured] = useState<boolean | null>(null);
   const [input,      setInput]      = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [messages,   setMessages]   = useState<ChatMessage[]>([]);
+  const [loading,    setLoading]    = useState(false);
+  const [error,      setError]      = useState<string | null>(null);
+
+  const inputRef    = useRef<HTMLInputElement>(null);
+  const messagesRef = useRef<HTMLDivElement>(null);
 
   // Check AI configuration when panel opens
   useEffect(() => {
@@ -45,12 +54,47 @@ export function AiPanel({ context }: AiPanelProps) {
     }
   }, [open, configured]);
 
-  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter" && input.trim()) {
-      // Stub: AI sending wired in future story
-      setInput("");
+  // Auto-scroll to bottom when messages or loading state changes
+  useEffect(() => {
+    const el = messagesRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [messages, loading, error]);
+
+  async function sendMessage() {
+    const text = input.trim();
+    if (!text || loading) return;
+
+    const userMsg: ChatMessage = { role: "user", content: text };
+    const nextMessages = [...messages, userMsg];
+
+    setMessages(nextMessages);
+    setInput("");
+    setLoading(true);
+    setError(null);
+
+    try {
+      const lang = (i18n.language?.startsWith("en") ? "en" : "de") as "de" | "en";
+      const res = await chatWithAi(nextMessages, lang);
+      setMessages((prev) => [...prev, { role: "assistant", content: res.content }]);
+    } catch {
+      setError(
+        i18n.language?.startsWith("en")
+          ? "Could not reach the AI assistant. Please try again."
+          : "Der Assistent konnte nicht erreicht werden. Bitte erneut versuchen.",
+      );
+    } finally {
+      setLoading(false);
     }
   }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      void sendMessage();
+    }
+  }
+
+  const canSend = !!configured && !!input.trim() && !loading;
 
   return (
     // chat-wrap: position:relative so panel (absolute) is anchored here
@@ -194,6 +238,7 @@ export function AiPanel({ context }: AiPanelProps) {
 
         {/* Messages */}
         <div
+          ref={messagesRef}
           style={{
             flex:          1,
             overflowY:     "auto",
@@ -209,7 +254,7 @@ export function AiPanel({ context }: AiPanelProps) {
             <span style={{ fontSize: "12px", color: "var(--text-light)" }}>…</span>
           )}
 
-          {/* AC #7: not configured */}
+          {/* Not configured hint */}
           {configured === false && (
             <BotMessage>
               KI-Assistent ist noch nicht eingerichtet.{" "}
@@ -218,10 +263,41 @@ export function AiPanel({ context }: AiPanelProps) {
             </BotMessage>
           )}
 
-          {configured === true && (
+          {/* Conversation history */}
+          {configured === true && messages.length === 0 && (
             <BotMessage>
               Hallo! Wie kann ich dir mit deinem Garten helfen?
             </BotMessage>
+          )}
+
+          {messages.map((msg, i) =>
+            msg.role === "user"
+              ? <UserMessage key={i}>{msg.content}</UserMessage>
+              : <BotMessage key={i}>{msg.content}</BotMessage>
+          )}
+
+          {/* Loading indicator */}
+          {loading && (
+            <BotMessage>
+              <LoadingDots />
+            </BotMessage>
+          )}
+
+          {/* Error banner */}
+          {error && (
+            <div
+              data-testid="ai-error"
+              style={{
+                background:   "#fdf0ee",
+                border:       "1px solid #e74c3c",
+                borderRadius: "6px",
+                padding:      "8px 12px",
+                fontSize:     "12px",
+                color:        "#c0392b",
+              }}
+            >
+              {error}
+            </div>
           )}
         </div>
 
@@ -246,7 +322,7 @@ export function AiPanel({ context }: AiPanelProps) {
             onKeyDown={handleKeyDown}
             placeholder="Frage oder Anweisung …"
             aria-label="Nachricht an Assistenten"
-            disabled={!configured}
+            disabled={!configured || loading}
             data-testid="ai-input"
             style={{
               flex:         1,
@@ -258,14 +334,14 @@ export function AiPanel({ context }: AiPanelProps) {
               fontFamily:   "var(--font-body)",
               color:        "var(--text-dark)",
               outline:      "none",
-              opacity:      configured ? 1 : 0.5,
+              opacity:      configured && !loading ? 1 : 0.5,
             }}
           />
           <button
             type="button"
             aria-label="Senden"
-            disabled={!configured || !input.trim()}
-            onClick={() => { if (input.trim()) setInput(""); }}
+            disabled={!canSend}
+            onClick={() => { void sendMessage(); }}
             data-testid="ai-send"
             style={{
               background:     "var(--green-deep)",
@@ -274,16 +350,16 @@ export function AiPanel({ context }: AiPanelProps) {
               borderRadius:   "50%",
               width:          "32px",
               height:         "32px",
-              cursor:         configured && input.trim() ? "pointer" : "not-allowed",
+              cursor:         canSend ? "pointer" : "not-allowed",
               fontSize:       "14px",
               display:        "flex",
               alignItems:     "center",
               justifyContent: "center",
               flexShrink:     0,
-              opacity:        configured && input.trim() ? 1 : 0.4,
+              opacity:        canSend ? 1 : 0.4,
               transition:     "background .2s",
             }}
-            className={configured && input.trim() ? "hover:bg-green-mid" : ""}
+            className={canSend ? "hover:bg-green-mid" : ""}
           >
             ↑
           </button>
@@ -323,10 +399,83 @@ function BotMessage({ children }: { children: React.ReactNode }) {
           lineHeight:   1.5,
           maxWidth:     "92%",
           boxShadow:    "0 1px 3px rgba(45,74,45,.08)",
+          whiteSpace:   "pre-wrap",
         }}
       >
         {children}
       </span>
     </div>
+  );
+}
+
+// ── UserMessage ───────────────────────────────────────────────────────────────
+
+function UserMessage({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "3px" }}>
+      <span
+        style={{
+          fontSize:      "10px",
+          fontWeight:    600,
+          letterSpacing: ".5px",
+          textTransform: "uppercase",
+          color:         "var(--text-light)",
+          padding:       "0 4px",
+        }}
+      >
+        Du
+      </span>
+      <span
+        style={{
+          alignSelf:    "flex-end",
+          background:   "var(--green-deep)",
+          color:        "white",
+          borderRadius: "12px 4px 12px 12px",
+          padding:      "8px 12px",
+          fontSize:     "12px",
+          lineHeight:   1.5,
+          maxWidth:     "92%",
+          whiteSpace:   "pre-wrap",
+        }}
+        data-testid="user-message"
+      >
+        {children}
+      </span>
+    </div>
+  );
+}
+
+// ── LoadingDots ───────────────────────────────────────────────────────────────
+
+function LoadingDots() {
+  return (
+    <span
+      data-testid="ai-loading-dots"
+      style={{
+        display:       "inline-flex",
+        gap:           "3px",
+        alignItems:    "center",
+        height:        "16px",
+      }}
+    >
+      {[0, 1, 2].map((i) => (
+        <span
+          key={i}
+          style={{
+            width:            "6px",
+            height:           "6px",
+            borderRadius:     "50%",
+            background:       "var(--text-light)",
+            animation:        `ai-dot-bounce 1.2s ease-in-out ${i * 0.2}s infinite`,
+          }}
+        />
+      ))}
+      <style>{`
+        @keyframes ai-dot-bounce {
+          0%, 80%, 100% { transform: scale(0.7); opacity: 0.4; }
+          40%            { transform: scale(1.0); opacity: 1.0; }
+        }
+      `}</style>
+    </span>
   );
 }

@@ -36,6 +36,7 @@ vi.mock("../api/client", () => ({
   apiClient: {
     getSettings: vi.fn(),
   },
+  chatWithAi: vi.fn(),
 }));
 
 beforeEach(async () => {
@@ -160,5 +161,165 @@ describe("AiPanel — not configured hint (AC #7)", () => {
     await waitFor(() =>
       expect(screen.getByText(/Wie kann ich dir/i)).toBeInTheDocument()
     );
+  });
+});
+
+// ── Chat interaction (STORY-042) ──────────────────────────────────────────────
+
+describe("AiPanel — sending a message (AC #1)", () => {
+  it("user message appears immediately as a bubble", async () => {
+    await setup(true);
+    const { chatWithAi } = await import("../api/client");
+    (chatWithAi as ReturnType<typeof vi.fn>).mockResolvedValue({ content: "Antwort" });
+
+    fireEvent.click(screen.getByTestId("ai-toggle"));
+    await waitFor(() => screen.getByTestId("ai-input"));
+
+    fireEvent.change(screen.getByTestId("ai-input"), { target: { value: "Hallo Assistent" } });
+    fireEvent.click(screen.getByTestId("ai-send"));
+
+    expect(screen.getByTestId("user-message")).toHaveTextContent("Hallo Assistent");
+  });
+
+  it("assistant reply appears after the call resolves", async () => {
+    await setup(true);
+    const { chatWithAi } = await import("../api/client");
+    (chatWithAi as ReturnType<typeof vi.fn>).mockResolvedValue({ content: "Hallo! Ich helfe gern." });
+
+    fireEvent.click(screen.getByTestId("ai-toggle"));
+    await waitFor(() => screen.getByTestId("ai-input"));
+
+    fireEvent.change(screen.getByTestId("ai-input"), { target: { value: "Test" } });
+    fireEvent.click(screen.getByTestId("ai-send"));
+
+    await waitFor(() =>
+      expect(screen.getByText("Hallo! Ich helfe gern.")).toBeInTheDocument()
+    );
+  });
+
+  it("input is cleared after sending", async () => {
+    await setup(true);
+    const { chatWithAi } = await import("../api/client");
+    (chatWithAi as ReturnType<typeof vi.fn>).mockResolvedValue({ content: "OK" });
+
+    fireEvent.click(screen.getByTestId("ai-toggle"));
+    await waitFor(() => screen.getByTestId("ai-input"));
+
+    const input = screen.getByTestId("ai-input") as HTMLInputElement;
+    fireEvent.change(input, { target: { value: "Nachricht" } });
+    fireEvent.click(screen.getByTestId("ai-send"));
+
+    expect(input.value).toBe("");
+  });
+});
+
+describe("AiPanel — loading state (AC #4)", () => {
+  it("shows loading dots while waiting for the response", async () => {
+    await setup(true);
+    let resolve: (v: { content: string }) => void = () => {};
+    const { chatWithAi } = await import("../api/client");
+    (chatWithAi as ReturnType<typeof vi.fn>).mockReturnValue(
+      new Promise((r) => { resolve = r; })
+    );
+
+    fireEvent.click(screen.getByTestId("ai-toggle"));
+    await waitFor(() => screen.getByTestId("ai-input"));
+
+    fireEvent.change(screen.getByTestId("ai-input"), { target: { value: "Frage" } });
+    fireEvent.click(screen.getByTestId("ai-send"));
+
+    expect(screen.getByTestId("ai-loading-dots")).toBeInTheDocument();
+
+    // Resolve to clean up
+    resolve({ content: "Antwort" });
+    await waitFor(() =>
+      expect(screen.queryByTestId("ai-loading-dots")).not.toBeInTheDocument()
+    );
+  });
+
+  it("input is disabled while loading", async () => {
+    await setup(true);
+    let resolve: (v: { content: string }) => void = () => {};
+    const { chatWithAi } = await import("../api/client");
+    (chatWithAi as ReturnType<typeof vi.fn>).mockReturnValue(
+      new Promise((r) => { resolve = r; })
+    );
+
+    fireEvent.click(screen.getByTestId("ai-toggle"));
+    await waitFor(() => screen.getByTestId("ai-input"));
+
+    fireEvent.change(screen.getByTestId("ai-input"), { target: { value: "Frage" } });
+    fireEvent.click(screen.getByTestId("ai-send"));
+
+    expect(screen.getByTestId("ai-input")).toBeDisabled();
+
+    resolve({ content: "Antwort" });
+    await waitFor(() =>
+      expect(screen.getByTestId("ai-input")).not.toBeDisabled()
+    );
+  });
+});
+
+describe("AiPanel — error handling (AC #5)", () => {
+  it("shows error banner when the API call fails", async () => {
+    await setup(true);
+    const { chatWithAi } = await import("../api/client");
+    (chatWithAi as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("Network error"));
+
+    fireEvent.click(screen.getByTestId("ai-toggle"));
+    await waitFor(() => screen.getByTestId("ai-input"));
+
+    fireEvent.change(screen.getByTestId("ai-input"), { target: { value: "Test" } });
+    fireEvent.click(screen.getByTestId("ai-send"));
+
+    await waitFor(() =>
+      expect(screen.getByTestId("ai-error")).toBeInTheDocument()
+    );
+  });
+
+  it("loading dots are gone after an error", async () => {
+    await setup(true);
+    const { chatWithAi } = await import("../api/client");
+    (chatWithAi as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("fail"));
+
+    fireEvent.click(screen.getByTestId("ai-toggle"));
+    await waitFor(() => screen.getByTestId("ai-input"));
+
+    fireEvent.change(screen.getByTestId("ai-input"), { target: { value: "Test" } });
+    fireEvent.click(screen.getByTestId("ai-send"));
+
+    await waitFor(() =>
+      expect(screen.queryByTestId("ai-loading-dots")).not.toBeInTheDocument()
+    );
+  });
+});
+
+describe("AiPanel — multi-turn history (AC #3)", () => {
+  it("second call includes the full prior conversation", async () => {
+    await setup(true);
+    const { chatWithAi } = await import("../api/client");
+    (chatWithAi as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ content: "Erste Antwort" })
+      .mockResolvedValueOnce({ content: "Zweite Antwort" });
+
+    fireEvent.click(screen.getByTestId("ai-toggle"));
+    await waitFor(() => screen.getByTestId("ai-input"));
+
+    // First message
+    fireEvent.change(screen.getByTestId("ai-input"), { target: { value: "Erste Frage" } });
+    fireEvent.click(screen.getByTestId("ai-send"));
+    await waitFor(() => screen.getByText("Erste Antwort"));
+
+    // Second message
+    fireEvent.change(screen.getByTestId("ai-input"), { target: { value: "Zweite Frage" } });
+    fireEvent.click(screen.getByTestId("ai-send"));
+    await waitFor(() => screen.getByText("Zweite Antwort"));
+
+    // Second call should have included 3 messages: user, assistant, user
+    const secondCallMessages = (chatWithAi as ReturnType<typeof vi.fn>).mock.calls[1][0] as Array<{ role: string; content: string }>;
+    expect(secondCallMessages).toHaveLength(3);
+    expect(secondCallMessages[0]).toEqual({ role: "user",      content: "Erste Frage"   });
+    expect(secondCallMessages[1]).toEqual({ role: "assistant", content: "Erste Antwort" });
+    expect(secondCallMessages[2]).toEqual({ role: "user",      content: "Zweite Frage"  });
   });
 });

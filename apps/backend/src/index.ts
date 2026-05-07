@@ -6,6 +6,7 @@ import { journalRoutes } from "./routes/journal.js";
 import { attachmentRoutes } from "./routes/attachments.js";
 import { settingsRoutes } from "./routes/settings.js";
 import { exportRoutes } from "./routes/export.js";
+import { aiRoutes }     from "./routes/ai.js";
 
 const app = new Hono();
 
@@ -25,6 +26,7 @@ app.route("/api/journal",     journalRoutes);
 app.route("/api/attachments", attachmentRoutes);
 app.route("/api/settings",    settingsRoutes);
 app.route("/api/export",      exportRoutes);
+app.route("/api/ai",          aiRoutes);
 
 // ── Health check ──────────────────────────────────────────────────────────────
 

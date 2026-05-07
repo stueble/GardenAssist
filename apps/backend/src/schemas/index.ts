@@ -76,6 +76,18 @@ export const JournalEntryInputSchema = z.object({
   attachment_ids: z.array(uuid),
 });
 
+// ── AiChatRequest ─────────────────────────────────────────────────────────────
+
+const chatMessageSchema = z.object({
+  role:    z.enum(["user", "assistant"]),
+  content: z.string().min(1),
+});
+
+export const AiChatRequestSchema = z.object({
+  messages: z.array(chatMessageSchema).min(1),
+  language: z.enum(["de", "en"]).default("de"),
+});
+
 // ── GardenInput ───────────────────────────────────────────────────────────────
 
 export const GardenInputSchema = z.object({
