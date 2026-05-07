@@ -179,9 +179,10 @@ export function GardenPlanWidget({
     if (!area) return;
     const s = stateRef.current;
 
-    // Mouse pan
+    // Mouse pan — disabled in pick mode so clicks land on handleAreaClick cleanly
     const onMouseDown = (e: MouseEvent) => {
       if ((e.target as HTMLElement).closest("[data-zoom-btn]")) return;
+      if (pickMode) return;   // pick mode: let React onClick handle the click
       s.dragging = true;
       s.startX   = e.clientX; s.startY = e.clientY;
       s.startTx  = s.tx;      s.startTy = s.ty;
