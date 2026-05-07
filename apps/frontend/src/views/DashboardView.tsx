@@ -14,7 +14,7 @@
  * AC #7  Legend bottom-left
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { AiPanel } from "@/components/AiPanel";
 import { useAiPanelState } from "@/hooks/useAiPanelState";
@@ -316,6 +316,8 @@ function TodoList({ garden, loading, onTaskResolved, onPlantSelect }: TodoListPr
   const [stableTodos, setStableTodos] = useState<TodoEntry[]>([]);
   // Keys currently animating out
   const [removing, setRemoving] = useState<Set<string>>(new Set());
+  // Blocks stableTodos updates while an animation + reload cycle is in progress
+  const blockUpdateRef = useRef(false);
 
   // Recompute stableTodos from garden whenever garden changes AND no animation is running
   const computeTodos = useCallback((g: Garden): TodoEntry[] => {
@@ -345,14 +347,15 @@ function TodoList({ garden, loading, onTaskResolved, onPlantSelect }: TodoListPr
   }, []);
 
   useEffect(() => {
-    if (garden && removing.size === 0) {
+    if (garden && removing.size === 0 && !blockUpdateRef.current) {
       setStableTodos(computeTodos(garden));
     }
   }, [garden, removing.size, computeTodos]);
 
   const resolve = useCallback(async (todo: TodoEntry, entryType: "done" | "skipped") => {
     const key = todo.key;
-    // Start slide-out animation
+    // Block stableTodos updates during the whole animation + reload cycle
+    blockUpdateRef.current = true;
     setRemoving((prev) => new Set([...prev, key]));
     try {
       await apiClient.createJournalEntry({
@@ -365,14 +368,17 @@ function TodoList({ garden, loading, onTaskResolved, onPlantSelect }: TodoListPr
         date:           new Date().toISOString().slice(0, 10),
         attachment_ids: [],
       });
-      // Wait for animation, then remove from stable list and reload garden
+      // Step 1: animation done → remove item and clear removing flag (single batch)
       setTimeout(() => {
         setStableTodos((prev) => prev.filter((t) => t.key !== key));
         setRemoving((prev) => { const s = new Set(prev); s.delete(key); return s; });
+        // Step 2: reload garden, then unblock updates so stableTodos syncs cleanly
         onTaskResolved?.();
+        setTimeout(() => { blockUpdateRef.current = false; }, 200);
       }, 380);
     } catch {
       // Revert on error
+      blockUpdateRef.current = false;
       setRemoving((prev) => { const s = new Set(prev); s.delete(key); return s; });
     }
   }, [onTaskResolved]);
