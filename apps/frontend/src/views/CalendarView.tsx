@@ -15,6 +15,7 @@ import { AiPanel } from "@/components/AiPanel";
 import { useAiPanelState } from "@/hooks/useAiPanelState";
 import { PlantDetailPanel } from "@/components/PlantDetailPanel";
 import { PlantEditDialog } from "@/components/PlantEditDialog";
+import { GardenPlanWidget } from "@/components/GardenPlanWidget";
 import { usePlantEditDialog } from "@/hooks/usePlantEditDialog";
 import { apiClient } from "@/api/client";
 import type { Plant } from "@api/plant";
@@ -68,11 +69,12 @@ export function CalendarView() {
   const { t } = useTranslation("calendar");
   const { setOpen: setAiOpen } = useAiPanelState();
 
-  const [plants,   setPlants]   = useState<Plant[]>([]);
-  const [loading,  setLoading]  = useState(true);
-  const [search,   setSearch]   = useState("");
+  const [plants,    setPlants]   = useState<Plant[]>([]);
+  const [loading,   setLoading]  = useState(true);
+  const [search,    setSearch]   = useState("");
   const [activeType, setActiveType] = useState<Schedule["schedule_type"]>("bloom");
-  const [selected, setSelected] = useState<Plant | null>(null);
+  const [selected,  setSelected] = useState<Plant | null>(null);
+  const [planUrl,   setPlanUrl]  = useState<string | null>(null);
 
   const edit = usePlantEditDialog();
 
@@ -81,7 +83,7 @@ export function CalendarView() {
 
   useEffect(() => {
     apiClient.getGarden()
-      .then((g) => { setPlants(g.plants); setLoading(false); })
+      .then((g) => { setPlants(g.plants); setPlanUrl(g.plan_url); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
 
@@ -179,12 +181,22 @@ export function CalendarView() {
           </div>
         </div>
 
-        {/* Gantt table */}
-        {loading ? (
+        {/* Garden plan — replaces Gantt while edit dialog is open */}
+        {edit.editTarget !== undefined && (
+          <GardenPlanWidget
+            planUrl={planUrl}
+            pins={edit.positions.map((p, i) => ({ x: p.x, y: p.y, label: String(i + 1) }))}
+            pickMode={edit.pickMode}
+            onPick={(x, y) => edit.addPosition(x, y)}
+          />
+        )}
+
+        {/* Gantt table — hidden when edit dialog is open */}
+        {edit.editTarget === undefined && loading ? (
           <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-light)", fontSize: "13px" }}>
             Wird geladen …
           </div>
-        ) : (
+        ) : edit.editTarget === undefined ? (
           <div style={{ flex: 1, overflow: "auto" }}>
             <table
               data-testid="calendar-table"
@@ -266,7 +278,7 @@ export function CalendarView() {
               </tbody>
             </table>
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* ── Detail/Edit panel — right of center, left of AiPanel (AC #6) ── */}
