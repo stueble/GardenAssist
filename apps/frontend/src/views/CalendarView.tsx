@@ -104,36 +104,6 @@ export function CalendarView() {
       data-testid="calendar-view"
       style={{ display: "flex", flex: 1, minHeight: 0, overflow: "hidden", background: "var(--cream)" }}
     >
-      {/* ── Detail panel overlay (left, AC #6) ── */}
-      <div
-        data-testid="calendar-detail-panel"
-        style={{
-          width:         selected ? "300px" : "0",
-          minWidth:      selected ? "300px" : "0",
-          overflow:      "hidden",
-          background:    "var(--warm-white)",
-          borderRight:   selected ? "2px solid var(--border)" : "none",
-          display:       "flex",
-          flexDirection: "column",
-          transition:    "width .3s ease, min-width .3s ease",
-          flexShrink:    0,
-          zIndex:        50,
-          boxShadow:     selected ? "4px 0 20px rgba(45,74,45,.15)" : "none",
-        }}
-      >
-        {selected && (
-          <PlantDetailPanel
-            plant={selected}
-            onClose={() => setSelected(null)}
-            onEdit={() => {}}
-            onDelete={() => {
-              setPlants((prev) => prev.filter((p) => p.id !== selected.id));
-              setSelected(null);
-            }}
-          />
-        )}
-      </div>
-
       {/* ── Main Gantt area ── */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, overflow: "hidden" }}>
 
@@ -182,7 +152,7 @@ export function CalendarView() {
                 onClick={() => setActiveType(type)}
                 style={{
                   padding:      "6px 12px",
-                  borderRadius: "6px",
+                  borderRadius: "20px",
                   border:       "1.5px solid var(--border)",
                   background:   activeType === type ? "var(--green-deep)" : "none",
                   color:        activeType === type ? "white" : "var(--text-mid)",
@@ -290,6 +260,34 @@ export function CalendarView() {
               </tbody>
             </table>
           </div>
+        )}
+      </div>
+
+      {/* ── Detail panel — right of center, left of AiPanel (AC #6) ── */}
+      <div
+        data-testid="calendar-detail-panel"
+        style={{
+          width:         selected ? "300px" : "0",
+          minWidth:      selected ? "300px" : "0",
+          overflow:      "hidden",
+          background:    "var(--warm-white)",
+          borderLeft:    selected ? "1px solid var(--border)" : "none",
+          display:       "flex",
+          flexDirection: "column",
+          transition:    "width .3s ease, min-width .3s ease",
+          flexShrink:    0,
+        }}
+      >
+        {selected && (
+          <PlantDetailPanel
+            plant={selected}
+            onClose={() => setSelected(null)}
+            onEdit={() => {}}
+            onDelete={() => {
+              setPlants((prev) => prev.filter((p) => p.id !== selected.id));
+              setSelected(null);
+            }}
+          />
         )}
       </div>
 
@@ -410,11 +408,7 @@ function PlantRow({ plant, activeType, currentMonth, selected, onClick }: PlantR
 
         {/* Bars */}
         <div style={{ position: "relative", height: "100%", padding: "8px 0" }}>
-          {bars.length === 0 ? (
-            <div style={{ paddingLeft: "8px", fontSize: "11px", color: "var(--text-light)", fontStyle: "italic", lineHeight: "40px" }}>
-              —
-            </div>
-          ) : (
+          {bars.length === 0 ? null : (
             bars.map((s) => {
               const left  = weekToPercent(s.start_week);
               const width = durationToPercent(s.start_week, s.end_week);
