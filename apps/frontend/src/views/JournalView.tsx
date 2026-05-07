@@ -1,15 +1,11 @@
 /**
- * JournalView — story-035: Timeline & Entry List.
+ * JournalView — story-035 + story-036.
  *
- * AC #1  Entries from Garden.journal_entries[] grouped by month descending
- * AC #2  Entry card: type badge, plant tag, title, date; expands for notes + attachments
- * AC #3  Filter chips: Erledigt, Übersprungen, Manuell — single active, toggle off
- * AC #4  Live search by title, notes, plant name
- * AC #5  Empty state when no entries match
- * AC #6  Type colors consistent with mockup
+ * story-035: Timeline & Entry List
+ * story-036: New Entry Panel & Edit
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { AiPanel } from "@/components/AiPanel";
 import { apiClient } from "@/api/client";
@@ -58,20 +54,19 @@ export function JournalView() {
   const [loading,    setLoading]    = useState(true);
   const [search,     setSearch]     = useState("");
   const [activeType, setActiveType] = useState<JournalEntryType | null>(null);
+  // Panel state: null=closed, undefined=new, JournalEntry=edit
+  const [panelEntry, setPanelEntry] = useState<JournalEntry | null | undefined>(undefined);
 
-  useEffect(() => {
-    apiClient.getGarden()
-      .then((g) => {
-        // Sort descending by date
-        const sorted = [...g.journal_entries].sort((a, b) =>
-          b.date.localeCompare(a.date)
-        );
-        setEntries(sorted);
-        setPlants(g.plants);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
+  function loadGarden() {
+    return apiClient.getGarden().then((g) => {
+      const sorted = [...g.journal_entries].sort((a, b) => b.date.localeCompare(a.date));
+      setEntries(sorted);
+      setPlants(g.plants);
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  }
+
+  useEffect(() => { void loadGarden(); }, []);
 
   // Plant lookup map
   const plantById = new Map(plants.map((p) => [p.id, p]));
@@ -106,7 +101,7 @@ export function JournalView() {
   return (
     <div
       data-testid="journal-view"
-      style={{ display: "flex", flex: 1, minHeight: 0, overflow: "hidden", background: "var(--cream)" }}
+      style={{ display: "flex", flex: 1, minHeight: 0, overflow: "hidden", background: "var(--cream)", position: "relative" }}
     >
       {/* ── Timeline area ── */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, overflow: "hidden" }}>
@@ -222,6 +217,7 @@ export function JournalView() {
                       key={entry.id}
                       entry={entry}
                       plant={entry.plant_id ? plantById.get(entry.plant_id) ?? null : null}
+                      onEdit={(e) => setPanelEntry(e)}
                     />
                   ))}
                 </div>
@@ -231,7 +227,67 @@ export function JournalView() {
         </div>
       </div>
 
+      {/* ── New/Edit Entry Panel (AC #1, #7) ── */}
+      <div
+        data-testid="entry-panel"
+        style={{
+          width:         panelEntry !== undefined ? "320px" : "0",
+          minWidth:      panelEntry !== undefined ? "320px" : "0",
+          overflow:      "hidden",
+          background:    "var(--warm-white)",
+          borderLeft:    panelEntry !== undefined ? "1px solid var(--border)" : "none",
+          display:       "flex",
+          flexDirection: "column",
+          transition:    "width .3s ease, min-width .3s ease",
+          flexShrink:    0,
+        }}
+      >
+        {panelEntry !== undefined && (
+          <EntryPanel
+            entry={panelEntry}
+            plants={plants}
+            onClose={() => setPanelEntry(undefined)}
+            onSaved={() => {
+              setPanelEntry(undefined);
+              void loadGarden();
+            }}
+          />
+        )}
+      </div>
+
       <AiPanel context={`📔 ${t("title")}`} />
+
+      {/* FAB — hidden when panel open */}
+      {panelEntry === undefined && (
+        <button
+          type="button"
+          data-testid="journal-fab"
+          onClick={() => setPanelEntry(null)}
+          style={{
+            position:       "absolute",
+            bottom:         "24px",
+            right:          "60px", // leave room for AI strip
+            width:          "48px",
+            height:         "48px",
+            borderRadius:   "12px",
+            background:     "var(--green-deep)",
+            color:          "white",
+            border:         "none",
+            fontSize:       "26px",
+            fontWeight:     300,
+            cursor:         "pointer",
+            display:        "flex",
+            alignItems:     "center",
+            justifyContent: "center",
+            boxShadow:      "0 4px 16px rgba(45,74,45,.35)",
+            lineHeight:     1,
+            zIndex:         10,
+          }}
+          className="hover:bg-green-mid"
+        >
+          ＋
+        </button>
+      )}
     </div>
   );
 }
@@ -239,11 +295,12 @@ export function JournalView() {
 // ── EntryCard ─────────────────────────────────────────────────────────────────
 
 interface EntryCardProps {
-  entry: JournalEntry;
-  plant: Plant | null;
+  entry:   JournalEntry;
+  plant:   Plant | null;
+  onEdit?: (entry: JournalEntry) => void;
 }
 
-function EntryCard({ entry, plant }: EntryCardProps) {
+function EntryCard({ entry, plant, onEdit }: EntryCardProps) {
   const [expanded, setExpanded] = useState(false);
 
   const colors = TYPE_COLOR[entry.entry_type] ?? TYPE_COLOR.manual;
@@ -357,6 +414,24 @@ function EntryCard({ entry, plant }: EntryCardProps) {
             {formatDate(entry.date)}
           </span>
 
+          {/* Edit button */}
+          {onEdit && (
+            <button
+              type="button"
+              data-testid="entry-edit-btn"
+              onClick={(e) => { e.stopPropagation(); onEdit(entry); }}
+              style={{
+                background: "none", border: "none", cursor: "pointer",
+                color: "var(--text-light)", fontSize: "13px", padding: "0 2px",
+                flexShrink: 0,
+              }}
+              className="hover:text-green-deep"
+              title="Bearbeiten"
+            >
+              ✏️
+            </button>
+          )}
+
           {/* Chevron */}
           {hasContent && (
             <span style={{
@@ -405,5 +480,252 @@ function EntryCard({ entry, plant }: EntryCardProps) {
         )}
       </div>
     </div>
+  );
+}
+
+// ── EntryPanel ────────────────────────────────────────────────────────────────
+
+/** Panel form entry types (maps to API types) */
+const PANEL_TYPES: Array<{ value: JournalEntryType; label: string; style: string }> = [
+  { value: "done",    label: "✅ Erledigt",     style: "done"    },
+  { value: "manual",  label: "👁 Beobachtung",  style: "manual"  },
+  { value: "manual",  label: "⚠️ Problem",       style: "problem" },
+  { value: "skipped", label: "⏭ Übersprungen",  style: "skipped" },
+];
+
+// Single unified type for the selector (index-based to handle manual/manual)
+type PanelTypeIdx = 0 | 1 | 2 | 3;
+
+interface EntryPanelProps {
+  entry:   JournalEntry | null;   // null = new entry
+  plants:  Plant[];
+  onClose: () => void;
+  onSaved: () => void;
+}
+
+function EntryPanel({ entry, plants, onClose, onSaved }: EntryPanelProps) {
+  const isNew = entry === null;
+
+  // Determine initial type index from entry_type
+  function entryTypeToIdx(type: JournalEntryType): PanelTypeIdx {
+    if (type === "done")    return 0;
+    if (type === "skipped") return 3;
+    return 1; // manual → Beobachtung
+  }
+
+  const [typeIdx,  setTypeIdx]  = useState<PanelTypeIdx>(entry ? entryTypeToIdx(entry.entry_type) : 0);
+  const [plantId,  setPlantId]  = useState<string>(entry?.plant_id ?? "");
+  const [date,     setDate]     = useState(entry?.date ?? new Date().toISOString().slice(0, 10));
+  const [title,    setTitle]    = useState(entry?.title ?? "");
+  const [notes,    setNotes]    = useState(entry?.notes ?? "");
+  const [saving,   setSaving]   = useState(false);
+  const [error,    setError]    = useState<string | null>(null);
+
+  const selectedType = PANEL_TYPES[typeIdx];
+
+  const fieldStyle: React.CSSProperties = {
+    width:        "100%",
+    background:   "var(--green-mist)",
+    border:       "1.5px solid var(--border)",
+    borderRadius: "8px",
+    padding:      "8px 12px",
+    fontSize:     "13px",
+    fontFamily:   "var(--font-body)",
+    color:        "var(--text-dark)",
+    outline:      "none",
+    boxSizing:    "border-box",
+  };
+
+  const labelStyle: React.CSSProperties = {
+    fontSize:      "10px",
+    fontWeight:    700,
+    letterSpacing: ".8px",
+    textTransform: "uppercase",
+    color:         "var(--text-light)",
+    marginBottom:  "6px",
+  };
+
+  async function handleSave() {
+    setSaving(true);
+    setError(null);
+    const apiType = selectedType.value;
+    try {
+      const payload = {
+        plant_id:       plantId || null,
+        schedule_id:    null,
+        week:           null,
+        entry_type:     apiType,
+        date,
+        title:          title.trim() || null,
+        notes:          notes.trim() || null,
+        attachment_ids: entry?.attachment_ids ?? [],
+      };
+      if (isNew) {
+        await apiClient.createJournalEntry(payload);
+      } else {
+        await apiClient.updateJournalEntry(entry!.id, payload);
+      }
+      onSaved();
+    } catch {
+      setError("Speichern fehlgeschlagen. Bitte erneut versuchen.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <>
+      {/* Header */}
+      <div style={{
+        padding:        "16px 18px 12px",
+        borderBottom:   "1px solid var(--border)",
+        display:        "flex",
+        alignItems:     "center",
+        justifyContent: "space-between",
+        flexShrink:     0,
+      }}>
+        <div style={{ fontFamily: "var(--font-display)", fontSize: "15px", color: "var(--green-deep)", fontWeight: 600 }}>
+          {isNew ? "Neuer Eintrag" : "Eintrag bearbeiten"}
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-light)", fontSize: "16px" }}
+          data-testid="panel-close"
+        >✕</button>
+      </div>
+
+      {/* Body */}
+      <div style={{ flex: 1, overflowY: "auto", padding: "16px 18px", display: "flex", flexDirection: "column", gap: "16px" }}>
+
+        {error && (
+          <div style={{ padding: "8px 12px", borderRadius: "8px", background: "var(--red-soft)", border: "1px solid var(--red-warn)", fontSize: "12px", color: "var(--red-warn)" }}>
+            {error}
+          </div>
+        )}
+
+        {/* Type selector */}
+        <div>
+          <div style={labelStyle}>Typ</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
+            {PANEL_TYPES.map((pt, i) => {
+              const tc = TYPE_COLOR[pt.style] ?? TYPE_COLOR.manual;
+              const active = typeIdx === i;
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  data-testid={`panel-type-${i}`}
+                  onClick={() => setTypeIdx(i as PanelTypeIdx)}
+                  style={{
+                    padding:      "7px 8px",
+                    borderRadius: "8px",
+                    fontSize:     "11.5px",
+                    fontWeight:   500,
+                    border:       active ? `1.5px solid ${tc.border}` : "1.5px solid var(--border)",
+                    background:   active ? tc.bg : "none",
+                    color:        active ? tc.text : "var(--text-mid)",
+                    cursor:       "pointer",
+                    fontFamily:   "var(--font-body)",
+                    transition:   "all .15s",
+                    display:      "flex",
+                    alignItems:   "center",
+                    gap:          "5px",
+                    ...(i === 3 ? { gridColumn: "1/-1" } : {}),
+                  }}
+                >
+                  {pt.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Plant picker */}
+        <div>
+          <div style={labelStyle}>Pflanze / Bezug</div>
+          <select
+            value={plantId}
+            onChange={(e) => setPlantId(e.target.value)}
+            data-testid="panel-plant"
+            style={{ ...fieldStyle, cursor: "pointer" }}
+          >
+            <option value="">🌿 Garten (allgemein)</option>
+            {plants.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.icon ?? "🌿"} {p.name_common}{p.location ? ` · ${p.location}` : ""}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Date */}
+        <div>
+          <div style={labelStyle}>Datum</div>
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            data-testid="panel-date"
+            style={fieldStyle}
+          />
+        </div>
+
+        {/* Title */}
+        <div>
+          <div style={labelStyle}>Titel</div>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Kurze Beschreibung …"
+            data-testid="panel-title"
+            style={fieldStyle}
+          />
+        </div>
+
+        {/* Notes */}
+        <div>
+          <div style={labelStyle}>Notizen</div>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Details, Beobachtungen …"
+            rows={4}
+            data-testid="panel-notes"
+            style={{ ...fieldStyle, resize: "vertical", minHeight: "90px", lineHeight: "1.5" }}
+          />
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div style={{ display: "flex", gap: "8px", padding: "12px 18px", borderTop: "1px solid var(--border)", flexShrink: 0 }}>
+        <button
+          type="button"
+          onClick={onClose}
+          disabled={saving}
+          style={{
+            flex: 1, padding: "9px", borderRadius: "8px", fontSize: "13px",
+            fontWeight: 500, fontFamily: "var(--font-body)", cursor: "pointer",
+            border: "1.5px solid var(--border)", background: "none", color: "var(--text-mid)",
+          }}
+        >
+          <span>✕</span> Abbrechen
+        </button>
+        <button
+          type="button"
+          onClick={() => void handleSave()}
+          disabled={saving}
+          data-testid="panel-save"
+          style={{
+            flex: 1, padding: "9px", borderRadius: "8px", fontSize: "13px",
+            fontWeight: 500, fontFamily: "var(--font-body)", cursor: "pointer",
+            border: "1.5px solid var(--green-deep)", background: "var(--green-deep)", color: "white",
+          }}
+        >
+          <span>✓</span> {saving ? "…" : "Speichern"}
+        </button>
+      </div>
+    </>
   );
 }
