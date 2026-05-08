@@ -87,8 +87,9 @@ export async function importJsonData(
       }
     }
 
-    // 1. Upsert plants
+    // 1. Upsert plants (preserving schedule IDs from backup)
     if (jsonData.garden.plants) {
+      const now = new Date().toISOString();
       for (const plant of jsonData.garden.plants) {
         try {
           const existing = db
@@ -97,37 +98,119 @@ export async function importJsonData(
             .where(eq(schema.plants.id, plant.id))
             .get();
 
-          const plantInput: PlantInput = {
-            name_common: plant.name_common,
-            name_botanical: plant.name_botanical ?? null,
-            icon: plant.icon ?? null,
-            origin_type: plant.origin_type ?? null,
-            category: plant.category ?? null,
-            lifecycle: plant.lifecycle ?? null,
-            description: plant.description ?? null,
-            care_notes: plant.care_notes ?? null,
-            sun_demand: plant.sun_demand ?? null,
-            water_demand: plant.water_demand ?? null,
-            soil_type: plant.soil_type ?? null,
-            frost_tolerance_min_c: plant.frost_tolerance_min_c ?? null,
-            temperature_protected: plant.temperature_protected ?? false,
-            health_status: plant.health_status ?? null,
-            location: plant.location ?? null,
-            watering_zone: plant.watering_zone ?? null,
-            purchase_date: plant.purchase_date ?? null,
-            purchase_price: plant.purchase_price ?? null,
-            thumbnail_attachment_id: plant.thumbnail_attachment_id ?? null,
-            positions: plant.positions ?? [],
-            schedules: plant.schedules ?? [],
-            // Attachments are not directly imported from JSON (they're restored from tar.gz backup)
-            // Use empty array for JSON imports
-            attachments: [],
-          };
-
           if (existing) {
-            await updatePlant(db, plant.id, plantInput);
+            // Update plant core fields
+            db.update(schema.plants)
+              .set({
+                name_common: plant.name_common,
+                name_botanical: plant.name_botanical ?? null,
+                icon: plant.icon ?? null,
+                origin_type: plant.origin_type ?? null,
+                category: plant.category ?? null,
+                lifecycle: plant.lifecycle ?? null,
+                description: plant.description ?? null,
+                care_notes: plant.care_notes ?? null,
+                sun_demand: plant.sun_demand ?? null,
+                water_demand: plant.water_demand ?? null,
+                soil_type: plant.soil_type ?? null,
+                frost_tolerance_min_c: plant.frost_tolerance_min_c ?? null,
+                temperature_protected: plant.temperature_protected ?? false,
+                health_status: plant.health_status ?? null,
+                location: plant.location ?? null,
+                watering_zone: plant.watering_zone ?? null,
+                purchase_date: plant.purchase_date ?? null,
+                purchase_price: plant.purchase_price ?? null,
+                thumbnail_attachment_id: plant.thumbnail_attachment_id ?? null,
+                updated_at: now,
+              })
+              .where(eq(schema.plants.id, plant.id))
+              .run();
+
+            // Delete and re-create positions (replace semantics)
+            db.delete(schema.plantPositions)
+              .where(eq(schema.plantPositions.plant_id, plant.id))
+              .run();
+            for (const pos of plant.positions ?? []) {
+              db.insert(schema.plantPositions).values({
+                id: crypto.randomUUID(),
+                plant_id: plant.id,
+                x_percent: pos.x_percent,
+                y_percent: pos.y_percent,
+              }).run();
+            }
+
+            // Delete and re-create schedules, BUT preserve IDs from backup
+            db.delete(schema.schedules)
+              .where(eq(schema.schedules.plant_id, plant.id))
+              .run();
+            for (const sched of plant.schedules ?? []) {
+              db.insert(schema.schedules).values({
+                id: sched.id, // IMPORTANT: Use ID from backup, not random!
+                plant_id: plant.id,
+                schedule_type: sched.schedule_type,
+                start_week: sched.start_week,
+                end_week: sched.end_week,
+                color: sched.color ?? null,
+                label: sched.label ?? null,
+                notes: sched.notes ?? null,
+                created_at: sched.created_at,
+                updated_at: sched.updated_at,
+              }).run();
+            }
           } else {
-            await createPlant(db, plantInput);
+            // Create new plant with preserved IDs
+            db.insert(schema.plants)
+              .values({
+                id: plant.id,
+                name_common: plant.name_common,
+                name_botanical: plant.name_botanical ?? null,
+                icon: plant.icon ?? null,
+                origin_type: plant.origin_type ?? null,
+                category: plant.category ?? null,
+                lifecycle: plant.lifecycle ?? null,
+                description: plant.description ?? null,
+                care_notes: plant.care_notes ?? null,
+                sun_demand: plant.sun_demand ?? null,
+                water_demand: plant.water_demand ?? null,
+                soil_type: plant.soil_type ?? null,
+                frost_tolerance_min_c: plant.frost_tolerance_min_c ?? null,
+                temperature_protected: plant.temperature_protected ?? false,
+                health_status: plant.health_status ?? null,
+                location: plant.location ?? null,
+                watering_zone: plant.watering_zone ?? null,
+                purchase_date: plant.purchase_date ?? null,
+                purchase_price: plant.purchase_price ?? null,
+                thumbnail_attachment_id: plant.thumbnail_attachment_id ?? null,
+                created_at: plant.created_at,
+                updated_at: plant.updated_at,
+              })
+              .run();
+
+            // Insert positions
+            for (const pos of plant.positions ?? []) {
+              db.insert(schema.plantPositions).values({
+                id: crypto.randomUUID(),
+                plant_id: plant.id,
+                x_percent: pos.x_percent,
+                y_percent: pos.y_percent,
+              }).run();
+            }
+
+            // Insert schedules with preserved IDs
+            for (const sched of plant.schedules ?? []) {
+              db.insert(schema.schedules).values({
+                id: sched.id, // IMPORTANT: Use ID from backup!
+                plant_id: plant.id,
+                schedule_type: sched.schedule_type,
+                start_week: sched.start_week,
+                end_week: sched.end_week,
+                color: sched.color ?? null,
+                label: sched.label ?? null,
+                notes: sched.notes ?? null,
+                created_at: sched.created_at,
+                updated_at: sched.updated_at,
+              }).run();
+            }
           }
         } catch (err) {
           skippedErrors.push(`Plant id=${plant.id}: ${String(err)}`);
