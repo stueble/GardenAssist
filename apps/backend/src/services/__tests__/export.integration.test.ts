@@ -79,12 +79,15 @@ describe("Export/Import Full Round-Trip", () => {
       positions: [{ x_percent: 10, y_percent: 20 }],
       schedules: [
         {
+          id: "schedule-bloom-1",
           schedule_type: "bloom",
           start_week: 15,
           end_week: 35,
           color: "#ff0000",
           label: "Bloom",
           notes: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         },
       ],
       attachments: [],
@@ -100,7 +103,7 @@ describe("Export/Import Full Round-Trip", () => {
         id: "journal-1",
         plant_id: plant1.id,
         schedule_id: null,
-        week: 20,
+        week: "20", // ISO week as string
         entry_type: "observation",
         date: "2026-05-08",
         title: "Plant is flowering nicely",
@@ -178,7 +181,7 @@ describe("Export/Import Full Round-Trip", () => {
         id: "garden-entry",
         plant_id: null, // Garden-level entry, not plant-specific
         schedule_id: null,
-        week: null,
+        week: null as any, // No specific week for general entries
         entry_type: "observation",
         date: "2026-05-08",
         title: "Garden observation",

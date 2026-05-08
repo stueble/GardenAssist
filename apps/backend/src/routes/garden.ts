@@ -6,6 +6,7 @@ import { db } from "../db/index.js";
 import { garden } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import { getGarden } from "../services/garden.service.js";
+import { deleteAllData } from "../services/delete.service.js";
 import { writeFile, unlink, mkdir } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
@@ -105,4 +106,16 @@ export const gardenRoutes = new Hono()
 
     const g = await getGarden(db);
     return c.json(g);
+  })
+
+  // DELETE /api/garden/all — delete all user data (plants, journal entries, attachments)
+  .delete("/all", async (c) => {
+    try {
+      const dataDir = process.env.DATA_DIR ?? "./data";
+      const g = await deleteAllData(db, dataDir);
+      return c.json(g);
+    } catch (err) {
+      console.error("Delete all data error:", err);
+      return c.json({ error: String(err) }, 500);
+    }
   });

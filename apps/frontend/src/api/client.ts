@@ -43,6 +43,10 @@ export const apiClient: Api = {
     return request("/garden/plan", { method: "DELETE" });
   },
 
+  deleteAllData(): Promise<Garden> {
+    return request("/garden/all", { method: "DELETE" });
+  },
+
   // ── Plants ──────────────────────────────────────────────────────────────────
 
   createPlant(data: PlantInput): Promise<Plant> {

@@ -1,7 +1,7 @@
 ---
 id: STORY-045
 title: Delete all data
-status: In Progress
+status: In Review
 assignee:
   - agent
 created_date: '2026-05-08 20:36'
@@ -17,11 +17,11 @@ Implement the Delete all data feature of the backup/restore settings
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 Implementation finished
-- [ ] #2 Test(s) added
-- [ ] #3 No regressions introduced
-- [ ] #4 Documentation updated
-- [ ] #5 Changes committed
+- [x] #1 Implementation finished
+- [x] #2 Test(s) added
+- [x] #3 No regressions introduced
+- [x] #4 Documentation updated
+- [x] #5 Changes committed
 <!-- DOD:END -->
 
 ## Implementation Plan
@@ -50,3 +50,41 @@ Implement the Delete all data feature of the backup/restore settings
    
 5. UI/Strings
    - German translation for delete confirmation
+
+## Implementation Notes
+
+### Backend
+- **deleteAllData(db, dataDir)** service function
+  - Deletes all plants (cascades via FK)
+  - Deletes garden-level journal entries (plant_id = null)
+  - Resets garden.plan_url to null
+  - Deletes attachment files from disk (best-effort)
+  - Preserves garden and settings singletons
+
+- **DELETE /api/garden/all** route
+  - Calls deleteAllData() service
+  - Returns empty garden after deletion
+  - Error handling with 500 response on failure
+
+### Frontend
+- **handleDeleteAll()** in SettingsView
+  - Two-step confirmation dialog (German)
+  - First dialog: Details what will be deleted
+  - Second dialog: Final confirmation
+  - Calls api.deleteAllData() and reloads page on success
+  - Shows error alerts on failure
+
+### API Update
+- Added `deleteAllData(): Promise<Garden>` to Api interface
+
+### Testing
+- 4 delete service tests:
+  - Deletes all plants and journal entries
+  - Preserves singletons (garden, settings, API key)
+  - Deletes garden-level journal entries
+  - Resets garden.plan_url to null
+
+### Results
+- All 99 backend tests passing ✅
+- All 302 frontend tests passing ✅
+- No regressions ✅

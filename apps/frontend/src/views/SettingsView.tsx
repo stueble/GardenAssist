@@ -84,10 +84,33 @@ export function SettingsView() {
     downloadBlob(blob, "plants.csv");
   }
 
-  function handleDeleteAll() {
-    if (confirm("Wirklich alle Daten löschen? Diese Aktion kann nicht rückgängig gemacht werden.")) {
-      // TODO: implement delete-all endpoint in future story
-      alert("Noch nicht implementiert.");
+  async function handleDeleteAll() {
+    const confirmed = confirm(
+      "⚠️ WARNUNG: Diese Aktion löscht ALLE Daten dauerhaft:\n\n" +
+      "• Alle Pflanzen\n" +
+      "• Alle Fotos und Anhänge\n" +
+      "• Alle Notizen und Einträge\n\n" +
+      "Diese Aktion kann NICHT rückgängig gemacht werden!\n\n" +
+      "Sicher, dass du fortfahren möchtest?",
+    );
+
+    if (confirmed) {
+      const doubleConfirmed = confirm(
+        "LETZTER HINWEIS: Alle Daten werden dauerhaft gelöscht.\n\n" +
+        "Um fortzufahren, klicke nochmals auf OK.",
+      );
+
+      if (doubleConfirmed) {
+        try {
+          await apiClient.deleteAllData();
+          alert("✅ Alle Daten erfolgreich gelöscht.");
+          // Reload to show empty state
+          window.location.reload();
+        } catch (err) {
+          console.error("Delete all failed:", err);
+          alert(`❌ Fehler beim Löschen: ${String(err)}`);
+        }
+      }
     }
   }
 

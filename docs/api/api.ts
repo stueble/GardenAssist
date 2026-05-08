@@ -95,10 +95,18 @@ export interface Api {
   uploadGardenPlan(file: File): Promise<Garden>;
 
   /**
-   * Removes the garden plan image.
-   * Plant positions are preserved — plan_url is set to null.
-   */
+    * Removes the garden plan image.
+    * Plant positions are preserved — plan_url is set to null.
+    */
   deleteGardenPlan(): Promise<Garden>;
+
+  /**
+    * Deletes all user data (plants, journal entries, attachments).
+    * Preserves garden singleton and settings (including API key).
+    * Returns empty garden after deletion.
+    * This is a destructive operation and should only be called with explicit user confirmation.
+    */
+  deleteAllData(): Promise<Garden>;
 
   // ── Plants ──────────────────────────────────────────────────────────────────
 
