@@ -67,12 +67,27 @@ The Backup and Restore functions are only stubs that need a complete implementat
 - ✅ Filename includes timestamp for easy sorting
 
 ### Testing
-- 10 service tests covering export/import/round-trip
-- All 92 backend tests passing
-- All 302 frontend tests passing
-- No regressions
+- 13 export/import tests (10 unit + 3 integration tests)
+- **Round-trip test**: Export → Delete → Import → Verify all data restored
+- **Schedule ID preservation** test: Verifies schedule IDs maintained during import
+- **API key preservation** test: Old API key not overwritten during import
+- **Journal entry validation** test: Garden-level entries (plant_id=null) handled correctly
+- All 95 backend tests passing ✅
+- All 302 frontend tests passing ✅
+- No regressions ✅
 
-### Commit
-- Commit hash: 16afa31
-- Full backup/restore functionality implemented and tested
+### Bug Fixes During Implementation
+1. **Journal Entry FK Constraints**: Added validation for plant_id/schedule_id references before insert
+   - Skips invalid entries instead of throwing errors
+   - Returns detailed error messages
+
+2. **Schedule ID Loss**: Fixed import to preserve schedule IDs from backup
+   - Previous: `crypto.randomUUID()` generated new IDs, breaking journal entry references
+   - Now: Uses original schedule IDs from exported data
+   - Direct DB inserts instead of service functions to maintain referential integrity
+
+### Commits
+- 16afa31: Implement full backup/restore functionality with tar.gz export
+- fc35a7a: Fix journal entry import validation for FK constraints
+- 9684f20: Fix schedule IDs preservation and add comprehensive integration tests
 <!-- SECTION:NOTES:END -->
