@@ -102,14 +102,24 @@ export const apiClient: Api = {
     return fetch(`${BASE}/export/json`).then((r) => r.blob());
   },
 
+  exportBackup(): Promise<Blob> {
+    return fetch(`${BASE}/export/backup`, { method: "POST" }).then((r) => r.blob());
+  },
+
   exportPlantsCsv(): Promise<Blob> {
     return fetch(`${BASE}/export/plants.csv`).then((r) => r.blob());
   },
 
-  importJson(file: File): Promise<Garden> {
+  importJson(file: File): Promise<{ garden: Garden; skipped_count: number; skipped_errors: string[] }> {
     const form = new FormData();
     form.append("file", file);
     return request("/export/import/json", { method: "POST", headers: {}, body: form });
+  },
+
+  importBackup(file: File): Promise<{ garden: Garden; skipped_count: number; skipped_errors: string[] }> {
+    const form = new FormData();
+    form.append("file", file);
+    return request("/export/import/backup", { method: "POST", headers: {}, body: form });
   },
 };
 

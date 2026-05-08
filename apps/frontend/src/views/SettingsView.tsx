@@ -44,25 +44,44 @@ export function SettingsView() {
     }
   }, [form?.language, i18n]);
 
-  async function handleExportJson() {
-    const blob = await apiClient.exportJson();
-    downloadBlob(blob, "gardenassist-export.json");
+  async function handleExportBackup() {
+    try {
+      const blob = await apiClient.exportBackup();
+      downloadBlob(blob, `gardenassist-backup-${new Date().toISOString().split("T")[0]}.tar.gz`);
+    } catch (err) {
+      console.error("Export backup failed:", err);
+      alert("Backup konnte nicht erstellt werden.");
+    }
+  }
+
+  function handleImportBackup() {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".tar.gz";
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (file) {
+        try {
+          const result = await apiClient.importBackup(file);
+          if (result.skipped_count > 0) {
+            alert(
+              `⚠️ Backup wiederhergestellt. ${result.skipped_count} Objekt(e) übersprungen wegen Fehler:\n${result.skipped_errors.join("\n")}`,
+            );
+          } else {
+            alert("✅ Backup erfolgreich wiederhergestellt.");
+          }
+        } catch (err) {
+          console.error("Import backup failed:", err);
+          alert(`Fehler beim Importieren: ${String(err)}`);
+        }
+      }
+    };
+    input.click();
   }
 
   async function handleExportCsv() {
     const blob = await apiClient.exportPlantsCsv();
     downloadBlob(blob, "plants.csv");
-  }
-
-  function handleImportJson() {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = ".json";
-    input.onchange = async () => {
-      const file = input.files?.[0];
-      if (file) await apiClient.importJson(file);
-    };
-    input.click();
   }
 
   function handleDeleteAll() {
@@ -185,9 +204,9 @@ export function SettingsView() {
               defaultOpen={false}
             >
               <DataSection
-                onExportJson={handleExportJson}
+                onExportBackup={handleExportBackup}
+                onImportBackup={handleImportBackup}
                 onExportCsv={handleExportCsv}
-                onImportJson={handleImportJson}
                 onDeleteAll={handleDeleteAll}
               />
             </SettingsSection>

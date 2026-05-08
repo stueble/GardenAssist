@@ -1,17 +1,18 @@
 ---
 id: STORY-043
 title: AI Assistant – Context-aware system prompt
-status: In Review
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-07 22:18'
-updated_date: '2026-05-07 22:47'
+updated_date: '2026-05-07 23:04'
 labels:
   - frontend
   - ai
 dependencies:
   - STORY-042
 priority: high
+ordinal: 43000
 ---
 
 ## Description

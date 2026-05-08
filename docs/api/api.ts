@@ -183,30 +183,45 @@ export interface Api {
   // ── Export & Import ───────────────────────────────────────────────────────────
 
   /**
-   * Exports the complete garden data as a JSON file.
-   * Includes all plants, schedules, journal entries, attachments metadata,
-   * color presets, garden plan metadata, and settings.
-   * Binary attachment files are not included — export them separately via
-   * backup of the file system attachment directory.
-   * Returns a Blob representing the JSON file for download.
-   */
+    * Exports the complete garden data as a JSON file.
+    * Includes all plants, schedules, journal entries, attachments metadata,
+    * color presets, garden plan metadata, and settings.
+    * Excludes the ai_api_key for security.
+    * Binary attachment files are not included — use exportBackup() for a complete backup.
+    * Returns a Blob representing the JSON file for download.
+    */
   exportJson(): Promise<Blob>;
 
   /**
-   * Exports the plant list as a CSV file.
-   * Includes one row per plant with all scalar fields (no nested objects).
-   * Returns a Blob representing the CSV file for download.
-   */
+    * Exports a complete backup as a tar.gz archive.
+    * Includes all garden data (JSON) plus all binary attachment files.
+    * Excludes the ai_api_key from settings for security.
+    * Returns a Blob (tar.gz) for download.
+    */
+  exportBackup(): Promise<Blob>;
+
+  /**
+    * Exports the plant list as a CSV file.
+    * Includes one row per plant with all scalar fields (no nested objects).
+    * Returns a Blob representing the CSV file for download.
+    */
   exportPlantsCsv(): Promise<Blob>;
 
   /**
-   * Imports data from a previously exported JSON file.
-   * Merges with existing data — does not overwrite or reset the current state.
-   * Plants and journal entries are matched by id; existing records are updated,
-   * new records are inserted. Settings and color presets are replaced in full.
-   * Binary attachment files are not restored by this method — restore them
-   * separately via file system.
-   * Returns the updated Garden after import.
-   */
-  importJson(file: File): Promise<Garden>;
+    * Imports data from a previously exported JSON file.
+    * Merges with existing data — does not overwrite or reset the current state.
+    * Plants, journal entries, and attachments are matched by id; existing records are updated,
+    * new records are inserted. Settings and color presets are replaced in full,
+    * but the ai_api_key is preserved from the current settings.
+    * Returns an object with the updated Garden and a count of skipped errors.
+    */
+  importJson(file: File): Promise<{ garden: Garden; skipped_count: number; skipped_errors: string[] }>;
+
+  /**
+    * Imports a complete backup from a tar.gz archive.
+    * Extracts metadata.json and restores all attachment files.
+    * Merges garden data like importJson(), and restores files to disk.
+    * Returns an object with the updated Garden and a count of skipped errors.
+    */
+  importBackup(file: File): Promise<{ garden: Garden; skipped_count: number; skipped_errors: string[] }>;
 }

@@ -1,10 +1,10 @@
 import { FieldHint } from "./FieldInput";
 
 interface Props {
-  onExportJson:  () => void;
-  onExportCsv:   () => void;
-  onImportJson:  () => void;
-  onDeleteAll:   () => void;
+  onExportBackup:  () => void;
+  onImportBackup:  () => void;
+  onExportCsv:     () => void;
+  onDeleteAll:     () => void;
 }
 
 function SectionGroupLabel({ children }: { children: React.ReactNode }) {
@@ -35,22 +35,22 @@ function ActionBtn({ onClick, children, danger }: { onClick: () => void; childre
   );
 }
 
-export function DataSection({ onExportJson, onExportCsv, onImportJson, onDeleteAll }: Props) {
+export function DataSection({ onExportBackup, onImportBackup, onExportCsv, onDeleteAll }: Props) {
   return (
     <div>
-      <SectionGroupLabel>Export</SectionGroupLabel>
+      <SectionGroupLabel>Backup & Wiederherstellung</SectionGroupLabel>
       <div className="flex gap-2">
-        <ActionBtn onClick={onExportJson}>📥 Alle Daten als JSON exportieren</ActionBtn>
-        <ActionBtn onClick={onExportCsv}>📄 Pflanzenliste als CSV</ActionBtn>
+        <ActionBtn onClick={onExportBackup}>💾 Vollständiges Backup exportieren</ActionBtn>
+        <ActionBtn onClick={onImportBackup}>🔄 Backup wiederherstellen</ActionBtn>
       </div>
+      <FieldHint>Das Backup enthält alle Daten inkl. Fotos und Dateien. Der API-Schlüssel wird nicht exportiert.</FieldHint>
 
       <Divider />
 
-      <SectionGroupLabel>Import</SectionGroupLabel>
+      <SectionGroupLabel>Pflanzenliste</SectionGroupLabel>
       <div className="flex gap-2">
-        <ActionBtn onClick={onImportJson}>📤 JSON importieren</ActionBtn>
+        <ActionBtn onClick={onExportCsv}>📄 Pflanzenliste als CSV</ActionBtn>
       </div>
-      <FieldHint>Beim Import werden bestehende Daten zusammengeführt, nicht überschrieben.</FieldHint>
 
       <Divider />
 
@@ -58,7 +58,7 @@ export function DataSection({ onExportJson, onExportCsv, onImportJson, onDeleteA
       <div className="flex gap-2">
         <ActionBtn onClick={onDeleteAll} danger>⚠️ Alle Daten löschen</ActionBtn>
       </div>
-      <FieldHint>Dieser Vorgang kann nicht rückgängig gemacht werden. Erstelle zuerst einen Export.</FieldHint>
+      <FieldHint>Dieser Vorgang kann nicht rückgängig gemacht werden. Erstelle zuerst ein Backup.</FieldHint>
     </div>
   );
 }
