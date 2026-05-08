@@ -142,6 +142,40 @@ export async function importJsonData(
       const now = new Date().toISOString();
       for (const entry of jsonData.garden.journal_entries) {
         try {
+          // Validate that plant exists if plant_id is set
+          if (entry.plant_id) {
+            const plantExists = db
+              .select()
+              .from(schema.plants)
+              .where(eq(schema.plants.id, entry.plant_id))
+              .get();
+            if (!plantExists) {
+              skippedErrors.push(
+                `JournalEntry id=${entry.id}: Referenced plant_id=${entry.plant_id} does not exist`,
+              );
+              skippedCount++;
+              if (!skipErrors) throw new Error("Plant reference missing");
+              continue; // Skip this entry
+            }
+          }
+
+          // Validate that schedule exists if schedule_id is set
+          if (entry.schedule_id) {
+            const scheduleExists = db
+              .select()
+              .from(schema.schedules)
+              .where(eq(schema.schedules.id, entry.schedule_id))
+              .get();
+            if (!scheduleExists) {
+              skippedErrors.push(
+                `JournalEntry id=${entry.id}: Referenced schedule_id=${entry.schedule_id} does not exist`,
+              );
+              skippedCount++;
+              if (!skipErrors) throw new Error("Schedule reference missing");
+              continue; // Skip this entry
+            }
+          }
+
           const existing = db
             .select()
             .from(schema.journalEntries)

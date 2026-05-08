@@ -2,10 +2,13 @@
 id: STORY-044
 title: Install Backup/Restore
 status: In Review
-assignee: [agent]
+assignee:
+  - agent
 created_date: '2026-05-07 23:05'
+updated_date: '2026-05-08 20:33'
 labels: []
 dependencies: []
+ordinal: 1000
 ---
 
 ## Description
@@ -25,6 +28,7 @@ The Backup and Restore functions are only stubs that need a complete implementat
 
 ## Implementation Notes
 
+<!-- SECTION:NOTES:BEGIN -->
 ### Backend Services
 - **exportJsonData()** – Exports complete garden data as JSON object
   - Removes `ai_api_key` from settings for security
@@ -71,3 +75,4 @@ The Backup and Restore functions are only stubs that need a complete implementat
 ### Commit
 - Commit hash: 16afa31
 - Full backup/restore functionality implemented and tested
+<!-- SECTION:NOTES:END -->
