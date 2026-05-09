@@ -241,6 +241,7 @@ function nl(label: string, value: string | number | boolean | null | undefined):
 function serializePlantBase(p: Plant): string {
   let out = `## ${p.name_common}${p.name_botanical ? ` (${p.name_botanical})` : ""}\n`;
   out += nl("id", p.id);
+  out += nl("Botanischer Name", p.name_botanical);
   out += nl("Standort", p.location);
   out += nl("Bewässerungszone", p.watering_zone);
   out += nl("Kategorie", p.category);
