@@ -48,6 +48,7 @@ export type AttachmentInput = Omit<Attachment,
   | "url"
   | "created_at"
   | "attachment_type"
+  | "sort_order"  // set automatically by the server (append to owner's list)
 > & {
   /** The binary file to upload. Accepted formats: PNG, JPG, WebP, PDF. */
   file: File;
@@ -101,12 +102,23 @@ export interface Api {
   deleteGardenPlan(): Promise<Garden>;
 
   /**
-    * Deletes all user data (plants, journal entries, attachments).
-    * Preserves garden singleton and settings (including API key).
-    * Returns empty garden after deletion.
-    * This is a destructive operation and should only be called with explicit user confirmation.
-    */
+   * Deletes ALL data — plants, journal entries, attachments, color presets,
+   * and settings. Removes attachment files from disk.
+   * Re-creates garden and settings singletons with empty/minimal values.
+   * Use this before importing a backup to guarantee a clean slate.
+   * This is a destructive, irreversible operation.
+   */
   deleteAllData(): Promise<Garden>;
+
+  /**
+   * Installs factory defaults for color presets and settings,
+   * without deleting any existing plants, journal entries, or attachments.
+   * Existing color presets are replaced in full; settings are overwritten
+   * with factory values. The AI API key is preserved.
+   *
+   * To do a full factory reset: call deleteAllData() first, then installDefaults().
+   */
+  installDefaults(): Promise<Garden>;
 
   // ── Plants ──────────────────────────────────────────────────────────────────
 
@@ -143,9 +155,15 @@ export interface Api {
   /**
    * Updates an existing journal entry.
    * Returns the updated JournalEntry.
-   * Note: journal entries cannot be deleted — edit instead.
    */
   updateJournalEntry(id: string, data: JournalEntryInput): Promise<JournalEntry>;
+
+  /**
+   * Deletes a journal entry permanently.
+   * Associated attachment references (junction rows) are removed.
+   * The attachment files themselves are not deleted — only the association.
+   */
+  deleteJournalEntry(id: string): Promise<void>;
 
   // ── Attachments ─────────────────────────────────────────────────────────────
 

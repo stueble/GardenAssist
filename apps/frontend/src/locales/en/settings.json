@@ -40,9 +40,30 @@
     "ai_api_key": "API Key"
   },
   "ai_provider": {
+    "placeholder": "Choose provider …",
     "anthropic": "Anthropic (Claude)",
     "openai": "OpenAI (GPT)",
     "openrouter": "OpenRouter"
+  },
+  "ai_model": {
+    "placeholder": "Enter model ID …",
+    "anthropic": {
+      "claude-sonnet-4-6": "claude-sonnet-4-6 (recommended)",
+      "claude-opus-4-5":   "claude-opus-4-5 (more powerful, slower)",
+      "claude-haiku-4-5":  "claude-haiku-4-5 (faster, cheaper)"
+    },
+    "openai": {
+      "gpt-4o":      "gpt-4o (recommended)",
+      "gpt-4o-mini": "gpt-4o-mini (faster, cheaper)",
+      "o1":          "o1 (Reasoning)",
+      "o1-mini":     "o1-mini (Reasoning, fast)"
+    }
+  },
+  "ai_test": {
+    "idle":    "🔌 Test connection",
+    "testing": "⏳ Testing …",
+    "ok":      "✅ Connection successful",
+    "error":   "❌ Connection failed"
   },
   "color_presets": {
     "hint": "These presets appear in the plant dialog when editing bloom periods, foliage, and miscellaneous intervals.",
@@ -63,5 +84,29 @@
     "remove_label": "Remove",
     "uploading": "Uploading …",
     "removing": "Removing …"
+  },
+  "data": {
+    "backup_group": "Export & import data",
+    "export_backup": "💾 Export all data",
+    "import_backup": "📥 Import data",
+    "backup_hint": "The export includes all data including photos and files. On import, existing data is added or updated — nothing is deleted. The API key is not exported.",
+    "export_error": "Export failed: {{error}}",
+    "import_success": "Data imported successfully.",
+    "import_partial": "Import completed. {{count}} item(s) skipped:\n{{errors}}",
+    "import_error": "Import failed: {{error}}",
+    "plant_list_group": "Plant list",
+    "export_csv": "📄 Export plant list as CSV",
+    "reset_group": "Reset",
+    "delete_all": "⚠️ Delete all data",
+    "delete_all_hint": "Deletes everything — plants, settings, color presets, photos. Cannot be undone.",
+    "install_defaults": "⚙️ Install defaults",
+    "install_defaults_hint": "Restores default color presets and settings. Plants and entries are kept. The AI API key is preserved.",
+    "delete_all_confirm1": "⚠️ WARNING: This action permanently deletes ALL data:\n\n• All plants\n• All photos and attachments\n• All notes and entries\n• All settings\n• All color presets\n\nThis action CANNOT be undone!\n\nAre you sure you want to continue?",
+    "delete_all_confirm2": "FINAL WARNING: All data will be permanently deleted.\n\nClick OK again to proceed.",
+    "delete_all_success": "All data successfully deleted.",
+    "delete_all_error": "Error deleting data: {{error}}",
+    "install_defaults_confirm": "Color presets and settings will be reset to their default values. Plants and entries are kept.\n\nProceed?",
+    "install_defaults_success": "Default values successfully installed.",
+    "install_defaults_error": "Error installing defaults: {{error}}"
   }
 }

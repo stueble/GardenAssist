@@ -18,6 +18,7 @@ async function createDb() {
   const path = DATABASE_URL.slice("file:".length);
   const sqlite = new Database(path);
   sqlite.pragma("journal_mode = WAL");
+  sqlite.pragma("foreign_keys = ON");
   return drizzleSQLite(sqlite, { schema });
 }
 
@@ -29,6 +30,7 @@ function createSQLiteDb(): BetterSQLite3Database<typeof schema> {
     : "./gardenassist.db";
   const sqlite = new Database(path);
   sqlite.pragma("journal_mode = WAL");
+  sqlite.pragma("foreign_keys = ON");
   return drizzleSQLite(sqlite, { schema });
 }
 

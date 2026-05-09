@@ -6,7 +6,7 @@ import { db } from "../db/index.js";
 import { garden } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import { getGarden } from "../services/garden.service.js";
-import { deleteAllData } from "../services/delete.service.js";
+import { deleteAllData, installDefaults } from "../services/delete.service.js";
 import { writeFile, unlink, mkdir } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
@@ -108,7 +108,8 @@ export const gardenRoutes = new Hono()
     return c.json(g);
   })
 
-  // DELETE /api/garden/all — delete all user data (plants, journal entries, attachments)
+  // DELETE /api/garden/all — delete everything (plants, journal entries,
+  // attachments, color presets, settings). Singletons are re-created empty.
   .delete("/all", async (c) => {
     try {
       const dataDir = process.env.DATA_DIR ?? "./data";
@@ -116,6 +117,19 @@ export const gardenRoutes = new Hono()
       return c.json(g);
     } catch (err) {
       console.error("Delete all data error:", err);
+      return c.json({ error: String(err) }, 500);
+    }
+  })
+
+  // POST /api/garden/defaults — install factory defaults for color presets and
+  // settings, without deleting any plants, journal entries, or attachments.
+  // The AI API key is preserved.
+  .post("/defaults", async (c) => {
+    try {
+      const g = await installDefaults(db);
+      return c.json(g);
+    } catch (err) {
+      console.error("Install defaults error:", err);
       return c.json({ error: String(err) }, 500);
     }
   });

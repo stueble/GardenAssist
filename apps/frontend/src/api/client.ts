@@ -47,6 +47,10 @@ export const apiClient: Api = {
     return request("/garden/all", { method: "DELETE" });
   },
 
+  installDefaults(): Promise<Garden> {
+    return request("/garden/defaults", { method: "POST" });
+  },
+
   // ── Plants ──────────────────────────────────────────────────────────────────
 
   createPlant(data: PlantInput): Promise<Plant> {
@@ -69,6 +73,10 @@ export const apiClient: Api = {
 
   updateJournalEntry(id: string, data: JournalEntryInput): Promise<JournalEntry> {
     return request(`/journal/${id}`, { method: "PUT", body: JSON.stringify(data) });
+  },
+
+  deleteJournalEntry(id: string): Promise<void> {
+    return request(`/journal/${id}`, { method: "DELETE" });
   },
 
   // ── Attachments ─────────────────────────────────────────────────────────────

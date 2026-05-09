@@ -47,10 +47,10 @@ export function SettingsView() {
   async function handleExportBackup() {
     try {
       const blob = await apiClient.exportBackup();
-      downloadBlob(blob, `gardenassist-backup-${new Date().toISOString().split("T")[0]}.tar.gz`);
+      downloadBlob(blob, `gardenassist-export-${new Date().toISOString().split("T")[0]}.tar.gz`);
     } catch (err) {
-      console.error("Export backup failed:", err);
-      alert("Backup konnte nicht erstellt werden.");
+      console.error("Export failed:", err);
+      alert(t("data.export_error", { error: String(err) }));
     }
   }
 
@@ -64,15 +64,14 @@ export function SettingsView() {
         try {
           const result = await apiClient.importBackup(file);
           if (result.skipped_count > 0) {
-            alert(
-              `⚠️ Backup wiederhergestellt. ${result.skipped_count} Objekt(e) übersprungen wegen Fehler:\n${result.skipped_errors.join("\n")}`,
-            );
+            alert(t("data.import_partial", { count: result.skipped_count, errors: result.skipped_errors.join("\n") }));
           } else {
-            alert("✅ Backup erfolgreich wiederhergestellt.");
+            alert(t("data.import_success"));
           }
+          window.location.reload();
         } catch (err) {
-          console.error("Import backup failed:", err);
-          alert(`Fehler beim Importieren: ${String(err)}`);
+          console.error("Import failed:", err);
+          alert(t("data.import_error", { error: String(err) }));
         }
       }
     };
@@ -85,32 +84,27 @@ export function SettingsView() {
   }
 
   async function handleDeleteAll() {
-    const confirmed = confirm(
-      "⚠️ WARNUNG: Diese Aktion löscht ALLE Daten dauerhaft:\n\n" +
-      "• Alle Pflanzen\n" +
-      "• Alle Fotos und Anhänge\n" +
-      "• Alle Notizen und Einträge\n\n" +
-      "Diese Aktion kann NICHT rückgängig gemacht werden!\n\n" +
-      "Sicher, dass du fortfahren möchtest?",
-    );
+    if (!confirm(t("data.delete_all_confirm1"))) return;
+    if (!confirm(t("data.delete_all_confirm2"))) return;
+    try {
+      await apiClient.deleteAllData();
+      alert(t("data.delete_all_success"));
+      window.location.reload();
+    } catch (err) {
+      console.error("Delete all failed:", err);
+      alert(t("data.delete_all_error", { error: String(err) }));
+    }
+  }
 
-    if (confirmed) {
-      const doubleConfirmed = confirm(
-        "LETZTER HINWEIS: Alle Daten werden dauerhaft gelöscht.\n\n" +
-        "Um fortzufahren, klicke nochmals auf OK.",
-      );
-
-      if (doubleConfirmed) {
-        try {
-          await apiClient.deleteAllData();
-          alert("✅ Alle Daten erfolgreich gelöscht.");
-          // Reload to show empty state
-          window.location.reload();
-        } catch (err) {
-          console.error("Delete all failed:", err);
-          alert(`❌ Fehler beim Löschen: ${String(err)}`);
-        }
-      }
+  async function handleInstallDefaults() {
+    if (!confirm(t("data.install_defaults_confirm"))) return;
+    try {
+      await apiClient.installDefaults();
+      alert(t("data.install_defaults_success"));
+      window.location.reload();
+    } catch (err) {
+      console.error("Install defaults failed:", err);
+      alert(t("data.install_defaults_error", { error: String(err) }));
     }
   }
 
@@ -231,6 +225,7 @@ export function SettingsView() {
                 onImportBackup={handleImportBackup}
                 onExportCsv={handleExportCsv}
                 onDeleteAll={handleDeleteAll}
+                onInstallDefaults={handleInstallDefaults}
               />
             </SettingsSection>
 

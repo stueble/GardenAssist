@@ -40,9 +40,30 @@
     "ai_api_key": "API-Schlüssel"
   },
   "ai_provider": {
+    "placeholder": "Anbieter wählen …",
     "anthropic": "Anthropic (Claude)",
     "openai": "OpenAI (GPT)",
     "openrouter": "OpenRouter"
+  },
+  "ai_model": {
+    "placeholder": "Modell-ID eingeben …",
+    "anthropic": {
+      "claude-sonnet-4-6": "claude-sonnet-4-6 (empfohlen)",
+      "claude-opus-4-5":   "claude-opus-4-5 (leistungsstärker, langsamer)",
+      "claude-haiku-4-5":  "claude-haiku-4-5 (schneller, günstig)"
+    },
+    "openai": {
+      "gpt-4o":      "gpt-4o (empfohlen)",
+      "gpt-4o-mini": "gpt-4o-mini (schneller, günstig)",
+      "o1":          "o1 (Reasoning)",
+      "o1-mini":     "o1-mini (Reasoning, schnell)"
+    }
+  },
+  "ai_test": {
+    "idle":    "🔌 Verbindung testen",
+    "testing": "⏳ Teste …",
+    "ok":      "✅ Verbindung erfolgreich",
+    "error":   "❌ Verbindung fehlgeschlagen"
   },
   "color_presets": {
     "hint": "Diese Presets erscheinen im Pflanzendialog beim Bearbeiten von Blütezeiten, Blättern und sonstigen Zeiträumen.",
@@ -63,5 +84,29 @@
     "remove_label": "Entfernen",
     "uploading": "Wird hochgeladen …",
     "removing": "Wird entfernt …"
+  },
+  "data": {
+    "backup_group": "Daten exportieren & importieren",
+    "export_backup": "💾 Alle Daten exportieren",
+    "import_backup": "📥 Daten importieren",
+    "backup_hint": "Der Export enthält alle Daten inkl. Fotos und Dateien. Beim Import werden vorhandene Daten ergänzt bzw. überschrieben — nichts wird gelöscht. Der API-Schlüssel wird nicht exportiert.",
+    "export_error": "Export fehlgeschlagen: {{error}}",
+    "import_success": "Daten erfolgreich importiert.",
+    "import_partial": "Import abgeschlossen. {{count}} Objekt(e) übersprungen:\n{{errors}}",
+    "import_error": "Import fehlgeschlagen: {{error}}",
+    "plant_list_group": "Pflanzenliste",
+    "export_csv": "📄 Pflanzenliste als CSV",
+    "reset_group": "Zurücksetzen",
+    "delete_all": "⚠️ Alle Daten löschen",
+    "delete_all_hint": "Löscht wirklich alles — Pflanzen, Einstellungen, Farb-Presets, Fotos. Nicht rückgängig machbar.",
+    "install_defaults": "⚙️ Standardwerte installieren",
+    "install_defaults_hint": "Stellt Standard-Farbpresets und -Einstellungen wieder her. Pflanzen und Einträge bleiben erhalten. Der API-Schlüssel wird bewahrt.",
+    "delete_all_confirm1": "⚠️ WARNUNG: Diese Aktion löscht ALLE Daten dauerhaft:\n\n• Alle Pflanzen\n• Alle Fotos und Anhänge\n• Alle Notizen und Einträge\n• Alle Einstellungen\n• Alle Farb-Presets\n\nDiese Aktion kann NICHT rückgängig gemacht werden!\n\nSicher, dass du fortfahren möchtest?",
+    "delete_all_confirm2": "LETZTER HINWEIS: Alle Daten werden dauerhaft gelöscht.\n\nUm fortzufahren, klicke nochmals auf OK.",
+    "delete_all_success": "Alle Daten erfolgreich gelöscht.",
+    "delete_all_error": "Fehler beim Löschen: {{error}}",
+    "install_defaults_confirm": "Farb-Presets und Einstellungen werden auf Standardwerte zurückgesetzt. Pflanzen und Einträge bleiben erhalten.\n\nFortfahren?",
+    "install_defaults_success": "Standardwerte erfolgreich installiert.",
+    "install_defaults_error": "Fehler beim Installieren der Standardwerte: {{error}}"
   }
 }

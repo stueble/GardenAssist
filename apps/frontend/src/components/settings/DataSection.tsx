@@ -1,10 +1,12 @@
+import { useTranslation } from "react-i18next";
 import { FieldHint } from "./FieldInput";
 
 interface Props {
-  onExportBackup:  () => void;
-  onImportBackup:  () => void;
-  onExportCsv:     () => void;
-  onDeleteAll:     () => void;
+  onExportBackup:    () => void;
+  onImportBackup:    () => void;
+  onExportCsv:       () => void;
+  onDeleteAll:       () => void;
+  onInstallDefaults: () => void;
 }
 
 function SectionGroupLabel({ children }: { children: React.ReactNode }) {
@@ -35,30 +37,34 @@ function ActionBtn({ onClick, children, danger }: { onClick: () => void; childre
   );
 }
 
-export function DataSection({ onExportBackup, onImportBackup, onExportCsv, onDeleteAll }: Props) {
+export function DataSection({ onExportBackup, onImportBackup, onExportCsv, onDeleteAll, onInstallDefaults }: Props) {
+  const { t } = useTranslation("settings");
+
   return (
     <div>
-      <SectionGroupLabel>Backup & Wiederherstellung</SectionGroupLabel>
+      <SectionGroupLabel>{t("data.backup_group")}</SectionGroupLabel>
       <div className="flex gap-2">
-        <ActionBtn onClick={onExportBackup}>💾 Vollständiges Backup exportieren</ActionBtn>
-        <ActionBtn onClick={onImportBackup}>🔄 Backup wiederherstellen</ActionBtn>
+        <ActionBtn onClick={onExportBackup}>{t("data.export_backup")}</ActionBtn>
+        <ActionBtn onClick={onImportBackup}>{t("data.import_backup")}</ActionBtn>
       </div>
-      <FieldHint>Das Backup enthält alle Daten inkl. Fotos und Dateien. Der API-Schlüssel wird nicht exportiert.</FieldHint>
+      <FieldHint>{t("data.backup_hint")}</FieldHint>
 
       <Divider />
 
-      <SectionGroupLabel>Pflanzenliste</SectionGroupLabel>
+      <SectionGroupLabel>{t("data.plant_list_group")}</SectionGroupLabel>
       <div className="flex gap-2">
-        <ActionBtn onClick={onExportCsv}>📄 Pflanzenliste als CSV</ActionBtn>
+        <ActionBtn onClick={onExportCsv}>{t("data.export_csv")}</ActionBtn>
       </div>
 
       <Divider />
 
-      <SectionGroupLabel>Zurücksetzen</SectionGroupLabel>
+      <SectionGroupLabel>{t("data.reset_group")}</SectionGroupLabel>
       <div className="flex gap-2">
-        <ActionBtn onClick={onDeleteAll} danger>⚠️ Alle Daten löschen</ActionBtn>
+        <ActionBtn onClick={onDeleteAll} danger>{t("data.delete_all")}</ActionBtn>
+        <ActionBtn onClick={onInstallDefaults}>{t("data.install_defaults")}</ActionBtn>
       </div>
-      <FieldHint>Dieser Vorgang kann nicht rückgängig gemacht werden. Erstelle zuerst ein Backup.</FieldHint>
+      <FieldHint>{t("data.delete_all_hint")}</FieldHint>
+      <FieldHint>{t("data.install_defaults_hint")}</FieldHint>
     </div>
   );
 }
