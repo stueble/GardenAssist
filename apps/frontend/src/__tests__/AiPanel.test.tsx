@@ -351,7 +351,7 @@ describe("AiPanel — context markers (TASK-057)", () => {
     });
   });
 
-  it("marker is not sent to the API (AC #5)", async () => {
+  it("marker is sent as 'assistant' role (not 'context') to the API (AC #5)", async () => {
     const ctx: AssistantContext = {
       view: "plants",
       garden: MOCK_GARDEN,
@@ -376,8 +376,13 @@ describe("AiPanel — context markers (TASK-057)", () => {
     await waitFor(() => {
       const calls = (chatWithAi as ReturnType<typeof vi.fn>).mock.calls;
       expect(calls.length).toBeGreaterThan(0);
-      const sentMessages = calls[0][0] as Array<{ role: string }>;
+      const sentMessages = calls[0][0] as Array<{ role: string; content: string }>;
+      // No "context" role reaches the API
       expect(sentMessages.every((m) => m.role !== "context")).toBe(true);
+      // The marker is present as an "assistant" message containing the plant_id
+      const markerMsg = sentMessages.find((m) => m.role === "assistant" && m.content.includes("plant_id:"));
+      expect(markerMsg).toBeDefined();
+      expect(markerMsg!.content).toContain("p1");
     });
   });
 
@@ -452,13 +457,15 @@ describe("AiPanel — multi-turn history (AC #3)", () => {
     fireEvent.click(screen.getByTestId("ai-send"));
     await waitFor(() => screen.getByText("Zweite Antwort"));
 
-    // Second call should have included 3 messages: user, assistant, user
-    // Context markers are filtered out before the API call (AC #5 TASK-057)
+    // Second call: user, assistant-reply, user — context markers sent as assistant
     const secondCallMessages = (chatWithAi as ReturnType<typeof vi.fn>).mock.calls[1][0] as Array<{ role: string; content: string }>;
-    const nonContext = secondCallMessages.filter((m) => m.role !== "context");
-    expect(nonContext).toHaveLength(3);
-    expect(nonContext[0]).toEqual({ role: "user",      content: "Erste Frage"   });
-    expect(nonContext[1]).toEqual({ role: "assistant", content: "Erste Antwort" });
-    expect(nonContext[2]).toEqual({ role: "user",      content: "Zweite Frage"  });
+    // No "context" role should reach the API
+    expect(secondCallMessages.every((m) => m.role !== "context")).toBe(true);
+    // Filter out the context-marker (assistant message containing plant_id) to check the real turns
+    const conversationMsgs = secondCallMessages.filter((m) => !m.content.includes("plant_id:"));
+    expect(conversationMsgs).toHaveLength(3);
+    expect(conversationMsgs[0]).toEqual({ role: "user",      content: "Erste Frage"   });
+    expect(conversationMsgs[1]).toEqual({ role: "assistant", content: "Erste Antwort" });
+    expect(conversationMsgs[2]).toEqual({ role: "user",      content: "Zweite Frage"  });
   });
 });

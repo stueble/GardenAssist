@@ -131,13 +131,19 @@ export function AiPanel({ assistantContext }: AiPanelProps) {
     if (currentId === prevPlantIdRef.current) return;
     prevPlantIdRef.current = currentId;
 
-    const label = plant
-      ? `${plant.icon ?? "🌿"} ${plant.name_common}${plant.location ? ` (${plant.location})` : ""}`
+    const displayLabel = plant
+      ? `${plant.icon ?? "🌿"} ${plant.name_common}${plant.location ? ` · ${plant.location}` : ""}`
       : assistantContext?.view
         ? `📋 ${assistantContext.view}`
         : "🌿 Garten";
 
-    setMessages((prev) => [...prev, { role: "context", content: label }]);
+    // The full content (sent to the model as an assistant message) includes the
+    // plant_id so the model uses the correct ID in subsequent tool calls.
+    const fullContent = plant
+      ? `${displayLabel} [plant_id: ${plant.id}]`
+      : displayLabel;
+
+    setMessages((prev) => [...prev, { role: "context", content: fullContent, display_content: displayLabel }]);
   }, [open, assistantContext?.selectedPlant, assistantContext?.view]);
 
   // Focus input when panel opens and AI is configured
@@ -174,8 +180,13 @@ export function AiPanel({ assistantContext }: AiPanelProps) {
       const systemPrompt = assistantContext
         ? buildSystemPrompt(assistantContext, lang)
         : undefined;
-      // Filter out context markers — they are local-only and must not be sent to the API
-      const apiMessages = nextMessages.filter((m) => m.role !== "context") as Array<{ role: "user" | "assistant"; content: string }>;
+      // Context markers are sent as "assistant" messages (with plant_id in content)
+      // so the model uses the correct plant ID in subsequent tool calls.
+      const apiMessages = nextMessages.map((m) =>
+        m.role === "context"
+          ? { role: "assistant" as const, content: m.content }
+          : m as { role: "user" | "assistant"; content: string }
+      );
       const res = await chatWithAi(apiMessages, lang, systemPrompt);
 
       // Parse tool calls from assistant response
@@ -365,7 +376,7 @@ export function AiPanel({ assistantContext }: AiPanelProps) {
 
           {messages.map((msg, i) =>
             msg.role === "context"
-              ? <ContextMarker key={i}>{msg.content}</ContextMarker>
+              ? <ContextMarker key={i}>{msg.display_content}</ContextMarker>
               : msg.role === "user"
                 ? <UserMessage key={i}>{msg.content}</UserMessage>
                 : <BotMessage key={i}>{msg.content}</BotMessage>

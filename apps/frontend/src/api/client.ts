@@ -139,12 +139,16 @@ export const apiClient: Api = {
 
 /**
  * A chat message in the conversation history.
- * role "context" is a local-only marker injected when the selected plant changes.
- * It is never sent to the AI API — filtered out before the API call.
+ *
+ * role "context" is injected when the selected plant changes.
+ *   - display_content: shown in the UI (no ID — human-readable)
+ *   - content:         sent to the API as an "assistant" message (includes plant_id)
+ *
+ * This lets the model see the active plant ID without showing it to the user.
  */
 export type ChatMessage =
   | { role: "user" | "assistant"; content: string }
-  | { role: "context"; content: string };
+  | { role: "context"; content: string; display_content: string };
 
 export function chatWithAi(
   messages: ChatMessage[],
