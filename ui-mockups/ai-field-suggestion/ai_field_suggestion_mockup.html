@@ -1,0 +1,112 @@
+
+<div style="background: var(--color-background-secondary); border-radius: var(--border-radius-lg); padding: 24px; display: flex; gap: 16px; align-items: flex-start;">
+
+  <div style="flex: 1; background: var(--color-background-primary); border-radius: var(--border-radius-lg); border: 0.5px solid var(--color-border-tertiary); padding: 20px; max-width: 380px;">
+    <p style="font-size: 13px; font-weight: 500; margin: 0 0 16px; color: var(--color-text-primary);">Pflanze bearbeiten — Rose</p>
+
+    <div style="margin-bottom: 12px;">
+      <p style="font-size: 11px; color: var(--color-text-secondary); margin: 0 0 4px;">Name</p>
+      <div style="background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 7px 10px; font-size: 13px; color: var(--color-text-primary);">Rose</div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+      <div>
+        <p style="font-size: 11px; color: var(--color-text-secondary); margin: 0 0 4px;">Standort</p>
+        <div style="background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 7px 10px; font-size: 13px; color: var(--color-text-primary);">Westbeet</div>
+      </div>
+      <div>
+        <p style="font-size: 11px; color: var(--color-text-secondary); margin: 0 0 4px;">Kategorie</p>
+        <div style="background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 7px 10px; font-size: 13px; color: var(--color-text-primary);">Strauch</div>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+      <div>
+        <p style="font-size: 11px; color: var(--color-text-secondary); margin: 0 0 4px;">Wasserbedarf</p>
+        <div style="position: relative;">
+          <div style="background: #EAF3DE; border: 1.5px solid #639922; border-radius: var(--border-radius-md); padding: 7px 10px; padding-right: 28px; font-size: 13px; color: #3B6D11; display: flex; align-items: center; gap: 6px;">
+            <i class="ti ti-sparkles" style="font-size: 12px; color: #639922;" aria-hidden="true"></i>
+            Mittel
+          </div>
+          <button onclick="revertField('water')" title="KI-Änderung rückgängig" style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; padding: 2px; border-radius: 4px; color: #639922; font-size: 14px; line-height: 1;" aria-label="KI-Änderung rückgängig machen">
+            <i class="ti ti-x" style="font-size: 13px;"></i>
+          </button>
+        </div>
+      </div>
+      <div>
+        <p style="font-size: 11px; color: var(--color-text-secondary); margin: 0 0 4px;">Lichtbedarf</p>
+        <div style="position: relative;">
+          <div style="background: #EAF3DE; border: 1.5px solid #639922; border-radius: var(--border-radius-md); padding: 7px 10px; padding-right: 28px; font-size: 13px; color: #3B6D11; display: flex; align-items: center; gap: 6px;">
+            <i class="ti ti-sparkles" style="font-size: 12px; color: #639922;" aria-hidden="true"></i>
+            Sonnig
+          </div>
+          <button onclick="revertField('sun')" title="KI-Änderung rückgängig" style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; padding: 2px; border-radius: 4px; color: #639922; font-size: 14px; line-height: 1;" aria-label="KI-Änderung rückgängig machen">
+            <i class="ti ti-x" style="font-size: 13px;"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-bottom: 16px;">
+      <p style="font-size: 11px; color: var(--color-text-secondary); margin: 0 0 4px;">Pflegehinweis</p>
+      <div style="position: relative;">
+        <div style="background: #EAF3DE; border: 1.5px solid #639922; border-radius: var(--border-radius-md); padding: 7px 10px 7px 28px; font-size: 13px; color: #3B6D11; line-height: 1.5;">
+          <i class="ti ti-sparkles" style="font-size: 12px; color: #639922; position: absolute; left: 10px; top: 9px;" aria-hidden="true"></i>
+          Nach dem Schnitt mit Rosendünger versorgen. Im Herbst mulchen.
+        </div>
+        <button onclick="revertField('notes')" title="KI-Änderung rückgängig" style="position: absolute; right: 6px; top: 6px; background: none; border: none; cursor: pointer; padding: 2px; border-radius: 4px; color: #639922; font-size: 14px; line-height: 1;" aria-label="KI-Änderung rückgängig machen">
+          <i class="ti ti-x" style="font-size: 13px;"></i>
+        </button>
+      </div>
+    </div>
+
+    <div id="ai-hint" style="display: flex; align-items: center; gap: 6px; background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 6px 10px; margin-bottom: 14px; border: 0.5px solid var(--color-border-tertiary);">
+      <i class="ti ti-sparkles" style="font-size: 13px; color: #639922;" aria-hidden="true"></i>
+      <span style="font-size: 11px; color: var(--color-text-secondary);">3 Felder vom Assistenten vorgeschlagen — <span id="reverted-count" style="color: var(--color-text-primary); font-weight: 500;">klicke × zum Verwerfen</span></span>
+    </div>
+
+    <div style="display: flex; gap: 8px; justify-content: flex-end;">
+      <button style="font-size: 13px; padding: 7px 14px;">Abbrechen</button>
+      <button style="font-size: 13px; padding: 7px 14px; background: #3B6D11; color: white; border: none; border-radius: var(--border-radius-md); cursor: pointer;">Speichern</button>
+    </div>
+  </div>
+
+  <div style="width: 220px; background: var(--color-background-primary); border-radius: var(--border-radius-lg); border: 0.5px solid var(--color-border-tertiary); padding: 14px; display: flex; flex-direction: column; gap: 10px;">
+    <p style="font-size: 11px; font-weight: 500; color: var(--color-text-secondary); margin: 0; text-transform: uppercase; letter-spacing: 0.05em;">Assistent</p>
+
+    <div style="background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 10px; font-size: 12px; color: var(--color-text-primary); line-height: 1.6;">
+      Rosen bevorzugen vollsonnige Standorte mit mindestens 6h Sonne täglich. Der Wasserbedarf ist mittel — staunässe vermeiden. Ich habe Wasserbedarf, Lichtbedarf und den Pflegehinweis für dich eingetragen.
+    </div>
+
+    <div style="border-top: 0.5px solid var(--color-border-tertiary); padding-top: 10px;">
+      <input type="text" placeholder="Frage stellen …" style="width: 100%; font-size: 12px; box-sizing: border-box;" />
+    </div>
+  </div>
+
+</div>
+
+<script>
+const reverted = { water: false, sun: false, notes: false };
+
+function revertField(field) {
+  reverted[field] = true;
+  const count = Object.values(reverted).filter(v => !v).length;
+  const hint = document.getElementById('reverted-count');
+  if (count === 0) {
+    hint.textContent = 'alle Vorschläge verworfen';
+  } else {
+    hint.textContent = count + ' Vorschlag' + (count === 1 ? '' : 'e') + ' noch aktiv';
+  }
+  const btns = { water: 0, sun: 1, notes: 2 };
+  const allAiFields = document.querySelectorAll('[onclick^="revertField"]');
+  if (allAiFields[btns[field]]) {
+    const parent = allAiFields[btns[field]].parentElement;
+    parent.style.background = 'var(--color-background-secondary)';
+    parent.style.border = '0.5px solid var(--color-border-tertiary)';
+    parent.querySelector('div, textarea') && (parent.querySelector('div').style.color = 'var(--color-text-primary)');
+    allAiFields[btns[field]].style.display = 'none';
+    const spark = parent.querySelector('.ti-sparkles');
+    if (spark) spark.style.display = 'none';
+  }
+}
+</script>
