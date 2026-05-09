@@ -95,13 +95,22 @@ Werkzeug: editPlant
     soil_type              (genau einer von: "loamy" | "sandy" | "humus_rich" | "calcareous" | "acidic")
     health_status          (genau einer von: "good" | "watch" | "needs_treatment")
 
-  Zeitpläne (fields.schedules): optionales Array von Operationen
-    Jedes Objekt hat folgende Felder:
+  Zeitpläne (fields.schedules): DIFFERENZIELL — nur explizit genannte Einträge werden geändert.
+    Nicht genannte Zeitpläne bleiben unberührt. Lies die vorhandenen IDs aus den Gartendaten.
+
+    PFLICHTREGELN:
+    1. NIEMALS bloom, foliage oder growth entfernen oder ändern, außer der Benutzer nennt sie explizit.
+       Diese sind rein informativ (Kalender/Gantt) — sie erzeugen KEINE Aufgaben.
+       Aufgaben entstehen nur aus: pruning, fertilization, misc.
+    2. NIEMALS add verwenden für einen Zeitplan, der bereits existiert (erkennbar an Typ + Wochenbereich).
+       Prüfe zuerst die vorhandenen Zeitpläne der Pflanze.
+    3. Bei remove/update: UUID exakt so verwenden wie in den Gartendaten angegeben.
+    4. Der Benutzer sagt "Aufgaben reduzieren" → nur pruning/fertilization/misc anpassen, nie bloom/foliage/growth.
+
+    Felder pro Operation:
       action         (genau eines von: "add" | "remove" | "update")
       id             (string, nur bei remove/update: die UUID direkt aus den Gartendaten, z.B. "a1b2c3d4-...")
       schedule_type  (bei add/update: genau eines von "bloom"|"growth"|"foliage"|"pruning"|"fertilization"|"misc")
-                     Hinweis: bloom, growth und foliage sind rein informativ (Kalender/Gantt) — sie erzeugen KEINE Aufgaben.
-                     Aufgaben entstehen nur aus: pruning, fertilization, misc.
       start_week     (bei add/update: Kalenderwoche 1–53)
       end_week       (bei add/update: Kalenderwoche 1–53; wenn start_week > end_week = Jahresübergang, z.B. KW 48–6)
       color          (optional, Hex-String z.B. "#c0392b"; bei Blüten aus dem Kontext ableiten, sonst weglassen)
@@ -120,9 +129,9 @@ Bestehende Pflanze öffnen und Blüte + Schnitt eintragen:
 {"tool":"editPlant","id":"<plant-id>","fields":{"schedules":[{"action":"add","schedule_type":"bloom","start_week":17,"end_week":36,"color":"#c0392b","label":"Hauptblüte"},{"action":"add","schedule_type":"pruning","start_week":9,"end_week":10}]}}
 \`\`\`
 
-Bestehenden Zeitplan entfernen (id aus den Gartendaten):
+Bestehenden Zeitplan entfernen (UUID aus den Gartendaten):
 \`\`\`tool
-{"tool":"editPlant","id":"<plant-id>","fields":{"schedules":[{"action":"remove","id":"<schedule-id>"}]}}
+{"tool":"editPlant","id":"<plant-id>","fields":{"schedules":[{"action":"remove","id":"<uuid-aus-gartendaten>"}]}}
 \`\`\`
 
 Wenn die Pflanzenverwaltung nicht geöffnet ist, teile dem Benutzer mit, dass er zuerst zur Pflanzenansicht wechseln soll.`,
@@ -155,13 +164,22 @@ Tool: editPlant
     soil_type              (exactly one of: "loamy" | "sandy" | "humus_rich" | "calcareous" | "acidic")
     health_status          (exactly one of: "good" | "watch" | "needs_treatment")
 
-  Schedules (fields.schedules): optional array of operations
-    Each object has these fields:
+  Schedules (fields.schedules): DIFFERENTIAL — only explicitly listed entries are changed.
+    Unlisted schedules remain untouched. Read existing IDs from the garden data.
+
+    MANDATORY RULES:
+    1. NEVER remove or update bloom, foliage or growth unless the user names them explicitly.
+       These are purely informational (calendar/Gantt) — they do NOT generate tasks.
+       Tasks are only generated from: pruning, fertilization, misc.
+    2. NEVER add a schedule that already exists (identifiable by type + week range).
+       Always check the plant's existing schedules first.
+    3. For remove/update: use the UUID exactly as shown in the garden data.
+    4. If the user says "reduce tasks" → only adjust pruning/fertilization/misc, never bloom/foliage/growth.
+
+    Fields per operation:
       action         (exactly one of: "add" | "remove" | "update")
       id             (string, only for remove/update: the UUID directly from garden data, e.g. "a1b2c3d4-...")
       schedule_type  (for add/update: exactly one of "bloom"|"growth"|"foliage"|"pruning"|"fertilization"|"misc")
-                     Note: bloom, growth and foliage are informational only (calendar/Gantt) — they do NOT generate tasks.
-                     Tasks are only generated from: pruning, fertilization, misc.
       start_week     (for add/update: week number 1–53)
       end_week       (for add/update: week number 1–53; if start_week > end_week = year-wrap, e.g. W48–W06)
       color          (optional, hex string e.g. "#c0392b"; derive from context for bloom, omit otherwise)
@@ -180,9 +198,9 @@ Open existing plant and add bloom + pruning schedule:
 {"tool":"editPlant","id":"<plant-id>","fields":{"schedules":[{"action":"add","schedule_type":"bloom","start_week":17,"end_week":36,"color":"#c0392b","label":"Main bloom"},{"action":"add","schedule_type":"pruning","start_week":9,"end_week":10}]}}
 \`\`\`
 
-Remove an existing schedule (id from garden data):
+Remove an existing schedule (UUID from garden data):
 \`\`\`tool
-{"tool":"editPlant","id":"<plant-id>","fields":{"schedules":[{"action":"remove","id":"<schedule-id>"}]}}
+{"tool":"editPlant","id":"<plant-id>","fields":{"schedules":[{"action":"remove","id":"<uuid-from-garden-data>"}]}}
 \`\`\`
 
 If the Plants view is not open, tell the user to switch there first.`,
