@@ -81,8 +81,10 @@ function serializeTask(t: Task): string {
 }
 
 function serializePlant(p: Plant): string {
-  // Strip: icon, thumbnail_attachment_id, attachments URLs, positions, created_at, updated_at
+  // Strip: icon, attachments URLs, positions, created_at, updated_at
+  // Keep: id (required for editPlant tool calls)
   let out = `## ${p.name_common}${p.name_botanical ? ` (${p.name_botanical})` : ""}\n`;
+  out += nl("id", p.id);
   out += nl("Standort", p.location);
   out += nl("Kategorie", p.category);
   out += nl("Lebenszyklus", p.lifecycle);
