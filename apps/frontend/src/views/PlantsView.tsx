@@ -1,11 +1,11 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { AiPanel } from "@/components/AiPanel";
 import { useAiPanelState } from "@/hooks/useAiPanelState";
 import { PlantEditDialog, type PlantEditDialogHandle } from "@/components/PlantEditDialog";
 import { usePlantEditDialog } from "@/hooks/usePlantEditDialog";
 import { usePlantEditHandler, type PlantEditFields } from "@/hooks/usePlantEditContext";
 import { useAssistantSettings } from "@/hooks/useAssistantSettings";
+import { setAssistantContext } from "@/hooks/useAssistantContext";
 import { GardenPlanWidget } from "@/components/GardenPlanWidget";
 import { apiClient } from "@/api/client";
 import type { Plant }            from "@api/plant";
@@ -48,7 +48,6 @@ function bloomColors(schedules: Schedule[]): string[] {
 
 export function PlantsView() {
   const { t } = useTranslation("plants");
-  const { setOpen: setAiPanelOpen } = useAiPanelState();
   const assistantSettings = useAssistantSettings();
 
   const [plants,    setPlants]    = useState<Plant[]>([]);
@@ -171,6 +170,12 @@ export function PlantsView() {
   const assistantContext: AssistantContext | undefined = garden
     ? { view: "plants", garden, selectedPlant: selected ?? undefined, settings: assistantSettings }
     : undefined;
+
+  // Report context to the shared AiPanel in App.tsx; clear on unmount
+  useEffect(() => {
+    setAssistantContext(assistantContext);
+  }, [assistantContext]);
+  useEffect(() => () => setAssistantContext(undefined), []);
 
   if (loading) {
     return (
@@ -464,7 +469,7 @@ export function PlantsView() {
         )}
       </div>
 
-      <AiPanel assistantContext={assistantContext} />
+      {/* AiPanel is rendered once in App.tsx — not here */}
     </div>
   );
 }

@@ -5,8 +5,9 @@ status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-04 22:45'
-updated_date: '2026-05-05 22:49'
-labels: []
+updated_date: '2026-05-09 17:37'
+labels:
+  - user story
 dependencies: []
 documentation:
   - docs/docs/doc-005 - 005-UX-UI-Concept-Plants-Overview.md

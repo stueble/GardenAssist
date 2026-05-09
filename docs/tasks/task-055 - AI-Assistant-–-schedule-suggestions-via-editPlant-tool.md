@@ -1,11 +1,11 @@
 ---
 id: TASK-055
 title: AI Assistant – schedule suggestions via editPlant tool
-status: In Review
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-09 16:17'
-updated_date: '2026-05-09 16:37'
+updated_date: '2026-05-09 17:36'
 labels: []
 dependencies: []
 references:
@@ -15,6 +15,7 @@ references:
 documentation:
   - docs/api/schedule.ts
   - apps/frontend/src/lib/aiPrompt.ts
+ordinal: 52000
 ---
 
 ## Description

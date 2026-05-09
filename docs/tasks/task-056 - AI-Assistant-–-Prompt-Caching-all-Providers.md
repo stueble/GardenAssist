@@ -1,14 +1,16 @@
 ---
 id: TASK-056
 title: AI Assistant – Prompt Caching (all Providers)
-status: Ready
-assignee: []
+status: Done
+assignee:
+  - '@agent'
 created_date: '2026-05-09 17:18'
-updated_date: '2026-05-09 17:18'
+updated_date: '2026-05-09 21:13'
 labels:
   - ai
   - backend
 dependencies: []
+ordinal: 54000
 ---
 
 ## Description
@@ -43,15 +45,32 @@ Split the system prompt into 5 blocks ordered by change frequency (static first,
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 buildSystemPrompt() wird in 5 Segmente nach Stabilitätshierarchie aufgeteilt: Persona+Tools, Settings, Stammdaten, Dynamische Daten, Aktuelle Situation
-- [ ] #2 Die Reihenfolge statisch→dynamisch stellt sicher dass OpenAIs implizites Prefix-Caching ohne weitere Konfiguration greift
-- [ ] #3 Settings-Daten (Zonen, Kategorien, Farb-Presets) werden als eigener Block serialisiert (Block #2)
-- [ ] #4 Pflanzenstammdaten und dynamische Pflanzendaten (Tasks, Journal, Schedules) werden als separate Blöcke serialisiert (Block #3 und #4)
-- [ ] #5 Die aktuelle Situation (View + ausgewählte Pflanze) steht immer als letzter Block (Block #5)
-- [ ] #6 Für anthropic und openrouter werden cache_control-Breakpoints auf Block #1–#4 gesetzt; openai erhält einen einzelnen String
-- [ ] #7 Cache-Hits bei Anthropic verifizierbar via cache_read_input_tokens > 0 im Backend-Log
-- [ ] #8 Alle bestehenden Tests bleiben grün, neue Tests für Block-Aufteilung und cache_control-Logik werden hinzugefügt
+- [x] #1 buildSystemPrompt() wird in 5 Segmente nach Stabilitätshierarchie aufgeteilt: Persona+Tools, Settings, Stammdaten, Dynamische Daten, Aktuelle Situation
+- [x] #2 Die Reihenfolge statisch→dynamisch stellt sicher dass OpenAIs implizites Prefix-Caching ohne weitere Konfiguration greift
+- [x] #3 Settings-Daten (Zonen, Kategorien, Farb-Presets) werden als eigener Block serialisiert (Block #2)
+- [x] #4 Pflanzenstammdaten und dynamische Pflanzendaten (Tasks, Journal, Schedules) werden als separate Blöcke serialisiert (Block #3 und #4)
+- [x] #5 Die aktuelle Situation (View + ausgewählte Pflanze) steht immer als letzter Block (Block #5)
+- [x] #6 Für anthropic und openrouter werden cache_control-Breakpoints auf Block #1–#4 gesetzt; openai erhält einen einzelnen String
+- [x] #7 Cache-Hits bei Anthropic verifizierbar via cache_read_input_tokens > 0 im Backend-Log
+- [x] #8 Alle bestehenden Tests bleiben grün, neue Tests für Block-Aufteilung und cache_control-Logik werden hinzugefügt
 <!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. aiPrompt.ts: buildSystemPrompt() in 5 Blöcke aufteilen, Settings serialisieren, Stammdaten/Dynamik trennen
+2. api/client.ts: chatWithAi() Signatur erweitern für strukturierten System Prompt
+3. backend ai.ts: cache_control Breakpoints für Anthropic/OpenRouter; OpenAI bleibt Single-String
+4. Backend loggt cache_read_input_tokens
+5. Tests anpassen und neue Tests für Block-Aufteilung + cache_control
+6. Typecheck + Tests grün
+<!-- SECTION:PLAN:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Implemented 5-block prompt caching. AssistantSettings type added to AssistantContext (location, zones, categories, color_presets — no API keys). buildSystemBlocks() splits prompt into: Block1=Persona+Tools (static), Block2=Settings, Block3=Plant base data, Block4=Dynamic data (tasks/journal/schedules), Block5=Current situation. Backend: Anthropic/OpenRouter receive structured array with cache_control ephemeral on blocks 1-4; OpenAI receives joined string. anthropic-beta: prompt-caching-2024-07-31 header added. Usage logged via console.log. useAssistantSettings hook feeds settings into all 4 views. 13 new/updated tests, 348+116 pass.
+<!-- SECTION:FINAL_SUMMARY:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
