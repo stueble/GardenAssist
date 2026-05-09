@@ -14,5 +14,13 @@
     "notes": "Notes",
     "plant": "Plant",
     "entry_type": "Type"
+  },
+  "actions": {
+    "delete": "Delete entry",
+    "delete_confirm_title": "Delete entry?",
+    "delete_confirm_body": "This action cannot be undone.",
+    "delete_confirm_cancel": "Cancel",
+    "delete_confirm_ok": "Delete",
+    "delete_error": "Error deleting entry: {{error}}"
   }
 }

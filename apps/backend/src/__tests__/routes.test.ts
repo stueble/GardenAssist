@@ -217,6 +217,34 @@ describe("Journal routes", () => {
     });
     expect(res.status).toBe(404);
   });
+
+  it("DELETE /api/journal/:id deletes the entry and returns 204 (AC #2)", async () => {
+    // Create an entry first
+    const create = await app.request("/api/journal", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify(manualEntry),
+    });
+    const created = await create.json() as Record<string, unknown>;
+    const id = created.id as string;
+
+    // Delete it
+    const del = await app.request(`/api/journal/${id}`, { method: "DELETE" });
+    expect(del.status).toBe(204);
+
+    // Verify it no longer appears in getGarden()
+    const garden = await app.request("/api/garden");
+    const gardenBody = await garden.json() as Record<string, unknown>;
+    const entries = gardenBody.journal_entries as Array<Record<string, unknown>>;
+    expect(entries.find((e) => e.id === id)).toBeUndefined();
+  });
+
+  it("DELETE /api/journal/:nonexistent returns 404", async () => {
+    const res = await app.request("/api/journal/00000000-0000-0000-0000-000000000000", {
+      method: "DELETE",
+    });
+    expect(res.status).toBe(404);
+  });
 });
 
 describe("Settings routes", () => {

@@ -275,6 +275,10 @@ export function JournalView() {
               setPanelEntry(undefined);
               void loadGarden();
             }}
+            onDeleted={() => {
+              setPanelEntry(undefined);
+              void loadGarden();
+            }}
           />
         )}
       </div>
@@ -540,13 +544,15 @@ const PANEL_TYPES: Array<{ value: JournalEntryType; label: string; style: string
 type PanelTypeIdx = 0 | 1 | 2 | 3;
 
 interface EntryPanelProps {
-  entry:   JournalEntry | null;   // null = new entry
-  plants:  Plant[];
-  onClose: () => void;
-  onSaved: () => void;
+  entry:     JournalEntry | null;   // null = new entry
+  plants:    Plant[];
+  onClose:   () => void;
+  onSaved:   () => void;
+  onDeleted: () => void;
 }
 
-function EntryPanel({ entry, plants, onClose, onSaved }: EntryPanelProps) {
+function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }: EntryPanelProps) {
+  const { t } = useTranslation("journal");
   const isNew = entry === null;
 
   // Determine initial type index from entry_type
@@ -563,8 +569,10 @@ function EntryPanel({ entry, plants, onClose, onSaved }: EntryPanelProps) {
   const [date,       setDate]       = useState(entry?.date ?? new Date().toISOString().slice(0, 10));
   const [title,      setTitle]      = useState(entry?.title ?? "");
   const [notes,      setNotes]      = useState(entry?.notes ?? "");
-  const [saving,     setSaving]     = useState(false);
-  const [error,      setError]      = useState<string | null>(null);
+  const [saving,        setSaving]        = useState(false);
+  const [error,         setError]         = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleteError,   setDeleteError]   = useState<string | null>(null);
   // Local files to upload (new) + existing attachment ids
   const [localFiles,    setLocalFiles]    = useState<Array<{ file: File; previewUrl: string }>>([]);
   const [existingAttIds, setExistingAttIds] = useState<string[]>(entry?.attachment_ids ?? []);
@@ -636,6 +644,21 @@ function EntryPanel({ entry, plants, onClose, onSaved }: EntryPanelProps) {
       onSaved();
     } catch {
       setError("Speichern fehlgeschlagen. Bitte erneut versuchen.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!entry) return;
+    setSaving(true);
+    setDeleteError(null);
+    try {
+      await apiClient.deleteJournalEntry(entry.id);
+      onDeleted();
+    } catch (err) {
+      setDeleteError(t("actions.delete_error", { error: String(err) }));
+      setConfirmDelete(false);
     } finally {
       setSaving(false);
     }
@@ -871,33 +894,102 @@ function EntryPanel({ entry, plants, onClose, onSaved }: EntryPanelProps) {
         </div>
       </div>
 
-      {/* Actions */}
-      <div style={{ display: "flex", gap: "8px", padding: "12px 18px", borderTop: "1px solid var(--border)", flexShrink: 0 }}>
-        <button
-          type="button"
-          onClick={onClose}
-          disabled={saving}
-          style={{
-            flex: 1, padding: "9px", borderRadius: "8px", fontSize: "13px",
-            fontWeight: 500, fontFamily: "var(--font-body)", cursor: "pointer",
-            border: "1.5px solid var(--border)", background: "none", color: "var(--text-mid)",
-          }}
-        >
-          <span>✕</span> Abbrechen
-        </button>
-        <button
-          type="button"
-          onClick={() => void handleSave()}
-          disabled={saving}
-          data-testid="panel-save"
-          style={{
-            flex: 1, padding: "9px", borderRadius: "8px", fontSize: "13px",
-            fontWeight: 500, fontFamily: "var(--font-body)", cursor: "pointer",
-            border: "1.5px solid var(--green-deep)", background: "var(--green-deep)", color: "white",
-          }}
-        >
-          <span>✓</span> {saving ? "…" : "Speichern"}
-        </button>
+      {/* Actions — normal mode OR delete-confirm replaces the whole footer */}
+      <div style={{ padding: "12px 18px", borderTop: "1px solid var(--border)", flexShrink: 0 }}>
+        {confirmDelete ? (
+          /* Delete confirm replaces Abbrechen/Speichern entirely */
+          <div
+            data-testid="panel-delete-confirm"
+            style={{
+              background: "var(--red-soft)", border: "1px solid var(--red-warn)",
+              borderRadius: "8px", padding: "10px 12px",
+              display: "flex", flexDirection: "column", gap: "8px",
+            }}
+          >
+            <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--red-warn)" }}>
+              {t("actions.delete_confirm_title")}
+            </div>
+            <div style={{ fontSize: "11px", color: "var(--text-mid)" }}>
+              {t("actions.delete_confirm_body")}
+            </div>
+            {deleteError && (
+              <div style={{ fontSize: "11px", color: "var(--red-warn)" }}>{deleteError}</div>
+            )}
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button
+                type="button"
+                data-testid="panel-delete-cancel"
+                onClick={() => setConfirmDelete(false)}
+                disabled={saving}
+                style={{
+                  flex: 1, padding: "7px", borderRadius: "8px", fontSize: "12px",
+                  fontWeight: 500, fontFamily: "var(--font-body)", cursor: "pointer",
+                  border: "1.5px solid var(--border)", background: "none", color: "var(--text-mid)",
+                }}
+              >
+                {t("actions.delete_confirm_cancel")}
+              </button>
+              <button
+                type="button"
+                data-testid="panel-delete-ok"
+                onClick={() => void handleDelete()}
+                disabled={saving}
+                style={{
+                  flex: 1, padding: "7px", borderRadius: "8px", fontSize: "12px",
+                  fontWeight: 500, fontFamily: "var(--font-body)", cursor: "pointer",
+                  background: "var(--red-warn)", color: "white", border: "1.5px solid var(--red-warn)",
+                }}
+              >
+                {saving ? "…" : t("actions.delete_confirm_ok")}
+              </button>
+            </div>
+          </div>
+        ) : (
+          /* Normal footer: Abbrechen + Speichern, plus delete link below */
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={saving}
+                style={{
+                  flex: 1, padding: "9px", borderRadius: "8px", fontSize: "13px",
+                  fontWeight: 500, fontFamily: "var(--font-body)", cursor: "pointer",
+                  border: "1.5px solid var(--border)", background: "none", color: "var(--text-mid)",
+                }}
+              >
+                <span>✕</span> Abbrechen
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleSave()}
+                disabled={saving}
+                data-testid="panel-save"
+                style={{
+                  flex: 1, padding: "9px", borderRadius: "8px", fontSize: "13px",
+                  fontWeight: 500, fontFamily: "var(--font-body)", cursor: "pointer",
+                  border: "1.5px solid var(--green-deep)", background: "var(--green-deep)", color: "white",
+                }}
+              >
+                <span>✓</span> {saving ? "…" : "Speichern"}
+              </button>
+            </div>
+            {!isNew && (
+              <button
+                type="button"
+                data-testid="panel-delete"
+                onClick={() => { setDeleteError(null); setConfirmDelete(true); }}
+                style={{
+                  background: "none", border: "none", cursor: "pointer", padding: 0,
+                  fontSize: "12px", color: "var(--red-warn)", fontFamily: "var(--font-body)",
+                  textDecoration: "underline", textUnderlineOffset: "2px", alignSelf: "flex-start",
+                }}
+              >
+                {t("actions.delete")}
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </>
   );

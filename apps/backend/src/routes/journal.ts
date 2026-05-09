@@ -128,4 +128,22 @@ export const journalRoutes = new Hono()
 
     const row = db.select().from(journalEntries).where(eq(journalEntries.id, id)).get()!;
     return c.json({ ...mapRow(row), attachment_ids: data.attachment_ids });
+  })
+
+  // DELETE /api/journal/:id — delete a journal entry
+  .delete("/:id", (c) => {
+    const id = c.req.param("id");
+
+    const existing = db.select().from(journalEntries).where(eq(journalEntries.id, id)).get();
+    if (!existing) return c.json({ error: "Not found" }, 404);
+
+    // junction rows cascade-delete via FK, but delete explicitly for safety
+    db.delete(journalEntryAttachments)
+      .where(eq(journalEntryAttachments.journal_entry_id, id))
+      .run();
+    db.delete(journalEntries)
+      .where(eq(journalEntries.id, id))
+      .run();
+
+    return c.body(null, 204);
   });

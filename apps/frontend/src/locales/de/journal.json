@@ -14,5 +14,13 @@
     "notes": "Notizen",
     "plant": "Pflanze",
     "entry_type": "Typ"
+  },
+  "actions": {
+    "delete": "Eintrag löschen",
+    "delete_confirm_title": "Eintrag löschen?",
+    "delete_confirm_body": "Dieser Vorgang kann nicht rückgängig gemacht werden.",
+    "delete_confirm_cancel": "Abbrechen",
+    "delete_confirm_ok": "Löschen",
+    "delete_error": "Fehler beim Löschen: {{error}}"
   }
 }
