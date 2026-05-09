@@ -691,18 +691,57 @@ function GrunddatenFields({
   aiMarked, onRevertAiField, t,
 }: GrunddatenProps) {
 
+  // Refs for select elements — used by AiField to focus/open after revert
+  const refCategory   = useRef<HTMLSelectElement>(null);
+  const refOrigin     = useRef<HTMLSelectElement>(null);
+  const refLifecycle  = useRef<HTMLSelectElement>(null);
+  const refHealth     = useRef<HTMLSelectElement>(null);
+  const refWatering   = useRef<HTMLSelectElement>(null);
+  const refSun        = useRef<HTMLSelectElement>(null);
+  const refWater      = useRef<HTMLSelectElement>(null);
+  const refSoil       = useRef<HTMLSelectElement>(null);
+
   /**
    * Returns style overrides for an input/select/textarea that is inside an AiField wrapper.
    * Removes the field's own border and background so the orange wrapper shows through cleanly.
    */
-  function aiInputStyle(fieldKey: AiSuggestableField): React.CSSProperties {
+  function aiInputStyle(fieldKey: AiSuggestableField, isSelect = false): React.CSSProperties {
     if (!aiMarked[fieldKey]) return {};
-    return { border: "none", background: "transparent", outline: "none" };
+    return {
+      border:      "none",
+      background:  "transparent",
+      outline:     "none",
+      // Hide the native dropdown arrow — the ▾ button in AiField replaces it
+      ...(isSelect ? { appearance: "none" as const, paddingRight: "28px" } : {}),
+    };
   }
 
-  /** Wraps a field input/select with orange AI-suggestion styling + × revert button. */
-  function AiField({ fieldKey, children }: { fieldKey: AiSuggestableField; children: React.ReactNode }) {
+  /**
+   * Wraps a field with orange AI-suggestion styling + revert control.
+   *
+   * For select fields (isSelect=true) the × button sits exactly where the
+   * native dropdown arrow would be and, after reverting, programmatically
+   * opens the select — so it feels like a single interaction.
+   */
+  function AiField({
+    fieldKey, children, isSelect = false, selectRef,
+  }: {
+    fieldKey:   AiSuggestableField;
+    children:   React.ReactNode;
+    isSelect?:  boolean;
+    selectRef?: React.RefObject<HTMLSelectElement | null>;
+  }) {
     if (!aiMarked[fieldKey]) return <>{children}</>;
+
+    function handleRevert() {
+      onRevertAiField(fieldKey);
+      if (isSelect && selectRef?.current) {
+        // Open the dropdown after revert so the user can immediately pick a value.
+        // setTimeout 0 lets React flush the state update (restoring original value) first.
+        setTimeout(() => selectRef.current?.focus(), 0);
+      }
+    }
+
     return (
       <div style={{ position: "relative" }} data-testid={`ai-field-${fieldKey}`}>
         <div style={{
@@ -718,27 +757,28 @@ function GrunddatenFields({
         </div>
         <button
           type="button"
-          onClick={() => onRevertAiField(fieldKey)}
+          onClick={handleRevert}
           data-testid={`ai-revert-${fieldKey}`}
-          title="KI-Änderung rückgängig"
+          title={isSelect ? "KI-Änderung verwerfen und Auswahl öffnen" : "KI-Änderung rückgängig"}
           aria-label="KI-Änderung rückgängig machen"
           style={{
             position:     "absolute",
-            right:        "4px",
+            right:        isSelect ? "6px" : "4px",
             top:          "50%",
             transform:    "translateY(-50%)",
             background:   "none",
             border:       "none",
             cursor:       "pointer",
             color:        "#e07b00",
-            fontSize:     "15px",
+            // For selects: match the size of a typical native dropdown arrow
+            fontSize:     isSelect ? "13px" : "15px",
             lineHeight:   1,
             padding:      "2px 4px",
             borderRadius: "4px",
             zIndex:       1,
           }}
         >
-          ×
+          {isSelect ? "▾" : "×"}
         </button>
       </div>
     );
@@ -872,12 +912,13 @@ function GrunddatenFields({
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "11px" }}>
         <div>
           <div style={fieldLabelStyle}>{t("edit.field_category")}</div>
-          <AiField fieldKey="category">
+          <AiField fieldKey="category" isSelect selectRef={refCategory}>
             <select
+              ref={refCategory}
               value={form.category}
               onChange={(e) => patch("category", e.target.value)}
               data-testid="field-category"
-              style={{ ...fieldSelectStyle, ...aiInputStyle("category") }}
+              style={{ ...fieldSelectStyle, ...aiInputStyle("category", true) }}
             >
               <option value="">{t("edit.select_none")}</option>
               {categories.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -886,12 +927,13 @@ function GrunddatenFields({
         </div>
         <div>
           <div style={fieldLabelStyle}>{t("edit.field_origin")}</div>
-          <AiField fieldKey="origin_type">
+          <AiField fieldKey="origin_type" isSelect selectRef={refOrigin}>
             <select
+              ref={refOrigin}
               value={form.origin_type}
               onChange={(e) => patch("origin_type", e.target.value)}
               data-testid="field-origin"
-              style={{ ...fieldSelectStyle, ...aiInputStyle("origin_type") }}
+              style={{ ...fieldSelectStyle, ...aiInputStyle("origin_type", true) }}
             >
               <option value="">{t("edit.select_none")}</option>
               <option value="native">{t("origin_type.native")}</option>
@@ -906,12 +948,13 @@ function GrunddatenFields({
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "11px" }}>
         <div>
           <div style={fieldLabelStyle}>{t("edit.field_lifecycle")}</div>
-          <AiField fieldKey="lifecycle">
+          <AiField fieldKey="lifecycle" isSelect selectRef={refLifecycle}>
             <select
+              ref={refLifecycle}
               value={form.lifecycle}
               onChange={(e) => patch("lifecycle", e.target.value)}
               data-testid="field-lifecycle"
-              style={{ ...fieldSelectStyle, ...aiInputStyle("lifecycle") }}
+              style={{ ...fieldSelectStyle, ...aiInputStyle("lifecycle", true) }}
             >
               <option value="">{t("edit.select_none")}</option>
               <option value="annual">{t("lifecycle.annual")}</option>
@@ -922,12 +965,13 @@ function GrunddatenFields({
         </div>
         <div>
           <div style={fieldLabelStyle}>{t("edit.field_health")}</div>
-          <AiField fieldKey="health_status">
+          <AiField fieldKey="health_status" isSelect selectRef={refHealth}>
             <select
+              ref={refHealth}
               value={form.health_status}
               onChange={(e) => patch("health_status", e.target.value)}
               data-testid="field-health"
-              style={{ ...fieldSelectStyle, ...aiInputStyle("health_status") }}
+              style={{ ...fieldSelectStyle, ...aiInputStyle("health_status", true) }}
             >
               <option value="">{t("edit.select_none")}</option>
               <option value="good">{t("health_status.good")}</option>
@@ -955,12 +999,13 @@ function GrunddatenFields({
         </div>
         <div>
           <div style={fieldLabelStyle}>{t("edit.field_watering")}</div>
-          <AiField fieldKey="watering_zone">
+          <AiField fieldKey="watering_zone" isSelect selectRef={refWatering}>
             <select
+              ref={refWatering}
               value={form.watering_zone}
               onChange={(e) => patch("watering_zone", e.target.value)}
               data-testid="field-watering"
-              style={{ ...fieldSelectStyle, ...aiInputStyle("watering_zone") }}
+              style={{ ...fieldSelectStyle, ...aiInputStyle("watering_zone", true) }}
             >
               <option value="">{t("edit.select_none")}</option>
               {zones.map((z) => <option key={z} value={z}>{z}</option>)}
@@ -973,12 +1018,13 @@ function GrunddatenFields({
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "11px" }}>
         <div>
           <div style={fieldLabelStyle}>{t("edit.field_sun")}</div>
-          <AiField fieldKey="sun_demand">
+          <AiField fieldKey="sun_demand" isSelect selectRef={refSun}>
             <select
+              ref={refSun}
               value={form.sun_demand}
               onChange={(e) => patch("sun_demand", e.target.value)}
               data-testid="field-sun"
-              style={{ ...fieldSelectStyle, ...aiInputStyle("sun_demand") }}
+              style={{ ...fieldSelectStyle, ...aiInputStyle("sun_demand", true) }}
             >
               <option value="">{t("edit.select_none")}</option>
               <option value="sunny">{t("sun_demand.sunny")}</option>
@@ -989,12 +1035,13 @@ function GrunddatenFields({
         </div>
         <div>
           <div style={fieldLabelStyle}>{t("edit.field_water")}</div>
-          <AiField fieldKey="water_demand">
+          <AiField fieldKey="water_demand" isSelect selectRef={refWater}>
             <select
+              ref={refWater}
               value={form.water_demand}
               onChange={(e) => patch("water_demand", e.target.value)}
               data-testid="field-water"
-              style={{ ...fieldSelectStyle, ...aiInputStyle("water_demand") }}
+              style={{ ...fieldSelectStyle, ...aiInputStyle("water_demand", true) }}
             >
               <option value="">{t("edit.select_none")}</option>
               <option value="low">{t("water_demand.low")}</option>
@@ -1009,12 +1056,13 @@ function GrunddatenFields({
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "11px" }}>
         <div>
           <div style={fieldLabelStyle}>{t("edit.field_soil")}</div>
-          <AiField fieldKey="soil_type">
+          <AiField fieldKey="soil_type" isSelect selectRef={refSoil}>
             <select
+              ref={refSoil}
               value={form.soil_type}
               onChange={(e) => patch("soil_type", e.target.value)}
               data-testid="field-soil"
-              style={{ ...fieldSelectStyle, ...aiInputStyle("soil_type") }}
+              style={{ ...fieldSelectStyle, ...aiInputStyle("soil_type", true) }}
             >
               <option value="">{t("edit.select_none")}</option>
               <option value="loamy">{t("soil_type.loamy")}</option>
