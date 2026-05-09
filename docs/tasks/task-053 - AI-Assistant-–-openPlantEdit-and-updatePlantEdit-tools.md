@@ -1,17 +1,18 @@
 ---
 id: TASK-053
 title: AI Assistant – openPlantEdit() and updatePlantEdit() tools
-status: In Review
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-09 00:37'
-updated_date: '2026-05-09 01:06'
+updated_date: '2026-05-09 16:25'
 labels:
   - frontend
   - ai
 dependencies: []
 references:
   - ui-mockups/ai-fild-suggestion/ai-field-suggestion.html
+ordinal: 51000
 ---
 
 ## Description
