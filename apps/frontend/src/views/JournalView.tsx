@@ -7,9 +7,9 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { AiPanel } from "@/components/AiPanel";
 import { useAiPanelState } from "@/hooks/useAiPanelState";
 import { useAssistantSettings } from "@/hooks/useAssistantSettings";
+import { setAssistantContext } from "@/hooks/useAssistantContext";
 import { apiClient } from "@/api/client";
 import type { JournalEntry, JournalEntryType } from "@api/journal-entry";
 import type { Attachment }      from "@api/attachment";
@@ -92,6 +92,16 @@ export function JournalView() {
   }
 
   useEffect(() => { void loadGarden(); }, []);
+
+  // Report AssistantContext to the shared AiPanel in App.tsx; clear on unmount
+  const assistantContext = garden
+    ? { view: "journal" as const, garden, settings: assistantSettings }
+    : undefined;
+  useEffect(() => {
+    setAssistantContext(assistantContext);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [garden, assistantSettings]);
+  useEffect(() => () => setAssistantContext(undefined), []);
 
   // Plant lookup map
   const plantById = new Map(plants.map((p) => [p.id, p]));
@@ -285,9 +295,7 @@ export function JournalView() {
         )}
       </div>
 
-      <AiPanel
-        assistantContext={garden ? { view: "journal", garden, settings: assistantSettings } : undefined}
-      />
+      {/* AiPanel is rendered once in App.tsx — not here */}
 
       {/* FAB — hidden when panel open */}
       {panelEntry === undefined && (

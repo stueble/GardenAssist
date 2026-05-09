@@ -11,8 +11,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { AiPanel } from "@/components/AiPanel";
-import { useAiPanelState } from "@/hooks/useAiPanelState";
+import { setAssistantContext } from "@/hooks/useAssistantContext";
 import { PlantDetailPanel } from "@/components/PlantDetailPanel";
 import { PlantEditDialog } from "@/components/PlantEditDialog";
 import { GardenPlanWidget } from "@/components/GardenPlanWidget";
@@ -70,7 +69,6 @@ function weekToMonthIdx(week: number): number {
 
 export function CalendarView() {
   const { t } = useTranslation("calendar");
-  const { setOpen: setAiOpen } = useAiPanelState();
   const assistantSettings = useAssistantSettings();
 
   const [plants,    setPlants]   = useState<Plant[]>([]);
@@ -110,6 +108,11 @@ export function CalendarView() {
   const assistantContext: AssistantContext | undefined = garden
     ? { view: "calendar", garden, selectedPlant: selected ?? undefined, settings: assistantSettings }
     : undefined;
+
+  useEffect(() => {
+    setAssistantContext(assistantContext);
+  }, [assistantContext]);
+  useEffect(() => () => setAssistantContext(undefined), []);
 
   return (
     <div
@@ -329,7 +332,7 @@ export function CalendarView() {
         )}
       </div>
 
-      <AiPanel assistantContext={assistantContext} />
+      {/* AiPanel is rendered once in App.tsx — not here */}
     </div>
   );
 }

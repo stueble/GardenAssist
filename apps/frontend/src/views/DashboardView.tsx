@@ -201,6 +201,11 @@ export function DashboardView() {
     ? { view: "dashboard", garden, selectedPlant: selected ?? undefined, settings: assistantSettings }
     : undefined;
 
+  useEffect(() => {
+    setAssistantContext(assistantContext);
+  }, [assistantContext]);
+  useEffect(() => () => setAssistantContext(undefined), []);
+
   return (
     <div
       data-testid="dashboard-view"
@@ -327,7 +332,7 @@ export function DashboardView() {
         ) : null}
       </div>
 
-      <AiPanel assistantContext={assistantContext} />
+      {/* AiPanel is rendered once in App.tsx — not here */}
     </div>
   );
 }

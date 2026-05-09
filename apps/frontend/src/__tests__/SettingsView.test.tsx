@@ -118,10 +118,11 @@ describe("SettingsView — API integration", () => {
     await waitFor(() => expect(screen.getByText(/Einstellungen gespeichert/i)).toBeInTheDocument());
   });
 
-  it("renders the AI panel toggle", async () => {
+  it("does not render an AiPanel directly (AiPanel is in App.tsx now)", async () => {
     renderSettings();
     await waitFor(() => expect(screen.queryByText(/werden geladen/i)).not.toBeInTheDocument());
-    expect(screen.getByRole("button", { name: /Assistent öffnen/i })).toBeInTheDocument();
+    // AiPanel is no longer rendered inside SettingsView — it lives in App.tsx
+    expect(screen.queryByTestId("ai-toggle")).not.toBeInTheDocument();
   });
 
   it("selecting a language in the dropdown updates form.language and switches i18n immediately", async () => {

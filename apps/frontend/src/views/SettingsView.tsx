@@ -1,10 +1,12 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { SettingsSection } from "@/components/SettingsSection";
 import { SaveBar } from "@/components/SaveBar";
-import { AiPanel } from "@/components/AiPanel";
 import { useSettings } from "@/hooks/useSettings";
 import { useGardenPlan } from "@/hooks/useGardenPlan";
+import { useAssistantSettings } from "@/hooks/useAssistantSettings";
+import { setAssistantContext } from "@/hooks/useAssistantContext";
+import type { Garden } from "@api/garden";
 import { LocationSection }    from "@/components/settings/LocationSection";
 import { ZonesSection }       from "@/components/settings/ZonesSection";
 import { CategoriesSection }  from "@/components/settings/CategoriesSection";
@@ -19,6 +21,21 @@ export function SettingsView() {
   const { t, i18n } = useTranslation("settings");
   const { form, dirty: settingsDirty, status, loading, error, updateForm, save: saveSettings, discard: discardSettings } = useSettings();
   const plan = useGardenPlan();
+  const assistantSettings = useAssistantSettings();
+  const [garden, setGarden] = useState<Garden | null>(null);
+
+  // Load garden once for the AI assistant context (settings view also benefits from garden data)
+  useEffect(() => {
+    apiClient.getGarden().then(setGarden).catch(() => {});
+  }, []);
+
+  // Report context to the shared AiPanel in App.tsx; clear on unmount
+  useEffect(() => {
+    if (garden) {
+      setAssistantContext({ view: "settings", garden, settings: assistantSettings });
+    }
+  }, [garden, assistantSettings]);
+  useEffect(() => () => setAssistantContext(undefined), []);
 
   const dirty = settingsDirty || plan.dirty;
 
@@ -235,7 +252,7 @@ export function SettingsView() {
         <SaveBar dirty={dirty} status={status} onSave={() => void save()} onDiscard={discard} />
       </div>
 
-      <AiPanel />
+      {/* AiPanel is rendered once in App.tsx — not here */}
     </div>
   );
 }
