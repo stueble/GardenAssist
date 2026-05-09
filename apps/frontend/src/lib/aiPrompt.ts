@@ -189,10 +189,23 @@ Werkzeug: editPlant
   id     (string | null): ID der Pflanze aus den Gartendaten, oder null für eine neue Pflanze
   fields (object):        Felder die vorausgefüllt oder überschrieben werden sollen
 
-  Mögliche Felder in fields:
-    name_common, name_botanical, description, category, origin_type, lifecycle,
-    location, watering_zone, purchase_date, purchase_price, sun_demand,
-    water_demand, frost_tolerance_min_c, soil_type, health_status, care_notes
+  Mögliche Felder und ERLAUBTE WERTE (immer exakt diese API-Werte verwenden, nie deutsche Übersetzungen):
+    name_common            (string)
+    name_botanical         (string)
+    description            (string)
+    category               (string, freier Text)
+    location               (string, freier Text)
+    watering_zone          (string, freier Text)
+    purchase_date          (string, Format YYYY-MM-DD)
+    purchase_price         (string, Zahl als Text, z.B. "12.50")
+    frost_tolerance_min_c  (string, Zahl als Text, z.B. "-15")
+    care_notes             (string)
+    origin_type            (genau einer von: "native" | "neophyte" | "invasive_neophyte")
+    lifecycle              (genau einer von: "annual" | "biennial" | "perennial")
+    sun_demand             (genau einer von: "sunny" | "partial_shade" | "shady")
+    water_demand           (genau einer von: "low" | "medium" | "high")
+    soil_type              (genau einer von: "loamy" | "sandy" | "humus_rich" | "calcareous" | "acidic")
+    health_status          (genau einer von: "good" | "watch" | "needs_treatment")
 
 Beispiele:
 
@@ -218,10 +231,23 @@ Tool: editPlant
   id     (string | null): ID of the plant from garden data, or null for a new plant
   fields (object):        fields to pre-fill or overwrite
 
-  Possible fields in fields:
-    name_common, name_botanical, description, category, origin_type, lifecycle,
-    location, watering_zone, purchase_date, purchase_price, sun_demand,
-    water_demand, frost_tolerance_min_c, soil_type, health_status, care_notes
+  Possible fields and ALLOWED VALUES (always use these exact API values, never translated labels):
+    name_common            (string)
+    name_botanical         (string)
+    description            (string)
+    category               (string, free text)
+    location               (string, free text)
+    watering_zone          (string, free text)
+    purchase_date          (string, format YYYY-MM-DD)
+    purchase_price         (string, number as text, e.g. "12.50")
+    frost_tolerance_min_c  (string, number as text, e.g. "-15")
+    care_notes             (string)
+    origin_type            (exactly one of: "native" | "neophyte" | "invasive_neophyte")
+    lifecycle              (exactly one of: "annual" | "biennial" | "perennial")
+    sun_demand             (exactly one of: "sunny" | "partial_shade" | "shady")
+    water_demand           (exactly one of: "low" | "medium" | "high")
+    soil_type              (exactly one of: "loamy" | "sandy" | "humus_rich" | "calcareous" | "acidic")
+    health_status          (exactly one of: "good" | "watch" | "needs_treatment")
 
 Examples:
 

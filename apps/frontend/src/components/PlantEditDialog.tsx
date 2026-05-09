@@ -222,6 +222,54 @@ type LocalAttachment = {
 };
 export type AttachmentRow = SavedAttachment | LocalAttachment;
 
+// ── AI enum normalization ─────────────────────────────────────────────────────
+
+/**
+ * Maps common German/English display labels to their API enum values.
+ * Guards against the LLM returning translated labels instead of API keys.
+ */
+const ENUM_NORMALIZE: Partial<Record<AiSuggestableField, Record<string, string>>> = {
+  sun_demand: {
+    sonnig: "sunny", sunny: "sunny",
+    "halbschattig": "partial_shade", "partial shade": "partial_shade", partial_shade: "partial_shade",
+    schattig: "shady", shady: "shady",
+  },
+  water_demand: {
+    niedrig: "low", gering: "low", low: "low",
+    mittel: "medium", medium: "medium",
+    hoch: "high", high: "high",
+  },
+  soil_type: {
+    lehmig: "loamy", loamy: "loamy",
+    sandig: "sandy", sandy: "sandy",
+    humusreich: "humus_rich", "humus-reich": "humus_rich", humus_rich: "humus_rich",
+    kalkhaltig: "calcareous", calcareous: "calcareous",
+    sauer: "acidic", acidic: "acidic",
+  },
+  health_status: {
+    gut: "good", good: "good",
+    beobachten: "watch", watch: "watch",
+    behandlung: "needs_treatment", "needs treatment": "needs_treatment", needs_treatment: "needs_treatment",
+  },
+  origin_type: {
+    heimisch: "native", native: "native",
+    neophyt: "neophyte", neophyte: "neophyte",
+    "invasiver neophyt": "invasive_neophyte", invasive_neophyte: "invasive_neophyte",
+  },
+  lifecycle: {
+    einjährig: "annual", annual: "annual",
+    zweijährig: "biennial", biennial: "biennial",
+    mehrjährig: "perennial", perennial: "perennial",
+    staude: "perennial",
+  },
+};
+
+function normalizeEnumValue(key: AiSuggestableField, value: string): string {
+  const map = ENUM_NORMALIZE[key];
+  if (!map) return value;
+  return map[value.toLowerCase()] ?? value;
+}
+
 // ── AI suggestion types ───────────────────────────────────────────────────────
 
 /** Keys of EditForm that AI can suggest (subset of scalar fields, no icon/checkbox). */
@@ -263,6 +311,9 @@ function PlantEditDialog({
   const { t } = useTranslation("plants");
 
   const [form,         setForm]         = useState<EditForm>(() => plantToForm(plant));
+  const formRef = useRef<EditForm>(form);
+  // Keep formRef in sync so applyAiFields always reads the latest form without closures.
+  formRef.current = form;
   const [saving,        setSaving]        = useState(false);
   const [error,         setError]         = useState<string | null>(null);
   const [iconManual,    setIconManual]    = useState(!!plant?.icon);
@@ -294,14 +345,15 @@ function PlantEditDialog({
         "frost_tolerance_min_c", "soil_type", "health_status", "care_notes",
       ];
       for (const k of keys) {
-        if (fields[k] !== undefined) suggestable[k] = fields[k];
+        if (fields[k] !== undefined) suggestable[k] = normalizeEnumValue(k, fields[k] as string);
       }
-      setForm((prev) => {
-        const { nextForm, nextMarked, prevValues } = applyAiSuggestions(prev, suggestable);
-        setAiMarked((m) => ({ ...m, ...nextMarked }));
-        setAiPrev((p) => ({ ...p, ...prevValues }));
-        return nextForm;
-      });
+      // Read current form via a ref to compute diff without using a setState updater.
+      // All three state updates are independent top-level calls — no side effects
+      // inside updaters, safe under React Strict Mode.
+      const { nextForm, nextMarked, prevValues } = applyAiSuggestions(formRef.current, suggestable);
+      setForm(nextForm);
+      setAiMarked((m) => ({ ...m, ...nextMarked }));
+      setAiPrev((p) => ({ ...p, ...prevValues }));
     },
   }));
 
