@@ -469,3 +469,102 @@ describe("AiPanel — multi-turn history (AC #3)", () => {
     expect(conversationMsgs[2]).toEqual({ role: "user",      content: "Zweite Frage"  });
   });
 });
+
+// ── Markdown rendering (TASK-061 AC #2, #3, #7, #8) ──────────────────────────
+
+describe("AiPanel — markdown rendering in bot messages (TASK-061)", () => {
+  it("renders bold text as <strong> (AC #8)", async () => {
+    await setup(true);
+    const { chatWithAi } = await import("../api/client");
+    (chatWithAi as ReturnType<typeof vi.fn>).mockResolvedValue({
+      content: "Das ist **fett** formatiert.",
+    });
+
+    fireEvent.click(screen.getByTestId("ai-toggle"));
+    await waitFor(() => screen.getByTestId("ai-input"));
+
+    fireEvent.change(screen.getByTestId("ai-input"), { target: { value: "Test" } });
+    fireEvent.click(screen.getByTestId("ai-send"));
+
+    await waitFor(() => screen.getByTestId("bot-message-markdown"));
+    const bubble = screen.getByTestId("bot-message-markdown");
+    expect(bubble.querySelector("strong")).not.toBeNull();
+    expect(bubble.querySelector("strong")!.textContent).toBe("fett");
+  });
+
+  it("renders an unordered list as <ul><li> (AC #8)", async () => {
+    await setup(true);
+    const { chatWithAi } = await import("../api/client");
+    (chatWithAi as ReturnType<typeof vi.fn>).mockResolvedValue({
+      content: "- Punkt 1\n- Punkt 2\n- Punkt 3",
+    });
+
+    fireEvent.click(screen.getByTestId("ai-toggle"));
+    await waitFor(() => screen.getByTestId("ai-input"));
+
+    fireEvent.change(screen.getByTestId("ai-input"), { target: { value: "Liste" } });
+    fireEvent.click(screen.getByTestId("ai-send"));
+
+    await waitFor(() => screen.getByTestId("bot-message-markdown"));
+    const bubble = screen.getByTestId("bot-message-markdown");
+    expect(bubble.querySelector("ul")).not.toBeNull();
+    expect(bubble.querySelectorAll("li")).toHaveLength(3);
+  });
+
+  it("renders inline code as <code> (AC #4, #8)", async () => {
+    await setup(true);
+    const { chatWithAi } = await import("../api/client");
+    (chatWithAi as ReturnType<typeof vi.fn>).mockResolvedValue({
+      content: "Verwende `npm install` zum Installieren.",
+    });
+
+    fireEvent.click(screen.getByTestId("ai-toggle"));
+    await waitFor(() => screen.getByTestId("ai-input"));
+
+    fireEvent.change(screen.getByTestId("ai-input"), { target: { value: "Code" } });
+    fireEvent.click(screen.getByTestId("ai-send"));
+
+    await waitFor(() => screen.getByTestId("bot-message-markdown"));
+    const bubble = screen.getByTestId("bot-message-markdown");
+    expect(bubble.querySelector("code")).not.toBeNull();
+    expect(bubble.querySelector("code")!.textContent).toBe("npm install");
+  });
+
+  it("plain text renders unchanged without wrapping markdown elements (AC #7)", async () => {
+    await setup(true);
+    const { chatWithAi } = await import("../api/client");
+    (chatWithAi as ReturnType<typeof vi.fn>).mockResolvedValue({
+      content: "Einfacher Text ohne Markdown.",
+    });
+
+    fireEvent.click(screen.getByTestId("ai-toggle"));
+    await waitFor(() => screen.getByTestId("ai-input"));
+
+    fireEvent.change(screen.getByTestId("ai-input"), { target: { value: "Frage" } });
+    fireEvent.click(screen.getByTestId("ai-send"));
+
+    await waitFor(() => screen.getByTestId("bot-message-markdown"));
+    const bubble = screen.getByTestId("bot-message-markdown");
+    expect(bubble.textContent).toContain("Einfacher Text ohne Markdown.");
+    expect(bubble.querySelector("strong")).toBeNull();
+    expect(bubble.querySelector("ul")).toBeNull();
+  });
+
+  it("renders a GFM table as <table> (AC #3)", async () => {
+    await setup(true);
+    const { chatWithAi } = await import("../api/client");
+    (chatWithAi as ReturnType<typeof vi.fn>).mockResolvedValue({
+      content: "| Pflanze | Typ |\n|---|---|\n| Rose | Strauch |",
+    });
+
+    fireEvent.click(screen.getByTestId("ai-toggle"));
+    await waitFor(() => screen.getByTestId("ai-input"));
+
+    fireEvent.change(screen.getByTestId("ai-input"), { target: { value: "Tabelle" } });
+    fireEvent.click(screen.getByTestId("ai-send"));
+
+    await waitFor(() => screen.getByTestId("bot-message-markdown"));
+    const bubble = screen.getByTestId("bot-message-markdown");
+    expect(bubble.querySelector("table")).not.toBeNull();
+  });
+});

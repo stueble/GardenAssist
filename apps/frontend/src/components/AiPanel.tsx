@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { apiClient }               from "@/api/client";
 import { chatWithAi }              from "@/api/client";
 import type { ChatMessage }        from "@/api/client";
@@ -379,7 +381,7 @@ export function AiPanel({ assistantContext }: AiPanelProps) {
               ? <ContextMarker key={i}>{msg.display_content}</ContextMarker>
               : msg.role === "user"
                 ? <UserMessage key={i}>{msg.content}</UserMessage>
-                : <BotMessage key={i}>{msg.content}</BotMessage>
+                : <BotMessage key={i} content={msg.content} />
           )}
 
           {/* Loading indicator */}
@@ -486,8 +488,30 @@ export function AiPanel({ assistantContext }: AiPanelProps) {
 
 // ── BotMessage ────────────────────────────────────────────────────────────────
 // doc-011 § 5.7: white background, border, subtle shadow
+//
+// When `content` (string) is provided, it is rendered as Markdown (GFM).
+// When `children` (ReactNode) is provided instead, it is rendered as-is
+// (used for static messages like the welcome hint and loading indicator).
 
-function BotMessage({ children }: { children: React.ReactNode }) {
+interface BotMessageProps {
+  content?:  string;
+  children?: React.ReactNode;
+}
+
+function BotMessage({ content, children }: BotMessageProps) {
+  const bubbleStyle: React.CSSProperties = {
+    alignSelf:    "flex-start",
+    background:   "white",
+    color:        "var(--text-dark)",
+    border:       "1px solid var(--border)",
+    borderRadius: "4px 12px 12px 12px",
+    padding:      "8px 12px",
+    fontSize:     "12px",
+    lineHeight:   1.5,
+    maxWidth:     "92%",
+    boxShadow:    "0 1px 3px rgba(45,74,45,.08)",
+  };
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
       <span
@@ -502,26 +526,124 @@ function BotMessage({ children }: { children: React.ReactNode }) {
       >
         Assistent
       </span>
-      <span
-        style={{
-          alignSelf:    "flex-start",
-          background:   "white",
-          color:        "var(--text-dark)",
-          border:       "1px solid var(--border)",
-          borderRadius: "4px 12px 12px 12px",
-          padding:      "8px 12px",
-          fontSize:     "12px",
-          lineHeight:   1.5,
-          maxWidth:     "92%",
-          boxShadow:    "0 1px 3px rgba(45,74,45,.08)",
-          whiteSpace:   "pre-wrap",
-        }}
-      >
-        {children}
-      </span>
+      {content !== undefined ? (
+        <div style={{ ...bubbleStyle }} data-testid="bot-message-markdown">
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={markdownComponents}
+          >
+            {content}
+          </ReactMarkdown>
+        </div>
+      ) : (
+        <span style={{ ...bubbleStyle, whiteSpace: "pre-wrap" }}>
+          {children}
+        </span>
+      )}
     </div>
   );
 }
+
+// ── Markdown component styles ─────────────────────────────────────────────────
+// Styled using existing CSS design tokens — no external CSS framework.
+
+const markdownComponents: React.ComponentProps<typeof ReactMarkdown>["components"] = {
+  // Paragraphs: no extra margin except between paragraphs
+  p: ({ children }) => (
+    <p style={{ margin: "0 0 6px", lineHeight: 1.5 }}>{children}</p>
+  ),
+  // Bold
+  strong: ({ children }) => (
+    <strong style={{ fontWeight: 700 }}>{children}</strong>
+  ),
+  // Italic
+  em: ({ children }) => (
+    <em style={{ fontStyle: "italic" }}>{children}</em>
+  ),
+  // Unordered list
+  ul: ({ children }) => (
+    <ul style={{ margin: "4px 0 6px", paddingLeft: "18px", listStyleType: "disc" }}>{children}</ul>
+  ),
+  // Ordered list
+  ol: ({ children }) => (
+    <ol style={{ margin: "4px 0 6px", paddingLeft: "18px", listStyleType: "decimal" }}>{children}</ol>
+  ),
+  li: ({ children }) => (
+    <li style={{ marginBottom: "2px" }}>{children}</li>
+  ),
+  // Inline code — AC #4: var(--green-mist) background
+  code: ({ children, className }) => {
+    const isBlock = !!className; // fenced code blocks have a className like "language-js"
+    if (isBlock) {
+      return (
+        <code
+          style={{
+            display:      "block",
+            background:   "var(--green-mist)",
+            border:       "1px solid var(--border)",
+            borderRadius: "6px",
+            padding:      "8px 10px",
+            fontSize:     "11px",
+            fontFamily:   "monospace",
+            whiteSpace:   "pre-wrap",
+            overflowX:    "auto",
+            margin:       "4px 0",
+          }}
+        >
+          {children}
+        </code>
+      );
+    }
+    // Inline code — AC #4
+    return (
+      <code
+        style={{
+          background:   "var(--green-mist)",
+          border:       "1px solid var(--border)",
+          borderRadius: "4px",
+          padding:      "1px 5px",
+          fontSize:     "11px",
+          fontFamily:   "monospace",
+        }}
+      >
+        {children}
+      </code>
+    );
+  },
+  // Code block wrapper — AC #5
+  pre: ({ children }) => (
+    <pre style={{ margin: "4px 0", background: "none", padding: 0 }}>{children}</pre>
+  ),
+  // Headings — keep them compact inside the chat bubble
+  h1: ({ children }) => <p style={{ fontWeight: 700, fontSize: "13px", margin: "4px 0" }}>{children}</p>,
+  h2: ({ children }) => <p style={{ fontWeight: 700, fontSize: "12px", margin: "4px 0" }}>{children}</p>,
+  h3: ({ children }) => <p style={{ fontWeight: 600, fontSize: "12px", margin: "4px 0" }}>{children}</p>,
+  // Horizontal rule
+  hr: () => <hr style={{ border: "none", borderTop: "1px solid var(--border)", margin: "6px 0" }} />,
+  // Blockquote
+  blockquote: ({ children }) => (
+    <blockquote
+      style={{
+        borderLeft: "3px solid var(--green-mid)",
+        margin:     "4px 0",
+        padding:    "2px 10px",
+        color:      "var(--text-mid)",
+      }}
+    >
+      {children}
+    </blockquote>
+  ),
+  // Tables (GFM)
+  table: ({ children }) => (
+    <table style={{ borderCollapse: "collapse", width: "100%", margin: "4px 0", fontSize: "11px" }}>{children}</table>
+  ),
+  th: ({ children }) => (
+    <th style={{ borderBottom: "2px solid var(--border)", padding: "3px 8px", textAlign: "left", fontWeight: 700 }}>{children}</th>
+  ),
+  td: ({ children }) => (
+    <td style={{ border: "1px solid var(--border)", padding: "3px 8px" }}>{children}</td>
+  ),
+};
 
 // ── UserMessage ───────────────────────────────────────────────────────────────
 
