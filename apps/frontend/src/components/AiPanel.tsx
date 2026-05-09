@@ -32,7 +32,12 @@ export function parseToolCall(raw: string): {
   if (!match) return { toolCall: null, displayText: raw };
   try {
     const toolCall = JSON.parse(match[1].trim()) as Record<string, unknown>;
-    const displayText = raw.replace(match[0], "").trim();
+    // Remove the block including any surrounding blank lines, then collapse
+    // multiple consecutive blank lines into one to avoid visible gaps.
+    const displayText = raw
+      .replace(/\n*```tool\s*\n[\s\S]*?\n```\n*/m, "\n")
+      .trim()
+      .replace(/\n{3,}/g, "\n\n");
     return { toolCall, displayText };
   } catch {
     return { toolCall: null, displayText: raw };

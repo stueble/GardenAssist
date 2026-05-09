@@ -63,11 +63,13 @@ export function PlantsView() {
   const edit = usePlantEditDialog();
   const dialogRef  = useRef<PlantEditDialogHandle>(null);
   const plantsRef  = useRef<Plant[]>(plants);
-  // Keep plantsRef in sync so the stable editPlant handler always sees current data
+  const editRef    = useRef(edit);
+  // Keep refs current on every render — no stale closures.
   useEffect(() => { plantsRef.current = plants; }, [plants]);
+  editRef.current = edit;
 
   // Register AI tool handler: editPlant(id, fields)
-  // Stable reference — reads latest plants via plantsRef to avoid stale closure.
+  // Stable identity via usePlantEditHandler's internal ref proxy.
   const editPlantHandler = useCallback((id: string | null, fields: PlantEditFields) => {
     const applyAfterOpen = () => {
       if (Object.keys(fields).length > 0) {
@@ -75,16 +77,18 @@ export function PlantsView() {
       }
     };
     if (id === null) {
-      edit.openNew();
+      editRef.current.openNew();
       applyAfterOpen();
     } else {
       const found = plantsRef.current.find((p) => p.id === id);
       if (found) {
-        edit.openEdit(found);
+        editRef.current.openEdit(found);
         applyAfterOpen();
       }
     }
-  }, [edit]);
+  // No deps needed — all state read via refs.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   usePlantEditHandler({ editPlant: editPlantHandler });
 

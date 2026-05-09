@@ -12,7 +12,7 @@
  * The user always confirms by clicking Save — no direct API writes.
  */
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 /**
  * Scalar fields the AI can suggest (mirrors the scalar fields of PlantInput,
@@ -64,13 +64,25 @@ export function getPlantEditHandler(): PlantEditHandler | null {
 }
 
 /**
- * Hook for PlantsView — registers the handler on mount, unregisters on unmount.
- * The handler object must be stable (built with useCallback / useMemo by the caller).
+ * Hook for PlantsView — keeps the singleton always pointing to the latest handler.
+ *
+ * We store the latest handler in a ref so the singleton never goes stale,
+ * then register a stable proxy function that delegates to the ref.
+ * This avoids stale-closure bugs when the caller's callbacks change (e.g.
+ * because `usePlantEditDialog` returns a new object on every render).
  */
 export function usePlantEditHandler(handler: PlantEditHandler) {
+  const handlerRef = useRef(handler);
+  // Keep the ref current on every render — no stale closures.
+  handlerRef.current = handler;
+
   useEffect(() => {
-    return registerPlantEditHandler(handler);
-  // Intentionally runs once — caller must pass a stable handler reference.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Register a stable proxy that always calls through the ref.
+    return registerPlantEditHandler({
+      editPlant: (id, fields) => handlerRef.current.editPlant(id, fields),
+    });
+    // Empty deps: register once, unregister on unmount. The proxy always
+    // delegates to the latest handler via the ref.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 }
