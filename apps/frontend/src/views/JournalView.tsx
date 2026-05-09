@@ -284,7 +284,6 @@ export function JournalView() {
       </div>
 
       <AiPanel
-        context={`📔 ${t("title")}`}
         assistantContext={garden ? { view: "journal", garden } : undefined}
       />
 

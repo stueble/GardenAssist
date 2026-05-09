@@ -7,15 +7,19 @@
  * - AC #3: Panel shows message area and input
  * - AC #6: Close button hides panel, toggle reappears
  * - AC #7: Not-configured hint shown when ai_provider/ai_api_key are null
+ * - TASK-057: Context change markers injected into conversation history
  */
 
+import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import { I18nextProvider } from "react-i18next";
 import i18n from "../i18n/index";
 import { AiPanel } from "../components/AiPanel";
-import { resetAiPanelState } from "../hooks/useAiPanelState";
+import { resetAiPanelState, useAiPanelState } from "../hooks/useAiPanelState";
 import type { Settings } from "@api/settings";
+import type { AssistantContext } from "@api/assistant-context";
+import type { Plant } from "@api/plant";
 
 const MOCK_SETTINGS_UNCONFIGURED: Settings = {
   language: "de", location_city: null, location_zip: null,
@@ -45,17 +49,34 @@ beforeEach(async () => {
   resetAiPanelState(); // ensure panel starts closed in every test
 });
 
-async function setup(configured = false) {
+async function setup(configured = false, assistantContext?: AssistantContext) {
   const { apiClient } = await import("../api/client");
   (apiClient.getSettings as ReturnType<typeof vi.fn>).mockResolvedValue(
     configured ? MOCK_SETTINGS_CONFIGURED : MOCK_SETTINGS_UNCONFIGURED
   );
   render(
     <I18nextProvider i18n={i18n}>
-      <AiPanel context="⚙️ Einstellungen" />
+      <AiPanel assistantContext={assistantContext} />
     </I18nextProvider>
   );
 }
+
+const MOCK_GARDEN = {
+  plan_url: null, plan_name: null,
+  plants: [], attachments: [], journal_entries: [], warnings: [],
+};
+
+const MOCK_PLANT: Plant = {
+  id: "p1", name_common: "Rose", name_botanical: "Rosa", icon: "🌹",
+  origin_type: "native", category: "Strauch", lifecycle: "perennial",
+  description: null, care_notes: null, sun_demand: "sunny",
+  water_demand: "medium", soil_type: "loamy",
+  frost_tolerance_min_c: -15, temperature_protected: false,
+  health_status: "good", location: "Westbeet", watering_zone: "Beet West",
+  purchase_date: null, purchase_price: null,
+  positions: [], attachments: [], journal_entries: [], schedules: [], tasks: [],
+  created_at: "", updated_at: "",
+};
 
 describe("AiPanel — collapsed state (AC #1)", () => {
   it("shows the toggle strip on load", async () => {
@@ -105,10 +126,11 @@ describe("AiPanel — panel content (AC #3)", () => {
     expect(screen.getByTestId("ai-send")).toBeInTheDocument();
   });
 
-  it("shows context pill when context prop is given", async () => {
+  it("no context pill — context bar removed (TASK-057 AC #6)", async () => {
     await setup();
     fireEvent.click(screen.getByTestId("ai-toggle"));
-    expect(screen.getByText("⚙️ Einstellungen")).toBeInTheDocument();
+    // The old context pill should not exist; context is now in-chat as a marker
+    expect(screen.queryByText("⚙️ Einstellungen")).not.toBeInTheDocument();
   });
 });
 
@@ -294,6 +316,121 @@ describe("AiPanel — error handling (AC #5)", () => {
   });
 });
 
+// ── TASK-057: Context change markers ─────────────────────────────────────────
+
+describe("AiPanel — context markers (TASK-057)", () => {
+  it("injects a context marker when the panel opens (AC #1)", async () => {
+    const ctx: AssistantContext = {
+      view: "plants",
+      garden: MOCK_GARDEN,
+      selectedPlant: MOCK_PLANT,
+    };
+    await setup(true, ctx);
+    fireEvent.click(screen.getByTestId("ai-toggle"));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("context-marker")).toBeInTheDocument();
+    });
+    expect(screen.getByTestId("context-marker").textContent).toContain("Rose");
+  });
+
+  it("marker includes plant icon and location (AC #3)", async () => {
+    const ctx: AssistantContext = {
+      view: "plants",
+      garden: MOCK_GARDEN,
+      selectedPlant: MOCK_PLANT,
+    };
+    await setup(true, ctx);
+    fireEvent.click(screen.getByTestId("ai-toggle"));
+
+    await waitFor(() => {
+      const marker = screen.getByTestId("context-marker");
+      expect(marker.textContent).toContain("🌹");
+      expect(marker.textContent).toContain("Rose");
+      expect(marker.textContent).toContain("Westbeet");
+    });
+  });
+
+  it("marker is not sent to the API (AC #5)", async () => {
+    const ctx: AssistantContext = {
+      view: "plants",
+      garden: MOCK_GARDEN,
+      selectedPlant: MOCK_PLANT,
+    };
+    const { apiClient, chatWithAi } = await import("../api/client");
+    (apiClient.getSettings as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_SETTINGS_CONFIGURED);
+    (chatWithAi as ReturnType<typeof vi.fn>).mockResolvedValue({ content: "Antwort" });
+
+    render(
+      <I18nextProvider i18n={i18n}>
+        <AiPanel assistantContext={ctx} />
+      </I18nextProvider>
+    );
+
+    fireEvent.click(screen.getByTestId("ai-toggle"));
+    await waitFor(() => screen.getByTestId("ai-input"));
+
+    fireEvent.change(screen.getByTestId("ai-input"), { target: { value: "Test" } });
+    fireEvent.click(screen.getByTestId("ai-send"));
+
+    await waitFor(() => {
+      const calls = (chatWithAi as ReturnType<typeof vi.fn>).mock.calls;
+      expect(calls.length).toBeGreaterThan(0);
+      const sentMessages = calls[0][0] as Array<{ role: string }>;
+      expect(sentMessages.every((m) => m.role !== "context")).toBe(true);
+    });
+  });
+
+  it("injects a new marker when selectedPlant changes (AC #2)", async () => {
+    const PLANT_2: Plant = {
+      ...MOCK_PLANT,
+      id: "p2",
+      name_common: "Bambus",
+      icon: "🎋",
+      location: "Rasen",
+    };
+
+    function Wrapper() {
+      const [plant, setPlant] = React.useState<Plant>(MOCK_PLANT);
+      const { setOpen } = useAiPanelState();
+      const ctx: AssistantContext = {
+        view: "plants",
+        garden: MOCK_GARDEN,
+        selectedPlant: plant,
+      };
+      return (
+        <I18nextProvider i18n={i18n}>
+          <button data-testid="switch-plant" onClick={() => setPlant(PLANT_2)} />
+          <button data-testid="open-panel" onClick={() => setOpen(true)} />
+          <AiPanel assistantContext={ctx} />
+        </I18nextProvider>
+      );
+    }
+
+    const { apiClient } = await import("../api/client");
+    (apiClient.getSettings as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_SETTINGS_CONFIGURED);
+
+    render(<Wrapper />);
+    fireEvent.click(screen.getByTestId("open-panel"));
+
+    // First marker: Rose
+    await waitFor(() => {
+      const markers = screen.getAllByTestId("context-marker");
+      expect(markers[0].textContent).toContain("Rose");
+    });
+
+    // Switch plant
+    act(() => { fireEvent.click(screen.getByTestId("switch-plant")); });
+
+    // Second marker: Bambus
+    await waitFor(() => {
+      const markers = screen.getAllByTestId("context-marker");
+      expect(markers.length).toBe(2);
+      expect(markers[1].textContent).toContain("Bambus");
+    });
+  });
+});
+
 describe("AiPanel — multi-turn history (AC #3)", () => {
   it("second call includes the full prior conversation", async () => {
     await setup(true);
@@ -316,10 +453,12 @@ describe("AiPanel — multi-turn history (AC #3)", () => {
     await waitFor(() => screen.getByText("Zweite Antwort"));
 
     // Second call should have included 3 messages: user, assistant, user
+    // Context markers are filtered out before the API call (AC #5 TASK-057)
     const secondCallMessages = (chatWithAi as ReturnType<typeof vi.fn>).mock.calls[1][0] as Array<{ role: string; content: string }>;
-    expect(secondCallMessages).toHaveLength(3);
-    expect(secondCallMessages[0]).toEqual({ role: "user",      content: "Erste Frage"   });
-    expect(secondCallMessages[1]).toEqual({ role: "assistant", content: "Erste Antwort" });
-    expect(secondCallMessages[2]).toEqual({ role: "user",      content: "Zweite Frage"  });
+    const nonContext = secondCallMessages.filter((m) => m.role !== "context");
+    expect(nonContext).toHaveLength(3);
+    expect(nonContext[0]).toEqual({ role: "user",      content: "Erste Frage"   });
+    expect(nonContext[1]).toEqual({ role: "assistant", content: "Erste Antwort" });
+    expect(nonContext[2]).toEqual({ role: "user",      content: "Zweite Frage"  });
   });
 });

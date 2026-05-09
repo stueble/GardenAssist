@@ -104,11 +104,6 @@ export function CalendarView() {
     return a.name_common.localeCompare(b.name_common);
   });
 
-  const aiContext = edit.editTarget
-    ? `✏️ ${edit.editTarget.name_common}`
-    : selected
-    ? `${selected.icon ?? "🌿"} ${selected.name_common}`
-    : `📅 ${t("title")}`;
 
   const assistantContext: AssistantContext | undefined = garden
     ? { view: "calendar", garden, selectedPlant: selected ?? undefined }
@@ -332,7 +327,7 @@ export function CalendarView() {
         )}
       </div>
 
-      <AiPanel context={aiContext} assistantContext={assistantContext} />
+      <AiPanel assistantContext={assistantContext} />
     </div>
   );
 }

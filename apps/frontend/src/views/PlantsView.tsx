@@ -165,9 +165,6 @@ export function PlantsView() {
     setSelected((prev) => (prev?.id === plant.id ? null : plant));
   }
 
-  const aiContext = selected
-    ? `${selected.icon ?? "🌿"} ${selected.name_common}`
-    : `🌿 ${t("title")}`;
 
   const assistantContext: AssistantContext | undefined = garden
     ? { view: "plants", garden, selectedPlant: selected ?? undefined }
@@ -465,7 +462,7 @@ export function PlantsView() {
         )}
       </div>
 
-      <AiPanel context={aiContext} assistantContext={assistantContext} />
+      <AiPanel assistantContext={assistantContext} />
     </div>
   );
 }

@@ -137,7 +137,14 @@ export const apiClient: Api = {
 
 // ── AI chat (outside Api interface — not part of the typed contract yet) ──────
 
-export type ChatMessage = { role: "user" | "assistant"; content: string };
+/**
+ * A chat message in the conversation history.
+ * role "context" is a local-only marker injected when the selected plant changes.
+ * It is never sent to the AI API — filtered out before the API call.
+ */
+export type ChatMessage =
+  | { role: "user" | "assistant"; content: string }
+  | { role: "context"; content: string };
 
 export function chatWithAi(
   messages: ChatMessage[],

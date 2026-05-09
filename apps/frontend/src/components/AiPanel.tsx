@@ -10,8 +10,6 @@ import { getPlantEditHandler }     from "@/hooks/usePlantEditContext";
 import type { PlantEditFields }    from "@/hooks/usePlantEditContext";
 
 interface AiPanelProps {
-  /** Context bar text, e.g. "✏️ Bearbeite: 🌹 Rose" or "⚙️ Einstellungen" */
-  context?: string;
   /** Structured context for the AI system prompt (garden data, active view, selected plant) */
   assistantContext?: AssistantContext;
 }
@@ -98,7 +96,7 @@ function dispatchToolCall(
  * - Context bar: rgba(255,255,255,.85) (§ 5.8)
  * - Strip hover: green-mid → green-light, 0.2s (§ 5.6)
  */
-export function AiPanel({ context, assistantContext }: AiPanelProps) {
+export function AiPanel({ assistantContext }: AiPanelProps) {
   const { open, setOpen }         = useAiPanelState();
   const { i18n }                  = useTranslation();
   const [configured, setConfigured] = useState<boolean | null>(null);
@@ -121,6 +119,26 @@ export function AiPanel({ context, assistantContext }: AiPanelProps) {
       setConfigured(!!(s.ai_provider && s.ai_api_key));
     }).catch(() => setConfigured(false));
   }, [open]);
+
+  // Inject a context marker into the conversation history whenever the selected
+  // plant changes (or on first open). This prevents the model from confusing
+  // tool calls / mentions from a previous plant with the current one.
+  const prevPlantIdRef = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    if (!open) return;
+    const plant = assistantContext?.selectedPlant;
+    const currentId = plant?.id;
+    if (currentId === prevPlantIdRef.current) return;
+    prevPlantIdRef.current = currentId;
+
+    const label = plant
+      ? `${plant.icon ?? "🌿"} ${plant.name_common}${plant.location ? ` (${plant.location})` : ""}`
+      : assistantContext?.view
+        ? `📋 ${assistantContext.view}`
+        : "🌿 Garten";
+
+    setMessages((prev) => [...prev, { role: "context", content: label }]);
+  }, [open, assistantContext?.selectedPlant, assistantContext?.view]);
 
   // Focus input when panel opens and AI is configured
   useEffect(() => {
@@ -156,7 +174,9 @@ export function AiPanel({ context, assistantContext }: AiPanelProps) {
       const systemPrompt = assistantContext
         ? buildSystemPrompt(assistantContext, lang)
         : undefined;
-      const res = await chatWithAi(nextMessages, lang, systemPrompt);
+      // Filter out context markers — they are local-only and must not be sent to the API
+      const apiMessages = nextMessages.filter((m) => m.role !== "context") as Array<{ role: "user" | "assistant"; content: string }>;
+      const res = await chatWithAi(apiMessages, lang, systemPrompt);
 
       // Parse tool calls from assistant response
       const { toolCall, displayText } = parseToolCall(res.content);
@@ -308,26 +328,6 @@ export function AiPanel({ context, assistantContext }: AiPanelProps) {
           </button>
         </div>
 
-        {/* Context bar (doc-011 § 5.8) */}
-        {context && (
-          <div
-            style={{
-              background:   "rgba(255,255,255,.85)",
-              borderBottom: "1px solid rgba(74,124,74,.15)",
-              padding:      "7px 14px",
-              fontSize:     "11px",
-              fontWeight:   600,
-              color:        "var(--green-deep)",
-              display:      "flex",
-              alignItems:   "center",
-              gap:          "6px",
-              flexShrink:   0,
-            }}
-          >
-            {context}
-          </div>
-        )}
-
         {/* Messages */}
         <div
           ref={messagesRef}
@@ -364,9 +364,11 @@ export function AiPanel({ context, assistantContext }: AiPanelProps) {
           )}
 
           {messages.map((msg, i) =>
-            msg.role === "user"
-              ? <UserMessage key={i}>{msg.content}</UserMessage>
-              : <BotMessage key={i}>{msg.content}</BotMessage>
+            msg.role === "context"
+              ? <ContextMarker key={i}>{msg.content}</ContextMarker>
+              : msg.role === "user"
+                ? <UserMessage key={i}>{msg.content}</UserMessage>
+                : <BotMessage key={i}>{msg.content}</BotMessage>
           )}
 
           {/* Loading indicator */}
@@ -543,6 +545,38 @@ function UserMessage({ children }: { children: React.ReactNode }) {
       >
         {children}
       </span>
+    </div>
+  );
+}
+
+// ── ContextMarker ─────────────────────────────────────────────────────────────
+// Centered separator line shown when the selected plant changes.
+// Not a chat bubble — visually distinct, muted, never sent to the API.
+
+function ContextMarker({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      data-testid="context-marker"
+      style={{
+        display:    "flex",
+        alignItems: "center",
+        gap:        "8px",
+        margin:     "2px 0",
+      }}
+    >
+      <span style={{ flex: 1, height: "1px", background: "rgba(74,124,74,.2)" }} />
+      <span
+        style={{
+          fontSize:     "10px",
+          fontWeight:   600,
+          color:        "var(--text-light)",
+          letterSpacing: ".4px",
+          whiteSpace:   "nowrap",
+        }}
+      >
+        {children}
+      </span>
+      <span style={{ flex: 1, height: "1px", background: "rgba(74,124,74,.2)" }} />
     </div>
   );
 }

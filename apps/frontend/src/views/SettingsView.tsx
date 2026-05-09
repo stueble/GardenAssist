@@ -235,7 +235,7 @@ export function SettingsView() {
         <SaveBar dirty={dirty} status={status} onSave={() => void save()} onDiscard={discard} />
       </div>
 
-      <AiPanel context={`⚙️ ${t("title")}`} />
+      <AiPanel />
     </div>
   );
 }

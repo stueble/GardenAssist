@@ -196,9 +196,6 @@ export function DashboardView() {
     }
   }
 
-  const aiContext = selected
-    ? `${selected.icon ?? "🌿"} ${selected.name_common}`
-    : `🏠 ${t("nav.dashboard")}`;
 
   const assistantContext: AssistantContext | undefined = garden
     ? { view: "dashboard", garden, selectedPlant: selected ?? undefined }
@@ -330,7 +327,7 @@ export function DashboardView() {
         ) : null}
       </div>
 
-      <AiPanel context={aiContext} assistantContext={assistantContext} />
+      <AiPanel assistantContext={assistantContext} />
     </div>
   );
 }
