@@ -99,8 +99,9 @@ Werkzeug: editPlant
     Nicht genannte Zeitpläne bleiben unberührt. Lies die vorhandenen IDs aus den Gartendaten.
 
     PFLICHTREGELN:
-    1. NIEMALS bloom, foliage oder growth entfernen oder ändern, außer der Benutzer nennt sie explizit.
-       Diese sind rein informativ (Kalender/Gantt) — sie erzeugen KEINE Aufgaben.
+    1. bloom, foliage, growth: add ist erlaubt, wenn noch KEIN Eintrag dieses Typs existiert.
+       remove und update nur auf ausdrückliche Anweisung des Benutzers.
+       Diese Typen sind rein informativ (Kalender/Gantt) — sie erzeugen KEINE Aufgaben.
        Aufgaben entstehen nur aus: pruning, fertilization, misc.
     2. NIEMALS add verwenden für einen Zeitplan, der bereits existiert (erkennbar an Typ + Wochenbereich).
        Prüfe zuerst die vorhandenen Zeitpläne der Pflanze.
@@ -168,8 +169,9 @@ Tool: editPlant
     Unlisted schedules remain untouched. Read existing IDs from the garden data.
 
     MANDATORY RULES:
-    1. NEVER remove or update bloom, foliage or growth unless the user names them explicitly.
-       These are purely informational (calendar/Gantt) — they do NOT generate tasks.
+    1. bloom, foliage, growth: add is allowed if NO entry of that type exists yet for the plant.
+       remove and update only on explicit user instruction.
+       These types are purely informational (calendar/Gantt) — they do NOT generate tasks.
        Tasks are only generated from: pruning, fertilization, misc.
     2. NEVER add a schedule that already exists (identifiable by type + week range).
        Always check the plant's existing schedules first.
