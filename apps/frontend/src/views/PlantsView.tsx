@@ -5,6 +5,7 @@ import { useAiPanelState } from "@/hooks/useAiPanelState";
 import { PlantEditDialog, type PlantEditDialogHandle } from "@/components/PlantEditDialog";
 import { usePlantEditDialog } from "@/hooks/usePlantEditDialog";
 import { usePlantEditHandler, type PlantEditFields } from "@/hooks/usePlantEditContext";
+import { useAssistantSettings } from "@/hooks/useAssistantSettings";
 import { GardenPlanWidget } from "@/components/GardenPlanWidget";
 import { apiClient } from "@/api/client";
 import type { Plant }            from "@api/plant";
@@ -48,6 +49,7 @@ function bloomColors(schedules: Schedule[]): string[] {
 export function PlantsView() {
   const { t } = useTranslation("plants");
   const { setOpen: setAiPanelOpen } = useAiPanelState();
+  const assistantSettings = useAssistantSettings();
 
   const [plants,    setPlants]    = useState<Plant[]>([]);
   const [garden,    setGarden]    = useState<Garden | null>(null);
@@ -167,7 +169,7 @@ export function PlantsView() {
 
 
   const assistantContext: AssistantContext | undefined = garden
-    ? { view: "plants", garden, selectedPlant: selected ?? undefined }
+    ? { view: "plants", garden, selectedPlant: selected ?? undefined, settings: assistantSettings }
     : undefined;
 
   if (loading) {

@@ -9,6 +9,7 @@ import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { AiPanel } from "@/components/AiPanel";
 import { useAiPanelState } from "@/hooks/useAiPanelState";
+import { useAssistantSettings } from "@/hooks/useAssistantSettings";
 import { apiClient } from "@/api/client";
 import type { JournalEntry, JournalEntryType } from "@api/journal-entry";
 import type { Attachment }      from "@api/attachment";
@@ -64,6 +65,7 @@ function monthLabel(key: string): string {
 export function JournalView() {
   const { t } = useTranslation("journal");
   const { open: aiOpen } = useAiPanelState();
+  const assistantSettings = useAssistantSettings();
 
   const [entries,      setEntries]      = useState<JournalEntry[]>([]);
   const [plants,       setPlants]       = useState<Plant[]>([]);
@@ -284,7 +286,7 @@ export function JournalView() {
       </div>
 
       <AiPanel
-        assistantContext={garden ? { view: "journal", garden } : undefined}
+        assistantContext={garden ? { view: "journal", garden, settings: assistantSettings } : undefined}
       />
 
       {/* FAB — hidden when panel open */}

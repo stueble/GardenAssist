@@ -18,6 +18,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { AiPanel } from "@/components/AiPanel";
 import type { AssistantContext } from "@api/assistant-context";
+import { useAssistantSettings } from "@/hooks/useAssistantSettings";
 import { useAiPanelState } from "@/hooks/useAiPanelState";
 import { GardenPlanWidget, type PlanPin } from "@/components/GardenPlanWidget";
 import { PlantDetailPanel } from "@/components/PlantDetailPanel";
@@ -108,6 +109,7 @@ function plantToPin(plant: Plant, posIdx: number, selectedId: string | null): Pl
 export function DashboardView() {
   const { t }             = useTranslation("common");
   const { setOpen: setAiOpen } = useAiPanelState();
+  const assistantSettings = useAssistantSettings();
 
   const [garden,   setGarden]   = useState<Garden | null>(null);
   const [loading,  setLoading]  = useState(true);
@@ -198,7 +200,7 @@ export function DashboardView() {
 
 
   const assistantContext: AssistantContext | undefined = garden
-    ? { view: "dashboard", garden, selectedPlant: selected ?? undefined }
+    ? { view: "dashboard", garden, selectedPlant: selected ?? undefined, settings: assistantSettings }
     : undefined;
 
   return (

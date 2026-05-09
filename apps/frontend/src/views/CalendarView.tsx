@@ -17,6 +17,7 @@ import { PlantDetailPanel } from "@/components/PlantDetailPanel";
 import { PlantEditDialog } from "@/components/PlantEditDialog";
 import { GardenPlanWidget } from "@/components/GardenPlanWidget";
 import { usePlantEditDialog } from "@/hooks/usePlantEditDialog";
+import { useAssistantSettings } from "@/hooks/useAssistantSettings";
 import { apiClient } from "@/api/client";
 import type { Plant }            from "@api/plant";
 import type { Garden }           from "@api/garden";
@@ -70,6 +71,7 @@ function weekToMonthIdx(week: number): number {
 export function CalendarView() {
   const { t } = useTranslation("calendar");
   const { setOpen: setAiOpen } = useAiPanelState();
+  const assistantSettings = useAssistantSettings();
 
   const [plants,    setPlants]   = useState<Plant[]>([]);
   const [garden,    setGarden]   = useState<Garden | null>(null);
@@ -106,7 +108,7 @@ export function CalendarView() {
 
 
   const assistantContext: AssistantContext | undefined = garden
-    ? { view: "calendar", garden, selectedPlant: selected ?? undefined }
+    ? { view: "calendar", garden, selectedPlant: selected ?? undefined, settings: assistantSettings }
     : undefined;
 
   return (

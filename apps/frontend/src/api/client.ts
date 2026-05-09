@@ -150,13 +150,21 @@ export type ChatMessage =
   | { role: "user" | "assistant"; content: string }
   | { role: "context"; content: string; display_content: string };
 
+export type SystemBlock = { text: string };
+
 export function chatWithAi(
   messages: ChatMessage[],
   language: "de" | "en" = "de",
   systemPrompt?: string,
+  systemBlocks?: SystemBlock[],
 ): Promise<{ content: string }> {
   return request("/ai/chat", {
     method: "POST",
-    body:   JSON.stringify({ messages, language, system_prompt: systemPrompt }),
+    body:   JSON.stringify({
+      messages,
+      language,
+      // Prefer structured blocks (for caching); fall back to plain string
+      ...(systemBlocks ? { system_blocks: systemBlocks } : { system_prompt: systemPrompt }),
+    }),
   });
 }

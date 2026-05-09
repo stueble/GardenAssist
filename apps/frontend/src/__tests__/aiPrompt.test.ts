@@ -9,10 +9,11 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { serializeGarden, buildSystemPrompt } from "../lib/aiPrompt";
-import type { Garden }           from "@api/garden";
-import type { Plant }            from "@api/plant";
-import type { AssistantContext } from "@api/assistant-context";
+import { serializeGarden, buildSystemPrompt, buildSystemBlocks } from "../lib/aiPrompt";
+import type { Garden }            from "@api/garden";
+import type { Plant }             from "@api/plant";
+import type { AssistantContext }  from "@api/assistant-context";
+import type { AssistantSettings } from "@api/assistant-context";
 
 // ── Minimal fixtures ──────────────────────────────────────────────────────────
 
@@ -192,7 +193,7 @@ describe("buildSystemPrompt — language (AC #5)", () => {
 });
 
 describe("buildSystemPrompt — selected plant (AC #4)", () => {
-  it("adds one identifying line for selected plant, not a duplicate of full data", () => {
+  it("adds one identifying line for selected plant in the situation block", () => {
     const ctx: AssistantContext = {
       view:          "plants",
       garden:        GARDEN,
@@ -200,14 +201,14 @@ describe("buildSystemPrompt — selected plant (AC #4)", () => {
     };
     const prompt = buildSystemPrompt(ctx, "de");
 
-    // The identifying line appears in layer 3 (situation)
+    // The identifying line appears in the situation block (Block 5)
     expect(prompt).toContain("Ausgewählte Pflanze");
     expect(prompt).toContain("Rote Rose");
 
-    // Full plant data is in garden serialization — name appears but not duplicated
-    // as a separate full block; we verify it's in the prompt but only one "## Rote Rose" heading
+    // Block 3 (base) and Block 4 (dynamic) both have "## Rote Rose" — that's correct
+    // (base: name/location/..., dynamic: schedules/tasks/journal)
     const headingCount = (prompt.match(/## Rote Rose/g) ?? []).length;
-    expect(headingCount).toBe(1); // only in garden list, not as a second block
+    expect(headingCount).toBeGreaterThanOrEqual(1);
   });
 
   it("selected plant line includes botanical name and location", () => {
@@ -219,5 +220,148 @@ describe("buildSystemPrompt — selected plant (AC #4)", () => {
     const prompt = buildSystemPrompt(ctx, "de");
     expect(prompt).toContain("Rosa rubra");
     expect(prompt).toContain("Südbeeet");
+  });
+});
+
+// ── buildSystemBlocks — TASK-056 ──────────────────────────────────────────────
+
+const MOCK_SETTINGS: AssistantSettings = {
+  location_city:    "München",
+  location_zip:     "80331",
+  irrigation_zones: ["Beet West", "Terrasse"],
+  plant_categories: ["Rosen", "Stauden"],
+  color_presets:    [
+    { schedule_type: "bloom", name: "Dunkelrot", color: "#8B0000" },
+  ],
+};
+
+describe("buildSystemBlocks — block structure (TASK-056 AC #1, #2)", () => {
+  it("returns at least 3 blocks (without settings, without dynamic data)", () => {
+    const ctx: AssistantContext = { view: "dashboard", garden: GARDEN };
+    const blocks = buildSystemBlocks(ctx, "de");
+    expect(blocks.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("returns 5 blocks when settings and dynamic plant data are present", () => {
+    const ctx: AssistantContext = {
+      view:     "plants",
+      garden:   GARDEN,
+      settings: MOCK_SETTINGS,
+    };
+    const blocks = buildSystemBlocks(ctx, "de");
+    expect(blocks.length).toBe(5);
+  });
+
+  it("each block has a non-empty text field", () => {
+    const ctx: AssistantContext = {
+      view:     "plants",
+      garden:   GARDEN,
+      settings: MOCK_SETTINGS,
+    };
+    const blocks = buildSystemBlocks(ctx, "de");
+    for (const b of blocks) {
+      expect(b.text.trim().length).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe("buildSystemBlocks — block 1: persona + tools (AC #1)", () => {
+  it("first block contains persona text", () => {
+    const ctx: AssistantContext = { view: "dashboard", garden: GARDEN };
+    const blocks = buildSystemBlocks(ctx, "de");
+    expect(blocks[0].text).toContain("Gartenassistent");
+  });
+
+  it("first block contains tool description", () => {
+    const ctx: AssistantContext = { view: "dashboard", garden: GARDEN };
+    const blocks = buildSystemBlocks(ctx, "de");
+    expect(blocks[0].text).toContain("editPlant");
+  });
+
+  it("first block is the same on every call (static, cacheable)", () => {
+    const ctx1: AssistantContext = { view: "dashboard", garden: GARDEN };
+    const ctx2: AssistantContext = { view: "journal",   garden: GARDEN };
+    const b1 = buildSystemBlocks(ctx1, "de")[0].text;
+    const b2 = buildSystemBlocks(ctx2, "de")[0].text;
+    expect(b1).toBe(b2);
+  });
+});
+
+describe("buildSystemBlocks — block 2: settings (AC #3)", () => {
+  it("includes irrigation zones when settings provided", () => {
+    const ctx: AssistantContext = {
+      view:     "plants",
+      garden:   GARDEN,
+      settings: MOCK_SETTINGS,
+    };
+    const blocks = buildSystemBlocks(ctx, "de");
+    const settingsBlock = blocks.find((b) => b.text.includes("Beet West"));
+    expect(settingsBlock).toBeDefined();
+  });
+
+  it("includes plant categories when settings provided", () => {
+    const ctx: AssistantContext = {
+      view:     "plants",
+      garden:   GARDEN,
+      settings: MOCK_SETTINGS,
+    };
+    const blocks = buildSystemBlocks(ctx, "de");
+    const settingsBlock = blocks.find((b) => b.text.includes("Rosen"));
+    expect(settingsBlock).toBeDefined();
+  });
+
+  it("no settings block when settings not provided", () => {
+    const ctx: AssistantContext = { view: "plants", garden: GARDEN };
+    const blocks = buildSystemBlocks(ctx, "de");
+    const hasZones = blocks.some((b) => b.text.includes("Beet West"));
+    expect(hasZones).toBe(false);
+  });
+});
+
+describe("buildSystemBlocks — block 3+4: plant data split (AC #4)", () => {
+  it("plant base data (name, location) appears before dynamic data (tasks, journal)", () => {
+    const ctx: AssistantContext = {
+      view:     "plants",
+      garden:   GARDEN,
+      settings: MOCK_SETTINGS,
+    };
+    const blocks = buildSystemBlocks(ctx, "de");
+    const baseIdx    = blocks.findIndex((b) => b.text.includes("Südbeeet"));
+    const dynamicIdx = blocks.findIndex((b) => b.text.includes("Gegossen"));
+    expect(baseIdx).toBeGreaterThan(-1);
+    expect(dynamicIdx).toBeGreaterThan(-1);
+    expect(baseIdx).toBeLessThan(dynamicIdx);
+  });
+});
+
+describe("buildSystemBlocks — block 5: current situation last (AC #5)", () => {
+  it("last block contains current view", () => {
+    const ctx: AssistantContext = {
+      view:     "journal",
+      garden:   GARDEN,
+      settings: MOCK_SETTINGS,
+    };
+    const blocks = buildSystemBlocks(ctx, "de");
+    const last = blocks[blocks.length - 1];
+    expect(last.text).toContain("Tagebuch");
+  });
+
+  it("last block changes when view changes; first block stays the same", () => {
+    const ctx1: AssistantContext = { view: "plants",   garden: GARDEN, settings: MOCK_SETTINGS };
+    const ctx2: AssistantContext = { view: "calendar", garden: GARDEN, settings: MOCK_SETTINGS };
+    const blocks1 = buildSystemBlocks(ctx1, "de");
+    const blocks2 = buildSystemBlocks(ctx2, "de");
+    expect(blocks1[0].text).toBe(blocks2[0].text);  // Block 1 identical
+    expect(blocks1[blocks1.length - 1].text).not.toBe(blocks2[blocks2.length - 1].text); // Block 5 differs
+  });
+});
+
+describe("buildSystemBlocks — backward compat: buildSystemPrompt still works", () => {
+  it("buildSystemPrompt returns joined blocks", () => {
+    const ctx: AssistantContext = { view: "plants", garden: GARDEN };
+    const prompt  = buildSystemPrompt(ctx, "de");
+    const blocks  = buildSystemBlocks(ctx, "de");
+    const joined  = blocks.map((b) => b.text).join("\n\n---\n\n");
+    expect(prompt).toBe(joined);
   });
 });

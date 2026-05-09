@@ -210,7 +210,7 @@ describe("POST /api/ai/chat — Anthropic provider", () => {
     expect((init.headers as Record<string, string>)["anthropic-version"]).toBeDefined();
   });
 
-  it("sends persona as top-level system field (not in messages)", async () => {
+  it("sends system as array of blocks (not in messages) — TASK-056", async () => {
     configureSettings({
       ai_provider: "anthropic",
       ai_model:    "claude-sonnet-4-6",
@@ -226,11 +226,13 @@ describe("POST /api/ai/chat — Anthropic provider", () => {
 
     const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
     const sent = JSON.parse(init.body as string) as {
-      system: string;
+      system:   Array<{ type: string; text: string }>;
       messages: Array<{ role: string }>;
     };
-    expect(typeof sent.system).toBe("string");
-    expect(sent.system).toMatch(/Gartenassistent/);
+    // With fallback persona, system is a 1-element array
+    expect(Array.isArray(sent.system)).toBe(true);
+    expect(sent.system[0].type).toBe("text");
+    expect(sent.system[0].text).toMatch(/Gartenassistent/);
     // messages should NOT contain a system role entry
     expect(sent.messages.every((m) => m.role !== "system")).toBe(true);
   });
@@ -250,7 +252,51 @@ describe("POST /api/ai/chat — Anthropic provider", () => {
     await postChat([{ role: "user", content: "Hi" }], "en");
 
     const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-    const sent = JSON.parse(init.body as string) as { system: string };
-    expect(sent.system).toMatch(/garden assistant/i);
+    const sent = JSON.parse(init.body as string) as {
+      system: Array<{ type: string; text: string }>;
+    };
+    expect(Array.isArray(sent.system)).toBe(true);
+    expect(sent.system[0].text).toMatch(/garden assistant/i);
+  });
+
+  it("sends cache_control on all blocks except the last when system_blocks provided — TASK-056 AC #6", async () => {
+    configureSettings({
+      ai_provider: "anthropic",
+      ai_model:    "claude-sonnet-4-6",
+      ai_api_key:  "sk-ant-test",
+    });
+
+    const fetchMock = mockFetch({
+      content: [{ type: "text", text: "OK" }],
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    // Send 3 blocks
+    const res = await app.request("/api/ai/chat", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({
+        messages:      [{ role: "user", content: "Test" }],
+        language:      "de",
+        system_blocks: [
+          { text: "Block 1 — static" },
+          { text: "Block 2 — semi-static" },
+          { text: "Block 3 — dynamic situation" },
+        ],
+      }),
+    });
+    expect(res.status).toBe(200);
+
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const sent = JSON.parse(init.body as string) as {
+      system: Array<{ type: string; text: string; cache_control?: { type: string } }>;
+    };
+
+    expect(sent.system).toHaveLength(3);
+    // Blocks 1 and 2 have cache_control
+    expect(sent.system[0].cache_control).toEqual({ type: "ephemeral" });
+    expect(sent.system[1].cache_control).toEqual({ type: "ephemeral" });
+    // Last block has no cache_control
+    expect(sent.system[2].cache_control).toBeUndefined();
   });
 });

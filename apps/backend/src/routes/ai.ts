@@ -1,16 +1,18 @@
 /**
- * AI chat proxy route — STORY-042
+ * AI chat proxy route — TASK-042 / TASK-056
  *
  * POST /api/ai/chat
  *
- * Forwards conversation history to the configured AI provider
- * (OpenAI, Anthropic, or OpenRouter) and returns the assistant reply.
- * The system message (persona stub) is prepended server-side so the
- * frontend never needs to construct it.
+ * Forwards conversation history to the configured AI provider.
+ * Supports structured system_blocks for prompt caching (TASK-056):
  *
- * Provider specifics:
- *   - openai / openrouter  → OpenAI chat-completions format
- *   - anthropic            → Anthropic Messages API (different shape + headers)
+ *   system_blocks: SystemBlock[]  — structured, enables cache_control on Anthropic/OpenRouter
+ *   system_prompt: string         — plain string fallback (backward-compatible)
+ *
+ * Cache strategy (TASK-056):
+ *   - openai:      blocks joined to a single string; implicit prefix caching applies automatically
+ *   - anthropic:   blocks sent as structured array; cache_control "ephemeral" on all but the last block
+ *   - openrouter:  same as anthropic (forwarded to underlying model)
  */
 
 import { Hono } from "hono";
@@ -26,22 +28,49 @@ export const aiRoutes = new Hono();
 const PERSONA_DE = "Du bist ein hilfreicher Gartenassistent. Antworte auf Deutsch.";
 const PERSONA_EN = "You are a helpful garden assistant. Reply in English.";
 
-const OPENAI_URL      = "https://api.openai.com/v1/chat/completions";
-const OPENROUTER_URL  = "https://openrouter.ai/api/v1/chat/completions";
-const ANTHROPIC_URL   = "https://api.anthropic.com/v1/messages";
+const OPENAI_URL        = "https://api.openai.com/v1/chat/completions";
+const OPENROUTER_URL    = "https://openrouter.ai/api/v1/chat/completions";
+const ANTHROPIC_URL     = "https://api.anthropic.com/v1/messages";
 const ANTHROPIC_VERSION = "2023-06-01";
-const MAX_TOKENS = 1024;
+const MAX_TOKENS        = 1024;
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type ChatMessage = { role: "user" | "assistant"; content: string };
+type ChatMessage  = { role: "user" | "assistant"; content: string };
+type SystemBlock  = { text: string };
+
+/** Anthropic system block with optional cache_control. */
+type AnthropicSystemBlock = {
+  type:           "text";
+  text:           string;
+  cache_control?: { type: "ephemeral" };
+};
+
+// ── Cache helpers ─────────────────────────────────────────────────────────────
+
+/**
+ * Convert blocks to Anthropic system format.
+ * cache_control "ephemeral" is set on every block except the last —
+ * the last block is the most dynamic (current situation) and should not be cached.
+ */
+function toAnthropicSystem(blocks: SystemBlock[]): AnthropicSystemBlock[] {
+  return blocks.map((b, i) => ({
+    type: "text" as const,
+    text: b.text,
+    ...(i < blocks.length - 1 ? { cache_control: { type: "ephemeral" as const } } : {}),
+  }));
+}
+
+/** Convert blocks to a single system string for OpenAI (implicit prefix caching). */
+function toOpenAiSystem(blocks: SystemBlock[]): string {
+  return blocks.map((b) => b.text).join("\n\n---\n\n");
+}
 
 // ── Route ─────────────────────────────────────────────────────────────────────
 
 aiRoutes.post("/chat", zValidator("json", AiChatRequestSchema), async (c) => {
-  const { messages, language, system_prompt } = c.req.valid("json");
+  const { messages, language, system_prompt, system_blocks } = c.req.valid("json");
 
-  // Read AI config from settings
   const settings = getSettings(db);
   const { ai_provider, ai_model, ai_api_key } = settings;
 
@@ -49,17 +78,23 @@ aiRoutes.post("/chat", zValidator("json", AiChatRequestSchema), async (c) => {
     return c.json({ error: "AI provider not configured" }, 400);
   }
 
-  // Use the frontend-built system prompt when provided; fall back to stub persona
-  const persona = system_prompt ?? (language === "en" ? PERSONA_EN : PERSONA_DE);
+  // Build system content: prefer structured blocks, fall back to plain string / stub persona
+  const fallbackPersona = system_prompt ?? (language === "en" ? PERSONA_EN : PERSONA_DE);
 
   try {
     let content: string;
 
     if (ai_provider === "anthropic") {
-      content = await callAnthropic(ai_api_key, ai_model, persona, messages);
+      const systemArr: AnthropicSystemBlock[] = system_blocks
+        ? toAnthropicSystem(system_blocks)
+        : [{ type: "text", text: fallbackPersona }];
+      content = await callAnthropic(ai_api_key, ai_model, systemArr, messages);
     } else {
+      const systemStr: string = system_blocks
+        ? toOpenAiSystem(system_blocks)
+        : fallbackPersona;
       const url = ai_provider === "openrouter" ? OPENROUTER_URL : OPENAI_URL;
-      content = await callOpenAiCompat(url, ai_api_key, ai_model, persona, messages);
+      content = await callOpenAiCompat(url, ai_api_key, ai_model, systemStr, messages, ai_provider === "openrouter");
     }
 
     return c.json({ content });
@@ -75,24 +110,31 @@ async function callOpenAiCompat(
   url: string,
   apiKey: string,
   model: string,
-  persona: string,
+  system: string,
   messages: ChatMessage[],
+  isOpenRouter = false,
 ): Promise<string> {
   const body = {
     model,
     messages: [
-      { role: "system", content: persona },
+      { role: "system", content: system },
       ...messages,
     ],
   };
 
+  const headers: Record<string, string> = {
+    "Content-Type":  "application/json",
+    "Authorization": `Bearer ${apiKey}`,
+  };
+  if (isOpenRouter) {
+    headers["HTTP-Referer"] = "https://gardenassist.app";
+    headers["X-Title"]      = "GardenAssist";
+  }
+
   const res = await fetch(url, {
     method:  "POST",
-    headers: {
-      "Content-Type":  "application/json",
-      "Authorization": `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify(body),
+    headers,
+    body:    JSON.stringify(body),
   });
 
   if (!res.ok) {
@@ -102,7 +144,13 @@ async function callOpenAiCompat(
 
   const data = await res.json() as {
     choices: Array<{ message: { content: string } }>;
+    usage?:  Record<string, number>;
   };
+
+  // AC #7: log cache usage when available
+  if (data.usage) {
+    console.log("[AI usage]", data.usage);
+  }
 
   const content = data.choices?.[0]?.message?.content;
   if (!content) throw new Error("Empty response from provider");
@@ -112,12 +160,12 @@ async function callOpenAiCompat(
 async function callAnthropic(
   apiKey: string,
   model: string,
-  persona: string,
+  system: AnthropicSystemBlock[],
   messages: ChatMessage[],
 ): Promise<string> {
   const body = {
     model,
-    system:     persona,
+    system,
     messages,
     max_tokens: MAX_TOKENS,
   };
@@ -128,6 +176,8 @@ async function callAnthropic(
       "Content-Type":      "application/json",
       "x-api-key":         apiKey,
       "anthropic-version": ANTHROPIC_VERSION,
+      // Required for prompt caching (Anthropic beta)
+      "anthropic-beta":    "prompt-caching-2024-07-31",
     },
     body: JSON.stringify(body),
   });
@@ -139,7 +189,15 @@ async function callAnthropic(
 
   const data = await res.json() as {
     content: Array<{ type: string; text: string }>;
+    usage?:  Record<string, number>;
   };
+
+  // AC #7: log cache hit/miss metrics
+  if (data.usage) {
+    console.log("[AI cache]", data.usage);
+    // Expected fields: input_tokens, output_tokens,
+    //   cache_creation_input_tokens, cache_read_input_tokens
+  }
 
   const block = data.content?.find((b) => b.type === "text");
   if (!block?.text) throw new Error("Empty response from Anthropic");

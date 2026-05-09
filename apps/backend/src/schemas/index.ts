@@ -84,10 +84,15 @@ const chatMessageSchema = z.object({
   content: z.string().min(1),
 });
 
+const systemBlockSchema = z.object({
+  text: z.string(),
+});
+
 export const AiChatRequestSchema = z.object({
-  messages:      z.array(chatMessageSchema).min(1),
-  language:      z.enum(["de", "en"]).default("de"),
-  system_prompt: z.string().optional(),
+  messages:       z.array(chatMessageSchema).min(1),
+  language:       z.enum(["de", "en"]).default("de"),
+  system_prompt:  z.string().optional(),
+  system_blocks:  z.array(systemBlockSchema).optional(),
 });
 
 // ── GardenInput ───────────────────────────────────────────────────────────────

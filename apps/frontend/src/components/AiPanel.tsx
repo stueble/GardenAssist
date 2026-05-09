@@ -4,7 +4,7 @@ import { apiClient }               from "@/api/client";
 import { chatWithAi }              from "@/api/client";
 import type { ChatMessage }        from "@/api/client";
 import { useAiPanelState }         from "@/hooks/useAiPanelState";
-import { buildSystemPrompt }       from "@/lib/aiPrompt";
+import { buildSystemBlocks }       from "@/lib/aiPrompt";
 import type { AssistantContext }   from "@api/assistant-context";
 import { getPlantEditHandler }     from "@/hooks/usePlantEditContext";
 import type { PlantEditFields }    from "@/hooks/usePlantEditContext";
@@ -177,8 +177,8 @@ export function AiPanel({ assistantContext }: AiPanelProps) {
 
     try {
       const lang = (i18n.language?.startsWith("en") ? "en" : "de") as "de" | "en";
-      const systemPrompt = assistantContext
-        ? buildSystemPrompt(assistantContext, lang)
+      const systemBlocks = assistantContext
+        ? buildSystemBlocks(assistantContext, lang)
         : undefined;
       // Context markers are sent as "assistant" messages (with plant_id in content)
       // so the model uses the correct plant ID in subsequent tool calls.
@@ -187,7 +187,7 @@ export function AiPanel({ assistantContext }: AiPanelProps) {
           ? { role: "assistant" as const, content: m.content }
           : m as { role: "user" | "assistant"; content: string }
       );
-      const res = await chatWithAi(apiMessages, lang, systemPrompt);
+      const res = await chatWithAi(apiMessages, lang, undefined, systemBlocks);
 
       // Parse tool calls from assistant response
       const { toolCall, displayText } = parseToolCall(res.content);
