@@ -259,7 +259,7 @@ describe("POST /api/ai/chat — Anthropic provider", () => {
     expect(sent.system[0].text).toMatch(/garden assistant/i);
   });
 
-  it("sends cache_control on all blocks except the last when system_blocks provided — TASK-056 AC #6", async () => {
+  it("merges small blocks and sets cache_control only on large-enough merged groups — TASK-056 AC #6", async () => {
     configureSettings({
       ai_provider: "anthropic",
       ai_model:    "claude-sonnet-4-6",
@@ -271,7 +271,11 @@ describe("POST /api/ai/chat — Anthropic provider", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    // Send 3 blocks
+    // Each block is ≥ 4096 chars so they stay separate and each gets cache_control
+    const bigText1 = "A".repeat(4096);
+    const bigText2 = "B".repeat(4096);
+    const situation = "Current view: plants"; // small — last block, no cache_control
+
     const res = await app.request("/api/ai/chat", {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
@@ -279,9 +283,9 @@ describe("POST /api/ai/chat — Anthropic provider", () => {
         messages:      [{ role: "user", content: "Test" }],
         language:      "de",
         system_blocks: [
-          { text: "Block 1 — static" },
-          { text: "Block 2 — semi-static" },
-          { text: "Block 3 — dynamic situation" },
+          { text: bigText1 },
+          { text: bigText2 },
+          { text: situation },
         ],
       }),
     });
@@ -292,11 +296,51 @@ describe("POST /api/ai/chat — Anthropic provider", () => {
       system: Array<{ type: string; text: string; cache_control?: { type: string } }>;
     };
 
+    // 3 blocks stay separate (each bigText ≥ 4096 chars)
     expect(sent.system).toHaveLength(3);
-    // Blocks 1 and 2 have cache_control
     expect(sent.system[0].cache_control).toEqual({ type: "ephemeral" });
     expect(sent.system[1].cache_control).toEqual({ type: "ephemeral" });
-    // Last block has no cache_control
+    // Last block (situation) has no cache_control
     expect(sent.system[2].cache_control).toBeUndefined();
+  });
+
+  it("merges blocks smaller than 4096 chars before setting cache_control", async () => {
+    configureSettings({
+      ai_provider: "anthropic",
+      ai_model:    "claude-sonnet-4-6",
+      ai_api_key:  "sk-ant-test",
+    });
+
+    const fetchMock = mockFetch({
+      content: [{ type: "text", text: "OK" }],
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    // 3 small blocks — all merged into 1, last block has no cache_control → 1 block total, no cache
+    const res = await app.request("/api/ai/chat", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({
+        messages:      [{ role: "user", content: "Test" }],
+        language:      "de",
+        system_blocks: [
+          { text: "Block 1 — small" },
+          { text: "Block 2 — small" },
+          { text: "Block 3 — situation" },
+        ],
+      }),
+    });
+    expect(res.status).toBe(200);
+
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const sent = JSON.parse(init.body as string) as {
+      system: Array<{ type: string; text: string; cache_control?: { type: string } }>;
+    };
+
+    // All 3 merged into 1 (all below threshold) → single block, no cache_control
+    expect(sent.system).toHaveLength(1);
+    expect(sent.system[0].cache_control).toBeUndefined();
+    expect(sent.system[0].text).toContain("Block 1");
+    expect(sent.system[0].text).toContain("Block 3");
   });
 });

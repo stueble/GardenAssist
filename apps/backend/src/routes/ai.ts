@@ -49,15 +49,41 @@ type AnthropicSystemBlock = {
 // ── Cache helpers ─────────────────────────────────────────────────────────────
 
 /**
- * Convert blocks to Anthropic system format.
- * cache_control "ephemeral" is set on every block except the last —
- * the last block is the most dynamic (current situation) and should not be cached.
+ * Convert blocks to Anthropic system format with smart cache_control placement.
+ *
+ * Anthropic requires ≥ 1024 tokens per cached block (~4096 chars at ~4 chars/token).
+ * Blocks below this threshold are merged with adjacent blocks before setting
+ * cache_control, so we never waste a breakpoint on a block too small to cache.
+ *
+ * Algorithm:
+ *   1. Merge consecutive blocks until the accumulated text reaches MIN_CACHE_CHARS.
+ *   2. Set cache_control on that merged block (except the final block).
+ *   3. Repeat for remaining blocks.
  */
+const MIN_CACHE_CHARS = 4096; // ≈ 1024 tokens at ~4 chars/token
+
 function toAnthropicSystem(blocks: SystemBlock[]): AnthropicSystemBlock[] {
-  return blocks.map((b, i) => ({
+  if (blocks.length === 0) return [];
+
+  // Merge small blocks: accumulate text until MIN_CACHE_CHARS, then flush.
+  const merged: string[] = [];
+  let acc = "";
+
+  for (let i = 0; i < blocks.length; i++) {
+    const isLast = i === blocks.length - 1;
+    acc += (acc ? "\n\n---\n\n" : "") + blocks[i].text;
+    // Flush when big enough OR at the last block
+    if (acc.length >= MIN_CACHE_CHARS || isLast) {
+      merged.push(acc);
+      acc = "";
+    }
+  }
+
+  // Build Anthropic blocks: cache_control on all but the last merged block
+  return merged.map((text, i) => ({
     type: "text" as const,
-    text: b.text,
-    ...(i < blocks.length - 1 ? { cache_control: { type: "ephemeral" as const } } : {}),
+    text,
+    ...(i < merged.length - 1 ? { cache_control: { type: "ephemeral" as const } } : {}),
   }));
 }
 
