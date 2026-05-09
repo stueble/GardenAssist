@@ -122,4 +122,5 @@ export const SettingsSchema = z.object({
   ai_provider:              z.enum(["anthropic", "openai", "openrouter"]).nullable(),
   ai_model:                 z.string().nullable(),
   ai_api_key:               z.string().nullable(),
+  gardener_profile:         z.enum(["hobbyist", "engaged", "expert"]).nullable(),
 });

@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FieldLabel, FieldInput, FieldSelect, FieldRow } from "./FieldInput";
-import type { Settings } from "@api/settings";
-import type { AiProvider } from "@api/settings";
+import type { Settings, AiProvider, GardenerProfile } from "@api/settings";
 
 interface Props {
   form:     Settings;
@@ -23,6 +22,7 @@ const OPENAI_MODELS = [
 ] as const;
 
 const PROVIDERS: AiProvider[] = ["anthropic", "openai", "openrouter"];
+const GARDENER_PROFILES: GardenerProfile[] = ["hobbyist", "engaged", "expert"];
 
 export function AiSection({ form, onChange }: Props) {
   const { t } = useTranslation("settings");
@@ -53,6 +53,21 @@ export function AiSection({ form, onChange }: Props) {
 
   return (
     <div>
+      {/* Gardener Profile */}
+      <FieldRow>
+        <FieldLabel htmlFor="gardener_profile">{t("fields.gardener_profile")}</FieldLabel>
+        <FieldSelect
+          id="gardener_profile"
+          value={form.gardener_profile ?? ""}
+          onChange={(e) => onChange({ gardener_profile: (e.target.value || null) as GardenerProfile | null })}
+        >
+          <option value="">{t("gardener_profile.placeholder")}</option>
+          {GARDENER_PROFILES.map((p) => (
+            <option key={p} value={p}>{t(`gardener_profile.${p}`)}</option>
+          ))}
+        </FieldSelect>
+      </FieldRow>
+
       {/* Provider */}
       <FieldRow>
         <FieldLabel htmlFor="ai_provider">{t("fields.ai_provider")}</FieldLabel>

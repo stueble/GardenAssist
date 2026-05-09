@@ -39,6 +39,7 @@ const BASE_SETTINGS: Settings = {
   ai_provider:              null,
   ai_model:                 null,
   ai_api_key:               null,
+  gardener_profile:         null,
 };
 
 describe("getSettings()", () => {

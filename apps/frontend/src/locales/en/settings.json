@@ -37,7 +37,8 @@
     "attachment_size_limit_mb": "Max. file size (MB)",
     "ai_provider": "Provider",
     "ai_model": "Model",
-    "ai_api_key": "API Key"
+    "ai_api_key": "API Key",
+    "gardener_profile": "Gardener Profile"
   },
   "ai_provider": {
     "placeholder": "Choose provider …",
@@ -58,6 +59,12 @@
       "o1":          "o1 (Reasoning)",
       "o1-mini":     "o1-mini (Reasoning, fast)"
     }
+  },
+  "gardener_profile": {
+    "placeholder": "Choose profile …",
+    "hobbyist": "🌱 Hobbyist (~1h/week)",
+    "engaged":  "🌿 Engaged (2–4h/week)",
+    "expert":   "🌳 Expert (5h+/week)"
   },
   "ai_test": {
     "idle":    "🔌 Test connection",

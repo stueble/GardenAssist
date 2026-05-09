@@ -134,4 +134,5 @@ export const settings = sqliteTable("settings", {
   ai_provider:              text("ai_provider"),
   ai_model:                 text("ai_model"),
   ai_api_key:               text("ai_api_key"),
+  gardener_profile:         text("gardener_profile"),               // Enum: hobbyist | engaged | expert
 });

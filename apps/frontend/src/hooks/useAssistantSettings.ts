@@ -20,6 +20,7 @@ export function useAssistantSettings(): AssistantSettings | undefined {
         irrigation_zones: s.irrigation_zones,
         plant_categories: s.plant_categories,
         color_presets:    s.color_presets,
+        gardener_profile: s.gardener_profile,
       });
     }).catch(() => {
       // Non-critical — assistant works without settings block

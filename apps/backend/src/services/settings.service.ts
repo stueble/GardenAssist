@@ -38,8 +38,9 @@ function mapSettings(
     task_lookahead_weeks:     row.task_lookahead_weeks,
     attachment_size_limit_mb: row.attachment_size_limit_mb,
     ai_provider:              (row.ai_provider ?? null) as Settings["ai_provider"],
-    ai_model:                 row.ai_model    ?? null,
-    ai_api_key:               row.ai_api_key  ?? null,
+    ai_model:                 row.ai_model         ?? null,
+    ai_api_key:               row.ai_api_key        ?? null,
+    gardener_profile:         (row.gardener_profile ?? null) as Settings["gardener_profile"],
   };
 }
 
@@ -72,6 +73,7 @@ export function getSettings(db: Db): Settings {
       ai_provider:              null,
       ai_model:                 null,
       ai_api_key:               null,
+      gardener_profile:         null,
     };
   }
 
@@ -95,6 +97,7 @@ export function updateSettings(db: Db, data: Settings): Settings {
       ai_provider:              data.ai_provider,
       ai_model:                 data.ai_model,
       ai_api_key:               data.ai_api_key,
+      gardener_profile:         data.gardener_profile,
     })
     .where(eq(schema.settings.id, "settings"))
     .run();

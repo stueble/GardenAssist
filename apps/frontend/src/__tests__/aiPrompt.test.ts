@@ -233,6 +233,7 @@ const MOCK_SETTINGS: AssistantSettings = {
   color_presets:    [
     { schedule_type: "bloom", name: "Dunkelrot", color: "#8B0000" },
   ],
+  gardener_profile: null,
 };
 
 describe("buildSystemBlocks — block structure (TASK-056 AC #1, #2)", () => {
@@ -508,6 +509,86 @@ describe("buildSystemPrompt — pendingPlantEdit in Block 5", () => {
     expect(prompt).toContain("NOT yet saved");
     expect(prompt).toContain("do NOT suggest again");
     expect(prompt).toContain("name_botanical: Rosa canina");
+  });
+});
+
+// ── Gardener profile in Block 2 (TASK-062 AC #5, #6, #8) ─────────────────────
+
+describe("buildSystemPrompt — gardener profile in Block 2 (TASK-062)", () => {
+  it("hobbyist profile: describes ~1h/week and simple routines (DE)", () => {
+    const ctx: AssistantContext = {
+      view: "plants", garden: GARDEN,
+      settings: { ...MOCK_SETTINGS, gardener_profile: "hobbyist" },
+    };
+    const prompt = buildSystemPrompt(ctx, "de");
+    expect(prompt).toContain("1 Stunde pro Woche");
+    expect(prompt).toContain("einfach");
+  });
+
+  it("engaged profile: describes 2–4h/week and standard care (DE)", () => {
+    const ctx: AssistantContext = {
+      view: "plants", garden: GARDEN,
+      settings: { ...MOCK_SETTINGS, gardener_profile: "engaged" },
+    };
+    const prompt = buildSystemPrompt(ctx, "de");
+    expect(prompt).toContain("2–4 Stunden");
+    expect(prompt).toContain("saisonale Pflege");
+  });
+
+  it("expert profile: describes 5h+/week and professional routines (DE)", () => {
+    const ctx: AssistantContext = {
+      view: "plants", garden: GARDEN,
+      settings: { ...MOCK_SETTINGS, gardener_profile: "expert" },
+    };
+    const prompt = buildSystemPrompt(ctx, "de");
+    expect(prompt).toContain("5 Stunden");
+    expect(prompt).toContain("professionelle");
+  });
+
+  it("null profile falls back to engaged behaviour (DE)", () => {
+    const ctx: AssistantContext = {
+      view: "plants", garden: GARDEN,
+      settings: { ...MOCK_SETTINGS, gardener_profile: null },
+    };
+    const prompt = buildSystemPrompt(ctx, "de");
+    // Should contain engaged text (the default)
+    expect(prompt).toContain("2–4 Stunden");
+  });
+
+  it("renders in English for all three profiles", () => {
+    const profiles = ["hobbyist", "engaged", "expert"] as const;
+    const expected = [
+      ["1 hour", "simple"],
+      ["2–4 hours", "seasonal care"],
+      ["5 or more hours", "professional"],
+    ];
+    for (let i = 0; i < profiles.length; i++) {
+      const ctx: AssistantContext = {
+        view: "plants", garden: GARDEN,
+        settings: { ...MOCK_SETTINGS, gardener_profile: profiles[i] },
+      };
+      const prompt = buildSystemPrompt(ctx, "en");
+      for (const phrase of expected[i]) {
+        expect(prompt).toContain(phrase);
+      }
+    }
+  });
+
+  it("profile sentence appears in Block 2, not Block 1 (static block unchanged)", () => {
+    const ctx1: AssistantContext = {
+      view: "plants", garden: GARDEN,
+      settings: { ...MOCK_SETTINGS, gardener_profile: "hobbyist" },
+    };
+    const ctx2: AssistantContext = {
+      view: "plants", garden: GARDEN,
+      settings: { ...MOCK_SETTINGS, gardener_profile: "expert" },
+    };
+    const blocks1 = buildSystemBlocks(ctx1, "de");
+    const blocks2 = buildSystemBlocks(ctx2, "de");
+    // Block 1 (persona) must be identical regardless of profile
+    expect(blocks1[0].text).toBe(blocks2[0].text);
+    // Block 2 (settings) must differ
+    expect(blocks1[1].text).not.toBe(blocks2[1].text);
   });
 });
 

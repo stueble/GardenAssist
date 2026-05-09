@@ -33,6 +33,21 @@ export const AiProvider = {
 } as const;
 export type AiProvider = typeof AiProvider[keyof typeof AiProvider];
 
+/**
+ * Gardener experience / time budget profile.
+ * Injected into the AI system prompt (Block 1) so the assistant calibrates
+ * care recommendation complexity to the user's reality.
+ * - hobbyist: ~1h/week, minimal interventions
+ * - engaged:  2–4h/week, standard seasonal care (default)
+ * - expert:   5h+/week, professional-grade routines
+ */
+export const GardenerProfile = {
+  Hobbyist: "hobbyist",
+  Engaged:  "engaged",
+  Expert:   "expert",
+} as const;
+export type GardenerProfile = typeof GardenerProfile[keyof typeof GardenerProfile];
+
 // ── Settings ──────────────────────────────────────────────────────────────────
 
 /**
@@ -130,4 +145,10 @@ export type Settings = {
    * null if not configured.
    */
   ai_api_key: string | null;
+
+  /**
+   * The user's gardener profile. Controls the ambition level of AI advice.
+   * null falls back to "engaged" behaviour (standard seasonal care).
+   */
+  gardener_profile: GardenerProfile | null;
 };

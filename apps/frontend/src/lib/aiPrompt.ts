@@ -24,6 +24,7 @@ import type { Schedule }         from "@api/schedule";
 import type { JournalEntry }     from "@api/journal-entry";
 import type { Task }             from "@api/task";
 import type { AssistantContext, PendingPlantEdit } from "@api/assistant-context";
+import type { GardenerProfile }                   from "@api/settings";
 
 // ── Public types ──────────────────────────────────────────────────────────────
 
@@ -194,12 +195,43 @@ function buildBlock1(lang: "de" | "en"): string {
 // ── Block 2 — Settings ────────────────────────────────────────────────────────
 // Changes only when the user saves Settings.
 
+// ── Gardener profile sentences ─────────────────────────────────────────────────
+
+const GARDENER_PROFILE_TEXT: Record<GardenerProfile, Record<"de" | "en", string>> = {
+  hobbyist: {
+    de: "Der Benutzer ist ein Hobbygärtner mit etwa 1 Stunde pro Woche für die Gartenpflege. " +
+        "Halte alle Empfehlungen einfach und zeitsparend. Empfehle höchstens eine Düngung pro Saison. " +
+        "Vermeide mehrstufige oder häufige Pflegemaßnahmen.",
+    en: "The user is a hobbyist gardener with about 1 hour per week available for garden care. " +
+        "Keep all recommendations simple and time-efficient. Recommend at most one fertilization per season. " +
+        "Avoid multi-step or frequent interventions.",
+  },
+  engaged: {
+    de: "Der Benutzer ist ein engagierter Hobbygärtner mit 2–4 Stunden pro Woche für die Gartenpflege. " +
+        "Regelmäßige saisonale Pflege ist akzeptabel. Standardmäßige Düngungs- und Schnittpläne sind geeignet.",
+    en: "The user is an engaged hobbyist gardener with 2–4 hours per week available for garden care. " +
+        "Regular seasonal care is acceptable. Standard fertilization and pruning schedules are appropriate.",
+  },
+  expert: {
+    de: "Der Benutzer ist ein erfahrener Gärtner mit mehr als 5 Stunden pro Woche für die Gartenpflege. " +
+        "Optimale Pflegeroutinen und professionelle Zeitpläne sind erwünscht. " +
+        "Mehrfache Düngungen, detaillierte Schnittfenster und aufwändige Maßnahmen sind willkommen.",
+    en: "The user is an expert gardener with 5 or more hours per week available for garden care. " +
+        "Optimal care routines and professional-grade schedules are welcome. " +
+        "Multiple fertilizations, detailed pruning windows, and complex interventions are appropriate.",
+  },
+};
+
 function buildBlock2(ctx: AssistantContext, lang: "de" | "en"): string {
   const s = ctx.settings;
   if (!s) return "";
 
   const isDE = lang === "de";
   const lines: string[] = [];
+
+  // Gardener profile — always first, controls overall tone
+  const profile = s.gardener_profile ?? "engaged";
+  lines.push(GARDENER_PROFILE_TEXT[profile][lang]);
 
   if (s.location_city || s.location_zip) {
     const loc = [s.location_city, s.location_zip].filter(Boolean).join(", ");
@@ -230,7 +262,6 @@ function buildBlock2(ctx: AssistantContext, lang: "de" | "en"): string {
     );
   }
 
-  if (lines.length === 0) return "";
   return (isDE ? "Einstellungen:\n" : "Settings:\n") + lines.join("\n");
 }
 

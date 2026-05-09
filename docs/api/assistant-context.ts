@@ -1,6 +1,7 @@
-import type { Garden }      from "./garden";
-import type { Plant }       from "./plant";
-import type { ColorPreset } from "./color-preset";
+import type { Garden }          from "./garden";
+import type { Plant }           from "./plant";
+import type { ColorPreset }     from "./color-preset";
+import type { GardenerProfile } from "./settings";
 
 /**
  * Context passed from each view to AiPanel so the assistant can build
@@ -29,6 +30,8 @@ export type AssistantSettings = {
   irrigation_zones: string[];
   plant_categories: string[];
   color_presets:    ColorPreset[];
+  /** null falls back to "engaged" (standard seasonal care). */
+  gardener_profile: GardenerProfile | null;
 };
 
 /**

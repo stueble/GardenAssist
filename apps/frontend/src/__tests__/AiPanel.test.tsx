@@ -27,6 +27,7 @@ const MOCK_SETTINGS_UNCONFIGURED: Settings = {
   task_lookback_weeks: 2, task_lookahead_weeks: 4,
   attachment_size_limit_mb: 10,
   ai_provider: null, ai_model: null, ai_api_key: null,
+  gardener_profile: null,
 };
 
 const MOCK_SETTINGS_CONFIGURED: Settings = {
