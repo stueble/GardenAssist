@@ -419,6 +419,12 @@ function PlantEditDialog({
         setScheduleRows((prev) => {
           let rows = [...prev];
           for (const op of fields.schedules!) {
+            // Normalise id: strip the "[id:...]" or "[temp-id:...]" wrapper the
+            // model copies verbatim from the system prompt serialisation.
+            const opId = op.id
+              ? op.id.replace(/^\[(?:temp-)?id:(.+)\]$/, "$1")
+              : op.id;
+
             if (op.action === "add") {
               const sectionCfg = SCHEDULE_SECTIONS.find((c) => c.type === op.schedule_type);
               const newRow: ScheduleRow = {
@@ -433,14 +439,14 @@ function PlantEditDialog({
               };
               rows = [...rows, newRow];
 
-            } else if (op.action === "remove" && op.id) {
+            } else if (op.action === "remove" && opId) {
               rows = rows.map((r) =>
-                r.id === op.id ? { ...r, aiAction: "remove" as const } : r
+                r.id === opId ? { ...r, aiAction: "remove" as const } : r
               );
 
-            } else if (op.action === "update" && op.id) {
+            } else if (op.action === "update" && opId) {
               rows = rows.map((r) => {
-                if (r.id !== op.id) return r;
+                if (r.id !== opId) return r;
                 const aiPrev: ScheduleRow["aiPrev"] = {};
                 const patch: Partial<ScheduleRow> = { aiAction: "update" as const, aiPrev };
                 if (op.start_week !== undefined) { aiPrev.startIdx = r.startIdx; patch.startIdx = weekToIdx(op.start_week); }

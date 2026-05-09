@@ -98,7 +98,7 @@ Werkzeug: editPlant
   Zeitpläne (fields.schedules): optionales Array von Operationen
     Jedes Objekt hat folgende Felder:
       action         (genau eines von: "add" | "remove" | "update")
-      id             (string, nur bei remove/update: id aus den Gartendaten, Format [id:...])
+      id             (string, nur bei remove/update: die UUID direkt aus den Gartendaten, z.B. "a1b2c3d4-...")
       schedule_type  (bei add/update: genau eines von "bloom"|"growth"|"foliage"|"pruning"|"fertilization"|"misc")
                      Hinweis: bloom, growth und foliage sind rein informativ (Kalender/Gantt) — sie erzeugen KEINE Aufgaben.
                      Aufgaben entstehen nur aus: pruning, fertilization, misc.
@@ -158,7 +158,7 @@ Tool: editPlant
   Schedules (fields.schedules): optional array of operations
     Each object has these fields:
       action         (exactly one of: "add" | "remove" | "update")
-      id             (string, only for remove/update: id from garden data, format [id:...])
+      id             (string, only for remove/update: the UUID directly from garden data, e.g. "a1b2c3d4-...")
       schedule_type  (for add/update: exactly one of "bloom"|"growth"|"foliage"|"pruning"|"fertilization"|"misc")
                      Note: bloom, growth and foliage are informational only (calendar/Gantt) — they do NOT generate tasks.
                      Tasks are only generated from: pruning, fertilization, misc.
@@ -313,7 +313,7 @@ function buildBlock3(ctx: AssistantContext, lang: "de" | "en"): string {
 // Changes when tasks are resolved, journal entries added, or schedules edited.
 
 function serializeSchedule(s: Schedule): string {
-  let out = `    - [id:${s.id}] ${s.schedule_type}, KW ${s.start_week}–${s.end_week}`;
+  let out = `    - id:${s.id} | ${s.schedule_type}, KW ${s.start_week}–${s.end_week}`;
   if (s.color) out += `, Farbe: ${s.color}`;
   if (s.label) out += `, Label: ${s.label}`;
   if (s.notes) out += `\n      Notizen: ${s.notes}`;
@@ -411,9 +411,9 @@ function serializePendingPlantEdit(pending: PendingPlantEdit, lang: "de" | "en")
                 : "  Schedules (already suggested — do NOT suggest again):\n";
     for (const s of pending.schedules) {
       const idNote = s.isTemporaryId
-        ? isDE ? `[temp-id:${s.id}] (temporäre ID — nutzbar für weitere Operationen in diesem Dialog)`
-               : `[temp-id:${s.id}] (temporary ID — usable for further operations in this dialog)`
-        : `[id:${s.id}]`;
+        ? isDE ? `id:${s.id} (temporäre ID — nutzbar für weitere Operationen in diesem Dialog)`
+               : `id:${s.id} (temporary ID — usable for further operations in this dialog)`
+        : `id:${s.id}`;
       const weekRange = s.start_week !== undefined && s.end_week !== undefined
         ? `, KW ${s.start_week}–${s.end_week}` : "";
       const label = s.label ? `, Label: ${s.label}` : "";

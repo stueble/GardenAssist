@@ -781,6 +781,68 @@ describe("PlantEditDialog — save with uploads (story-029 AC #5)", () => {
   });
 });
 
+// ── AI schedule ID normalisation regression ───────────────────────────────────
+
+describe("PlantEditDialog — AI schedule ID normalisation (regression)", () => {
+  const PLANT_WITH_SCHEDULE: Plant = {
+    ...MOCK_PLANT,
+    schedules: [MOCK_SCHEDULE],
+  };
+
+  it("marks a schedule for removal when model sends plain UUID", async () => {
+    const ref = createRef<PlantEditDialogHandle>();
+    render(
+      <I18nextProvider i18n={i18n}>
+        <PlantEditDialog
+          ref={ref}
+          plant={PLANT_WITH_SCHEDULE}
+          onClose={vi.fn()} onSaved={vi.fn()}
+          positions={[]} onPositionsChange={vi.fn()}
+          initialPositions={[]} pickMode={false} onPickModeChange={vi.fn()}
+        />
+      </I18nextProvider>
+    );
+
+    act(() => {
+      ref.current!.applyAiFields({
+        schedules: [{ action: "remove", id: MOCK_SCHEDULE.id }],
+      });
+    });
+
+    await waitFor(() => {
+      const row = document.querySelector("[data-ai-action='remove']");
+      expect(row).not.toBeNull();
+    });
+  });
+
+  it("marks a schedule for removal when model sends [id:uuid] format", async () => {
+    const ref = createRef<PlantEditDialogHandle>();
+    render(
+      <I18nextProvider i18n={i18n}>
+        <PlantEditDialog
+          ref={ref}
+          plant={PLANT_WITH_SCHEDULE}
+          onClose={vi.fn()} onSaved={vi.fn()}
+          positions={[]} onPositionsChange={vi.fn()}
+          initialPositions={[]} pickMode={false} onPickModeChange={vi.fn()}
+        />
+      </I18nextProvider>
+    );
+
+    act(() => {
+      // Model copies the [id:...] wrapper verbatim from the old prompt format
+      ref.current!.applyAiFields({
+        schedules: [{ action: "remove", id: `[id:${MOCK_SCHEDULE.id}]` }],
+      });
+    });
+
+    await waitFor(() => {
+      const row = document.querySelector("[data-ai-action='remove']");
+      expect(row).not.toBeNull();
+    });
+  });
+});
+
 // ── AI suggestions + save regression (pending changes) ───────────────────────
 
 describe("PlantEditDialog — save after AI suggestions (regression)", () => {
