@@ -10,7 +10,7 @@ import { GardenPlanWidget } from "@/components/GardenPlanWidget";
 import { apiClient } from "@/api/client";
 import type { Plant }            from "@api/plant";
 import type { Garden }           from "@api/garden";
-import type { AssistantContext } from "@api/assistant-context";
+import type { AssistantContext, PendingPlantEdit } from "@api/assistant-context";
 import type { Schedule } from "@api/schedule";
 import {
   derivePlantStatus,
@@ -60,6 +60,7 @@ export function PlantsView() {
   const [sortDir,   setSortDir]   = useState<SortDir>("asc");
   const [selected,  setSelected]  = useState<Plant | null>(null);
   const [planUrl,   setPlanUrl]   = useState<string | null>(null);
+  const [pendingPlantEdit, setPendingPlantEdit] = useState<PendingPlantEdit | null>(null);
 
   const edit = usePlantEditDialog();
   const dialogRef  = useRef<PlantEditDialogHandle>(null);
@@ -168,7 +169,7 @@ export function PlantsView() {
 
 
   const assistantContext: AssistantContext | undefined = garden
-    ? { view: "plants", garden, selectedPlant: selected ?? undefined, settings: assistantSettings }
+    ? { view: "plants", garden, selectedPlant: selected ?? undefined, settings: assistantSettings, pendingPlantEdit: pendingPlantEdit ?? undefined }
     : undefined;
 
   // Report context to the shared AiPanel in App.tsx.
@@ -177,11 +178,11 @@ export function PlantsView() {
   useEffect(() => {
     setAssistantContext(
       garden
-        ? { view: "plants", garden, selectedPlant: selected ?? undefined, settings: assistantSettings }
+        ? { view: "plants", garden, selectedPlant: selected ?? undefined, settings: assistantSettings, pendingPlantEdit: pendingPlantEdit ?? undefined }
         : undefined
     );
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [garden, selected, assistantSettings]);
+  }, [garden, selected, assistantSettings, pendingPlantEdit]);
 
   if (loading) {
     return (
@@ -439,6 +440,7 @@ export function PlantsView() {
                  setPlants(g.plants);
               }).then((fresh) => setSelected(fresh));
             }}
+            onPendingChange={setPendingPlantEdit}
             positions={edit.positions}
             onPositionsChange={edit.onPositionsChange}
             initialPositions={edit.initialPositions}

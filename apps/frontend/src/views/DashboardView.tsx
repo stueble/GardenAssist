@@ -16,7 +16,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import type { AssistantContext } from "@api/assistant-context";
+import type { AssistantContext, PendingPlantEdit } from "@api/assistant-context";
 import { useAssistantSettings } from "@/hooks/useAssistantSettings";
 import { setAssistantContext } from "@/hooks/useAssistantContext";
 import { GardenPlanWidget, type PlanPin } from "@/components/GardenPlanWidget";
@@ -112,6 +112,7 @@ export function DashboardView() {
   const [garden,   setGarden]   = useState<Garden | null>(null);
   const [loading,  setLoading]  = useState(true);
   const [selected, setSelected] = useState<Plant | null>(null);
+  const [pendingPlantEdit, setPendingPlantEdit] = useState<PendingPlantEdit | null>(null);
 
   const edit = usePlantEditDialog();
 
@@ -198,17 +199,17 @@ export function DashboardView() {
 
 
   const assistantContext: AssistantContext | undefined = garden
-    ? { view: "dashboard", garden, selectedPlant: selected ?? undefined, settings: assistantSettings }
+    ? { view: "dashboard", garden, selectedPlant: selected ?? undefined, settings: assistantSettings, pendingPlantEdit: pendingPlantEdit ?? undefined }
     : undefined;
 
   useEffect(() => {
     setAssistantContext(
       garden
-        ? { view: "dashboard", garden, selectedPlant: selected ?? undefined, settings: assistantSettings }
+        ? { view: "dashboard", garden, selectedPlant: selected ?? undefined, settings: assistantSettings, pendingPlantEdit: pendingPlantEdit ?? undefined }
         : undefined
     );
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [garden, selected, assistantSettings]);
+  }, [garden, selected, assistantSettings, pendingPlantEdit]);
 
   return (
     <div
@@ -314,6 +315,7 @@ export function DashboardView() {
                 setGarden(g);
               }).then((fresh) => setSelected(fresh));
             }}
+            onPendingChange={setPendingPlantEdit}
             positions={edit.positions}
             onPositionsChange={edit.onPositionsChange}
             initialPositions={edit.initialPositions}

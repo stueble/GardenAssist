@@ -412,6 +412,105 @@ describe("serializeGarden — previously missing fields now included", () => {
   });
 });
 
+// ── pendingPlantEdit in Block 5 ───────────────────────────────────────────────
+
+describe("buildSystemPrompt — pendingPlantEdit in Block 5", () => {
+  it("includes scalar pending fields with 'not suggested again' warning", () => {
+    const ctx: AssistantContext = {
+      view:   "plants",
+      garden: GARDEN,
+      pendingPlantEdit: {
+        plantId:      "p-1",
+        scalarFields: { name_botanical: "Rosa canina", care_notes: "Regelmäßig düngen" },
+        schedules:    [],
+      },
+    };
+    const prompt = buildSystemPrompt(ctx, "de");
+    expect(prompt).toContain("name_botanical: Rosa canina");
+    expect(prompt).toContain("care_notes: Regelmäßig düngen");
+    expect(prompt).toContain("NICHT nochmal vorschlagen");
+    expect(prompt).toContain("noch NICHT gespeichert");
+  });
+
+  it("includes pending ADD schedule with temporary ID note", () => {
+    const ctx: AssistantContext = {
+      view:   "plants",
+      garden: GARDEN,
+      pendingPlantEdit: {
+        plantId:      "p-1",
+        scalarFields: {},
+        schedules: [{
+          action:        "add",
+          id:            "temp-uuid-123",
+          isTemporaryId: true,
+          schedule_type: "bloom",
+          start_week:    15,
+          end_week:      25,
+          label:         "Hauptblüte",
+          color:         "#c0392b",
+        }],
+      },
+    };
+    const prompt = buildSystemPrompt(ctx, "de");
+    expect(prompt).toContain("temp-uuid-123");
+    expect(prompt).toContain("temporäre ID");
+    expect(prompt).toContain("ADD");
+    expect(prompt).toContain("bloom");
+    expect(prompt).toContain("KW 15–25");
+    expect(prompt).toContain("Hauptblüte");
+  });
+
+  it("includes pending REMOVE schedule with server ID (not marked temporary)", () => {
+    const ctx: AssistantContext = {
+      view:   "plants",
+      garden: GARDEN,
+      pendingPlantEdit: {
+        plantId:      "p-1",
+        scalarFields: {},
+        schedules: [{
+          action:        "remove",
+          id:            "server-id-456",
+          isTemporaryId: false,
+          schedule_type: "pruning",
+          start_week:    9,
+          end_week:      10,
+          label:         null,
+          color:         null,
+        }],
+      },
+    };
+    const prompt = buildSystemPrompt(ctx, "de");
+    expect(prompt).toContain("server-id-456");
+    expect(prompt).toContain("REMOVE");
+    expect(prompt).toContain("pruning");
+    // No "temporäre ID" note for server IDs
+    expect(prompt).not.toContain("temporäre ID");
+  });
+
+  it("omits pending section entirely when pendingPlantEdit is absent", () => {
+    const ctx: AssistantContext = { view: "plants", garden: GARDEN };
+    const prompt = buildSystemPrompt(ctx, "de");
+    expect(prompt).not.toContain("noch NICHT gespeichert");
+    expect(prompt).not.toContain("NICHT nochmal vorschlagen");
+  });
+
+  it("renders in English when lang is 'en'", () => {
+    const ctx: AssistantContext = {
+      view:   "plants",
+      garden: GARDEN,
+      pendingPlantEdit: {
+        plantId:      "p-1",
+        scalarFields: { name_botanical: "Rosa canina" },
+        schedules:    [],
+      },
+    };
+    const prompt = buildSystemPrompt(ctx, "en");
+    expect(prompt).toContain("NOT yet saved");
+    expect(prompt).toContain("do NOT suggest again");
+    expect(prompt).toContain("name_botanical: Rosa canina");
+  });
+});
+
 describe("buildSystemBlocks — backward compat: buildSystemPrompt still works", () => {
   it("buildSystemPrompt returns joined blocks", () => {
     const ctx: AssistantContext = { view: "plants", garden: GARDEN };

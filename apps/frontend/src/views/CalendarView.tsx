@@ -21,7 +21,7 @@ import { apiClient } from "@/api/client";
 import type { Plant }            from "@api/plant";
 import type { Garden }           from "@api/garden";
 import type { Schedule }         from "@api/schedule";
-import type { AssistantContext } from "@api/assistant-context";
+import type { AssistantContext, PendingPlantEdit } from "@api/assistant-context";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -78,6 +78,7 @@ export function CalendarView() {
   const [activeType, setActiveType] = useState<Schedule["schedule_type"]>("bloom");
   const [selected,  setSelected] = useState<Plant | null>(null);
   const [planUrl,   setPlanUrl]  = useState<string | null>(null);
+  const [pendingPlantEdit, setPendingPlantEdit] = useState<PendingPlantEdit | null>(null);
 
   const edit = usePlantEditDialog();
 
@@ -106,17 +107,17 @@ export function CalendarView() {
 
 
   const assistantContext: AssistantContext | undefined = garden
-    ? { view: "calendar", garden, selectedPlant: selected ?? undefined, settings: assistantSettings }
+    ? { view: "calendar", garden, selectedPlant: selected ?? undefined, settings: assistantSettings, pendingPlantEdit: pendingPlantEdit ?? undefined }
     : undefined;
 
   useEffect(() => {
     setAssistantContext(
       garden
-        ? { view: "calendar", garden, selectedPlant: selected ?? undefined, settings: assistantSettings }
+        ? { view: "calendar", garden, selectedPlant: selected ?? undefined, settings: assistantSettings, pendingPlantEdit: pendingPlantEdit ?? undefined }
         : undefined
     );
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [garden, selected, assistantSettings]);
+  }, [garden, selected, assistantSettings, pendingPlantEdit]);
 
   return (
     <div
@@ -328,6 +329,7 @@ export function CalendarView() {
                 setPlants(g.plants);
               }).then((fresh) => setSelected(fresh));
             }}
+            onPendingChange={setPendingPlantEdit}
             positions={edit.positions}
             onPositionsChange={edit.onPositionsChange}
             initialPositions={edit.initialPositions}

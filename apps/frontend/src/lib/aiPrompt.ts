@@ -23,7 +23,7 @@ import type { Plant }            from "@api/plant";
 import type { Schedule }         from "@api/schedule";
 import type { JournalEntry }     from "@api/journal-entry";
 import type { Task }             from "@api/task";
-import type { AssistantContext } from "@api/assistant-context";
+import type { AssistantContext, PendingPlantEdit } from "@api/assistant-context";
 
 // ── Public types ──────────────────────────────────────────────────────────────
 
@@ -353,6 +353,48 @@ const VIEW_LABEL: Record<string, Record<"de" | "en", string>> = {
   settings:  { de: "Einstellungen",   en: "Settings"    },
 };
 
+function serializePendingPlantEdit(pending: PendingPlantEdit, lang: "de" | "en"): string {
+  const isDE = lang === "de";
+
+  const header = isDE
+    ? "Ausstehende Änderungen im Bearbeitungsdialog (noch NICHT gespeichert):\n"
+    : "Pending changes in the edit dialog (NOT yet saved):\n";
+
+  let out = header;
+
+  const scalarKeys = Object.keys(pending.scalarFields);
+  if (scalarKeys.length > 0) {
+    out += isDE ? "  Skalare Felder (bereits vorgeschlagen — NICHT nochmal vorschlagen):\n"
+                : "  Scalar fields (already suggested — do NOT suggest again):\n";
+    for (const key of scalarKeys) {
+      out += `    ${key}: ${pending.scalarFields[key]}\n`;
+    }
+  }
+
+  if (pending.schedules.length > 0) {
+    out += isDE ? "  Zeitpläne (bereits vorgeschlagen — NICHT nochmal vorschlagen):\n"
+                : "  Schedules (already suggested — do NOT suggest again):\n";
+    for (const s of pending.schedules) {
+      const idNote = s.isTemporaryId
+        ? isDE ? `[temp-id:${s.id}] (temporäre ID — nutzbar für weitere Operationen in diesem Dialog)`
+               : `[temp-id:${s.id}] (temporary ID — usable for further operations in this dialog)`
+        : `[id:${s.id}]`;
+      const weekRange = s.start_week !== undefined && s.end_week !== undefined
+        ? `, KW ${s.start_week}–${s.end_week}` : "";
+      const label = s.label ? `, Label: ${s.label}` : "";
+      const color = s.color ? `, Farbe: ${s.color}` : "";
+      out += `    - ${s.action.toUpperCase()} ${idNote} ${s.schedule_type ?? ""}${weekRange}${label}${color}\n`;
+    }
+    if (pending.schedules.some((s) => s.isTemporaryId)) {
+      out += isDE
+        ? "  HINWEIS: Temporäre IDs sind bis zum Speichern stabil und können für remove/update genutzt werden.\n"
+        : "  NOTE: Temporary IDs are stable until Save and can be used for remove/update.\n";
+    }
+  }
+
+  return out.trimEnd();
+}
+
 function buildBlock5(ctx: AssistantContext, lang: "de" | "en"): string {
   const isDE = lang === "de";
   const viewLabel = VIEW_LABEL[ctx.view]?.[lang] ?? ctx.view;
@@ -371,6 +413,10 @@ function buildBlock5(ctx: AssistantContext, lang: "de" | "en"): string {
     out += isDE
       ? `Ausgewählte Pflanze: ${id}\n`
       : `Selected plant: ${id}\n`;
+  }
+
+  if (ctx.pendingPlantEdit) {
+    out += "\n" + serializePendingPlantEdit(ctx.pendingPlantEdit, lang) + "\n";
   }
 
   return out.trim();

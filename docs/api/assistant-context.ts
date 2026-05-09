@@ -31,10 +31,50 @@ export type AssistantSettings = {
   color_presets:    ColorPreset[];
 };
 
+/**
+ * One schedule that has been suggested by the AI in the currently open
+ * plant edit dialog but not yet saved to the database.
+ *
+ * isTemporaryId: true when action === "add" — the id is a frontend-local
+ * crypto.randomUUID(). It is stable for the lifetime of the open dialog
+ * and can be used by the AI in subsequent remove/update calls within the
+ * same session. After the user clicks Save, the server assigns real IDs
+ * and the garden context is refreshed.
+ */
+export type PendingSchedule = {
+  action:         "add" | "remove" | "update";
+  id:             string;
+  isTemporaryId:  boolean;
+  schedule_type?: string;
+  start_week?:    number;
+  end_week?:      number;
+  label?:         string | null;
+  color?:         string | null;
+};
+
+/**
+ * Represents the AI-suggested changes currently staged in the open
+ * PlantEditDialog that have not yet been confirmed by the user (Save).
+ *
+ * Included in AssistantContext so Block 5 of the system prompt can inform
+ * the model about what it has already proposed, preventing duplicate
+ * suggestions on follow-up messages.
+ */
+export type PendingPlantEdit = {
+  /** The plant being edited, or null for a new plant. */
+  plantId:      string | null;
+  /** Scalar fields the AI has pre-filled, keyed by field name. */
+  scalarFields: Record<string, string>;
+  /** Schedule operations the AI has staged. */
+  schedules:    PendingSchedule[];
+};
+
 export type AssistantContext = {
   view:           AssistantView;
   selectedPlant?: Plant;
   garden:         Garden;
   /** Optional — when present, enables the Settings cache block (Block #2). */
   settings?:      AssistantSettings;
+  /** Optional — AI-suggested changes staged in the open PlantEditDialog. */
+  pendingPlantEdit?: PendingPlantEdit;
 };

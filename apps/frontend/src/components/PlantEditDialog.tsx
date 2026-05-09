@@ -22,6 +22,7 @@ import type { Schedule, ScheduleType } from "@api/schedule";
 import type { ColorPreset } from "@api/color-preset";
 import type { Attachment, AttachmentCategory } from "@api/attachment";
 import type { PlantInput } from "@api/api";
+import type { PendingPlantEdit } from "@api/assistant-context";
 import { apiClient } from "@/api/client";
 import { applyAiSuggestions } from "@/lib/applyAiSuggestions";
 import type { PlantEditFields } from "@/hooks/usePlantEditContext";
@@ -308,6 +309,13 @@ export interface PlantEditDialogProps {
   initialPositions:    PositionRow[];   // snapshot at dialog open — for dirty check
   pickMode:            boolean;
   onPickModeChange:    (active: boolean) => void;
+  /**
+   * Called whenever the set of AI-staged (pending) changes changes.
+   * Receives null when the dialog closes or all AI suggestions are reverted.
+   * Used by parent views to include pending changes in the AI system prompt
+   * so the assistant knows what it has already suggested.
+   */
+  onPendingChange?:    (pending: PendingPlantEdit | null) => void;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -317,6 +325,7 @@ function PlantEditDialog({
   plant, onClose, onSaved,
   positions, onPositionsChange, initialPositions,
   pickMode, onPickModeChange,
+  onPendingChange,
 }: PlantEditDialogProps, ref) {
   const { t } = useTranslation("plants");
 
@@ -341,6 +350,49 @@ function PlantEditDialog({
   // AI suggestion state: which fields are marked + their pre-AI values for revert
   const [aiMarked, setAiMarked] = useState<AiSuggestionsMap>({});
   const [aiPrev,   setAiPrev]   = useState<AiPrevMap>({});
+
+  // Helper: clear pending state whenever the dialog closes for any reason.
+  const clearPending = useCallback(() => {
+    onPendingChange?.(null);
+  }, [onPendingChange]);
+
+  // Notify parent whenever the set of pending AI changes updates.
+  // This lets the assistant context (Block 5) reflect what has already been staged.
+  useEffect(() => {
+    if (!onPendingChange) return;
+
+    const scalarFields: Record<string, string> = {};
+    for (const key of Object.keys(aiMarked) as AiSuggestableField[]) {
+      if (aiMarked[key]) scalarFields[key] = form[key] as string ?? "";
+    }
+
+    const pendingSchedules = scheduleRows
+      .filter((r) => r.aiAction !== undefined)
+      .map((r) => ({
+        action:        r.aiAction as "add" | "remove" | "update",
+        id:            r.id,
+        isTemporaryId: r.aiAction === "add",
+        schedule_type: r.scheduleType,
+        start_week:    r.aiAction !== "remove" ? r.startIdx + 1 : undefined,
+        end_week:      r.aiAction !== "remove" ? r.endIdx + 1   : undefined,
+        label:         r.label || null,
+        color:         r.color || null,
+      }));
+
+    const hasScalar    = Object.keys(scalarFields).length > 0;
+    const hasSchedules = pendingSchedules.length > 0;
+
+    if (!hasScalar && !hasSchedules) {
+      onPendingChange(null);
+    } else {
+      onPendingChange({
+        plantId:      plant?.id ?? null,
+        scalarFields,
+        schedules:    pendingSchedules,
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aiMarked, scheduleRows]);
 
   // Imperative handle for AiPanel / PlantEditContext
   useImperativeHandle(ref, () => ({
@@ -468,6 +520,7 @@ function PlantEditDialog({
 
   function handleClose() {
     if (dirty && !confirm(t("edit.unsaved_confirm"))) return;
+    clearPending();
     onClose();
   }
 
@@ -519,11 +572,13 @@ function PlantEditDialog({
           setAttachmentError(t("edit.attachments.upload_error"));
           setSaving(false);
           // Still close dialog — plant data is saved; images can be re-added later
+          clearPending();
           onSaved(saved);
           return;
         }
       }
 
+      clearPending();
       onSaved(saved);
     } catch {
       setError("Speichern fehlgeschlagen. Bitte versuche es erneut.");
