@@ -75,7 +75,7 @@ describe("Export/Import Full Round-Trip", () => {
       watering_zone: "Zone 1",
       purchase_date: "2024-01-15",
       purchase_price: 25.99,
-      thumbnail_attachment_id: null,
+      
       positions: [{ x_percent: 10, y_percent: 20 }],
       schedules: [
         {
@@ -205,6 +205,64 @@ describe("Export/Import Full Round-Trip", () => {
     expect(result.skipped_errors.length).toBe(0);
     expect(result.garden.journal_entries).toHaveLength(1);
     expect(result.garden.journal_entries[0].plant_id).toBeNull();
+  });
+
+  it("round-trip: plant attachments are restored to DB and disk", async () => {
+    const db1 = createTestDb();
+
+    // Create a plant
+    const plant = await createPlant(db1, {
+      name_common: "Farn", name_botanical: null, icon: null, origin_type: null,
+      category: null, lifecycle: null, description: null, care_notes: null,
+      sun_demand: null, water_demand: null, soil_type: null,
+      frost_tolerance_min_c: null, temperature_protected: false,
+      health_status: null, location: null, watering_zone: null,
+      purchase_date: null, purchase_price: null, 
+      positions: [], schedules: [], attachments: [],
+    });
+
+    // Insert an attachment row directly (simulates an uploaded image)
+    const attId = "att-test-001";
+    const attUrl = `/static/attachments/plant/${plant.id}/photo.jpg`;
+    const now = new Date().toISOString();
+    db1.insert(schema.attachments).values({
+      id: attId, owner_type: "plant", owner_id: plant.id,
+      attachment_type: "image", category: "main",
+      url: attUrl, created_at: now, updated_at: now,
+    }).run();
+
+    // Write a fake image file to disk
+    const attDir = path.join(tempDir, "static", "attachments", "plant", plant.id);
+    fs.mkdirSync(attDir, { recursive: true });
+    fs.writeFileSync(path.join(attDir, "photo.jpg"), Buffer.from("fake-image-data"));
+
+    // Export
+    const backup = await exportBackupTarGz(db1, tempDir);
+
+    // Import into a fresh DB / fresh tempDir
+    const db2 = createTestDb();
+    const tempDir2 = fs.mkdtempSync(path.join(os.tmpdir(), "garden-import-att-test-"));
+    fs.mkdirSync(path.join(tempDir2, "static", "attachments"), { recursive: true });
+
+    try {
+      const result = await importBackupTarGz(db2, backup, tempDir2, { skipErrors: false });
+
+      // Attachment DB row must exist
+      const attRow = db2.select().from(schema.attachments)
+        .where(eq(schema.attachments.id, attId)).get();
+      expect(attRow).toBeDefined();
+      expect(attRow?.url).toBe(attUrl);
+      expect(attRow?.owner_type).toBe("plant");
+      expect(attRow?.owner_id).toBe(plant.id);
+
+      // Attachment file must exist on disk
+      const restoredFile = path.join(tempDir2, "static", "attachments", "plant", plant.id, "photo.jpg");
+      expect(fs.existsSync(restoredFile)).toBe(true);
+
+      expect(result.skipped_count).toBe(0);
+    } finally {
+      fs.rmSync(tempDir2, { recursive: true });
+    }
   });
 
   it("settings api_key is preserved during round-trip", async () => {

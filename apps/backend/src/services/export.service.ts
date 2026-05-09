@@ -50,7 +50,8 @@ export async function exportJsonData(db: Db): Promise<ExportData> {
 /**
  * Creates a tar.gz backup archive containing:
  * - metadata.json (garden + settings without api_key)
- * - attachments/ directory with all binary files
+ * - attachments/ directory with all binary attachment files
+ * - garden/plan.<ext> if a garden plan image is set
  *
  * Returns the gzipped buffer for download.
  */
@@ -60,8 +61,20 @@ export async function exportBackupTarGz(db: Db, dataDir: string): Promise<Buffer
   // Collect all attachments from DB
   const attachmentRows = db.select().from(schema.attachments).all();
 
+  // Resolve garden plan file path (if any)
+  const planUrl = jsonData.garden.plan_url; // e.g. "/static/garden/plan.png"
+  let gardenPlanEntry: { name: string; filePath: string } | null = null;
+  if (planUrl) {
+    // planUrl is like /static/garden/plan.png — strip leading slash, resolve against dataDir
+    const relPath = planUrl.replace(/^\//, "");
+    const absPath = path.join(dataDir, relPath);
+    if (fs.existsSync(absPath)) {
+      gardenPlanEntry = { name: relPath, filePath: absPath };
+    }
+  }
+
   // Build tar.gz in memory
-  const tarBuffer = await createTarGzBuffer(jsonData, attachmentRows, dataDir);
+  const tarBuffer = await createTarGzBuffer(jsonData, attachmentRows, dataDir, gardenPlanEntry);
   return tarBuffer;
 }
 
@@ -74,12 +87,14 @@ interface TarEntry {
 }
 
 /**
- * Creates a tar.gz buffer with metadata.json and all attachment files.
+ * Creates a tar.gz buffer with metadata.json, all attachment files,
+ * and the garden plan image (if present).
  */
 async function createTarGzBuffer(
   jsonData: ExportData,
   attachmentRows: typeof schema.attachments.$inferSelect[],
   dataDir: string,
+  gardenPlanEntry: { name: string; filePath: string } | null,
 ): Promise<Buffer> {
   const entries: TarEntry[] = [];
 
@@ -91,7 +106,16 @@ async function createTarGzBuffer(
     mode: 0o644,
   });
 
-  // 2. Add all attachment files
+  // 2. Add garden plan image (e.g. static/garden/plan.png)
+  if (gardenPlanEntry) {
+    entries.push({
+      name: gardenPlanEntry.name,
+      data: fs.readFileSync(gardenPlanEntry.filePath),
+      mode: 0o644,
+    });
+  }
+
+  // 3. Add all attachment files
   for (const attachment of attachmentRows) {
     const filePath = path.join(
       dataDir,

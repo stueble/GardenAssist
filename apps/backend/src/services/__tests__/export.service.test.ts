@@ -81,7 +81,7 @@ describe("exportJsonData()", () => {
       watering_zone: null,
       purchase_date: null,
       purchase_price: null,
-      thumbnail_attachment_id: null,
+      
       positions: [],
       schedules: [
         {
@@ -203,7 +203,7 @@ describe("importJsonData()", () => {
       watering_zone: null,
       purchase_date: null,
       purchase_price: null,
-      thumbnail_attachment_id: null,
+      
       positions: [],
       schedules: [],
       attachments: [],

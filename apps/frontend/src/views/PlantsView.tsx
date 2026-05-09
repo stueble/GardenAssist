@@ -409,13 +409,14 @@ export function PlantsView() {
       <div
         data-testid="detail-panel"
         style={{
-          width:        selected && edit.editTarget === undefined ? "300px" : "0",
+          width:        selected && edit.editTarget === undefined ? "360px" : "0",
+          minWidth:     selected && edit.editTarget === undefined ? "360px" : "0",
           overflow:     "hidden",
           background:   "var(--warm-white)",
           borderLeft:   selected && edit.editTarget === undefined ? "1px solid var(--border)" : "none",
           display:      "flex",
           flexDirection:"column",
-          transition:   "width .3s ease",
+          transition:   "width .3s ease, min-width .3s ease",
           flexShrink:   0,
         }}
       >
@@ -491,13 +492,8 @@ function PlantRow({ plant, selected, onClick, t }: PlantRowProps) {
   const colors    = bloomColors(plant.schedules);
   const colorName = bloomColorLabel(plant.schedules);
 
-  // Thumbnail: prefer thumbnail_attachment_id, then main, then first image
-  const thumbImg = plant.thumbnail_attachment_id
-    ? plant.attachments.find((a) => a.id === plant.thumbnail_attachment_id && a.attachment_type === "image")
-      ?? plant.attachments.find((a) => a.attachment_type === "image" && a.category === "main")
-      ?? plant.attachments.find((a) => a.attachment_type === "image")
-    : plant.attachments.find((a) => a.attachment_type === "image" && a.category === "main")
-      ?? plant.attachments.find((a) => a.attachment_type === "image");
+  // Thumbnail: first image in sort_order (backend returns attachments sorted by sort_order)
+  const thumbImg = plant.attachments.find((a) => a.attachment_type === "image");
 
   return (
     <tr
@@ -664,10 +660,8 @@ function PlantCard({ plant, selected, onClick, t: _t }: PlantCardProps) {
   const status   = derivePlantStatus(plant);
   const careTask = nextCareTask(plant);
 
-  // First image attachment (prefer thumbnail_attachment_id, else first image)
-  const firstImage = plant.thumbnail_attachment_id
-    ? plant.attachments.find((a) => a.id === plant.thumbnail_attachment_id && a.attachment_type === "image")
-    : plant.attachments.find((a) => a.attachment_type === "image");
+  // Thumbnail: first image in sort_order (backend returns attachments sorted by sort_order)
+  const firstImage = plant.attachments.find((a) => a.attachment_type === "image");
 
   return (
     <div

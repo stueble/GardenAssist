@@ -48,12 +48,44 @@ export async function importJsonData(
 
   try {
     // 0. Upsert attachments (must come first, as plants/entries reference them)
-    // Note: attachment API type doesn't include owner_type/owner_id
-    // These are derived from how attachments are loaded (as part of their owner)
-    // So we only update metadata (category, etc.) on import
-    if (jsonData.garden.attachments) {
+    //
+    // owner_type and owner_id are not part of the Attachment API type, but they
+    // can be recovered from the URL: /static/attachments/{owner_type}/{owner_id}/{file}
+    // For garden-level attachments the URL is /static/attachments/garden/{file}
+    // (owner_id segment is absent — the literal string "garden" stands in).
+    //
+    // We collect all attachment records from every context in which they appear:
+    //   - Garden.attachments          → owner_type: "garden",        owner_id: null
+    //   - Plant.attachments           → owner_type: "plant",         owner_id: plant.id
+    //   - JournalEntry (via ids)      → owner_type: "journal_entry", owner_id: entry.id
+    //     (journal_entry_attachments junction rows are recreated in step 2)
+    {
       const now = new Date().toISOString();
-      for (const attachment of jsonData.garden.attachments) {
+
+      // Collect all unique attachment objects from every place they appear in the export.
+      // owner_type and owner_id are recovered directly from the URL:
+      //   /static/attachments/{owner_type}/{owner_id}/{filename}
+      // This is the canonical source of truth — no assumptions about context needed.
+      const seenIds = new Set<string>();
+      const allAttachments: (typeof jsonData.garden.attachments)[0][] = [];
+
+      const collect = (atts: typeof jsonData.garden.attachments | undefined) => {
+        for (const a of atts ?? []) {
+          if (!seenIds.has(a.id)) { seenIds.add(a.id); allAttachments.push(a); }
+        }
+      };
+
+      collect(jsonData.garden.attachments);
+      for (const plant of jsonData.garden.plants ?? []) collect(plant.attachments);
+
+      for (const attachment of allAttachments) {
+        // Parse owner_type and owner_id from URL path:
+        // /static/attachments/{owner_type}/{owner_id}/{file}  (plant / journal_entry)
+        // /static/attachments/garden/{file}                   (garden, no owner_id segment)
+        const parts = attachment.url.replace(/^\//, "").split("/");
+        // parts: ["static", "attachments", owner_type, owner_id_or_file, file?]
+        const owner_type = parts[2] ?? "garden";
+        const owner_id   = parts.length >= 5 ? (parts[3] ?? null) : null;
         try {
           const existing = db
             .select()
@@ -61,23 +93,31 @@ export async function importJsonData(
             .where(eq(schema.attachments.id, attachment.id))
             .get();
 
+          // sort_order: use value from export if present, fall back to 0 for
+          // backwards compatibility with exports that predate this field.
+          const sortOrder = (attachment as any).sort_order ?? 0;
+
           if (existing) {
-            // Only update category, not owner info
             db.update(schema.attachments)
-              .set({
-                category: attachment.category ?? null,
-                updated_at: now,
-              })
+              .set({ category: attachment.category ?? null, sort_order: sortOrder, updated_at: now })
               .where(eq(schema.attachments.id, attachment.id))
               .run();
           } else {
-            // Skip creating new attachments without owner info
-            // They must be restored as part of file restore, not JSON import
-            // This is because we don't know owner_type/owner_id from the API
-            skippedErrors.push(
-              `Attachment id=${attachment.id}: Cannot import new attachment without owner info (restore from backup instead)`,
-            );
-            skippedCount++;
+            // Derive attachment_type from the file extension in the URL
+            const ext = attachment.url.split(".").pop()?.toLowerCase() ?? "";
+            const attachmentType = ext === "pdf" ? "pdf" : "image";
+
+            db.insert(schema.attachments).values({
+              id:              attachment.id,
+              owner_type,
+              owner_id,
+              attachment_type: attachmentType,
+              category:        attachment.category ?? null,
+              sort_order:      sortOrder,
+              url:             attachment.url,
+              created_at:      attachment.created_at ?? now,
+              updated_at:      attachment.updated_at ?? now,
+            }).run();
           }
         } catch (err) {
           skippedErrors.push(`Attachment id=${attachment.id}: ${String(err)}`);
@@ -120,7 +160,6 @@ export async function importJsonData(
                 watering_zone: plant.watering_zone ?? null,
                 purchase_date: plant.purchase_date ?? null,
                 purchase_price: plant.purchase_price ?? null,
-                thumbnail_attachment_id: plant.thumbnail_attachment_id ?? null,
                 updated_at: now,
               })
               .where(eq(schema.plants.id, plant.id))
@@ -180,7 +219,6 @@ export async function importJsonData(
                 watering_zone: plant.watering_zone ?? null,
                 purchase_date: plant.purchase_date ?? null,
                 purchase_price: plant.purchase_price ?? null,
-                thumbnail_attachment_id: plant.thumbnail_attachment_id ?? null,
                 created_at: plant.created_at,
                 updated_at: plant.updated_at,
               })
@@ -324,7 +362,22 @@ export async function importJsonData(
       }
     }
 
-    // 3. Merge settings (preserve ai_api_key!)
+    // 3. Restore garden plan metadata (plan_url + plan_name)
+    try {
+      db.update(schema.garden)
+        .set({
+          plan_url:  jsonData.garden.plan_url  ?? null,
+          plan_name: jsonData.garden.plan_name ?? null,
+        })
+        .where(eq(schema.garden.id, "garden"))
+        .run();
+    } catch (err) {
+      skippedErrors.push(`Garden plan metadata restore failed: ${String(err)}`);
+      skippedCount++;
+      if (!skipErrors) throw err;
+    }
+
+    // 4. Merge settings (preserve ai_api_key!)
     try {
       const oldSettings = getSettings(db);
       const newSettings: Settings = {
@@ -367,7 +420,7 @@ export async function importBackupTarGz(
   options: { skipErrors?: boolean } = {},
 ): Promise<ImportResult> {
   // Extract tar.gz to in-memory
-  const { metadataJson, attachments } = await extractTarGz(tarGzBuffer);
+  const { metadataJson, attachments, staticFiles } = await extractTarGz(tarGzBuffer);
 
   // Parse metadata
   let jsonData: { garden: Garden; settings: Settings };
@@ -380,18 +433,29 @@ export async function importBackupTarGz(
   // Import JSON data
   const result = await importJsonData(db, jsonData, options);
 
-  // Restore attachment files to disk
+  // Restore attachment files to disk (entry paths are relative: attachments/...)
   for (const [entryPath, fileData] of Object.entries(attachments)) {
     try {
       const targetPath = path.join(dataDir, "static", entryPath);
       const dir = path.dirname(targetPath);
-
-      // Create directory if needed
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
       }
+      fs.writeFileSync(targetPath, fileData);
+    } catch (err) {
+      result.skipped_errors.push(`Failed to restore ${entryPath}: ${String(err)}`);
+      result.skipped_count++;
+    }
+  }
 
-      // Write file
+  // Restore other static files (entry paths are already relative: static/garden/plan.png)
+  for (const [entryPath, fileData] of Object.entries(staticFiles)) {
+    try {
+      const targetPath = path.join(dataDir, entryPath);
+      const dir = path.dirname(targetPath);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
       fs.writeFileSync(targetPath, fileData);
     } catch (err) {
       result.skipped_errors.push(`Failed to restore ${entryPath}: ${String(err)}`);
@@ -407,6 +471,7 @@ export async function importBackupTarGz(
 interface ExtractedTarGz {
   metadataJson: Buffer;
   attachments: Record<string, Buffer>;
+  staticFiles: Record<string, Buffer>; // other static files, e.g. static/garden/plan.png
 }
 
 /**
@@ -441,6 +506,7 @@ async function extractTarGz(tarGzBuffer: Buffer): Promise<ExtractedTarGz> {
 function parseTarData(tarData: Buffer): ExtractedTarGz {
   const metadataJson: Buffer[] = [];
   const attachments: Record<string, Buffer> = {};
+  const staticFiles: Record<string, Buffer> = {};
 
   let offset = 0;
 
@@ -466,12 +532,16 @@ function parseTarData(tarData: Buffer): ExtractedTarGz {
       metadataJson.push(fileData);
     } else if (header.filename.startsWith("attachments/")) {
       attachments[header.filename] = fileData;
+    } else if (header.filename.startsWith("static/")) {
+      // Other static files (e.g. static/garden/plan.png)
+      staticFiles[header.filename] = fileData;
     }
   }
 
   return {
     metadataJson: Buffer.concat(metadataJson),
     attachments,
+    staticFiles,
   };
 }
 
