@@ -69,9 +69,10 @@ export function GardenPlanWidget({
 
   const [modeFitH, setModeFitH] = useState(false);
   const [modeFitW, setModeFitW] = useState(false);
-  // Refs so the wheel handler always reads the current mode without being re-registered
+  // Refs so event handlers always read the current value without being re-registered
   const modeFitHRef = useRef(false);
   const modeFitWRef = useRef(false);
+  const pickModeRef = useRef(pickMode);
   // Trigger re-render for pin positions after transform change
   const [, forceUpdate] = useState(0);
 
@@ -182,7 +183,7 @@ export function GardenPlanWidget({
     // Mouse pan — disabled in pick mode so clicks land on handleAreaClick cleanly
     const onMouseDown = (e: MouseEvent) => {
       if ((e.target as HTMLElement).closest("[data-zoom-btn]")) return;
-      if (pickMode) return;   // pick mode: let React onClick handle the click
+      if (pickModeRef.current) return;   // pick mode: let React onClick handle the click
       s.dragging = true;
       s.startX   = e.clientX; s.startY = e.clientY;
       s.startTx  = s.tx;      s.startTy = s.ty;
@@ -196,7 +197,7 @@ export function GardenPlanWidget({
     };
     const onMouseUp = () => {
       s.dragging = false;
-      area.style.cursor = pickMode ? "crosshair" : "grab";
+      area.style.cursor = pickModeRef.current ? "crosshair" : "grab";
     };
 
     // Wheel: zoom (free), pan H (fit-height), pan V (fit-width), locked (both)
@@ -291,10 +292,11 @@ export function GardenPlanWidget({
       area.removeEventListener("touchmove",   onTouchMove);
       area.removeEventListener("touchend",    onTouchEnd);
     };
-  }, [applyT, zoomAt, initPlan, pickMode]);
+  }, [applyT, zoomAt, initPlan]);
 
-  // Re-apply cursor when pickMode changes
+  // Keep pickModeRef in sync and re-apply cursor — without touching the main effect
   useEffect(() => {
+    pickModeRef.current = pickMode;
     const area = areaRef.current;
     if (!area) return;
     area.style.cursor = pickMode ? "crosshair" : "grab";
@@ -322,16 +324,18 @@ export function GardenPlanWidget({
     const curW  = modeFitWRef.current;
     modeFitHRef.current = nextH;
     setModeFitH(nextH);
-    if (!nextH && !curW) initPlan();
-    else applyCurrentMode(nextH, curW, true);
+    if (!nextH && curW) applyFitW();       // only fit-width remains active
+    else if (nextH)     applyCurrentMode(nextH, curW, true); // activating fit-height
+    // deactivating with no other mode: leave current transform as-is
   };
   const handleFitW = () => {
     const nextW = !modeFitWRef.current;
     const curH  = modeFitHRef.current;
     modeFitWRef.current = nextW;
     setModeFitW(nextW);
-    if (!curH && !nextW) initPlan();
-    else applyCurrentMode(curH, nextW, true);
+    if (!nextW && curH) applyFitH();       // only fit-height remains active
+    else if (nextW)     applyCurrentMode(curH, nextW, true); // activating fit-width
+    // deactivating with no other mode: leave current transform as-is
   };
 
   // ── render ────────────────────────────────────────────────────────────────────

@@ -434,20 +434,8 @@ export function PlantDetailPanel({ plant, onClose, onEdit, onDelete }: PlantDeta
 
       </div>
 
-      {/* Actions — AC #6 */}
-      <div style={{ display: "flex", gap: "8px", padding: "12px 18px", borderTop: "1px solid var(--border)", flexShrink: 0 }}>
-        <button
-          type="button"
-          style={{ ...detailBtnStyle, background: "var(--green-deep)", color: "white", borderColor: "var(--green-deep)" }}
-          onClick={() => onEdit?.(plant)}
-          data-testid="detail-btn-edit"
-        >
-          {t("detail.btn_edit")}
-        </button>
-      </div>
-
-      {/* Delete — AC #3, #4, #5, #7 */}
-      <div style={{ padding: "0 18px 14px", flexShrink: 0 }}>
+      {/* Actions + Delete — confirm replaces the edit button entirely */}
+      <div style={{ padding: "12px 18px 14px", borderTop: "1px solid var(--border)", flexShrink: 0 }}>
         {deleteError && (
           <div
             data-testid="detail-delete-error"
@@ -457,20 +445,7 @@ export function PlantDetailPanel({ plant, onClose, onEdit, onDelete }: PlantDeta
             {deleteError}
           </div>
         )}
-        {!confirmOpen ? (
-          <button
-            type="button"
-            data-testid="detail-btn-delete"
-            onClick={() => { setDeleteError(null); setConfirmOpen(true); }}
-            style={{
-              background: "none", border: "none", cursor: "pointer", padding: 0,
-              fontSize: "12px", color: "var(--red-warn)", fontFamily: "var(--font-body)",
-              textDecoration: "underline", textUnderlineOffset: "2px",
-            }}
-          >
-            {t("detail.btn_delete")}
-          </button>
-        ) : (
+        {confirmOpen ? (
           <div
             data-testid="detail-delete-confirm"
             style={{
@@ -520,6 +495,29 @@ export function PlantDetailPanel({ plant, onClose, onEdit, onDelete }: PlantDeta
                 {deleting ? "…" : t("detail.delete_confirm_ok")}
               </button>
             </div>
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            <button
+              type="button"
+              style={{ ...detailBtnStyle, background: "var(--green-deep)", color: "white", borderColor: "var(--green-deep)" }}
+              onClick={() => onEdit?.(plant)}
+              data-testid="detail-btn-edit"
+            >
+              {t("detail.btn_edit")}
+            </button>
+            <button
+              type="button"
+              data-testid="detail-btn-delete"
+              onClick={() => { setDeleteError(null); setConfirmOpen(true); }}
+              style={{
+                background: "none", border: "none", cursor: "pointer", padding: 0,
+                fontSize: "12px", color: "var(--red-warn)", fontFamily: "var(--font-body)",
+                textDecoration: "underline", textUnderlineOffset: "2px", alignSelf: "flex-start",
+              }}
+            >
+              {t("detail.btn_delete")}
+            </button>
           </div>
         )}
       </div>
