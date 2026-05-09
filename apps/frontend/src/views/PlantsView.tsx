@@ -467,7 +467,7 @@ export function PlantsView() {
           <PlantDetailPanel
             plant={selected}
             onClose={() => setSelected(null)}
-            onEdit={(p) => { edit.openEdit(p); setSelected(null); }}
+            onEdit={(p) => { edit.openEdit(p); }}
             onDelete={() => {
               setPlants((prev) => prev.filter((p) => p.id !== selected.id));
               setSelected(null);
