@@ -691,18 +691,30 @@ function GrunddatenFields({
   aiMarked, onRevertAiField, t,
 }: GrunddatenProps) {
 
-  /** Wraps a field input/select with green AI-suggestion styling + × revert button. */
+  /**
+   * Returns style overrides for an input/select/textarea that is inside an AiField wrapper.
+   * Removes the field's own border and background so the orange wrapper shows through cleanly.
+   */
+  function aiInputStyle(fieldKey: AiSuggestableField): React.CSSProperties {
+    if (!aiMarked[fieldKey]) return {};
+    return { border: "none", background: "transparent", outline: "none" };
+  }
+
+  /** Wraps a field input/select with orange AI-suggestion styling + × revert button. */
   function AiField({ fieldKey, children }: { fieldKey: AiSuggestableField; children: React.ReactNode }) {
     if (!aiMarked[fieldKey]) return <>{children}</>;
     return (
       <div style={{ position: "relative" }} data-testid={`ai-field-${fieldKey}`}>
-        {/* Orange left border — field itself keeps its original styling */}
         <div style={{
-          borderLeft:   "3px solid #e07b00",
+          background:   "#fff4e6",
+          border:       "1.5px solid #e07b00",
           borderRadius: "8px",
-          paddingRight: "26px", // room for × button
+          padding:      "1px",
         }}>
-          {children}
+          <div style={{ display: "flex", alignItems: "center", gap: "4px", padding: "0 4px 0 6px" }}>
+            <span aria-hidden="true" style={{ fontSize: "11px", color: "#e07b00", flexShrink: 0 }}>✦</span>
+            <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
+          </div>
         </div>
         <button
           type="button"
@@ -820,6 +832,7 @@ function GrunddatenFields({
               data-testid="field-name"
               style={{
                 ...fieldInputStyle,
+                ...aiInputStyle("name_common"),
                 borderColor: nameError ? "var(--red-warn)" : undefined,
               }}
             />
@@ -835,7 +848,7 @@ function GrunddatenFields({
               onChange={(e) => patch("name_botanical", e.target.value)}
               placeholder="z.B. Rosa"
               data-testid="field-botanical"
-              style={{ ...fieldInputStyle }}
+              style={{ ...fieldInputStyle, ...aiInputStyle("name_botanical") }}
             />
           </AiField>
         </div>
@@ -850,7 +863,7 @@ function GrunddatenFields({
             placeholder="Beschreibung der Pflanze …"
             rows={3}
             data-testid="field-description"
-            style={{ ...fieldTextareaStyle }}
+            style={{ ...fieldTextareaStyle, ...aiInputStyle("description") }}
           />
         </AiField>
       </FieldRow>
@@ -864,7 +877,7 @@ function GrunddatenFields({
               value={form.category}
               onChange={(e) => patch("category", e.target.value)}
               data-testid="field-category"
-              style={{ ...fieldSelectStyle }}
+              style={{ ...fieldSelectStyle, ...aiInputStyle("category") }}
             >
               <option value="">{t("edit.select_none")}</option>
               {categories.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -878,7 +891,7 @@ function GrunddatenFields({
               value={form.origin_type}
               onChange={(e) => patch("origin_type", e.target.value)}
               data-testid="field-origin"
-              style={{ ...fieldSelectStyle }}
+              style={{ ...fieldSelectStyle, ...aiInputStyle("origin_type") }}
             >
               <option value="">{t("edit.select_none")}</option>
               <option value="native">{t("origin_type.native")}</option>
@@ -898,7 +911,7 @@ function GrunddatenFields({
               value={form.lifecycle}
               onChange={(e) => patch("lifecycle", e.target.value)}
               data-testid="field-lifecycle"
-              style={{ ...fieldSelectStyle }}
+              style={{ ...fieldSelectStyle, ...aiInputStyle("lifecycle") }}
             >
               <option value="">{t("edit.select_none")}</option>
               <option value="annual">{t("lifecycle.annual")}</option>
@@ -914,7 +927,7 @@ function GrunddatenFields({
               value={form.health_status}
               onChange={(e) => patch("health_status", e.target.value)}
               data-testid="field-health"
-              style={{ ...fieldSelectStyle }}
+              style={{ ...fieldSelectStyle, ...aiInputStyle("health_status") }}
             >
               <option value="">{t("edit.select_none")}</option>
               <option value="good">{t("health_status.good")}</option>
@@ -936,7 +949,7 @@ function GrunddatenFields({
               onChange={(e) => patch("location", e.target.value)}
               placeholder="z.B. Westbeet"
               data-testid="field-location"
-              style={{ ...fieldInputStyle }}
+              style={{ ...fieldInputStyle, ...aiInputStyle("location") }}
             />
           </AiField>
         </div>
@@ -947,7 +960,7 @@ function GrunddatenFields({
               value={form.watering_zone}
               onChange={(e) => patch("watering_zone", e.target.value)}
               data-testid="field-watering"
-              style={{ ...fieldSelectStyle }}
+              style={{ ...fieldSelectStyle, ...aiInputStyle("watering_zone") }}
             >
               <option value="">{t("edit.select_none")}</option>
               {zones.map((z) => <option key={z} value={z}>{z}</option>)}
@@ -965,7 +978,7 @@ function GrunddatenFields({
               value={form.sun_demand}
               onChange={(e) => patch("sun_demand", e.target.value)}
               data-testid="field-sun"
-              style={{ ...fieldSelectStyle }}
+              style={{ ...fieldSelectStyle, ...aiInputStyle("sun_demand") }}
             >
               <option value="">{t("edit.select_none")}</option>
               <option value="sunny">{t("sun_demand.sunny")}</option>
@@ -981,7 +994,7 @@ function GrunddatenFields({
               value={form.water_demand}
               onChange={(e) => patch("water_demand", e.target.value)}
               data-testid="field-water"
-              style={{ ...fieldSelectStyle }}
+              style={{ ...fieldSelectStyle, ...aiInputStyle("water_demand") }}
             >
               <option value="">{t("edit.select_none")}</option>
               <option value="low">{t("water_demand.low")}</option>
@@ -1001,7 +1014,7 @@ function GrunddatenFields({
               value={form.soil_type}
               onChange={(e) => patch("soil_type", e.target.value)}
               data-testid="field-soil"
-              style={{ ...fieldSelectStyle }}
+              style={{ ...fieldSelectStyle, ...aiInputStyle("soil_type") }}
             >
               <option value="">{t("edit.select_none")}</option>
               <option value="loamy">{t("soil_type.loamy")}</option>
@@ -1021,7 +1034,7 @@ function GrunddatenFields({
               onChange={(e) => patch("frost_tolerance_min_c", e.target.value)}
               placeholder="-15"
               data-testid="field-temp"
-              style={{ ...fieldInputStyle }}
+              style={{ ...fieldInputStyle, ...aiInputStyle("frost_tolerance_min_c") }}
             />
           </AiField>
         </div>
@@ -1051,7 +1064,7 @@ function GrunddatenFields({
               value={form.purchase_date}
               onChange={(e) => patch("purchase_date", e.target.value)}
               data-testid="field-purchase-date"
-              style={{ ...fieldInputStyle }}
+              style={{ ...fieldInputStyle, ...aiInputStyle("purchase_date") }}
             />
           </AiField>
         </div>
@@ -1066,7 +1079,7 @@ function GrunddatenFields({
               onChange={(e) => patch("purchase_price", e.target.value)}
               placeholder="0.00"
               data-testid="field-purchase-price"
-              style={{ ...fieldInputStyle }}
+              style={{ ...fieldInputStyle, ...aiInputStyle("purchase_price") }}
             />
           </AiField>
         </div>
@@ -1081,7 +1094,7 @@ function GrunddatenFields({
             placeholder="Pflegehinweise, Besonderheiten …"
             rows={3}
             data-testid="field-care-notes"
-            style={{ ...fieldTextareaStyle }}
+            style={{ ...fieldTextareaStyle, ...aiInputStyle("care_notes") }}
           />
         </AiField>
       </FieldRow>
