@@ -5,7 +5,7 @@
  * fetch is mocked via vi.stubGlobal to intercept provider calls.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach, type MockInstance } from "vitest";
 import app from "../../index.js";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -342,5 +342,104 @@ describe("POST /api/ai/chat — Anthropic provider", () => {
     expect(sent.system[0].cache_control).toBeUndefined();
     expect(sent.system[0].text).toContain("Block 1");
     expect(sent.system[0].text).toContain("Block 3");
+  });
+
+  // ── Caching verification tests ───────────────────────────────────────────────
+  // These tests verify the caching infrastructure is correctly wired without
+  // making real API calls. They confirm:
+  //   1. The anthropic-beta header is sent (required to activate prompt caching)
+  //   2. cache_read_input_tokens from the response is logged (visible in prod logs)
+  //   3. cache_creation_input_tokens is also logged (shows cache was built)
+  //
+  // To verify caching actually works in production:
+  //   - Watch the backend log for: [AI cache] { ..., cache_read_input_tokens: N }
+  //   - First request: cache_creation_input_tokens > 0, cache_read_input_tokens = 0
+  //   - Second request (same context, within 5 min TTL): cache_read_input_tokens > 0
+
+  it("sends anthropic-beta prompt-caching header (required for caching to activate)", async () => {
+    configureSettings({
+      ai_provider: "anthropic",
+      ai_model:    "claude-sonnet-4-6",
+      ai_api_key:  "sk-ant-test",
+    });
+
+    const fetchMock = mockFetch({
+      content: [{ type: "text", text: "OK" }],
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await postChat([{ role: "user", content: "Test" }]);
+
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const headers = init.headers as Record<string, string>;
+    expect(headers["anthropic-beta"]).toBe("prompt-caching-2024-07-31");
+  });
+
+  it("logs cache_read_input_tokens when Anthropic returns usage data (cache hit)", async () => {
+    configureSettings({
+      ai_provider: "anthropic",
+      ai_model:    "claude-sonnet-4-6",
+      ai_api_key:  "sk-ant-test",
+    });
+
+    // Simulate a cache-hit response from Anthropic
+    const fetchMock = mockFetch({
+      content: [{ type: "text", text: "Cached reply" }],
+      usage: {
+        input_tokens:                 120,
+        output_tokens:                 45,
+        cache_creation_input_tokens:    0,
+        cache_read_input_tokens:     1180,  // > 0 = cache hit
+      },
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const consoleSpy = vi.spyOn(console, "log") as MockInstance;
+
+    await postChat([{ role: "user", content: "Test" }]);
+
+    // Backend should log the usage object so cache hits are visible in production logs
+    const cacheLogCall = consoleSpy.mock.calls.find(
+      (args) => typeof args[0] === "string" && args[0].includes("[AI cache]")
+    );
+    expect(cacheLogCall).toBeDefined();
+    const loggedUsage = cacheLogCall![1] as Record<string, number>;
+    expect(loggedUsage.cache_read_input_tokens).toBe(1180);
+
+    consoleSpy.mockRestore();
+  });
+
+  it("logs cache_creation_input_tokens when Anthropic returns usage data (cache miss / first request)", async () => {
+    configureSettings({
+      ai_provider: "anthropic",
+      ai_model:    "claude-sonnet-4-6",
+      ai_api_key:  "sk-ant-test",
+    });
+
+    // Simulate a cache-miss (first request) response: cache is being written
+    const fetchMock = mockFetch({
+      content: [{ type: "text", text: "First reply" }],
+      usage: {
+        input_tokens:                1300,
+        output_tokens:                 45,
+        cache_creation_input_tokens: 1180,  // > 0 = cache was written
+        cache_read_input_tokens:        0,
+      },
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const consoleSpy = vi.spyOn(console, "log") as MockInstance;
+
+    await postChat([{ role: "user", content: "Test" }]);
+
+    const cacheLogCall = consoleSpy.mock.calls.find(
+      (args) => typeof args[0] === "string" && args[0].includes("[AI cache]")
+    );
+    expect(cacheLogCall).toBeDefined();
+    const loggedUsage = cacheLogCall![1] as Record<string, number>;
+    expect(loggedUsage.cache_creation_input_tokens).toBe(1180);
+    expect(loggedUsage.cache_read_input_tokens).toBe(0);
+
+    consoleSpy.mockRestore();
   });
 });
