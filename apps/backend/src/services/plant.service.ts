@@ -23,27 +23,26 @@ export async function createPlant(db: Db, data: PlantInput) {
 
   db.insert(schema.plants).values({
     id,
-    name_common:             data.name_common,
-    name_botanical:          data.name_botanical,
-    icon:                    data.icon,
-    origin_type:             data.origin_type,
-    category:                data.category,
-    lifecycle:               data.lifecycle,
-    description:             data.description,
-    care_notes:              data.care_notes,
-    sun_demand:              data.sun_demand,
-    water_demand:            data.water_demand,
-    soil_type:               data.soil_type,
-    frost_tolerance_min_c:   data.frost_tolerance_min_c,
-    temperature_protected:   data.temperature_protected,
-    health_status:           data.health_status,
-    location:                data.location,
-    watering_zone:           data.watering_zone,
-    purchase_date:           data.purchase_date,
-    purchase_price:          data.purchase_price,
-    thumbnail_attachment_id: data.thumbnail_attachment_id,
-    created_at:              now,
-    updated_at:              now,
+    name_common:           data.name_common,
+    name_botanical:        data.name_botanical,
+    icon:                  data.icon,
+    origin_type:           data.origin_type,
+    category:              data.category,
+    lifecycle:             data.lifecycle,
+    description:           data.description,
+    care_notes:            data.care_notes,
+    sun_demand:            data.sun_demand,
+    water_demand:          data.water_demand,
+    soil_type:             data.soil_type,
+    frost_tolerance_min_c: data.frost_tolerance_min_c,
+    temperature_protected: data.temperature_protected,
+    health_status:         data.health_status,
+    location:              data.location,
+    watering_zone:         data.watering_zone,
+    purchase_date:         data.purchase_date,
+    purchase_price:        data.purchase_price,
+    created_at:            now,
+    updated_at:            now,
   }).run();
 
   // Insert positions
@@ -86,26 +85,25 @@ export async function updatePlant(db: Db, id: string, data: PlantInput) {
 
   db.update(schema.plants)
     .set({
-      name_common:             data.name_common,
-      name_botanical:          data.name_botanical,
-      icon:                    data.icon,
-      origin_type:             data.origin_type,
-      category:                data.category,
-      lifecycle:               data.lifecycle,
-      description:             data.description,
-      care_notes:              data.care_notes,
-      sun_demand:              data.sun_demand,
-      water_demand:            data.water_demand,
-      soil_type:               data.soil_type,
-      frost_tolerance_min_c:   data.frost_tolerance_min_c,
-      temperature_protected:   data.temperature_protected,
-      health_status:           data.health_status,
-      location:                data.location,
-      watering_zone:           data.watering_zone,
-      purchase_date:           data.purchase_date,
-      purchase_price:          data.purchase_price,
-      thumbnail_attachment_id: data.thumbnail_attachment_id,
-      updated_at:              now,
+      name_common:           data.name_common,
+      name_botanical:        data.name_botanical,
+      icon:                  data.icon,
+      origin_type:           data.origin_type,
+      category:              data.category,
+      lifecycle:             data.lifecycle,
+      description:           data.description,
+      care_notes:            data.care_notes,
+      sun_demand:            data.sun_demand,
+      water_demand:          data.water_demand,
+      soil_type:             data.soil_type,
+      frost_tolerance_min_c: data.frost_tolerance_min_c,
+      temperature_protected: data.temperature_protected,
+      health_status:         data.health_status,
+      location:              data.location,
+      watering_zone:         data.watering_zone,
+      purchase_date:         data.purchase_date,
+      purchase_price:        data.purchase_price,
+      updated_at:            now,
     })
     .where(eq(schema.plants.id, id))
     .run();
@@ -140,6 +138,14 @@ export async function updatePlant(db: Db, id: string, data: PlantInput) {
       created_at:    now,
       updated_at:    now,
     }).run();
+  }
+
+  // Update attachment category and sort_order (patch-replace semantics on metadata)
+  for (const att of data.attachments) {
+    db.update(schema.attachments)
+      .set({ category: att.category, sort_order: att.sort_order, updated_at: now })
+      .where(eq(schema.attachments.id, att.id))
+      .run();
   }
 
   // Return the assembled plant

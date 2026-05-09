@@ -32,6 +32,7 @@ const ATTACHMENT = {
   id:              "att-1",
   attachment_type: "image" as const,
   category:        "main" as const,
+  sort_order:      0,
   url:             "/static/p1.jpg",
   created_at:      "2023-01-01T00:00:00Z",
   updated_at:      "2023-01-01T00:00:00Z",
@@ -57,7 +58,7 @@ const PLANT: Plant = {
   watering_zone:           null,
   purchase_date:           "2023-04-01",
   purchase_price:          12.5,
-  thumbnail_attachment_id: "att-1",
+  
   positions:               [{ x_percent: 50, y_percent: 60 }],
   attachments:             [ATTACHMENT],
   schedules:               [SCHEDULE],
@@ -75,7 +76,7 @@ const GARDEN: Garden = {
     { id: "je-1", plant_id: "p-1", schedule_id: null, week: null, entry_type: "done", date: "2024-05-01", title: "Gegossen", notes: null, attachment_ids: [], created_at: "2024-05-01T00:00:00Z", updated_at: "2024-05-01T00:00:00Z" },
     { id: "je-2", plant_id: null, schedule_id: null, week: null, entry_type: "observation", date: "2024-05-02", title: "Gartenrundgang", notes: "Alles gut", attachment_ids: [], created_at: "2024-05-02T00:00:00Z", updated_at: "2024-05-02T00:00:00Z" },
   ],
-  attachments:     [{ id: "att-1", attachment_type: "image", category: null, url: "/static/plan.jpg", created_at: "2023-01-01T00:00:00Z", updated_at: "2023-01-01T00:00:00Z" }],
+  attachments:     [{ id: "att-1", attachment_type: "image", category: null, sort_order: 0, url: "/static/plan.jpg", created_at: "2023-01-01T00:00:00Z", updated_at: "2023-01-01T00:00:00Z" }],
   warnings:        [],
 };
 
@@ -95,10 +96,10 @@ describe("serializeGarden — field stripping (AC #3)", () => {
     expect(result).not.toContain("/static/plan.jpg");
   });
 
-  it("does not include thumbnail_attachment_id", () => {
+  it("does not include attachment ids or sort_order", () => {
     const result = serializeGarden(GARDEN);
     expect(result).not.toContain("att-1");
-    expect(result).not.toContain("thumbnail_attachment_id");
+    expect(result).not.toContain("sort_order");
   });
 
   it("does not include position coordinates", () => {

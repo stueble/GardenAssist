@@ -14,7 +14,7 @@ export type AttachmentType = typeof AttachmentType[keyof typeof AttachmentType];
 /**
  * The semantic category of an attachment.
  * Applies to both plant and journal attachments.
- * - main: general photo; used as thumbnail in Plants Overview (plant only)
+ * - main: general photo
  * - bloom: photo of the plant's flowers (plant only)
  * - leaf: photo of the plant's leaves (plant only)
  * - problem: photo documenting a disease, pest, or damage
@@ -52,6 +52,13 @@ export type Attachment = {
 
   /** The semantic category of this attachment. */
   category: AttachmentCategory | null;
+
+  /**
+   * Display order within the owner's attachment list (0-based).
+   * The attachment with the lowest sort_order is shown as the thumbnail
+   * in list and overview views. Controlled by the user via drag-and-drop.
+   */
+  sort_order: number;
 
   /**
    * Relative URL to the binary file,

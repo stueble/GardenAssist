@@ -62,7 +62,7 @@ const MOCK_PLANT: Plant = {
   frost_tolerance_min_c: -15, temperature_protected: false,
   health_status: "good", location: "Westbeet", watering_zone: "Beet West",
   purchase_date: "2022-03-15", purchase_price: 12.5,
-  thumbnail_attachment_id: null,
+  
   positions: [], attachments: [], journal_entries: [], schedules: [], tasks: [],
   created_at: "", updated_at: "",
 };
@@ -88,7 +88,7 @@ vi.mock("../api/client", () => ({
       care_notes: null, sun_demand: null, water_demand: null, soil_type: null,
       frost_tolerance_min_c: null, temperature_protected: false,
       health_status: null, location: null, watering_zone: null,
-      purchase_date: null, purchase_price: null, thumbnail_attachment_id: null,
+      purchase_date: null, purchase_price: null, 
       positions: [], attachments: [], journal_entries: [], schedules: [], tasks: [],
       created_at: "", updated_at: "",
     }),
@@ -97,7 +97,7 @@ vi.mock("../api/client", () => ({
     ),
     getGarden: vi.fn().mockResolvedValue({ plan_url: null, plan_name: null, plants: [], attachments: [], journal_entries: [], warnings: [] }),
     uploadAttachment: vi.fn().mockResolvedValue({
-      id: "att-1", attachment_type: "image", category: "main",
+      id: "att-1", attachment_type: "image", category: "main", sort_order: 0,
       url: "/static/attachments/plants/new-p/main-1.jpg",
       created_at: "", updated_at: "",
     }),
@@ -271,7 +271,7 @@ describe("PlantEditDialog — enum dropdowns (AC #4)", () => {
     renderDialog(null);
     const sel = screen.getByTestId("field-lifecycle");
     expect(sel).toHaveTextContent("Mehrjährig");
-    expect(sel).toHaveTextContent("Immergrün");
+    expect(sel).not.toHaveTextContent("Immergrün");
   });
 
   it("sun demand dropdown contains i18n options", () => {
@@ -490,7 +490,7 @@ describe("PlantEditDialog — pre-fill schedules from existing plant (AC #2)", (
       sun_demand: null, water_demand: null, soil_type: null,
       frost_tolerance_min_c: null, temperature_protected: false,
       health_status: null, location: null, watering_zone: null,
-      purchase_date: null, purchase_price: null, thumbnail_attachment_id: null,
+      purchase_date: null, purchase_price: null, 
       positions: [], attachments: [], journal_entries: [], tasks: [],
       created_at: "", updated_at: "",
     },
@@ -653,12 +653,12 @@ describe("PlantEditDialog — Bilder: pre-filled from existing plant (story-029 
       sun_demand: null, water_demand: null, soil_type: null,
       frost_tolerance_min_c: null, temperature_protected: false,
       health_status: null, location: null, watering_zone: null,
-      purchase_date: null, purchase_price: null, thumbnail_attachment_id: "att-1",
+      purchase_date: null, purchase_price: null, 
       positions: [], journal_entries: [], schedules: [], tasks: [],
       created_at: "", updated_at: "",
     },
     attachments: [{
-      id: "att-1", attachment_type: "image", category: "main",
+      id: "att-1", attachment_type: "image", category: "main", sort_order: 0,
       url: "/static/attachments/plants/p1/main-1.jpg",
       created_at: "", updated_at: "",
     }],
@@ -715,12 +715,12 @@ describe("PlantEditDialog — Bilder: delete saved attachment (story-029 AC #4)"
       sun_demand: null, water_demand: null, soil_type: null,
       frost_tolerance_min_c: null, temperature_protected: false,
       health_status: null, location: null, watering_zone: null,
-      purchase_date: null, purchase_price: null, thumbnail_attachment_id: null,
+      purchase_date: null, purchase_price: null, 
       positions: [], journal_entries: [], schedules: [], tasks: [],
       created_at: "", updated_at: "",
     },
     attachments: [{
-      id: "att-99", attachment_type: "image", category: "bloom",
+      id: "att-99", attachment_type: "image", category: "bloom", sort_order: 0,
       url: "/static/attachments/plants/p1/bloom-1.jpg",
       created_at: "", updated_at: "",
     }],

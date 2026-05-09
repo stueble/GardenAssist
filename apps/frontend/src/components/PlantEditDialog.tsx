@@ -196,10 +196,9 @@ function formToInput(form: EditForm): PlantInput {
     temperature_protected:   form.temperature_protected,
     care_notes:              form.care_notes.trim() || null,
     // Later stories fill these:
-    positions:               [],
-    attachments:             [],
-    schedules:               [],
-    thumbnail_attachment_id: null,
+    positions:   [],
+    attachments: [],
+    schedules:   [],
   };
 }
 
@@ -300,7 +299,9 @@ export function PlantEditDialog({
     JSON.stringify(positions) !== JSON.stringify(initialPositions) ||
     attachmentRows.some((r) => r._kind === "local") ||
     // a saved attachment was deleted
-    (plant?.attachments ?? []).some((a) => !attachmentRows.find((r) => r._kind === "saved" && r.id === a.id));
+    (plant?.attachments ?? []).some((a) => !attachmentRows.find((r) => r._kind === "saved" && r.id === a.id)) ||
+    // order of saved attachments changed
+    attachmentRows.some((r, i) => r._kind === "saved" && plant?.attachments[i]?.id !== r.id);
 
   function handleClose() {
     if (dirty && !confirm(t("edit.unsaved_confirm"))) return;
@@ -321,17 +322,16 @@ export function PlantEditDialog({
     setError(null);
     setAttachmentError(null);
     try {
-      // 1. Determine thumbnail: first saved "main" attachment, else first saved
+      // 1. Build attachment payload with sort_order = position in the list.
+      // The user controls order by dragging; backend persists sort_order.
       const savedRows = attachmentRows.filter((r) => r._kind === "saved") as SavedAttachment[];
-      const firstMain = savedRows.find((r) => r.category === "main");
-      const thumbnailId = firstMain?.id ?? savedRows[0]?.id ?? null;
+      const attachmentsWithOrder = savedRows.map((r, idx) => ({ ...r, sort_order: idx }));
 
       const input: ReturnType<typeof formToInput> = {
         ...formToInput(form),
-        schedules:               rowsToScheduleInputs(scheduleRows),
-        positions:               positions.map((r) => ({ x_percent: r.x, y_percent: r.y })),
-        attachments:             savedRows,
-        thumbnail_attachment_id: thumbnailId,
+        schedules:   rowsToScheduleInputs(scheduleRows),
+        positions:   positions.map((r) => ({ x_percent: r.x, y_percent: r.y })),
+        attachments: attachmentsWithOrder,
       };
 
       // 2. Save plant (create or update)
@@ -767,7 +767,6 @@ function GrunddatenFields({
             <option value="annual">{t("lifecycle.annual")}</option>
             <option value="biennial">{t("lifecycle.biennial")}</option>
             <option value="perennial">{t("lifecycle.perennial")}</option>
-            <option value="evergreen">{t("lifecycle.evergreen")}</option>
           </select>
         </div>
         <div>

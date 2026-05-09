@@ -43,7 +43,7 @@ function makePlant(overrides: Partial<Plant> = {}): Plant {
     watering_zone:           null,
     purchase_date:           "2022-04-01",
     purchase_price:          null,
-    thumbnail_attachment_id: null,
+    
     positions:               [],
     attachments:             [],
     journal_entries:         [],

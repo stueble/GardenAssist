@@ -33,7 +33,9 @@ export const ScheduleInputSchema = z.object({
 const attachmentCategory = z.enum(["main", "bloom", "leaf", "problem", "invoice"]).nullable();
 
 export const AttachmentInputSchema = z.object({
-  category: attachmentCategory,
+  id:         uuid,
+  category:   attachmentCategory,
+  sort_order: z.number().int().min(0),
 });
 
 // ── PlantInput ────────────────────────────────────────────────────────────────
@@ -44,7 +46,7 @@ export const PlantInputSchema = z.object({
   icon:                    z.string().nullable(),
   origin_type:             z.enum(["native", "neophyte", "invasive_neophyte"]).nullable(),
   category:                z.string().nullable(),
-  lifecycle:               z.enum(["annual", "biennial", "perennial", "evergreen"]).nullable(),
+  lifecycle:               z.enum(["annual", "biennial", "perennial"]).nullable(),
   description:             z.string().nullable(),
   care_notes:              z.string().nullable(),
   sun_demand:              z.enum(["sunny", "partial_shade", "shady"]).nullable(),
@@ -57,7 +59,6 @@ export const PlantInputSchema = z.object({
   watering_zone:           z.string().nullable(),
   purchase_date:           isoDate.nullable(),
   purchase_price:          z.number().nonnegative().nullable(),
-  thumbnail_attachment_id: uuid.nullable(),
   positions:               z.array(PlantPositionInputSchema),
   attachments:             z.array(AttachmentInputSchema),
   schedules:               z.array(ScheduleInputSchema),

@@ -10,28 +10,27 @@ import {
 // ── plants ────────────────────────────────────────────────────────────────────
 
 export const plants = sqliteTable("plants", {
-  id:                      text("id").primaryKey(),
-  name_common:             text("name_common").notNull(),
-  name_botanical:          text("name_botanical"),
-  icon:                    text("icon"),
-  origin_type:             text("origin_type"),
-  category:                text("category"),
-  lifecycle:               text("lifecycle"),
-  description:             text("description"),
-  care_notes:              text("care_notes"),
-  sun_demand:              text("sun_demand"),
-  water_demand:            text("water_demand"),
-  soil_type:               text("soil_type"),
-  frost_tolerance_min_c:   integer("frost_tolerance_min_c"),
-  temperature_protected:   integer("temperature_protected", { mode: "boolean" }).notNull().default(false),
-  health_status:           text("health_status"),
-  location:                text("location"),
-  watering_zone:           text("watering_zone"),
-  purchase_date:           text("purchase_date"),
-  purchase_price:          real("purchase_price"),
-  thumbnail_attachment_id: text("thumbnail_attachment_id"),  // FK → attachments.id (nullable, set after insert)
-  created_at:              text("created_at").notNull(),
-  updated_at:              text("updated_at").notNull(),
+  id:                    text("id").primaryKey(),
+  name_common:           text("name_common").notNull(),
+  name_botanical:        text("name_botanical"),
+  icon:                  text("icon"),
+  origin_type:           text("origin_type"),
+  category:              text("category"),
+  lifecycle:             text("lifecycle"),
+  description:           text("description"),
+  care_notes:            text("care_notes"),
+  sun_demand:            text("sun_demand"),
+  water_demand:          text("water_demand"),
+  soil_type:             text("soil_type"),
+  frost_tolerance_min_c: integer("frost_tolerance_min_c"),
+  temperature_protected: integer("temperature_protected", { mode: "boolean" }).notNull().default(false),
+  health_status:         text("health_status"),
+  location:              text("location"),
+  watering_zone:         text("watering_zone"),
+  purchase_date:         text("purchase_date"),
+  purchase_price:        real("purchase_price"),
+  created_at:            text("created_at").notNull(),
+  updated_at:            text("updated_at").notNull(),
 });
 
 // ── plant_positions ───────────────────────────────────────────────────────────
@@ -81,6 +80,7 @@ export const attachments = sqliteTable("attachments", {
   owner_id:        text("owner_id"),              // null for garden attachments
   attachment_type: text("attachment_type").notNull(), // image | pdf — derived server-side
   category:        text("category"),              // main | bloom | leaf | problem | invoice
+  sort_order:      integer("sort_order").notNull().default(0), // display order within owner
   url:             text("url").notNull(),
   created_at:      text("created_at").notNull(),
   updated_at:      text("updated_at").notNull(),

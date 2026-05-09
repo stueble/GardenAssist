@@ -94,8 +94,7 @@
   "lifecycle": {
     "annual": "Annual",
     "biennial": "Biennial",
-    "perennial": "Perennial",
-    "evergreen": "Evergreen"
+    "perennial": "Perennial"
   },
   "sun_demand": {
     "sunny": "Sunny (6+ h)",

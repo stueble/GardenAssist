@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { db } from "../db/index.js";
 import { attachments } from "../db/schema.js";
-import { eq } from "drizzle-orm";
+import { and, eq, count } from "drizzle-orm";
 import { writeFile, unlink, mkdir } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
@@ -66,6 +66,18 @@ export const attachmentRoutes = new Hono()
 
     const now = new Date().toISOString();
 
+    // sort_order: append after existing attachments of this owner
+    const existingCount = db
+      .select({ count: count() })
+      .from(attachments)
+      .where(
+        ownerId
+          ? and(eq(attachments.owner_type, ownerType), eq(attachments.owner_id, ownerId))
+          : and(eq(attachments.owner_type, ownerType)),
+      )
+      .get();
+    const sortOrder = existingCount?.count ?? 0;
+
     // Insert into DB
     db.insert(attachments).values({
       id,
@@ -73,6 +85,7 @@ export const attachmentRoutes = new Hono()
       owner_id:        ownerId,
       attachment_type: attachmentType,
       category,
+      sort_order:      sortOrder,
       url:             urlPath,
       created_at:      now,
       updated_at:      now,
@@ -82,6 +95,7 @@ export const attachmentRoutes = new Hono()
       id,
       attachment_type: attachmentType as Attachment["attachment_type"],
       category:        category as Attachment["category"],
+      sort_order:      sortOrder,
       url:             urlPath,
       created_at:      now,
       updated_at:      now,

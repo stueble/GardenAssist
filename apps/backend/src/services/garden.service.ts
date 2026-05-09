@@ -5,7 +5,7 @@
  * API types defined in docs/api/.
  */
 
-import { eq, inArray } from "drizzle-orm";
+import { asc, eq, inArray } from "drizzle-orm";
 import { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import * as schema from "../db/schema.js";
 import type * as Schema from "../db/schema.js";
@@ -67,6 +67,7 @@ function mapAttachment(row: typeof schema.attachments.$inferSelect): Attachment 
     id:              row.id,
     attachment_type: row.attachment_type as Attachment["attachment_type"],
     category:        (row.category ?? null) as Attachment["category"],
+    sort_order:      row.sort_order,
     url:             row.url,
     created_at:      row.created_at,
     updated_at:      row.updated_at,
@@ -103,7 +104,7 @@ export async function getGarden(db: Db): Promise<Garden> {
 
   const journalEntryRows = db.select().from(schema.journalEntries).all();
 
-  const attachmentRows   = db.select().from(schema.attachments).all();
+  const attachmentRows   = db.select().from(schema.attachments).orderBy(asc(schema.attachments.sort_order)).all();
 
   const jeAttachRows     = db.select().from(schema.journalEntryAttachments).all();
 
@@ -162,7 +163,6 @@ export async function getGarden(db: Db): Promise<Garden> {
       watering_zone:           plantRow.watering_zone ?? null,
       purchase_date:           plantRow.purchase_date ?? null,
       purchase_price:          plantRow.purchase_price ?? null,
-      thumbnail_attachment_id: plantRow.thumbnail_attachment_id ?? null,
       positions,
       attachments,
       journal_entries: journalEntries,

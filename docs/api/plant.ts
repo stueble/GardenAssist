@@ -36,7 +36,6 @@ export const Lifecycle = {
   Annual:    "annual",
   Biennial:  "biennial",
   Perennial: "perennial",
-  Evergreen: "evergreen",
 } as const;
 export type Lifecycle = typeof Lifecycle[keyof typeof Lifecycle];
 
@@ -215,16 +214,12 @@ export type Plant = {
   positions: PlantPosition[];
 
   /**
-   * All attachments of this plant.
-   * The attachment referenced by thumbnail_attachment_id is used as the thumbnail in the Plants Overview.
+   * All attachments of this plant, sorted by sort_order ascending.
+   * The first image attachment (lowest sort_order) is used as the thumbnail
+   * in list and overview views. Order is controlled by the user via drag-and-drop
+   * in the edit dialog and persisted to the database.
    */
   attachments: Attachment[];
-
-  /**
-   * ID of the attachment used as the thumbnail in list and overview views.
-   * Must reference an item from attachments[]. null if no attachments exist.
-   */
-  thumbnail_attachment_id: string | null;
 
   /**
    * All journal entries for this plant, sorted by date descending (newest first).

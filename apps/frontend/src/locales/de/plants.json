@@ -94,8 +94,7 @@
   "lifecycle": {
     "annual": "Einjährig",
     "biennial": "Zweijährig",
-    "perennial": "Mehrjährig",
-    "evergreen": "Immergrün"
+    "perennial": "Mehrjährig"
   },
   "sun_demand": {
     "sunny": "Sonnig (6+ h)",

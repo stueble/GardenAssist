@@ -24,7 +24,7 @@ const MOCK_PLANT: Plant = {
   sun_demand: null, water_demand: null, soil_type: null,
   frost_tolerance_min_c: null, temperature_protected: false,
   health_status: null, location: "Westbeet", watering_zone: null,
-  purchase_date: null, purchase_price: null, thumbnail_attachment_id: null,
+  purchase_date: null, purchase_price: null, 
   positions: [], attachments: [], journal_entries: [], tasks: [],
   schedules: [{
     id: "s1", schedule_type: "bloom",
@@ -53,7 +53,7 @@ vi.mock("../api/client", () => ({
           sun_demand: null, water_demand: null, soil_type: null,
           frost_tolerance_min_c: null, temperature_protected: false,
           health_status: null, location: "Westbeet", watering_zone: null,
-          purchase_date: null, purchase_price: null, thumbnail_attachment_id: null,
+          purchase_date: null, purchase_price: null, 
           positions: [], attachments: [], journal_entries: [], tasks: [],
           schedules: [{
             id: "s1", schedule_type: "bloom",
@@ -70,7 +70,7 @@ vi.mock("../api/client", () => ({
           sun_demand: null, water_demand: null, soil_type: null,
           frost_tolerance_min_c: null, temperature_protected: false,
           health_status: null, location: null, watering_zone: null,
-          purchase_date: null, purchase_price: null, thumbnail_attachment_id: null,
+          purchase_date: null, purchase_price: null, 
           positions: [], attachments: [], journal_entries: [], tasks: [],
           schedules: [],
           created_at: "", updated_at: "",

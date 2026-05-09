@@ -46,7 +46,7 @@ const MOCK_PLANT: Plant = {
   watering_zone:           "Beet West",
   purchase_date:           "2022-03-15",
   purchase_price:          null,
-  thumbnail_attachment_id: null,
+  
   positions:               [],
   attachments:             [],
   journal_entries:         [],
