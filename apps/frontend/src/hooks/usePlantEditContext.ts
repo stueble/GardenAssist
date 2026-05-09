@@ -15,8 +15,29 @@
 import { useEffect, useRef } from "react";
 
 /**
- * Scalar fields the AI can suggest (mirrors the scalar fields of PlantInput,
- * excluding positions / attachments / schedules which the AI must not touch).
+ * One schedule suggestion from the AI.
+ * action:
+ *   "add"    — insert a new schedule row
+ *   "remove" — soft-delete an existing row (matched by id)
+ *   "update" — patch an existing row (matched by id)
+ */
+export type AiScheduleSuggestion = {
+  action:         "add" | "remove" | "update";
+  /** Required for remove/update — the schedule's server-side id. */
+  id?:            string;
+  schedule_type?: string;
+  start_week?:    number;
+  end_week?:      number;
+  /** Hex color, e.g. "#c0392b". Omit to use the section default. */
+  color?:         string | null;
+  label?:         string | null;
+  notes?:         string | null;
+};
+
+/**
+ * All fields the AI can suggest via the editPlant tool.
+ * Scalar fields mirror PlantInput (excluding positions/attachments).
+ * schedules: optional array of add/remove/update operations.
  */
 export type PlantEditFields = Partial<{
   icon:                  string;
@@ -37,6 +58,7 @@ export type PlantEditFields = Partial<{
   health_status:         string;
   temperature_protected: boolean;
   care_notes:            string;
+  schedules:             AiScheduleSuggestion[];
 }>;
 
 /** The single handler registered by PlantsView. */

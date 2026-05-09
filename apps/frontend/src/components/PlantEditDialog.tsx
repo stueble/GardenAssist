@@ -75,6 +75,16 @@ export type ScheduleRow = {
   color:      string;
   label:      string;
   notes:      string;
+  /**
+   * Set when this row was inserted/modified/removed by the AI assistant.
+   *   "add"    — row added by AI; × removes it (revert)
+   *   "remove" — existing row marked for deletion by AI; displayed struck through; × restores it
+   *   "update" — existing row patched by AI; × restores previous values
+   * undefined  — normal user row, no AI involvement
+   */
+  aiAction?:  "add" | "remove" | "update";
+  /** Previous field values before an AI "update", used for × revert. */
+  aiPrev?:    Partial<Pick<ScheduleRow, "startIdx" | "endIdx" | "color" | "label" | "notes">>;
 };
 
 type ScheduleSectionConfig = {
@@ -336,7 +346,7 @@ function PlantEditDialog({
   useImperativeHandle(ref, () => ({
     isOpen: () => true,
     applyAiFields: (fields: PlantEditFields) => {
-      // Only suggestable fields (no icon, no checkbox)
+      // ── Scalar fields ──────────────────────────────────────────────────────
       const suggestable: Partial<EditForm> = {};
       const keys: AiSuggestableField[] = [
         "name_common", "name_botanical", "description", "category",
@@ -347,13 +357,52 @@ function PlantEditDialog({
       for (const k of keys) {
         if (fields[k] !== undefined) suggestable[k] = normalizeEnumValue(k, fields[k] as string);
       }
-      // Read current form via a ref to compute diff without using a setState updater.
-      // All three state updates are independent top-level calls — no side effects
-      // inside updaters, safe under React Strict Mode.
       const { nextForm, nextMarked, prevValues } = applyAiSuggestions(formRef.current, suggestable);
       setForm(nextForm);
       setAiMarked((m) => ({ ...m, ...nextMarked }));
       setAiPrev((p) => ({ ...p, ...prevValues }));
+
+      // ── Schedule operations ────────────────────────────────────────────────
+      if (fields.schedules && fields.schedules.length > 0) {
+        setScheduleRows((prev) => {
+          let rows = [...prev];
+          for (const op of fields.schedules!) {
+            if (op.action === "add") {
+              const sectionCfg = SCHEDULE_SECTIONS.find((c) => c.type === op.schedule_type);
+              const newRow: ScheduleRow = {
+                id:           crypto.randomUUID(),
+                scheduleType: (op.schedule_type as ScheduleType) ?? "misc",
+                startIdx:     weekToIdx(op.start_week ?? 1),
+                endIdx:       weekToIdx(op.end_week ?? 4),
+                color:        op.color ?? sectionCfg?.defaultColor ?? "#7f8c8d",
+                label:        op.label ?? "",
+                notes:        op.notes ?? "",
+                aiAction:     "add",
+              };
+              rows = [...rows, newRow];
+
+            } else if (op.action === "remove" && op.id) {
+              rows = rows.map((r) =>
+                r.id === op.id ? { ...r, aiAction: "remove" as const } : r
+              );
+
+            } else if (op.action === "update" && op.id) {
+              rows = rows.map((r) => {
+                if (r.id !== op.id) return r;
+                const aiPrev: ScheduleRow["aiPrev"] = {};
+                const patch: Partial<ScheduleRow> = { aiAction: "update" as const, aiPrev };
+                if (op.start_week !== undefined) { aiPrev.startIdx = r.startIdx; patch.startIdx = weekToIdx(op.start_week); }
+                if (op.end_week   !== undefined) { aiPrev.endIdx   = r.endIdx;   patch.endIdx   = weekToIdx(op.end_week);   }
+                if (op.color      !== undefined) { aiPrev.color    = r.color;    patch.color    = op.color ?? r.color;      }
+                if (op.label      !== undefined) { aiPrev.label    = r.label;    patch.label    = op.label ?? "";           }
+                if (op.notes      !== undefined) { aiPrev.notes    = r.notes;    patch.notes    = op.notes ?? "";           }
+                return { ...r, ...patch };
+              });
+            }
+          }
+          return rows;
+        });
+      }
     },
   }));
 
@@ -381,7 +430,23 @@ function PlantEditDialog({
   }
 
   function deleteScheduleRow(idx: number) {
-    setScheduleRows((prev) => prev.filter((_, i) => i !== idx));
+    setScheduleRows((prev) => {
+      const row = prev[idx];
+      // For AI-added rows: revert = remove the row entirely
+      // For AI-removed rows: revert = clear the aiAction flag (restore)
+      // For AI-updated rows: revert = restore previous values
+      // For normal rows: just remove
+      if (row?.aiAction === "remove") {
+        return prev.map((r, i) => i === idx ? { ...r, aiAction: undefined, aiPrev: undefined } : r);
+      }
+      if (row?.aiAction === "update" && row.aiPrev) {
+        return prev.map((r, i) => i === idx
+          ? { ...r, ...row.aiPrev, aiAction: undefined, aiPrev: undefined }
+          : r
+        );
+      }
+      return prev.filter((_, i) => i !== idx);
+    });
   }
 
   // Auto-update icon when category changes, unless manually overridden (AC #3)
@@ -427,7 +492,8 @@ function PlantEditDialog({
 
       const input: ReturnType<typeof formToInput> = {
         ...formToInput(form),
-        schedules:   rowsToScheduleInputs(scheduleRows),
+        // Exclude rows marked for AI-removal before saving
+        schedules:   rowsToScheduleInputs(scheduleRows.filter((r) => r.aiAction !== "remove")),
         positions:   positions.map((r) => ({ x_percent: r.x, y_percent: r.y })),
         attachments: attachmentsWithOrder,
       };
@@ -470,7 +536,9 @@ function PlantEditDialog({
     ? t("edit.title_edit", { name: plant.name_common })
     : t("edit.title_new");
 
-  const aiSuggestionCount = Object.keys(aiMarked).filter((k) => aiMarked[k as AiSuggestableField]).length;
+  const aiSuggestionCount =
+    Object.keys(aiMarked).filter((k) => aiMarked[k as AiSuggestableField]).length +
+    scheduleRows.filter((r) => r.aiAction !== undefined).length;
 
   function revertAiField(key: AiSuggestableField) {
     setForm((f) => ({ ...f, [key]: aiPrev[key] ?? "" }));
@@ -630,10 +698,14 @@ function PlantEditDialog({
         >
           <span aria-hidden="true" style={{ fontSize: "13px" }}>✦</span>
           <span>
-            {aiSuggestionCount === 1
-              ? "1 Feld vom Assistenten vorgeschlagen"
-              : `${aiSuggestionCount} Felder vom Assistenten vorgeschlagen`}
-            {" — klicke × zum Verwerfen"}
+            {(() => {
+              const scalarCount   = Object.keys(aiMarked).filter((k) => aiMarked[k as AiSuggestableField]).length;
+              const scheduleCount = scheduleRows.filter((r) => r.aiAction !== undefined).length;
+              const parts: string[] = [];
+              if (scalarCount > 0)   parts.push(`${scalarCount} Feld${scalarCount === 1 ? "" : "er"}`);
+              if (scheduleCount > 0) parts.push(`${scheduleCount} Zeitplan${scheduleCount === 1 ? "" : "pläne"}`);
+              return parts.join(", ") + " vom Assistenten vorgeschlagen — klicke × zum Verwerfen";
+            })()}
           </span>
         </div>
       )}
@@ -685,6 +757,10 @@ interface EditSectionProps {
 
 function EditSection({ title, accent, defaultOpen = false, count, children }: EditSectionProps) {
   const [open, setOpen] = useState(defaultOpen);
+  // If defaultOpen flips to true after mount (e.g. AI inserts rows), open automatically.
+  useEffect(() => {
+    if (defaultOpen) setOpen(true);
+  }, [defaultOpen]);
   return (
     <div style={{ borderBottom: "1px solid var(--border)" }}>
       <div
@@ -1798,25 +1874,54 @@ function ScheduleEntryRow({ row, hasColor, presets, onChange, onDelete, t }: Sch
 
   const handleColorChange = useCallback((hex: string, name?: string) => {
     onChange({ color: hex });
-    // Auto-fill label for bloom if empty or matches a preset name
     if (name !== undefined) {
       onChange({ color: hex, label: row.label.trim() === "" || isPresetName(row.label, presets) ? name : row.label });
     }
   }, [row.label, presets, onChange]);
 
-  const isWrap = row.startIdx > row.endIdx;
+  const isWrap    = row.startIdx > row.endIdx;
+  const isAi      = row.aiAction !== undefined;
+  const isRemoved = row.aiAction === "remove";
+
+  // Styles that depend on AI state
+  const cardBorder     = isAi ? "1.5px solid #e07b00" : "1.5px solid var(--border)";
+  const cardBackground = isAi ? "#fff4e6" : "var(--green-mist)";
+  const contentOpacity = isRemoved ? 0.45 : 1;
+  const strikeStyle: React.CSSProperties = isRemoved
+    ? { textDecoration: "line-through", textDecorationColor: "#e07b00" }
+    : {};
 
   return (
     <div
       data-testid="schedule-entry"
+      data-ai-action={row.aiAction}
       style={{
-        background: "var(--green-mist)", border: "1.5px solid var(--border)",
-        borderRadius: "10px", padding: "10px 11px", display: "flex", flexDirection: "column", gap: "8px",
+        background:    cardBackground,
+        border:        cardBorder,
+        borderRadius:  "10px",
+        padding:       "10px 11px",
+        display:       "flex",
+        flexDirection: "column",
+        gap:           "8px",
+        opacity:       contentOpacity,
+        transition:    "opacity .2s",
       }}
     >
-      {/* Top row: color swatch | week range | delete */}
+      {/* Top row: [✦] color swatch | week range | [×/✕] */}
       <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-        {hasColor && (
+
+        {/* AI sparkle icon */}
+        {isAi && (
+          <span
+            aria-hidden="true"
+            title={isRemoved ? "Vom Assistenten zum Entfernen vorgeschlagen" : "Vom Assistenten vorgeschlagen"}
+            style={{ fontSize: "11px", color: "#e07b00", flexShrink: 0 }}
+          >
+            ✦
+          </span>
+        )}
+
+        {hasColor && !isRemoved && (
           <div ref={colorWrapRef} style={{ position: "relative", flexShrink: 0 }}>
             <button
               type="button"
@@ -1841,85 +1946,103 @@ function ScheduleEntryRow({ row, hasColor, presets, onChange, onDelete, t }: Sch
           </div>
         )}
 
-        {/* Week selects */}
-        <select
-          value={row.startIdx}
-          data-testid="week-start"
-          onChange={(e) => onChange({ startIdx: Number(e.target.value) })}
-          style={weekSelectStyle}
-        >
-          {WEEK_LABELS.map((lbl, i) => (
-            <option key={i} value={i}>{lbl}</option>
-          ))}
-        </select>
-
-        <span style={{ fontSize: "11px", color: "var(--text-light)", flexShrink: 0 }}>
-          {t("edit.schedule.week_arrow")}
-        </span>
-
-        <select
-          value={row.endIdx}
-          data-testid="week-end"
-          onChange={(e) => onChange({ endIdx: Number(e.target.value) })}
-          style={weekSelectStyle}
-        >
-          {WEEK_LABELS.map((lbl, i) => (
-            <option key={i} value={i}>{lbl}</option>
-          ))}
-        </select>
-
-        {/* Year-wrap indicator (AC #4) */}
-        {isWrap && (
-          <span
-            data-testid="wrap-indicator"
-            title={t("edit.schedule.wrap_hint")}
-            style={{ fontSize: "11px", color: "var(--text-light)", flexShrink: 0 }}
-          >
-            ↻
+        {/* Week selects — shown as plain text when removed */}
+        {isRemoved ? (
+          <span style={{ fontSize: "11px", color: "#e07b00", ...strikeStyle }}>
+            {WEEK_LABELS[row.startIdx]} → {WEEK_LABELS[row.endIdx]}
+            {row.label ? ` · ${row.label}` : ""}
           </span>
+        ) : (
+          <>
+            <select
+              value={row.startIdx}
+              data-testid="week-start"
+              onChange={(e) => onChange({ startIdx: Number(e.target.value) })}
+              style={weekSelectStyle}
+            >
+              {WEEK_LABELS.map((lbl, i) => (
+                <option key={i} value={i}>{lbl}</option>
+              ))}
+            </select>
+
+            <span style={{ fontSize: "11px", color: "var(--text-light)", flexShrink: 0 }}>
+              {t("edit.schedule.week_arrow")}
+            </span>
+
+            <select
+              value={row.endIdx}
+              data-testid="week-end"
+              onChange={(e) => onChange({ endIdx: Number(e.target.value) })}
+              style={weekSelectStyle}
+            >
+              {WEEK_LABELS.map((lbl, i) => (
+                <option key={i} value={i}>{lbl}</option>
+              ))}
+            </select>
+
+            {isWrap && (
+              <span
+                data-testid="wrap-indicator"
+                title={t("edit.schedule.wrap_hint")}
+                style={{ fontSize: "11px", color: "var(--text-light)", flexShrink: 0 }}
+              >
+                ↻
+              </span>
+            )}
+          </>
         )}
 
-        {/* Delete */}
+        {/* Delete / Revert button */}
         <button
           type="button"
           data-testid="schedule-entry-delete"
           onClick={onDelete}
-          style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-light)", fontSize: "13px", lineHeight: 1, marginLeft: "auto", flexShrink: 0, padding: 0 }}
-          className="hover:text-red-warn"
-          aria-label="Eintrag löschen"
+          title={isAi ? "KI-Änderung rückgängig" : "Eintrag löschen"}
+          style={{
+            background: "none", border: "none", cursor: "pointer",
+            color:      isAi ? "#e07b00" : "var(--text-light)",
+            fontSize:   "13px", lineHeight: 1, marginLeft: "auto",
+            flexShrink: 0, padding: 0,
+          }}
+          className={isAi ? "" : "hover:text-red-warn"}
+          aria-label={isAi ? "KI-Änderung rückgängig machen" : "Eintrag löschen"}
         >
           ✕
         </button>
       </div>
 
-      {/* Label + Notes */}
-      <input
-        type="text"
-        value={row.label}
-        placeholder={t("edit.schedule.field_label_placeholder")}
-        data-testid="schedule-label"
-        onChange={(e) => onChange({ label: e.target.value })}
-        style={{
-          width: "100%", background: "white", border: "1.5px solid var(--border)",
-          borderRadius: "6px", padding: "5px 8px", fontSize: "12px",
-          fontFamily: "var(--font-body)", color: "var(--text-dark)", outline: "none",
-          boxSizing: "border-box",
-        }}
-      />
-      <textarea
-        value={row.notes}
-        placeholder={t("edit.schedule.field_notes_placeholder")}
-        data-testid="schedule-notes"
-        rows={2}
-        onChange={(e) => onChange({ notes: e.target.value })}
-        style={{
-          width: "100%", background: "white", border: "1.5px solid var(--border)",
-          borderRadius: "6px", padding: "5px 8px", fontSize: "12px",
-          fontFamily: "var(--font-body)", color: "var(--text-dark)", outline: "none",
-          resize: "vertical", minHeight: "48px", lineHeight: "1.5",
-          boxSizing: "border-box",
-        }}
-      />
+      {/* Label + Notes — hidden for "remove" rows (summary already shown above) */}
+      {!isRemoved && (
+        <>
+          <input
+            type="text"
+            value={row.label}
+            placeholder={t("edit.schedule.field_label_placeholder")}
+            data-testid="schedule-label"
+            onChange={(e) => onChange({ label: e.target.value })}
+            style={{
+              width: "100%", background: "white", border: "1.5px solid var(--border)",
+              borderRadius: "6px", padding: "5px 8px", fontSize: "12px",
+              fontFamily: "var(--font-body)", color: "var(--text-dark)", outline: "none",
+              boxSizing: "border-box",
+            }}
+          />
+          <textarea
+            value={row.notes}
+            placeholder={t("edit.schedule.field_notes_placeholder")}
+            data-testid="schedule-notes"
+            rows={2}
+            onChange={(e) => onChange({ notes: e.target.value })}
+            style={{
+              width: "100%", background: "white", border: "1.5px solid var(--border)",
+              borderRadius: "6px", padding: "5px 8px", fontSize: "12px",
+              fontFamily: "var(--font-body)", color: "var(--text-dark)", outline: "none",
+              resize: "vertical", minHeight: "48px", lineHeight: "1.5",
+              boxSizing: "border-box",
+            }}
+          />
+        </>
+      )}
     </div>
   );
 }
@@ -1942,12 +2065,15 @@ interface ScheduleSectionProps {
 
 function ScheduleSection({ config, rows, colorPresets, onAdd, onChange, onDelete, t }: ScheduleSectionProps) {
   const typePresets = colorPresets.filter((p) => p.schedule_type === config.type);
+  // Auto-open the section when the AI has inserted or marked rows in it
+  const hasAiRows = rows.some((r) => r.aiAction !== undefined);
 
   return (
     <EditSection
       title={(t as (k: string) => string)(`edit.schedule.${config.i18nSection}`)}
       accent={config.accent}
       count={rows.length}
+      defaultOpen={hasAiRows}
       data-testid={`section-${config.type}`}
     >
       <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: rows.length > 0 ? "10px" : 0 }}>

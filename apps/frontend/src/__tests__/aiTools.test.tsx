@@ -319,3 +319,167 @@ describe("dispatchToolCallForTest", () => {
     expect(msg).toContain("deletePlant");
   });
 });
+
+// ── TASK-055: Schedule suggestions via editPlant tool ─────────────────────────
+
+describe("applyAiFields — schedule add (AC #1, #2)", () => {
+  it("PlantEditFields type accepts schedules array", () => {
+    // Type-level test: this must compile without errors
+    const fields = {
+      schedules: [
+        { action: "add" as const, schedule_type: "bloom", start_week: 17, end_week: 36, color: "#c0392b", label: "Hauptblüte", notes: null },
+        { action: "add" as const, schedule_type: "pruning", start_week: 9, end_week: 10 },
+      ],
+    };
+    expect(fields.schedules).toHaveLength(2);
+    expect(fields.schedules[0].action).toBe("add");
+  });
+
+  it("adds a new schedule row with aiAction='add'", async () => {
+    const { getRef } = renderWithRef(MOCK_PLANT);
+    await waitFor(() => { expect(getRef()).not.toBeNull(); });
+
+    act(() => {
+      getRef()!.applyAiFields({
+        schedules: [{ action: "add", schedule_type: "bloom", start_week: 17, end_week: 36, color: "#c0392b", label: "Hauptblüte" }],
+      });
+    });
+
+    // Bloom section should auto-open and show the new entry
+    await waitFor(() => {
+      const entries = screen.queryAllByTestId("schedule-entry");
+      const aiEntries = entries.filter((e) => e.getAttribute("data-ai-action") === "add");
+      expect(aiEntries.length).toBeGreaterThan(0);
+    });
+  });
+
+  it("preserves existing schedule rows (additive behaviour, AC #2)", async () => {
+    const plantWithSchedule: Plant = {
+      ...MOCK_PLANT,
+      schedules: [{
+        id: "s1", schedule_type: "bloom", start_week: 17, end_week: 36,
+        color: "#c0392b", label: "Existing", notes: null, created_at: "", updated_at: "",
+      }],
+    };
+    const { getRef } = renderWithRef(plantWithSchedule);
+    await waitFor(() => { expect(getRef()).not.toBeNull(); });
+
+    // Open the bloom section (it auto-opens when AI adds rows there)
+    // First add a pruning schedule via AI — it opens the pruning section
+    act(() => {
+      getRef()!.applyAiFields({
+        schedules: [{ action: "add", schedule_type: "bloom", start_week: 5, end_week: 8, label: "Zweite Blüte" }],
+      });
+    });
+
+    await waitFor(() => {
+      // Both the existing and the new AI row should be present in bloom section
+      const entries = screen.queryAllByTestId("schedule-entry");
+      expect(entries.length).toBeGreaterThanOrEqual(2);
+    });
+  });
+
+  it("marks a row for removal with aiAction='remove'", async () => {
+    const plantWithSchedule: Plant = {
+      ...MOCK_PLANT,
+      schedules: [{
+        id: "s-remove", schedule_type: "bloom", start_week: 17, end_week: 36,
+        color: "#c0392b", label: "To remove", notes: null, created_at: "", updated_at: "",
+      }],
+    };
+    const { getRef } = renderWithRef(plantWithSchedule);
+    await waitFor(() => { expect(getRef()).not.toBeNull(); });
+
+    act(() => {
+      getRef()!.applyAiFields({
+        schedules: [{ action: "remove", id: "s-remove" }],
+      });
+    });
+
+    await waitFor(() => {
+      const entries = screen.queryAllByTestId("schedule-entry");
+      const removed = entries.filter((e) => e.getAttribute("data-ai-action") === "remove");
+      expect(removed.length).toBe(1);
+    });
+  });
+
+  it("reverts a 'remove' mark when × is clicked", async () => {
+    const plantWithSchedule: Plant = {
+      ...MOCK_PLANT,
+      schedules: [{
+        id: "s-rev", schedule_type: "bloom", start_week: 17, end_week: 36,
+        color: "#c0392b", label: "Revert me", notes: null, created_at: "", updated_at: "",
+      }],
+    };
+    const { getRef } = renderWithRef(plantWithSchedule);
+    await waitFor(() => { expect(getRef()).not.toBeNull(); });
+
+    act(() => {
+      getRef()!.applyAiFields({ schedules: [{ action: "remove", id: "s-rev" }] });
+    });
+
+    await waitFor(() => {
+      const entries = screen.queryAllByTestId("schedule-entry");
+      expect(entries.some((e) => e.getAttribute("data-ai-action") === "remove")).toBe(true);
+    });
+
+    // Click the × button on the removed entry
+    const deleteButtons = screen.getAllByTestId("schedule-entry-delete");
+    fireEvent.click(deleteButtons[0]);
+
+    await waitFor(() => {
+      const entries = screen.queryAllByTestId("schedule-entry");
+      // After revert the entry should exist but have no ai-action
+      expect(entries.some((e) => e.getAttribute("data-ai-action") === "remove")).toBe(false);
+      expect(entries.length).toBe(1); // still there, just no longer marked
+    });
+  });
+
+  it("does not call createPlant or updatePlant when schedules are suggested (AC #6)", async () => {
+    const { apiClient } = await import("../api/client");
+    const { getRef } = renderWithRef(MOCK_PLANT);
+    await waitFor(() => { expect(getRef()).not.toBeNull(); });
+
+    act(() => {
+      getRef()!.applyAiFields({
+        schedules: [{ action: "add", schedule_type: "bloom", start_week: 17, end_week: 36 }],
+      });
+    });
+
+    await new Promise((r) => setTimeout(r, 10));
+    expect(apiClient.createPlant).not.toHaveBeenCalled();
+    expect(apiClient.updatePlant).not.toHaveBeenCalled();
+  });
+});
+
+describe("System prompt contains schedule documentation (AC #4, #5)", () => {
+  it("TOOLS_DESCRIPTION contains 'schedules'", async () => {
+    const { buildSystemPrompt } = await import("../lib/aiPrompt");
+    const ctx = {
+      view: "plants" as const,
+      garden: {
+        plan_url: null, plan_name: null,
+        plants: [], attachments: [], journal_entries: [], warnings: [],
+      },
+    };
+    const prompt = buildSystemPrompt(ctx, "de");
+    expect(prompt).toContain("schedules");
+    expect(prompt).toContain("bloom");
+    expect(prompt).toContain("start_week");
+    expect(prompt).toContain("end_week");
+  });
+
+  it("TOOLS_DESCRIPTION explains year-wrap (AC #5)", async () => {
+    const { buildSystemPrompt } = await import("../lib/aiPrompt");
+    const ctx = {
+      view: "plants" as const,
+      garden: {
+        plan_url: null, plan_name: null,
+        plants: [], attachments: [], journal_entries: [], warnings: [],
+      },
+    };
+    const prompt = buildSystemPrompt(ctx, "de");
+    // Year-wrap hint: start_week > end_week
+    expect(prompt).toMatch(/start_week.*>.*end_week|Jahres/);
+  });
+});

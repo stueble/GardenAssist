@@ -62,7 +62,9 @@ function nl(label: string, value: string | number | boolean | null | undefined):
 }
 
 function serializeSchedule(s: Schedule): string {
-  let out = `    - Typ: ${s.schedule_type}, KW ${s.start_week}–${s.end_week}`;
+  // id is included so the AI can reference schedules in remove/update actions
+  let out = `    - [id:${s.id}] ${s.schedule_type}, KW ${s.start_week}–${s.end_week}`;
+  if (s.color) out += `, Farbe: ${s.color}`;
   if (s.label) out += `, Label: ${s.label}`;
   if (s.notes) out += `\n      Notizen: ${s.notes}`;
   return out;
@@ -180,7 +182,7 @@ function buildSituation(ctx: AssistantContext, lang: "de" | "en"): string {
 
 const TOOLS_DESCRIPTION: Record<"de" | "en", string> = {
   de: `Du hast Zugriff auf ein Werkzeug, um den Benutzer direkt in der App zu unterstützen.
-Verwende es, wenn der Benutzer dich bittet, eine Pflanze zu erstellen, zu öffnen oder Felder zu befüllen.
+Verwende es, wenn der Benutzer dich bittet, eine Pflanze zu erstellen, zu öffnen, Felder zu befüllen oder Zeitpläne zu bearbeiten.
 Der Benutzer muss immer selbst auf Speichern klicken — du schreibst nie direkt in die Datenbank.
 
 WICHTIG: Antworte mit einem normalen erklärenden Satz UND direkt danach dem Tool-Aufruf als JSON-Block.
@@ -189,7 +191,7 @@ Werkzeug: editPlant
   id     (string | null): ID der Pflanze aus den Gartendaten, oder null für eine neue Pflanze
   fields (object):        Felder die vorausgefüllt oder überschrieben werden sollen
 
-  Mögliche Felder und ERLAUBTE WERTE (immer exakt diese API-Werte verwenden, nie deutsche Übersetzungen):
+  Skalare Felder und ERLAUBTE WERTE (immer exakt diese API-Werte verwenden, nie deutsche Übersetzungen):
     name_common            (string)
     name_botanical         (string)
     description            (string)
@@ -207,6 +209,17 @@ Werkzeug: editPlant
     soil_type              (genau einer von: "loamy" | "sandy" | "humus_rich" | "calcareous" | "acidic")
     health_status          (genau einer von: "good" | "watch" | "needs_treatment")
 
+  Zeitpläne (fields.schedules): optionales Array von Operationen
+    Jedes Objekt hat folgende Felder:
+      action         (genau eines von: "add" | "remove" | "update")
+      id             (string, nur bei remove/update: id aus den Gartendaten, Format [id:...])
+      schedule_type  (bei add/update: genau eines von "bloom"|"growth"|"foliage"|"pruning"|"fertilization"|"misc")
+      start_week     (bei add/update: Kalenderwoche 1–53)
+      end_week       (bei add/update: Kalenderwoche 1–53; wenn start_week > end_week = Jahresübergang, z.B. KW 48–6)
+      color          (optional, Hex-String z.B. "#c0392b"; bei Blüten aus dem Kontext ableiten, sonst weglassen)
+      label          (optional, kurzer Text)
+      notes          (optional, Freitext)
+
 Beispiele:
 
 Neue Pflanze erstellen und vorausfüllen:
@@ -214,15 +227,20 @@ Neue Pflanze erstellen und vorausfüllen:
 {"tool":"editPlant","id":null,"fields":{"name_common":"Rose","sun_demand":"sunny","water_demand":"medium"}}
 \`\`\`
 
-Bestehende Pflanze öffnen und Felder setzen (id aus den Gartendaten):
+Bestehende Pflanze öffnen und Blüte + Schnitt eintragen:
 \`\`\`tool
-{"tool":"editPlant","id":"<plant-id>","fields":{"care_notes":"Regelmäßig düngen.","health_status":"good"}}
+{"tool":"editPlant","id":"<plant-id>","fields":{"schedules":[{"action":"add","schedule_type":"bloom","start_week":17,"end_week":36,"color":"#c0392b","label":"Hauptblüte"},{"action":"add","schedule_type":"pruning","start_week":9,"end_week":10}]}}
+\`\`\`
+
+Bestehenden Zeitplan entfernen (id aus den Gartendaten):
+\`\`\`tool
+{"tool":"editPlant","id":"<plant-id>","fields":{"schedules":[{"action":"remove","id":"<schedule-id>"}]}}
 \`\`\`
 
 Wenn die Pflanzenverwaltung nicht geöffnet ist, teile dem Benutzer mit, dass er zuerst zur Pflanzenansicht wechseln soll.`,
 
   en: `You have access to one tool to help the user directly within the app.
-Use it when the user asks you to create, open, or fill in plant fields.
+Use it when the user asks you to create, open, fill in plant fields, or manage schedules.
 The user must always click Save themselves — you never write directly to the database.
 
 IMPORTANT: Respond with a normal explanatory sentence AND directly after that the tool call as a JSON block.
@@ -231,7 +249,7 @@ Tool: editPlant
   id     (string | null): ID of the plant from garden data, or null for a new plant
   fields (object):        fields to pre-fill or overwrite
 
-  Possible fields and ALLOWED VALUES (always use these exact API values, never translated labels):
+  Scalar fields and ALLOWED VALUES (always use these exact API values, never translated labels):
     name_common            (string)
     name_botanical         (string)
     description            (string)
@@ -249,6 +267,17 @@ Tool: editPlant
     soil_type              (exactly one of: "loamy" | "sandy" | "humus_rich" | "calcareous" | "acidic")
     health_status          (exactly one of: "good" | "watch" | "needs_treatment")
 
+  Schedules (fields.schedules): optional array of operations
+    Each object has these fields:
+      action         (exactly one of: "add" | "remove" | "update")
+      id             (string, only for remove/update: id from garden data, format [id:...])
+      schedule_type  (for add/update: exactly one of "bloom"|"growth"|"foliage"|"pruning"|"fertilization"|"misc")
+      start_week     (for add/update: week number 1–53)
+      end_week       (for add/update: week number 1–53; if start_week > end_week = year-wrap, e.g. W48–W06)
+      color          (optional, hex string e.g. "#c0392b"; derive from context for bloom, omit otherwise)
+      label          (optional, short text)
+      notes          (optional, free text)
+
 Examples:
 
 Create and pre-fill a new plant:
@@ -256,9 +285,14 @@ Create and pre-fill a new plant:
 {"tool":"editPlant","id":null,"fields":{"name_common":"Rose","sun_demand":"sunny","water_demand":"medium"}}
 \`\`\`
 
-Open an existing plant and set fields (id from garden data):
+Open existing plant and add bloom + pruning schedule:
 \`\`\`tool
-{"tool":"editPlant","id":"<plant-id>","fields":{"care_notes":"Water regularly.","health_status":"good"}}
+{"tool":"editPlant","id":"<plant-id>","fields":{"schedules":[{"action":"add","schedule_type":"bloom","start_week":17,"end_week":36,"color":"#c0392b","label":"Main bloom"},{"action":"add","schedule_type":"pruning","start_week":9,"end_week":10}]}}
+\`\`\`
+
+Remove an existing schedule (id from garden data):
+\`\`\`tool
+{"tool":"editPlant","id":"<plant-id>","fields":{"schedules":[{"action":"remove","id":"<schedule-id>"}]}}
 \`\`\`
 
 If the Plants view is not open, tell the user to switch there first.`,
