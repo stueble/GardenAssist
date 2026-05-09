@@ -35,7 +35,6 @@ export function SettingsView() {
       setAssistantContext({ view: "settings", garden, settings: assistantSettings });
     }
   }, [garden, assistantSettings]);
-  useEffect(() => () => setAssistantContext(undefined), []);
 
   const dirty = settingsDirty || plan.dirty;
 

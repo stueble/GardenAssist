@@ -101,7 +101,6 @@ export function JournalView() {
     setAssistantContext(assistantContext);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [garden, assistantSettings]);
-  useEffect(() => () => setAssistantContext(undefined), []);
 
   // Plant lookup map
   const plantById = new Map(plants.map((p) => [p.id, p]));

@@ -19,7 +19,13 @@ const _listeners = new Set<(ctx: AssistantContext | undefined) => void>();
 
 function setGlobalContext(ctx: AssistantContext | undefined) {
   _ctx = ctx;
-  _listeners.forEach((fn) => fn(ctx));
+  // Defer listener notifications to avoid "Cannot update a component while
+  // rendering a different component" — views call setAssistantContext() from
+  // useEffect (after render), but React may still be committing the tree.
+  // queueMicrotask ensures the state update runs after the current commit.
+  queueMicrotask(() => {
+    _listeners.forEach((fn) => fn(ctx));
+  });
 }
 
 /** Called by each view to report its current AssistantContext. */

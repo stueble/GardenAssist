@@ -112,7 +112,6 @@ export function CalendarView() {
   useEffect(() => {
     setAssistantContext(assistantContext);
   }, [assistantContext]);
-  useEffect(() => () => setAssistantContext(undefined), []);
 
   return (
     <div

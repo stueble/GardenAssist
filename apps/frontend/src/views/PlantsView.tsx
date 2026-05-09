@@ -171,11 +171,10 @@ export function PlantsView() {
     ? { view: "plants", garden, selectedPlant: selected ?? undefined, settings: assistantSettings }
     : undefined;
 
-  // Report context to the shared AiPanel in App.tsx; clear on unmount
+  // Report context to the shared AiPanel in App.tsx
   useEffect(() => {
     setAssistantContext(assistantContext);
   }, [assistantContext]);
-  useEffect(() => () => setAssistantContext(undefined), []);
 
   if (loading) {
     return (

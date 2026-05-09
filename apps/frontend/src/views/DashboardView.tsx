@@ -204,7 +204,6 @@ export function DashboardView() {
   useEffect(() => {
     setAssistantContext(assistantContext);
   }, [assistantContext]);
-  useEffect(() => () => setAssistantContext(undefined), []);
 
   return (
     <div
