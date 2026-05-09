@@ -171,10 +171,17 @@ export function PlantsView() {
     ? { view: "plants", garden, selectedPlant: selected ?? undefined, settings: assistantSettings }
     : undefined;
 
-  // Report context to the shared AiPanel in App.tsx
+  // Report context to the shared AiPanel in App.tsx.
+  // Dependencies are primitives/stable refs — not the object itself — to avoid
+  // infinite loops (new object reference on every render would re-trigger the effect).
   useEffect(() => {
-    setAssistantContext(assistantContext);
-  }, [assistantContext]);
+    setAssistantContext(
+      garden
+        ? { view: "plants", garden, selectedPlant: selected ?? undefined, settings: assistantSettings }
+        : undefined
+    );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [garden, selected, assistantSettings]);
 
   if (loading) {
     return (

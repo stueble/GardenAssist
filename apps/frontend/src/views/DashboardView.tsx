@@ -202,8 +202,13 @@ export function DashboardView() {
     : undefined;
 
   useEffect(() => {
-    setAssistantContext(assistantContext);
-  }, [assistantContext]);
+    setAssistantContext(
+      garden
+        ? { view: "dashboard", garden, selectedPlant: selected ?? undefined, settings: assistantSettings }
+        : undefined
+    );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [garden, selected, assistantSettings]);
 
   return (
     <div
