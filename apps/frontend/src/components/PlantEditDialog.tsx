@@ -569,10 +569,10 @@ function PlantEditDialog({
             alignItems:   "center",
             gap:          "6px",
             padding:      "6px 12px",
-            background:   "#EAF3DE",
-            borderTop:    "1px solid #c5e0a0",
+            background:   "#fff4e6",
+            borderTop:    "1px solid #f0c080",
             fontSize:     "11px",
-            color:        "#3B6D11",
+            color:        "#a05000",
             flexShrink:   0,
           }}
         >
@@ -696,16 +696,13 @@ function GrunddatenFields({
     if (!aiMarked[fieldKey]) return <>{children}</>;
     return (
       <div style={{ position: "relative" }} data-testid={`ai-field-${fieldKey}`}>
+        {/* Orange left border — field itself keeps its original styling */}
         <div style={{
-          background:   "#EAF3DE",
-          border:       "1.5px solid #639922",
+          borderLeft:   "3px solid #e07b00",
           borderRadius: "8px",
-          padding:      "1px",
+          paddingRight: "26px", // room for × button
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "4px", padding: "0 4px 0 6px" }}>
-            <span aria-hidden="true" style={{ fontSize: "11px", color: "#639922", flexShrink: 0 }}>✦</span>
-            <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
-          </div>
+          {children}
         </div>
         <button
           type="button"
@@ -721,8 +718,8 @@ function GrunddatenFields({
             background:   "none",
             border:       "none",
             cursor:       "pointer",
-            color:        "#639922",
-            fontSize:     "13px",
+            color:        "#e07b00",
+            fontSize:     "15px",
             lineHeight:   1,
             padding:      "2px 4px",
             borderRadius: "4px",
@@ -824,8 +821,6 @@ function GrunddatenFields({
               style={{
                 ...fieldInputStyle,
                 borderColor: nameError ? "var(--red-warn)" : undefined,
-                border: aiMarked.name_common ? "none" : undefined,
-                background: aiMarked.name_common ? "transparent" : undefined,
               }}
             />
           </AiField>
@@ -840,7 +835,7 @@ function GrunddatenFields({
               onChange={(e) => patch("name_botanical", e.target.value)}
               placeholder="z.B. Rosa"
               data-testid="field-botanical"
-              style={{ ...fieldInputStyle, border: aiMarked.name_botanical ? "none" : undefined, background: aiMarked.name_botanical ? "transparent" : undefined }}
+              style={{ ...fieldInputStyle }}
             />
           </AiField>
         </div>
@@ -855,7 +850,7 @@ function GrunddatenFields({
             placeholder="Beschreibung der Pflanze …"
             rows={3}
             data-testid="field-description"
-            style={{ ...fieldTextareaStyle, border: aiMarked.description ? "none" : undefined, background: aiMarked.description ? "transparent" : undefined }}
+            style={{ ...fieldTextareaStyle }}
           />
         </AiField>
       </FieldRow>
@@ -869,7 +864,7 @@ function GrunddatenFields({
               value={form.category}
               onChange={(e) => patch("category", e.target.value)}
               data-testid="field-category"
-              style={{ ...fieldSelectStyle, border: aiMarked.category ? "none" : undefined, background: aiMarked.category ? "transparent" : undefined }}
+              style={{ ...fieldSelectStyle }}
             >
               <option value="">{t("edit.select_none")}</option>
               {categories.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -883,7 +878,7 @@ function GrunddatenFields({
               value={form.origin_type}
               onChange={(e) => patch("origin_type", e.target.value)}
               data-testid="field-origin"
-              style={{ ...fieldSelectStyle, border: aiMarked.origin_type ? "none" : undefined, background: aiMarked.origin_type ? "transparent" : undefined }}
+              style={{ ...fieldSelectStyle }}
             >
               <option value="">{t("edit.select_none")}</option>
               <option value="native">{t("origin_type.native")}</option>
@@ -903,7 +898,7 @@ function GrunddatenFields({
               value={form.lifecycle}
               onChange={(e) => patch("lifecycle", e.target.value)}
               data-testid="field-lifecycle"
-              style={{ ...fieldSelectStyle, border: aiMarked.lifecycle ? "none" : undefined, background: aiMarked.lifecycle ? "transparent" : undefined }}
+              style={{ ...fieldSelectStyle }}
             >
               <option value="">{t("edit.select_none")}</option>
               <option value="annual">{t("lifecycle.annual")}</option>
@@ -919,7 +914,7 @@ function GrunddatenFields({
               value={form.health_status}
               onChange={(e) => patch("health_status", e.target.value)}
               data-testid="field-health"
-              style={{ ...fieldSelectStyle, border: aiMarked.health_status ? "none" : undefined, background: aiMarked.health_status ? "transparent" : undefined }}
+              style={{ ...fieldSelectStyle }}
             >
               <option value="">{t("edit.select_none")}</option>
               <option value="good">{t("health_status.good")}</option>
@@ -941,7 +936,7 @@ function GrunddatenFields({
               onChange={(e) => patch("location", e.target.value)}
               placeholder="z.B. Westbeet"
               data-testid="field-location"
-              style={{ ...fieldInputStyle, border: aiMarked.location ? "none" : undefined, background: aiMarked.location ? "transparent" : undefined }}
+              style={{ ...fieldInputStyle }}
             />
           </AiField>
         </div>
@@ -952,7 +947,7 @@ function GrunddatenFields({
               value={form.watering_zone}
               onChange={(e) => patch("watering_zone", e.target.value)}
               data-testid="field-watering"
-              style={{ ...fieldSelectStyle, border: aiMarked.watering_zone ? "none" : undefined, background: aiMarked.watering_zone ? "transparent" : undefined }}
+              style={{ ...fieldSelectStyle }}
             >
               <option value="">{t("edit.select_none")}</option>
               {zones.map((z) => <option key={z} value={z}>{z}</option>)}
@@ -970,7 +965,7 @@ function GrunddatenFields({
               value={form.sun_demand}
               onChange={(e) => patch("sun_demand", e.target.value)}
               data-testid="field-sun"
-              style={{ ...fieldSelectStyle, border: aiMarked.sun_demand ? "none" : undefined, background: aiMarked.sun_demand ? "transparent" : undefined }}
+              style={{ ...fieldSelectStyle }}
             >
               <option value="">{t("edit.select_none")}</option>
               <option value="sunny">{t("sun_demand.sunny")}</option>
@@ -986,7 +981,7 @@ function GrunddatenFields({
               value={form.water_demand}
               onChange={(e) => patch("water_demand", e.target.value)}
               data-testid="field-water"
-              style={{ ...fieldSelectStyle, border: aiMarked.water_demand ? "none" : undefined, background: aiMarked.water_demand ? "transparent" : undefined }}
+              style={{ ...fieldSelectStyle }}
             >
               <option value="">{t("edit.select_none")}</option>
               <option value="low">{t("water_demand.low")}</option>
@@ -1006,7 +1001,7 @@ function GrunddatenFields({
               value={form.soil_type}
               onChange={(e) => patch("soil_type", e.target.value)}
               data-testid="field-soil"
-              style={{ ...fieldSelectStyle, border: aiMarked.soil_type ? "none" : undefined, background: aiMarked.soil_type ? "transparent" : undefined }}
+              style={{ ...fieldSelectStyle }}
             >
               <option value="">{t("edit.select_none")}</option>
               <option value="loamy">{t("soil_type.loamy")}</option>
@@ -1026,7 +1021,7 @@ function GrunddatenFields({
               onChange={(e) => patch("frost_tolerance_min_c", e.target.value)}
               placeholder="-15"
               data-testid="field-temp"
-              style={{ ...fieldInputStyle, border: aiMarked.frost_tolerance_min_c ? "none" : undefined, background: aiMarked.frost_tolerance_min_c ? "transparent" : undefined }}
+              style={{ ...fieldInputStyle }}
             />
           </AiField>
         </div>
@@ -1056,7 +1051,7 @@ function GrunddatenFields({
               value={form.purchase_date}
               onChange={(e) => patch("purchase_date", e.target.value)}
               data-testid="field-purchase-date"
-              style={{ ...fieldInputStyle, border: aiMarked.purchase_date ? "none" : undefined, background: aiMarked.purchase_date ? "transparent" : undefined }}
+              style={{ ...fieldInputStyle }}
             />
           </AiField>
         </div>
@@ -1071,7 +1066,7 @@ function GrunddatenFields({
               onChange={(e) => patch("purchase_price", e.target.value)}
               placeholder="0.00"
               data-testid="field-purchase-price"
-              style={{ ...fieldInputStyle, border: aiMarked.purchase_price ? "none" : undefined, background: aiMarked.purchase_price ? "transparent" : undefined }}
+              style={{ ...fieldInputStyle }}
             />
           </AiField>
         </div>
@@ -1086,7 +1081,7 @@ function GrunddatenFields({
             placeholder="Pflegehinweise, Besonderheiten …"
             rows={3}
             data-testid="field-care-notes"
-            style={{ ...fieldTextareaStyle, border: aiMarked.care_notes ? "none" : undefined, background: aiMarked.care_notes ? "transparent" : undefined }}
+            style={{ ...fieldTextareaStyle }}
           />
         </AiField>
       </FieldRow>
