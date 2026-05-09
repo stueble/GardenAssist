@@ -38,7 +38,7 @@ remains fully synchronized and up-to-date.
 
 ### Key Understanding
 
-- **Tasks/User stories** live in `docs/tasks/` as `story-<id> - <title>.md` files
+- **Tasks/User stories** live in `docs/tasks/` as `task-<id> - <title>.md` files
 - **You interact via CLI only**: `backlog task create`, `backlog task edit`, etc.
 - **Use `--plain` flag** for AI-friendly output when viewing/listing
 - **Never bypass the CLI** - It handles Git, metadata, file naming, and relationships
@@ -65,7 +65,7 @@ remains fully synchronized and up-to-date.
 ### 📖 **UNDERSTANDING** (What you'll see when reading)
 
 - Markdown task files live under **`docs/tasks/`** (drafts under **`drafts/drafts/`**)
-- Files are named: `story-<id> - <title>.md` (e.g., `story-42 - Add GraphQL resolver.md`)
+- Files are named: `task-<id> - <title>.md` (e.g., `task-42 - Add GraphQL resolver.md`)
 - Project documentation is in **`docs/docs/`**
 - Project decisions are in **`docs/decisions/`**
 

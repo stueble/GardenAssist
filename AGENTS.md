@@ -25,7 +25,7 @@ Hono + Drizzle + SQLite (backend), deployed via Docker. Monorepo with pnpm works
 
 ## Task Management (backlog CLI)
 
-All tasks live in `docs/tasks/` as `story-NNN - Title.md`. **Never edit these files directly.**
+All tasks live in `docs/tasks/` as `task-NNN - Title.md`. **Never edit these files directly.**
 All operations go through the `backlog` CLI.
 
 ```bash
