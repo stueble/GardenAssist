@@ -324,6 +324,7 @@ export function CalendarView() {
             onClose={edit.close}
             onSaved={(saved) => {
               void edit.handleSaved(saved, (g) => {
+                setGarden(g);
                 setPlants(g.plants);
               }).then((fresh) => setSelected(fresh));
             }}

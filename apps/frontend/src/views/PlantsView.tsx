@@ -435,7 +435,8 @@ export function PlantsView() {
             onClose={edit.close}
             onSaved={(saved) => {
               void edit.handleSaved(saved, (g) => {
-                setPlants(g.plants);
+                 setGarden(g);
+                 setPlants(g.plants);
               }).then((fresh) => setSelected(fresh));
             }}
             positions={edit.positions}
