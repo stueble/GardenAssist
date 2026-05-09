@@ -174,6 +174,80 @@ function buildSituation(ctx: AssistantContext, lang: "de" | "en"): string {
   return out;
 }
 
+// ── Layer 4 — Tool descriptions ───────────────────────────────────────────────
+
+const TOOLS_DESCRIPTION: Record<"de" | "en", string> = {
+  de: `Du hast Zugriff auf folgende Werkzeuge, um den Benutzer direkt in der App zu unterstützen.
+Verwende sie wenn der Benutzer dich bittet, eine Pflanze zu erstellen, zu öffnen oder Felder zu befüllen.
+Der Benutzer muss immer selbst auf Speichern klicken — du schreibst nie direkt in die Datenbank.
+
+WICHTIG: Antworte mit einem normalen Satz UND direkt danach dem Tool-Aufruf als JSON-Block.
+
+Verfügbare Werkzeuge:
+
+1. openPlantEdit — öffnet den Pflanzbearbeiten-Dialog
+   Parameter:
+     plant_id  (optional, string): ID der zu bearbeitenden Pflanze (aus den Gartendaten)
+     prefill   (optional, object): Felder zum Vorausfüllen beim Erstellen einer neuen Pflanze
+       Mögliche Felder: name_common, name_botanical, description, category, origin_type,
+       lifecycle, location, watering_zone, purchase_date, purchase_price, sun_demand,
+       water_demand, frost_tolerance_min_c, soil_type, health_status, care_notes
+
+2. updatePlantEdit — setzt Felder im aktuell geöffneten Dialog (der Dialog muss bereits offen sein)
+   Parameter:
+     fields (object): Felder mit neuen Werten (gleiche Feldnamen wie bei openPlantEdit.prefill)
+
+Format für Tool-Aufrufe (immer als JSON-Block am Ende der Antwort):
+\`\`\`tool
+{"tool":"openPlantEdit","plant_id":"<id>"}
+\`\`\`
+oder
+\`\`\`tool
+{"tool":"openPlantEdit","prefill":{"name_common":"Rose","sun_demand":"sunny"}}
+\`\`\`
+oder
+\`\`\`tool
+{"tool":"updatePlantEdit","fields":{"water_demand":"medium","care_notes":"Regelmäßig düngen."}}
+\`\`\`
+
+Wenn kein Dialog offen ist und updatePlantEdit aufgerufen werden soll, antworte stattdessen auf Deutsch, dass zuerst ein Dialog geöffnet werden muss.`,
+
+  en: `You have access to the following tools to help the user directly within the app.
+Use them when the user asks you to create, open, or fill in plant fields.
+The user must always click Save themselves — you never write directly to the database.
+
+IMPORTANT: Respond with a normal sentence AND directly after that the tool call as a JSON block.
+
+Available tools:
+
+1. openPlantEdit — opens the plant edit dialog
+   Parameters:
+     plant_id  (optional, string): ID of the plant to edit (from garden data)
+     prefill   (optional, object): fields to pre-fill when creating a new plant
+       Possible fields: name_common, name_botanical, description, category, origin_type,
+       lifecycle, location, watering_zone, purchase_date, purchase_price, sun_demand,
+       water_demand, frost_tolerance_min_c, soil_type, health_status, care_notes
+
+2. updatePlantEdit — sets fields in the currently open dialog (the dialog must already be open)
+   Parameters:
+     fields (object): fields with new values (same field names as openPlantEdit.prefill)
+
+Format for tool calls (always as a JSON block at the end of the response):
+\`\`\`tool
+{"tool":"openPlantEdit","plant_id":"<id>"}
+\`\`\`
+or
+\`\`\`tool
+{"tool":"openPlantEdit","prefill":{"name_common":"Rose","sun_demand":"sunny"}}
+\`\`\`
+or
+\`\`\`tool
+{"tool":"updatePlantEdit","fields":{"water_demand":"medium","care_notes":"Water regularly."}}
+\`\`\`
+
+If no dialog is open and updatePlantEdit is requested, reply instead that the dialog must be opened first.`,
+};
+
 // ── Public API ────────────────────────────────────────────────────────────────
 
 export function buildSystemPrompt(ctx: AssistantContext, lang: "de" | "en"): string {
@@ -181,5 +255,6 @@ export function buildSystemPrompt(ctx: AssistantContext, lang: "de" | "en"): str
     PERSONA[lang],
     APP_DESCRIPTION[lang],
     buildSituation(ctx, lang),
+    TOOLS_DESCRIPTION[lang],
   ].join("\n\n---\n\n");
 }

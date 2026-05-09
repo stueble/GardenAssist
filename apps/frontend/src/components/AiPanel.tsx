@@ -6,12 +6,94 @@ import type { ChatMessage }        from "@/api/client";
 import { useAiPanelState }         from "@/hooks/useAiPanelState";
 import { buildSystemPrompt }       from "@/lib/aiPrompt";
 import type { AssistantContext }   from "@api/assistant-context";
+import { getPlantEditHandler }     from "@/hooks/usePlantEditContext";
+import type { Plant }              from "@api/plant";
 
 interface AiPanelProps {
   /** Context bar text, e.g. "✏️ Bearbeite: 🌹 Rose" or "⚙️ Einstellungen" */
   context?: string;
   /** Structured context for the AI system prompt (garden data, active view, selected plant) */
   assistantContext?: AssistantContext;
+}
+
+// ── Tool-call parsing ─────────────────────────────────────────────────────────
+
+/**
+ * Extracts a ```tool ... ``` JSON block from an AI response, if present.
+ * Returns { toolCall, displayText } where displayText has the block stripped.
+ *
+ * Exported for testing.
+ */
+export function parseToolCall(raw: string): {
+  toolCall: Record<string, unknown> | null;
+  displayText: string;
+} {
+  const match = /```tool\s*\n([\s\S]*?)\n```/m.exec(raw);
+  if (!match) return { toolCall: null, displayText: raw };
+  try {
+    const toolCall = JSON.parse(match[1].trim()) as Record<string, unknown>;
+    const displayText = raw.replace(match[0], "").trim();
+    return { toolCall, displayText };
+  } catch {
+    return { toolCall: null, displayText: raw };
+  }
+}
+
+/**
+ * Dispatches a parsed tool call to the appropriate handler.
+ * Returns a feedback string to append to the chat (for the user to see).
+ *
+ * Exported as dispatchToolCallForTest for unit testing.
+ */
+export function dispatchToolCallForTest(
+  toolCall: Record<string, unknown>,
+  plants: Plant[],
+  lang: "de" | "en",
+): string {
+  return dispatchToolCall(toolCall, plants, lang);
+}
+
+function dispatchToolCall(
+  toolCall: Record<string, unknown>,
+  plants: Plant[],
+  lang: "de" | "en",
+): string {
+  const handler = getPlantEditHandler();
+  const tool = toolCall.tool as string | undefined;
+
+  if (tool === "openPlantEdit") {
+    if (!handler) {
+      return lang === "de"
+        ? "⚠️ Die Pflanzenverwaltung ist gerade nicht geöffnet."
+        : "⚠️ Plant management is not currently open.";
+    }
+    handler.openPlantEdit({
+      plantId: (toolCall.plant_id as string | undefined),
+      prefill:  toolCall.prefill as Record<string, string> | undefined,
+    }, plants);
+    return "";
+  }
+
+  if (tool === "updatePlantEdit") {
+    if (!handler) {
+      return lang === "de"
+        ? "⚠️ Die Pflanzenverwaltung ist gerade nicht geöffnet."
+        : "⚠️ Plant management is not currently open.";
+    }
+    const ok = handler.updatePlantEdit(
+      (toolCall.fields as Record<string, string>) ?? {}
+    );
+    if (!ok) {
+      return lang === "de"
+        ? "⚠️ Kein Pflanzendialog ist gerade geöffnet. Bitte öffne zuerst eine Pflanze zum Bearbeiten."
+        : "⚠️ No plant dialog is currently open. Please open a plant for editing first.";
+    }
+    return "";
+  }
+
+  return lang === "de"
+    ? `⚠️ Unbekanntes Werkzeug: ${tool}`
+    : `⚠️ Unknown tool: ${tool}`;
 }
 
 /**
@@ -90,7 +172,18 @@ export function AiPanel({ context, assistantContext }: AiPanelProps) {
         ? buildSystemPrompt(assistantContext, lang)
         : undefined;
       const res = await chatWithAi(nextMessages, lang, systemPrompt);
-      setMessages((prev) => [...prev, { role: "assistant", content: res.content }]);
+
+      // Parse tool calls from assistant response
+      const { toolCall, displayText } = parseToolCall(res.content);
+      let feedback = "";
+      if (toolCall) {
+        const plants = assistantContext?.garden?.plants ?? [];
+        feedback = dispatchToolCall(toolCall, plants, lang);
+      }
+
+      // Show the display text (tool block stripped) + any error feedback
+      const finalContent = [displayText, feedback].filter(Boolean).join("\n\n");
+      setMessages((prev) => [...prev, { role: "assistant", content: finalContent || res.content }]);
     } catch {
       setError(
         i18n.language?.startsWith("en")

@@ -14,7 +14,7 @@
  * Later stories add: Bilder, Positionen, Schedule sections (story-027, #028, #029).
  */
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useImperativeHandle, forwardRef } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import type { Plant } from "@api/plant";
@@ -23,6 +23,8 @@ import type { ColorPreset } from "@api/color-preset";
 import type { Attachment, AttachmentCategory } from "@api/attachment";
 import type { PlantInput } from "@api/api";
 import { apiClient } from "@/api/client";
+import { applyAiSuggestions } from "@/lib/applyAiSuggestions";
+import type { PlantEditFields } from "@/hooks/usePlantEditContext";
 
 // ── Icon library (AC #3) ──────────────────────────────────────────────────────
 
@@ -220,6 +222,21 @@ type LocalAttachment = {
 };
 export type AttachmentRow = SavedAttachment | LocalAttachment;
 
+// ── AI suggestion types ───────────────────────────────────────────────────────
+
+/** Keys of EditForm that AI can suggest (subset of scalar fields, no icon/checkbox). */
+export type AiSuggestableField = Exclude<keyof EditForm, "icon" | "temperature_protected">;
+export type AiSuggestionsMap   = Partial<Record<AiSuggestableField, true>>;
+export type AiPrevMap          = Partial<Record<AiSuggestableField, string>>;
+
+/** Imperative handle exposed to parent/context via forwardRef. */
+export type PlantEditDialogHandle = {
+  /** Returns true if dialog is open (always true when mounted). */
+  isOpen: () => boolean;
+  /** Push AI-suggested fields into the dialog; marks them visually. */
+  applyAiFields: (fields: PlantEditFields) => void;
+};
+
 // ── Props ─────────────────────────────────────────────────────────────────────
 
 export interface PlantEditDialogProps {
@@ -237,11 +254,12 @@ export interface PlantEditDialogProps {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export function PlantEditDialog({
+export const PlantEditDialog = forwardRef<PlantEditDialogHandle, PlantEditDialogProps>(
+function PlantEditDialog({
   plant, onClose, onSaved,
   positions, onPositionsChange, initialPositions,
   pickMode, onPickModeChange,
-}: PlantEditDialogProps) {
+}: PlantEditDialogProps, ref) {
   const { t } = useTranslation("plants");
 
   const [form,         setForm]         = useState<EditForm>(() => plantToForm(plant));
@@ -258,6 +276,34 @@ export function PlantEditDialog({
     () => (plant?.attachments ?? []).map((a) => ({ ...a, _kind: "saved" as const }))
   );
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
+
+  // AI suggestion state: which fields are marked + their pre-AI values for revert
+  const [aiMarked, setAiMarked] = useState<AiSuggestionsMap>({});
+  const [aiPrev,   setAiPrev]   = useState<AiPrevMap>({});
+
+  // Imperative handle for AiPanel / PlantEditContext
+  useImperativeHandle(ref, () => ({
+    isOpen: () => true,
+    applyAiFields: (fields: PlantEditFields) => {
+      // Only suggestable fields (no icon, no checkbox)
+      const suggestable: Partial<EditForm> = {};
+      const keys: AiSuggestableField[] = [
+        "name_common", "name_botanical", "description", "category",
+        "origin_type", "lifecycle", "location", "watering_zone",
+        "purchase_date", "purchase_price", "sun_demand", "water_demand",
+        "frost_tolerance_min_c", "soil_type", "health_status", "care_notes",
+      ];
+      for (const k of keys) {
+        if (fields[k] !== undefined) suggestable[k] = fields[k];
+      }
+      setForm((prev) => {
+        const { nextForm, nextMarked, prevValues } = applyAiSuggestions(prev, suggestable);
+        setAiMarked((m) => ({ ...m, ...nextMarked }));
+        setAiPrev((p) => ({ ...p, ...prevValues }));
+        return nextForm;
+      });
+    },
+  }));
 
   // Load settings for category + zone dropdowns (AC #5) and color presets (AC #3)
   useEffect(() => {
@@ -372,6 +418,14 @@ export function PlantEditDialog({
     ? t("edit.title_edit", { name: plant.name_common })
     : t("edit.title_new");
 
+  const aiSuggestionCount = Object.keys(aiMarked).filter((k) => aiMarked[k as AiSuggestableField]).length;
+
+  function revertAiField(key: AiSuggestableField) {
+    setForm((f) => ({ ...f, [key]: aiPrev[key] ?? "" }));
+    setAiMarked((m) => { const n = { ...m }; delete n[key]; return n; });
+    setAiPrev((p) => { const n = { ...p }; delete n[key]; return n; });
+  }
+
   return (
     <>
       {/* ── Header ── */}
@@ -442,6 +496,8 @@ export function PlantEditDialog({
             categories={categories}
             zones={zones}
             nameError={nameError}
+            aiMarked={aiMarked}
+            onRevertAiField={revertAiField}
             t={t}
           />
         </EditSection>
@@ -504,6 +560,32 @@ export function PlantEditDialog({
 
       </div>
 
+      {/* ── AI suggestion status bar ── */}
+      {aiSuggestionCount > 0 && (
+        <div
+          data-testid="ai-suggestion-bar"
+          style={{
+            display:      "flex",
+            alignItems:   "center",
+            gap:          "6px",
+            padding:      "6px 12px",
+            background:   "#EAF3DE",
+            borderTop:    "1px solid #c5e0a0",
+            fontSize:     "11px",
+            color:        "#3B6D11",
+            flexShrink:   0,
+          }}
+        >
+          <span aria-hidden="true" style={{ fontSize: "13px" }}>✦</span>
+          <span>
+            {aiSuggestionCount === 1
+              ? "1 Feld vom Assistenten vorgeschlagen"
+              : `${aiSuggestionCount} Felder vom Assistenten vorgeschlagen`}
+            {" — klicke × zum Verwerfen"}
+          </span>
+        </div>
+      )}
+
       {/* ── Actions ── */}
       <div
         style={{
@@ -537,7 +619,7 @@ export function PlantEditDialog({
       </div>
     </>
   );
-}
+});
 
 // ── EditSection ───────────────────────────────────────────────────────────────
 
@@ -589,22 +671,69 @@ function EditSection({ title, accent, defaultOpen = false, count, children }: Ed
 // ── GrunddatenFields ──────────────────────────────────────────────────────────
 
 interface GrunddatenProps {
-  form:           EditForm;
-  patch:          (key: keyof EditForm, value: string | boolean) => void;
-  pickerOpen:     boolean;
-  setPickerOpen:  (v: boolean) => void;
-  iconManual:     boolean;
-  setIconManual:  (v: boolean) => void;
-  categories:     string[];
-  zones:          string[];
-  nameError:      boolean;
-  t:              TFunction<"plants">;
+  form:              EditForm;
+  patch:             (key: keyof EditForm, value: string | boolean) => void;
+  pickerOpen:        boolean;
+  setPickerOpen:     (v: boolean) => void;
+  iconManual:        boolean;
+  setIconManual:     (v: boolean) => void;
+  categories:        string[];
+  zones:             string[];
+  nameError:         boolean;
+  aiMarked:          AiSuggestionsMap;
+  onRevertAiField:   (key: AiSuggestableField) => void;
+  t:                 TFunction<"plants">;
 }
 
 function GrunddatenFields({
   form, patch, pickerOpen, setPickerOpen,
-  iconManual, setIconManual, categories, zones, nameError, t,
+  iconManual, setIconManual, categories, zones, nameError,
+  aiMarked, onRevertAiField, t,
 }: GrunddatenProps) {
+
+  /** Wraps a field input/select with green AI-suggestion styling + × revert button. */
+  function AiField({ fieldKey, children }: { fieldKey: AiSuggestableField; children: React.ReactNode }) {
+    if (!aiMarked[fieldKey]) return <>{children}</>;
+    return (
+      <div style={{ position: "relative" }} data-testid={`ai-field-${fieldKey}`}>
+        <div style={{
+          background:   "#EAF3DE",
+          border:       "1.5px solid #639922",
+          borderRadius: "8px",
+          padding:      "1px",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "4px", padding: "0 4px 0 6px" }}>
+            <span aria-hidden="true" style={{ fontSize: "11px", color: "#639922", flexShrink: 0 }}>✦</span>
+            <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => onRevertAiField(fieldKey)}
+          data-testid={`ai-revert-${fieldKey}`}
+          title="KI-Änderung rückgängig"
+          aria-label="KI-Änderung rückgängig machen"
+          style={{
+            position:     "absolute",
+            right:        "4px",
+            top:          "50%",
+            transform:    "translateY(-50%)",
+            background:   "none",
+            border:       "none",
+            cursor:       "pointer",
+            color:        "#639922",
+            fontSize:     "13px",
+            lineHeight:   1,
+            padding:      "2px 4px",
+            borderRadius: "4px",
+            zIndex:       1,
+          }}
+        >
+          ×
+        </button>
+      </div>
+    );
+  }
 
   function selectIcon(emoji: string) {
     patch("icon", emoji);
@@ -685,71 +814,83 @@ function GrunddatenFields({
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "11px" }}>
         <div>
           <div style={fieldLabelStyle}>{t("edit.field_name")}</div>
-          <input
-            type="text"
-            value={form.name_common}
-            onChange={(e) => patch("name_common", e.target.value)}
-            placeholder="z.B. Rote Rose"
-            data-testid="field-name"
-            style={{
-              ...fieldInputStyle,
-              borderColor: nameError ? "var(--red-warn)" : undefined,
-            }}
-          />
+          <AiField fieldKey="name_common">
+            <input
+              type="text"
+              value={form.name_common}
+              onChange={(e) => patch("name_common", e.target.value)}
+              placeholder="z.B. Rote Rose"
+              data-testid="field-name"
+              style={{
+                ...fieldInputStyle,
+                borderColor: nameError ? "var(--red-warn)" : undefined,
+                border: aiMarked.name_common ? "none" : undefined,
+                background: aiMarked.name_common ? "transparent" : undefined,
+              }}
+            />
+          </AiField>
           {nameError && <div style={{ fontSize: "10px", color: "var(--red-warn)", marginTop: "3px" }}>{t("edit.name_required")}</div>}
         </div>
         <div>
           <div style={fieldLabelStyle}>{t("edit.field_botanical")}</div>
-          <input
-            type="text"
-            value={form.name_botanical}
-            onChange={(e) => patch("name_botanical", e.target.value)}
-            placeholder="z.B. Rosa"
-            data-testid="field-botanical"
-            style={fieldInputStyle}
-          />
+          <AiField fieldKey="name_botanical">
+            <input
+              type="text"
+              value={form.name_botanical}
+              onChange={(e) => patch("name_botanical", e.target.value)}
+              placeholder="z.B. Rosa"
+              data-testid="field-botanical"
+              style={{ ...fieldInputStyle, border: aiMarked.name_botanical ? "none" : undefined, background: aiMarked.name_botanical ? "transparent" : undefined }}
+            />
+          </AiField>
         </div>
       </div>
 
       {/* Description */}
       <FieldRow label={t("edit.field_description")}>
-        <textarea
-          value={form.description}
-          onChange={(e) => patch("description", e.target.value)}
-          placeholder="Beschreibung der Pflanze …"
-          rows={3}
-          data-testid="field-description"
-          style={fieldTextareaStyle}
-        />
+        <AiField fieldKey="description">
+          <textarea
+            value={form.description}
+            onChange={(e) => patch("description", e.target.value)}
+            placeholder="Beschreibung der Pflanze …"
+            rows={3}
+            data-testid="field-description"
+            style={{ ...fieldTextareaStyle, border: aiMarked.description ? "none" : undefined, background: aiMarked.description ? "transparent" : undefined }}
+          />
+        </AiField>
       </FieldRow>
 
       {/* Category (AC #5 — from Settings) + Origin (AC #4 — from i18n) */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "11px" }}>
         <div>
           <div style={fieldLabelStyle}>{t("edit.field_category")}</div>
-          <select
-            value={form.category}
-            onChange={(e) => patch("category", e.target.value)}
-            data-testid="field-category"
-            style={fieldSelectStyle}
-          >
-            <option value="">{t("edit.select_none")}</option>
-            {categories.map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
+          <AiField fieldKey="category">
+            <select
+              value={form.category}
+              onChange={(e) => patch("category", e.target.value)}
+              data-testid="field-category"
+              style={{ ...fieldSelectStyle, border: aiMarked.category ? "none" : undefined, background: aiMarked.category ? "transparent" : undefined }}
+            >
+              <option value="">{t("edit.select_none")}</option>
+              {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </AiField>
         </div>
         <div>
           <div style={fieldLabelStyle}>{t("edit.field_origin")}</div>
-          <select
-            value={form.origin_type}
-            onChange={(e) => patch("origin_type", e.target.value)}
-            data-testid="field-origin"
-            style={fieldSelectStyle}
-          >
-            <option value="">{t("edit.select_none")}</option>
-            <option value="native">{t("origin_type.native")}</option>
-            <option value="neophyte">{t("origin_type.neophyte")}</option>
-            <option value="invasive_neophyte">{t("origin_type.invasive_neophyte")}</option>
-          </select>
+          <AiField fieldKey="origin_type">
+            <select
+              value={form.origin_type}
+              onChange={(e) => patch("origin_type", e.target.value)}
+              data-testid="field-origin"
+              style={{ ...fieldSelectStyle, border: aiMarked.origin_type ? "none" : undefined, background: aiMarked.origin_type ? "transparent" : undefined }}
+            >
+              <option value="">{t("edit.select_none")}</option>
+              <option value="native">{t("origin_type.native")}</option>
+              <option value="neophyte">{t("origin_type.neophyte")}</option>
+              <option value="invasive_neophyte">{t("origin_type.invasive_neophyte")}</option>
+            </select>
+          </AiField>
         </div>
       </div>
 
@@ -757,31 +898,35 @@ function GrunddatenFields({
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "11px" }}>
         <div>
           <div style={fieldLabelStyle}>{t("edit.field_lifecycle")}</div>
-          <select
-            value={form.lifecycle}
-            onChange={(e) => patch("lifecycle", e.target.value)}
-            data-testid="field-lifecycle"
-            style={fieldSelectStyle}
-          >
-            <option value="">{t("edit.select_none")}</option>
-            <option value="annual">{t("lifecycle.annual")}</option>
-            <option value="biennial">{t("lifecycle.biennial")}</option>
-            <option value="perennial">{t("lifecycle.perennial")}</option>
-          </select>
+          <AiField fieldKey="lifecycle">
+            <select
+              value={form.lifecycle}
+              onChange={(e) => patch("lifecycle", e.target.value)}
+              data-testid="field-lifecycle"
+              style={{ ...fieldSelectStyle, border: aiMarked.lifecycle ? "none" : undefined, background: aiMarked.lifecycle ? "transparent" : undefined }}
+            >
+              <option value="">{t("edit.select_none")}</option>
+              <option value="annual">{t("lifecycle.annual")}</option>
+              <option value="biennial">{t("lifecycle.biennial")}</option>
+              <option value="perennial">{t("lifecycle.perennial")}</option>
+            </select>
+          </AiField>
         </div>
         <div>
           <div style={fieldLabelStyle}>{t("edit.field_health")}</div>
-          <select
-            value={form.health_status}
-            onChange={(e) => patch("health_status", e.target.value)}
-            data-testid="field-health"
-            style={fieldSelectStyle}
-          >
-            <option value="">{t("edit.select_none")}</option>
-            <option value="good">{t("health_status.good")}</option>
-            <option value="watch">{t("health_status.watch")}</option>
-            <option value="needs_treatment">{t("health_status.needs_treatment")}</option>
-          </select>
+          <AiField fieldKey="health_status">
+            <select
+              value={form.health_status}
+              onChange={(e) => patch("health_status", e.target.value)}
+              data-testid="field-health"
+              style={{ ...fieldSelectStyle, border: aiMarked.health_status ? "none" : undefined, background: aiMarked.health_status ? "transparent" : undefined }}
+            >
+              <option value="">{t("edit.select_none")}</option>
+              <option value="good">{t("health_status.good")}</option>
+              <option value="watch">{t("health_status.watch")}</option>
+              <option value="needs_treatment">{t("health_status.needs_treatment")}</option>
+            </select>
+          </AiField>
         </div>
       </div>
 
@@ -789,26 +934,30 @@ function GrunddatenFields({
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "11px" }}>
         <div>
           <div style={fieldLabelStyle}>{t("edit.field_location")}</div>
-          <input
-            type="text"
-            value={form.location}
-            onChange={(e) => patch("location", e.target.value)}
-            placeholder="z.B. Westbeet"
-            data-testid="field-location"
-            style={fieldInputStyle}
-          />
+          <AiField fieldKey="location">
+            <input
+              type="text"
+              value={form.location}
+              onChange={(e) => patch("location", e.target.value)}
+              placeholder="z.B. Westbeet"
+              data-testid="field-location"
+              style={{ ...fieldInputStyle, border: aiMarked.location ? "none" : undefined, background: aiMarked.location ? "transparent" : undefined }}
+            />
+          </AiField>
         </div>
         <div>
           <div style={fieldLabelStyle}>{t("edit.field_watering")}</div>
-          <select
-            value={form.watering_zone}
-            onChange={(e) => patch("watering_zone", e.target.value)}
-            data-testid="field-watering"
-            style={fieldSelectStyle}
-          >
-            <option value="">{t("edit.select_none")}</option>
-            {zones.map((z) => <option key={z} value={z}>{z}</option>)}
-          </select>
+          <AiField fieldKey="watering_zone">
+            <select
+              value={form.watering_zone}
+              onChange={(e) => patch("watering_zone", e.target.value)}
+              data-testid="field-watering"
+              style={{ ...fieldSelectStyle, border: aiMarked.watering_zone ? "none" : undefined, background: aiMarked.watering_zone ? "transparent" : undefined }}
+            >
+              <option value="">{t("edit.select_none")}</option>
+              {zones.map((z) => <option key={z} value={z}>{z}</option>)}
+            </select>
+          </AiField>
         </div>
       </div>
 
@@ -816,31 +965,35 @@ function GrunddatenFields({
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "11px" }}>
         <div>
           <div style={fieldLabelStyle}>{t("edit.field_sun")}</div>
-          <select
-            value={form.sun_demand}
-            onChange={(e) => patch("sun_demand", e.target.value)}
-            data-testid="field-sun"
-            style={fieldSelectStyle}
-          >
-            <option value="">{t("edit.select_none")}</option>
-            <option value="sunny">{t("sun_demand.sunny")}</option>
-            <option value="partial_shade">{t("sun_demand.partial_shade")}</option>
-            <option value="shady">{t("sun_demand.shady")}</option>
-          </select>
+          <AiField fieldKey="sun_demand">
+            <select
+              value={form.sun_demand}
+              onChange={(e) => patch("sun_demand", e.target.value)}
+              data-testid="field-sun"
+              style={{ ...fieldSelectStyle, border: aiMarked.sun_demand ? "none" : undefined, background: aiMarked.sun_demand ? "transparent" : undefined }}
+            >
+              <option value="">{t("edit.select_none")}</option>
+              <option value="sunny">{t("sun_demand.sunny")}</option>
+              <option value="partial_shade">{t("sun_demand.partial_shade")}</option>
+              <option value="shady">{t("sun_demand.shady")}</option>
+            </select>
+          </AiField>
         </div>
         <div>
           <div style={fieldLabelStyle}>{t("edit.field_water")}</div>
-          <select
-            value={form.water_demand}
-            onChange={(e) => patch("water_demand", e.target.value)}
-            data-testid="field-water"
-            style={fieldSelectStyle}
-          >
-            <option value="">{t("edit.select_none")}</option>
-            <option value="low">{t("water_demand.low")}</option>
-            <option value="medium">{t("water_demand.medium")}</option>
-            <option value="high">{t("water_demand.high")}</option>
-          </select>
+          <AiField fieldKey="water_demand">
+            <select
+              value={form.water_demand}
+              onChange={(e) => patch("water_demand", e.target.value)}
+              data-testid="field-water"
+              style={{ ...fieldSelectStyle, border: aiMarked.water_demand ? "none" : undefined, background: aiMarked.water_demand ? "transparent" : undefined }}
+            >
+              <option value="">{t("edit.select_none")}</option>
+              <option value="low">{t("water_demand.low")}</option>
+              <option value="medium">{t("water_demand.medium")}</option>
+              <option value="high">{t("water_demand.high")}</option>
+            </select>
+          </AiField>
         </div>
       </div>
 
@@ -848,30 +1001,34 @@ function GrunddatenFields({
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "11px" }}>
         <div>
           <div style={fieldLabelStyle}>{t("edit.field_soil")}</div>
-          <select
-            value={form.soil_type}
-            onChange={(e) => patch("soil_type", e.target.value)}
-            data-testid="field-soil"
-            style={fieldSelectStyle}
-          >
-            <option value="">{t("edit.select_none")}</option>
-            <option value="loamy">{t("soil_type.loamy")}</option>
-            <option value="sandy">{t("soil_type.sandy")}</option>
-            <option value="humus_rich">{t("soil_type.humus_rich")}</option>
-            <option value="calcareous">{t("soil_type.calcareous")}</option>
-            <option value="acidic">{t("soil_type.acidic")}</option>
-          </select>
+          <AiField fieldKey="soil_type">
+            <select
+              value={form.soil_type}
+              onChange={(e) => patch("soil_type", e.target.value)}
+              data-testid="field-soil"
+              style={{ ...fieldSelectStyle, border: aiMarked.soil_type ? "none" : undefined, background: aiMarked.soil_type ? "transparent" : undefined }}
+            >
+              <option value="">{t("edit.select_none")}</option>
+              <option value="loamy">{t("soil_type.loamy")}</option>
+              <option value="sandy">{t("soil_type.sandy")}</option>
+              <option value="humus_rich">{t("soil_type.humus_rich")}</option>
+              <option value="calcareous">{t("soil_type.calcareous")}</option>
+              <option value="acidic">{t("soil_type.acidic")}</option>
+            </select>
+          </AiField>
         </div>
         <div>
           <div style={fieldLabelStyle}>{t("edit.field_temp")}</div>
-          <input
-            type="number"
-            value={form.frost_tolerance_min_c}
-            onChange={(e) => patch("frost_tolerance_min_c", e.target.value)}
-            placeholder="-15"
-            data-testid="field-temp"
-            style={fieldInputStyle}
-          />
+          <AiField fieldKey="frost_tolerance_min_c">
+            <input
+              type="number"
+              value={form.frost_tolerance_min_c}
+              onChange={(e) => patch("frost_tolerance_min_c", e.target.value)}
+              placeholder="-15"
+              data-testid="field-temp"
+              style={{ ...fieldInputStyle, border: aiMarked.frost_tolerance_min_c ? "none" : undefined, background: aiMarked.frost_tolerance_min_c ? "transparent" : undefined }}
+            />
+          </AiField>
         </div>
       </div>
 
@@ -893,39 +1050,45 @@ function GrunddatenFields({
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "11px" }}>
         <div>
           <div style={fieldLabelStyle}>{t("edit.field_purchase_date")}</div>
-          <input
-            type="date"
-            value={form.purchase_date}
-            onChange={(e) => patch("purchase_date", e.target.value)}
-            data-testid="field-purchase-date"
-            style={fieldInputStyle}
-          />
+          <AiField fieldKey="purchase_date">
+            <input
+              type="date"
+              value={form.purchase_date}
+              onChange={(e) => patch("purchase_date", e.target.value)}
+              data-testid="field-purchase-date"
+              style={{ ...fieldInputStyle, border: aiMarked.purchase_date ? "none" : undefined, background: aiMarked.purchase_date ? "transparent" : undefined }}
+            />
+          </AiField>
         </div>
         <div>
           <div style={fieldLabelStyle}>{t("edit.field_purchase_price")}</div>
-          <input
-            type="number"
-            min="0"
-            step="0.01"
-            value={form.purchase_price}
-            onChange={(e) => patch("purchase_price", e.target.value)}
-            placeholder="0.00"
-            data-testid="field-purchase-price"
-            style={fieldInputStyle}
-          />
+          <AiField fieldKey="purchase_price">
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={form.purchase_price}
+              onChange={(e) => patch("purchase_price", e.target.value)}
+              placeholder="0.00"
+              data-testid="field-purchase-price"
+              style={{ ...fieldInputStyle, border: aiMarked.purchase_price ? "none" : undefined, background: aiMarked.purchase_price ? "transparent" : undefined }}
+            />
+          </AiField>
         </div>
       </div>
 
       {/* Care notes */}
       <FieldRow label={t("edit.field_care_notes")}>
-        <textarea
-          value={form.care_notes}
-          onChange={(e) => patch("care_notes", e.target.value)}
-          placeholder="Pflegehinweise, Besonderheiten …"
-          rows={3}
-          data-testid="field-care-notes"
-          style={fieldTextareaStyle}
-        />
+        <AiField fieldKey="care_notes">
+          <textarea
+            value={form.care_notes}
+            onChange={(e) => patch("care_notes", e.target.value)}
+            placeholder="Pflegehinweise, Besonderheiten …"
+            rows={3}
+            data-testid="field-care-notes"
+            style={{ ...fieldTextareaStyle, border: aiMarked.care_notes ? "none" : undefined, background: aiMarked.care_notes ? "transparent" : undefined }}
+          />
+        </AiField>
       </FieldRow>
     </div>
   );

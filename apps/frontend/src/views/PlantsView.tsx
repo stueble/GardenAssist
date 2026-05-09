@@ -1,9 +1,10 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { AiPanel } from "@/components/AiPanel";
 import { useAiPanelState } from "@/hooks/useAiPanelState";
-import { PlantEditDialog } from "@/components/PlantEditDialog";
+import { PlantEditDialog, type PlantEditDialogHandle } from "@/components/PlantEditDialog";
 import { usePlantEditDialog } from "@/hooks/usePlantEditDialog";
+import { usePlantEditHandler, type OpenPlantEditArgs, type PlantEditFields } from "@/hooks/usePlantEditContext";
 import { GardenPlanWidget } from "@/components/GardenPlanWidget";
 import { apiClient } from "@/api/client";
 import type { Plant }            from "@api/plant";
@@ -60,6 +61,38 @@ export function PlantsView() {
   const [planUrl,   setPlanUrl]   = useState<string | null>(null);
 
   const edit = usePlantEditDialog();
+  const dialogRef = useRef<PlantEditDialogHandle>(null);
+
+  // Register AI tool handlers so AiPanel can dispatch openPlantEdit / updatePlantEdit
+  const openPlantEditHandler = useCallback((args: OpenPlantEditArgs, allPlants: Plant[]) => {
+    if (args.plantId) {
+      const found = allPlants.find((p) => p.id === args.plantId);
+      if (found) {
+        edit.openEdit(found);
+        // After dialog mounts, apply any prefill
+        if (args.prefill) {
+          // Give React one tick to mount the dialog + set up the ref
+          setTimeout(() => dialogRef.current?.applyAiFields(args.prefill!), 50);
+        }
+      }
+    } else {
+      edit.openNew();
+      if (args.prefill) {
+        setTimeout(() => dialogRef.current?.applyAiFields(args.prefill!), 50);
+      }
+    }
+  }, [edit]);
+
+  const updatePlantEditHandler = useCallback((fields: PlantEditFields): boolean => {
+    if (edit.editTarget === undefined) return false;
+    dialogRef.current?.applyAiFields(fields);
+    return true;
+  }, [edit.editTarget]);
+
+  usePlantEditHandler({
+    openPlantEdit: (args) => openPlantEditHandler(args, plants),
+    updatePlantEdit: updatePlantEditHandler,
+  });
 
   useEffect(() => {
     apiClient.getGarden()
@@ -389,6 +422,7 @@ export function PlantsView() {
       >
         {edit.editTarget !== undefined && (
           <PlantEditDialog
+            ref={dialogRef}
             plant={edit.editTarget}
             onClose={edit.close}
             onSaved={(saved) => {
