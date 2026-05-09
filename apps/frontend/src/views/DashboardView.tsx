@@ -146,7 +146,7 @@ export function DashboardView() {
 
   // Build monthly schedule data for the MonthBand (AC #3, #4, #5)
   // One dot per schedule type per month (deduplicated); spans all months the schedule covers.
-  const CARE_SCHEDULE_TYPES = new Set(["pruning", "fertilization", "growth", "misc"]);
+  const CARE_SCHEDULE_TYPES = new Set(["pruning", "fertilization", "misc"]);
   type MonthGroup = { icon: string; color: string; plants: string[] };
   type MonthData = { dots: Array<{ type: string; color: string }>; groups: Map<string, MonthGroup> };
 
@@ -163,7 +163,7 @@ export function DashboardView() {
         const color = s.color ?? "var(--green-mid)";
         const typeLabel: Record<string, string> = {
           pruning: "Schneiden", fertilization: "Düngen",
-          growth: "Wachstum", misc: "Sonstiges",
+          misc: "Sonstiges",
         };
 
         // Determine all months this schedule spans (start_week → end_week)
@@ -864,7 +864,7 @@ function MonthTooltip({ monthName, groups }: MonthTooltipProps) {
                   marginTop:     "8px",
                   marginBottom:  "3px",
                 }}>
-                  {grp.icon} {type === "pruning" ? "Schneiden" : type === "fertilization" ? "Düngen" : type === "growth" ? "Wachstum" : "Sonstiges"}
+                  {grp.icon} {type === "pruning" ? "Schneiden" : type === "fertilization" ? "Düngen" : "Sonstiges"}
                 </div>
                 {/* Plant entries — indented, dot in schedule color */}
                 {grp.plants.map((name) => (

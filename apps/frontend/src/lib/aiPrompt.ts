@@ -99,6 +99,8 @@ Werkzeug: editPlant
       action         (genau eines von: "add" | "remove" | "update")
       id             (string, nur bei remove/update: id aus den Gartendaten, Format [id:...])
       schedule_type  (bei add/update: genau eines von "bloom"|"growth"|"foliage"|"pruning"|"fertilization"|"misc")
+                     Hinweis: bloom, growth und foliage sind rein informativ (Kalender/Gantt) — sie erzeugen KEINE Aufgaben.
+                     Aufgaben entstehen nur aus: pruning, fertilization, misc.
       start_week     (bei add/update: Kalenderwoche 1–53)
       end_week       (bei add/update: Kalenderwoche 1–53; wenn start_week > end_week = Jahresübergang, z.B. KW 48–6)
       color          (optional, Hex-String z.B. "#c0392b"; bei Blüten aus dem Kontext ableiten, sonst weglassen)
@@ -157,6 +159,8 @@ Tool: editPlant
       action         (exactly one of: "add" | "remove" | "update")
       id             (string, only for remove/update: id from garden data, format [id:...])
       schedule_type  (for add/update: exactly one of "bloom"|"growth"|"foliage"|"pruning"|"fertilization"|"misc")
+                     Note: bloom, growth and foliage are informational only (calendar/Gantt) — they do NOT generate tasks.
+                     Tasks are only generated from: pruning, fertilization, misc.
       start_week     (for add/update: week number 1–53)
       end_week       (for add/update: week number 1–53; if start_week > end_week = year-wrap, e.g. W48–W06)
       color          (optional, hex string e.g. "#c0392b"; derive from context for bloom, omit otherwise)

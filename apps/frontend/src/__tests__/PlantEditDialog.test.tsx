@@ -19,16 +19,17 @@
  * - AC #6: Entry count badge shown in section header
  */
 
-import React, { useState } from "react";
+import React, { useState, createRef } from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, within, act } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { I18nextProvider } from "react-i18next";
 import i18n from "../i18n/index";
-import { PlantEditDialog, type AttachmentRow } from "../components/PlantEditDialog";
+import { PlantEditDialog, type AttachmentRow, type PlantEditDialogHandle } from "../components/PlantEditDialog";
 import { resetAiPanelState } from "../hooks/useAiPanelState";
 import type { Plant } from "@api/plant";
 import type { Schedule } from "@api/schedule";
+import type { PendingPlantEdit } from "@api/assistant-context";
 
 const MOCK_COLOR_PRESETS = [
   { schedule_type: "bloom" as const, name: "Dunkelrot", color: "#c0392b" },
@@ -777,5 +778,140 @@ describe("PlantEditDialog — save with uploads (story-029 AC #5)", () => {
     // Simpler: just verify uploadAttachment exists in mock and would be called
     // (full integration test would need to inject attachmentRows externally)
     expect(apiClient.uploadAttachment).toBeDefined();
+  });
+});
+
+// ── AI suggestions + save regression (pending changes) ───────────────────────
+
+describe("PlantEditDialog — save after AI suggestions (regression)", () => {
+  it("calls onSaved after applyAiFields + Save click", async () => {
+    const { apiClient } = await import("../api/client");
+    const onSaved = vi.fn();
+    const ref = createRef<PlantEditDialogHandle>();
+
+    render(
+      <I18nextProvider i18n={i18n}>
+        <PlantEditDialog
+          ref={ref}
+          plant={MOCK_PLANT}
+          onClose={vi.fn()}
+          onSaved={onSaved}
+          positions={[]}
+          onPositionsChange={vi.fn()}
+          initialPositions={[]}
+          pickMode={false}
+          onPickModeChange={vi.fn()}
+        />
+      </I18nextProvider>
+    );
+
+    // Simulate AI applying fields
+    act(() => {
+      ref.current!.applyAiFields({ name_botanical: "Rosa canina", care_notes: "Düngen" });
+    });
+
+    fireEvent.click(screen.getByTestId("edit-save"));
+
+    await waitFor(() => expect(apiClient.updatePlant).toHaveBeenCalledOnce());
+    await waitFor(() => expect(onSaved).toHaveBeenCalledOnce());
+  });
+
+  it("calls onSaved after applyAiFields adds a schedule + Save click", async () => {
+    const { apiClient } = await import("../api/client");
+    const onSaved = vi.fn();
+    const ref = createRef<PlantEditDialogHandle>();
+
+    render(
+      <I18nextProvider i18n={i18n}>
+        <PlantEditDialog
+          ref={ref}
+          plant={MOCK_PLANT}
+          onClose={vi.fn()}
+          onSaved={onSaved}
+          positions={[]}
+          onPositionsChange={vi.fn()}
+          initialPositions={[]}
+          pickMode={false}
+          onPickModeChange={vi.fn()}
+        />
+      </I18nextProvider>
+    );
+
+    act(() => {
+      ref.current!.applyAiFields({
+        schedules: [{ action: "add", schedule_type: "bloom", start_week: 15, end_week: 25 }],
+      });
+    });
+
+    fireEvent.click(screen.getByTestId("edit-save"));
+
+    await waitFor(() => expect(apiClient.updatePlant).toHaveBeenCalledOnce());
+    await waitFor(() => expect(onSaved).toHaveBeenCalledOnce());
+  });
+
+  it("calls onPendingChange with data after applyAiFields", async () => {
+    const ref = createRef<PlantEditDialogHandle>();
+    const onPendingChange = vi.fn<(pending: PendingPlantEdit | null) => void>();
+
+    render(
+      <I18nextProvider i18n={i18n}>
+        <PlantEditDialog
+          ref={ref}
+          plant={MOCK_PLANT}
+          onClose={vi.fn()}
+          onSaved={vi.fn()}
+          onPendingChange={onPendingChange}
+          positions={[]}
+          onPositionsChange={vi.fn()}
+          initialPositions={[]}
+          pickMode={false}
+          onPickModeChange={vi.fn()}
+        />
+      </I18nextProvider>
+    );
+
+    act(() => {
+      ref.current!.applyAiFields({ name_botanical: "Rosa canina" });
+    });
+
+    await waitFor(() => {
+      const lastCall = onPendingChange.mock.calls.at(-1)?.[0];
+      expect(lastCall).not.toBeNull();
+      expect((lastCall as PendingPlantEdit).scalarFields.name_botanical).toBe("Rosa canina");
+    });
+  });
+
+  it("calls onPendingChange with null after Save", async () => {
+    const ref = createRef<PlantEditDialogHandle>();
+    const onPendingChange = vi.fn<(pending: PendingPlantEdit | null) => void>();
+
+    render(
+      <I18nextProvider i18n={i18n}>
+        <PlantEditDialog
+          ref={ref}
+          plant={MOCK_PLANT}
+          onClose={vi.fn()}
+          onSaved={vi.fn()}
+          onPendingChange={onPendingChange}
+          positions={[]}
+          onPositionsChange={vi.fn()}
+          initialPositions={[]}
+          pickMode={false}
+          onPickModeChange={vi.fn()}
+        />
+      </I18nextProvider>
+    );
+
+    act(() => {
+      ref.current!.applyAiFields({ name_botanical: "Rosa canina" });
+    });
+
+    fireEvent.click(screen.getByTestId("edit-save"));
+
+    await waitFor(() => {
+      const calls = onPendingChange.mock.calls.map((c) => c[0]);
+      // Last call must be null (cleared on save)
+      expect(calls.at(-1)).toBeNull();
+    });
   });
 });

@@ -196,15 +196,15 @@ function windowStatus(
 
 /**
  * Schedule types that represent actionable care tasks shown to the user.
- * bloom and foliage are informational/decorative — never shown as tasks.
+ * bloom, foliage, and growth are informational/decorative — never shown as tasks.
  */
-const CARE_TYPES = new Set(["pruning", "fertilization", "growth", "misc"]);
+const CARE_TYPES = new Set(["pruning", "fertilization", "misc"]);
 
 /**
  * Derives one task per schedule for a plant.
  *
  * A schedule produces a task if:
- * 1. Its schedule_type is a care type (pruning/fertilization/growth/misc)
+ * 1. Its schedule_type is a care type (pruning/fertilization/misc)
  * 2. Its time window overlaps with [now - lookbackWeeks, now + lookaheadWeeks]
  * 3. No JournalEntry of type "done" or "skipped" references that schedule_id
  *
