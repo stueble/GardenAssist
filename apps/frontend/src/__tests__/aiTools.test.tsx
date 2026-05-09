@@ -1,9 +1,10 @@
 /**
- * Tests for TASK-053: openPlantEdit / updatePlantEdit tools
+ * Tests for TASK-053: editPlant AI tool
  *
  * Covers:
- * - AC #1: openPlantEdit tool opens dialog (new or edit)
- * - AC #2: updatePlantEdit sets fields; error if dialog closed
+ * - AC #1: editPlant(null, fields) opens dialog in new-plant mode with prefill
+ * - AC #1: editPlant(id, fields) opens dialog in edit mode and applies fields
+ * - AC #2: if handler not registered, dispatchToolCall returns error feedback
  * - AC #3: AI-suggested fields have green marker styling
  * - AC #4: × revert button restores previous value and removes marker
  * - AC #5: Status bar shows count of active suggestions
@@ -141,21 +142,17 @@ describe("PlantEditDialog — AI field markers (AC #3, #4, #5)", () => {
   it("applies AI suggestions and shows green marker + status bar (AC #3, #5)", async () => {
     const { getRef } = renderWithRef(MOCK_PLANT);
 
-    await waitFor(() => {
-      expect(getRef()).not.toBeNull();
-    });
+    await waitFor(() => { expect(getRef()).not.toBeNull(); });
 
     act(() => {
       getRef()!.applyAiFields({ water_demand: "low", care_notes: "Regelmäßig gießen." });
     });
 
     await waitFor(() => {
-      // Status bar visible with count 2
       expect(screen.getByTestId("ai-suggestion-bar")).toBeInTheDocument();
       expect(screen.getByTestId("ai-suggestion-bar").textContent).toContain("2 Felder");
     });
 
-    // Green marker wrapper present for both fields
     expect(screen.getByTestId("ai-field-water_demand")).toBeInTheDocument();
     expect(screen.getByTestId("ai-field-care_notes")).toBeInTheDocument();
   });
@@ -165,15 +162,12 @@ describe("PlantEditDialog — AI field markers (AC #3, #4, #5)", () => {
 
     await waitFor(() => { expect(getRef()).not.toBeNull(); });
 
-    act(() => {
-      getRef()!.applyAiFields({ water_demand: "low" });
-    });
+    act(() => { getRef()!.applyAiFields({ water_demand: "low" }); });
 
     await waitFor(() => {
       expect(screen.getByTestId("ai-field-water_demand")).toBeInTheDocument();
     });
 
-    // Click revert button
     fireEvent.click(screen.getByTestId("ai-revert-water_demand"));
 
     await waitFor(() => {
@@ -181,7 +175,6 @@ describe("PlantEditDialog — AI field markers (AC #3, #4, #5)", () => {
       expect(screen.queryByTestId("ai-suggestion-bar")).not.toBeInTheDocument();
     });
 
-    // Field value reverted to original
     const waterSelect = screen.getByTestId("field-water") as HTMLSelectElement;
     expect(waterSelect.value).toBe("medium"); // original value from MOCK_PLANT
   });
@@ -191,9 +184,7 @@ describe("PlantEditDialog — AI field markers (AC #3, #4, #5)", () => {
 
     await waitFor(() => { expect(getRef()).not.toBeNull(); });
 
-    act(() => {
-      getRef()!.applyAiFields({ water_demand: "low", sun_demand: "shady" });
-    });
+    act(() => { getRef()!.applyAiFields({ water_demand: "low", sun_demand: "shady" }); });
 
     await waitFor(() => {
       expect(screen.getByTestId("ai-suggestion-bar").textContent).toContain("2 Felder");
@@ -213,73 +204,33 @@ describe("PlantEditDialog — AI field markers (AC #3, #4, #5)", () => {
   });
 });
 
-// ── AC #1: openPlantEdit via PlantEditContext ─────────────────────────────────
+// ── AC #1: editPlant via PlantEditContext ─────────────────────────────────────
 
-describe("openPlantEdit via PlantEditContext (AC #1)", () => {
+describe("editPlant via PlantEditContext (AC #1)", () => {
   it("registers handler and getPlantEditHandler() returns it", () => {
-    const openPlantEdit = vi.fn();
-    const updatePlantEdit = vi.fn();
-    const unregister = registerPlantEditHandler({ openPlantEdit, updatePlantEdit });
+    const editPlant = vi.fn();
+    const unregister = registerPlantEditHandler({ editPlant });
     expect(getPlantEditHandler()).not.toBeNull();
     unregister();
     expect(getPlantEditHandler()).toBeNull();
   });
 
-  it("dispatches openPlantEdit with plant_id", () => {
-    const openPlantEdit = vi.fn();
-    const updatePlantEdit = vi.fn();
-    const unregister = registerPlantEditHandler({ openPlantEdit, updatePlantEdit });
+  it("dispatches editPlant with null id for new plant", () => {
+    const editPlant = vi.fn();
+    const unregister = registerPlantEditHandler({ editPlant });
 
-    const handler = getPlantEditHandler()!;
-    handler.openPlantEdit({ plantId: "p1" }, [MOCK_PLANT]);
-    expect(openPlantEdit).toHaveBeenCalledWith({ plantId: "p1" }, [MOCK_PLANT]);
+    getPlantEditHandler()!.editPlant(null, { name_common: "Magnolie", sun_demand: "sunny" });
+    expect(editPlant).toHaveBeenCalledWith(null, { name_common: "Magnolie", sun_demand: "sunny" });
 
     unregister();
   });
 
-  it("dispatches openPlantEdit with prefill for new plant", () => {
-    const openPlantEdit = vi.fn();
-    const updatePlantEdit = vi.fn();
-    const unregister = registerPlantEditHandler({ openPlantEdit, updatePlantEdit });
+  it("dispatches editPlant with plant id for edit mode", () => {
+    const editPlant = vi.fn();
+    const unregister = registerPlantEditHandler({ editPlant });
 
-    const handler = getPlantEditHandler()!;
-    handler.openPlantEdit({ prefill: { name_common: "Magnolie", sun_demand: "sunny" } }, []);
-    expect(openPlantEdit).toHaveBeenCalledWith(
-      { prefill: { name_common: "Magnolie", sun_demand: "sunny" } },
-      []
-    );
-
-    unregister();
-  });
-});
-
-// ── AC #2: updatePlantEdit returns false if dialog closed ────────────────────
-
-describe("updatePlantEdit (AC #2)", () => {
-  it("returns false when no handler registered", () => {
-    // No handler registered
-    const handler = getPlantEditHandler();
-    expect(handler).toBeNull();
-  });
-
-  it("updatePlantEdit returns false when dialog is not open", () => {
-    const updatePlantEdit = vi.fn().mockReturnValue(false);
-    const unregister = registerPlantEditHandler({ openPlantEdit: vi.fn(), updatePlantEdit });
-
-    const handler = getPlantEditHandler()!;
-    const result = handler.updatePlantEdit({ water_demand: "low" });
-    expect(result).toBe(false);
-
-    unregister();
-  });
-
-  it("updatePlantEdit returns true when dialog is open", () => {
-    const updatePlantEdit = vi.fn().mockReturnValue(true);
-    const unregister = registerPlantEditHandler({ openPlantEdit: vi.fn(), updatePlantEdit });
-
-    const handler = getPlantEditHandler()!;
-    const result = handler.updatePlantEdit({ care_notes: "Gießen" });
-    expect(result).toBe(true);
+    getPlantEditHandler()!.editPlant("p1", { care_notes: "Gießen" });
+    expect(editPlant).toHaveBeenCalledWith("p1", { care_notes: "Gießen" });
 
     unregister();
   });
@@ -294,11 +245,8 @@ describe("Tool use does not trigger API writes (AC #6)", () => {
 
     await waitFor(() => { expect(getRef()).not.toBeNull(); });
 
-    act(() => {
-      getRef()!.applyAiFields({ water_demand: "low", care_notes: "Test" });
-    });
+    act(() => { getRef()!.applyAiFields({ water_demand: "low", care_notes: "Test" }); });
 
-    // Wait a tick
     await new Promise((r) => setTimeout(r, 10));
 
     expect(apiClient.createPlant).not.toHaveBeenCalled();
@@ -308,29 +256,27 @@ describe("Tool use does not trigger API writes (AC #6)", () => {
 
 // ── Tool-call parsing ─────────────────────────────────────────────────────────
 
-describe("parseToolCall (tool-call infrastructure)", () => {
-  it("parses a valid tool block from AI response", () => {
-    const raw = `Ich öffne jetzt den Dialog.\n\`\`\`tool\n{"tool":"openPlantEdit","prefill":{"sun_demand":"sunny"}}\n\`\`\``;
+describe("parseToolCall", () => {
+  it("parses a valid editPlant tool block", () => {
+    const raw = `Ich öffne den Dialog.\n\`\`\`tool\n{"tool":"editPlant","id":null,"fields":{"sun_demand":"sunny"}}\n\`\`\``;
     const { toolCall, displayText } = parseToolCall(raw);
-    expect(toolCall).toEqual({ tool: "openPlantEdit", prefill: { sun_demand: "sunny" } });
-    expect(displayText).toBe("Ich öffne jetzt den Dialog.");
+    expect(toolCall).toEqual({ tool: "editPlant", id: null, fields: { sun_demand: "sunny" } });
+    expect(displayText).toBe("Ich öffne den Dialog.");
   });
 
-  it("returns null toolCall for plain text response", () => {
-    const raw = "Kein Tool-Aufruf hier.";
-    const { toolCall, displayText } = parseToolCall(raw);
+  it("returns null toolCall for plain text", () => {
+    const { toolCall, displayText } = parseToolCall("Kein Tool.");
     expect(toolCall).toBeNull();
-    expect(displayText).toBe(raw);
+    expect(displayText).toBe("Kein Tool.");
   });
 
-  it("returns null toolCall for invalid JSON in block", () => {
-    const raw = "```tool\nnot-json\n```";
-    const { toolCall } = parseToolCall(raw);
+  it("returns null toolCall for malformed JSON", () => {
+    const { toolCall } = parseToolCall("```tool\nnot-json\n```");
     expect(toolCall).toBeNull();
   });
 
   it("strips the tool block from displayText", () => {
-    const raw = `Antwort.\n\`\`\`tool\n{"tool":"updatePlantEdit","fields":{"care_notes":"X"}}\n\`\`\`\nEnde.`;
+    const raw = `Antwort.\n\`\`\`tool\n{"tool":"editPlant","id":"p1","fields":{}}\n\`\`\`\nEnde.`;
     const { displayText } = parseToolCall(raw);
     expect(displayText).not.toContain("```tool");
     expect(displayText).toContain("Antwort.");
@@ -338,35 +284,38 @@ describe("parseToolCall (tool-call infrastructure)", () => {
   });
 });
 
-// ── dispatchToolCall feedback messages ────────────────────────────────────────
+// ── dispatchToolCall (AC #2 error feedback) ───────────────────────────────────
 
-describe("dispatchToolCall (AC #2 error feedback)", () => {
-  it("returns error feedback if no handler and updatePlantEdit called", () => {
-    // No handler registered
-    const msg = dispatchToolCallForTest({ tool: "updatePlantEdit", fields: {} }, [], "de");
+describe("dispatchToolCallForTest", () => {
+  it("returns error feedback if no handler registered", () => {
+    const msg = dispatchToolCallForTest({ tool: "editPlant", id: null, fields: {} }, "de");
     expect(msg).toContain("⚠️");
-    expect(msg).toContain("geöffnet");
+    expect(msg).toContain("Pflanzenansicht");
   });
 
-  it("returns empty string on successful openPlantEdit dispatch", () => {
-    const openPlantEdit = vi.fn();
-    const updatePlantEdit = vi.fn().mockReturnValue(true);
-    const unregister = registerPlantEditHandler({ openPlantEdit, updatePlantEdit });
+  it("returns English error when lang=en and no handler", () => {
+    const msg = dispatchToolCallForTest({ tool: "editPlant", id: null, fields: {} }, "en");
+    expect(msg).toContain("⚠️");
+    expect(msg.toLowerCase()).toContain("plants view");
+  });
+
+  it("returns empty string on successful dispatch", () => {
+    const editPlant = vi.fn();
+    const unregister = registerPlantEditHandler({ editPlant });
 
     const msg = dispatchToolCallForTest(
-      { tool: "openPlantEdit", prefill: { name_common: "Test" } },
-      [MOCK_PLANT],
+      { tool: "editPlant", id: null, fields: { name_common: "Test" } },
       "de"
     );
     expect(msg).toBe("");
-    expect(openPlantEdit).toHaveBeenCalled();
+    expect(editPlant).toHaveBeenCalledWith(null, { name_common: "Test" });
 
     unregister();
   });
 
-  it("returns error in English when lang is en", () => {
-    const msg = dispatchToolCallForTest({ tool: "updatePlantEdit", fields: {} }, [], "en");
+  it("returns error for unknown tool", () => {
+    const msg = dispatchToolCallForTest({ tool: "deletePlant" }, "de");
     expect(msg).toContain("⚠️");
-    expect(msg.toLowerCase()).toContain("open");
+    expect(msg).toContain("deletePlant");
   });
 });

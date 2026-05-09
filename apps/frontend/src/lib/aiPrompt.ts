@@ -177,75 +177,63 @@ function buildSituation(ctx: AssistantContext, lang: "de" | "en"): string {
 // ── Layer 4 — Tool descriptions ───────────────────────────────────────────────
 
 const TOOLS_DESCRIPTION: Record<"de" | "en", string> = {
-  de: `Du hast Zugriff auf folgende Werkzeuge, um den Benutzer direkt in der App zu unterstützen.
-Verwende sie wenn der Benutzer dich bittet, eine Pflanze zu erstellen, zu öffnen oder Felder zu befüllen.
+  de: `Du hast Zugriff auf ein Werkzeug, um den Benutzer direkt in der App zu unterstützen.
+Verwende es, wenn der Benutzer dich bittet, eine Pflanze zu erstellen, zu öffnen oder Felder zu befüllen.
 Der Benutzer muss immer selbst auf Speichern klicken — du schreibst nie direkt in die Datenbank.
 
-WICHTIG: Antworte mit einem normalen Satz UND direkt danach dem Tool-Aufruf als JSON-Block.
+WICHTIG: Antworte mit einem normalen erklärenden Satz UND direkt danach dem Tool-Aufruf als JSON-Block.
 
-Verfügbare Werkzeuge:
+Werkzeug: editPlant
+  id     (string | null): ID der Pflanze aus den Gartendaten, oder null für eine neue Pflanze
+  fields (object):        Felder die vorausgefüllt oder überschrieben werden sollen
 
-1. openPlantEdit — öffnet den Pflanzbearbeiten-Dialog
-   Parameter:
-     plant_id  (optional, string): ID der zu bearbeitenden Pflanze (aus den Gartendaten)
-     prefill   (optional, object): Felder zum Vorausfüllen beim Erstellen einer neuen Pflanze
-       Mögliche Felder: name_common, name_botanical, description, category, origin_type,
-       lifecycle, location, watering_zone, purchase_date, purchase_price, sun_demand,
-       water_demand, frost_tolerance_min_c, soil_type, health_status, care_notes
+  Mögliche Felder in fields:
+    name_common, name_botanical, description, category, origin_type, lifecycle,
+    location, watering_zone, purchase_date, purchase_price, sun_demand,
+    water_demand, frost_tolerance_min_c, soil_type, health_status, care_notes
 
-2. updatePlantEdit — setzt Felder im aktuell geöffneten Dialog (der Dialog muss bereits offen sein)
-   Parameter:
-     fields (object): Felder mit neuen Werten (gleiche Feldnamen wie bei openPlantEdit.prefill)
+Beispiele:
 
-Format für Tool-Aufrufe (immer als JSON-Block am Ende der Antwort):
+Neue Pflanze erstellen und vorausfüllen:
 \`\`\`tool
-{"tool":"openPlantEdit","plant_id":"<id>"}
-\`\`\`
-oder
-\`\`\`tool
-{"tool":"openPlantEdit","prefill":{"name_common":"Rose","sun_demand":"sunny"}}
-\`\`\`
-oder
-\`\`\`tool
-{"tool":"updatePlantEdit","fields":{"water_demand":"medium","care_notes":"Regelmäßig düngen."}}
+{"tool":"editPlant","id":null,"fields":{"name_common":"Rose","sun_demand":"sunny","water_demand":"medium"}}
 \`\`\`
 
-Wenn kein Dialog offen ist und updatePlantEdit aufgerufen werden soll, antworte stattdessen auf Deutsch, dass zuerst ein Dialog geöffnet werden muss.`,
+Bestehende Pflanze öffnen und Felder setzen (id aus den Gartendaten):
+\`\`\`tool
+{"tool":"editPlant","id":"<plant-id>","fields":{"care_notes":"Regelmäßig düngen.","health_status":"good"}}
+\`\`\`
 
-  en: `You have access to the following tools to help the user directly within the app.
-Use them when the user asks you to create, open, or fill in plant fields.
+Wenn die Pflanzenverwaltung nicht geöffnet ist, teile dem Benutzer mit, dass er zuerst zur Pflanzenansicht wechseln soll.`,
+
+  en: `You have access to one tool to help the user directly within the app.
+Use it when the user asks you to create, open, or fill in plant fields.
 The user must always click Save themselves — you never write directly to the database.
 
-IMPORTANT: Respond with a normal sentence AND directly after that the tool call as a JSON block.
+IMPORTANT: Respond with a normal explanatory sentence AND directly after that the tool call as a JSON block.
 
-Available tools:
+Tool: editPlant
+  id     (string | null): ID of the plant from garden data, or null for a new plant
+  fields (object):        fields to pre-fill or overwrite
 
-1. openPlantEdit — opens the plant edit dialog
-   Parameters:
-     plant_id  (optional, string): ID of the plant to edit (from garden data)
-     prefill   (optional, object): fields to pre-fill when creating a new plant
-       Possible fields: name_common, name_botanical, description, category, origin_type,
-       lifecycle, location, watering_zone, purchase_date, purchase_price, sun_demand,
-       water_demand, frost_tolerance_min_c, soil_type, health_status, care_notes
+  Possible fields in fields:
+    name_common, name_botanical, description, category, origin_type, lifecycle,
+    location, watering_zone, purchase_date, purchase_price, sun_demand,
+    water_demand, frost_tolerance_min_c, soil_type, health_status, care_notes
 
-2. updatePlantEdit — sets fields in the currently open dialog (the dialog must already be open)
-   Parameters:
-     fields (object): fields with new values (same field names as openPlantEdit.prefill)
+Examples:
 
-Format for tool calls (always as a JSON block at the end of the response):
+Create and pre-fill a new plant:
 \`\`\`tool
-{"tool":"openPlantEdit","plant_id":"<id>"}
-\`\`\`
-or
-\`\`\`tool
-{"tool":"openPlantEdit","prefill":{"name_common":"Rose","sun_demand":"sunny"}}
-\`\`\`
-or
-\`\`\`tool
-{"tool":"updatePlantEdit","fields":{"water_demand":"medium","care_notes":"Water regularly."}}
+{"tool":"editPlant","id":null,"fields":{"name_common":"Rose","sun_demand":"sunny","water_demand":"medium"}}
 \`\`\`
 
-If no dialog is open and updatePlantEdit is requested, reply instead that the dialog must be opened first.`,
+Open an existing plant and set fields (id from garden data):
+\`\`\`tool
+{"tool":"editPlant","id":"<plant-id>","fields":{"care_notes":"Water regularly.","health_status":"good"}}
+\`\`\`
+
+If the Plants view is not open, tell the user to switch there first.`,
 };
 
 // ── Public API ────────────────────────────────────────────────────────────────

@@ -1,72 +1,76 @@
 /**
  * usePlantEditContext — global bridge between AiPanel and PlantEditDialog.
  *
- * A module-level pub/sub singleton (same pattern as useAiPanelState).
- * PlantsView registers handlers; AiPanel dispatches tool calls.
+ * A module-level singleton (same pattern as useAiPanelState).
+ * PlantsView registers the handler; AiPanel dispatches the single tool call.
  *
- * Handlers:
- *   openPlantEdit(plantId?, prefill?) — open dialog (edit or new with prefill)
- *   updatePlantEdit(fields)           — push AI suggestions into open dialog
+ * Tool: editPlant(id, fields)
+ *   id === null  → open in "new plant" mode, prefill with fields
+ *   id === str   → load that plant, open in edit mode, overlay fields as AI suggestions
  *
- * Returns null if no handler is registered (dialog not mounted).
+ * In both cases the dialog is opened if it isn't already.
+ * The user always confirms by clicking Save — no direct API writes.
  */
 
 import { useEffect } from "react";
-import type { Plant } from "@api/plant";
 
-// Partial form fields the AI can suggest
-export type PlantEditFields = {
-  icon?:                  string;
-  name_common?:           string;
-  name_botanical?:        string;
-  description?:           string;
-  category?:              string;
-  origin_type?:           string;
-  lifecycle?:             string;
-  location?:              string;
-  watering_zone?:         string;
-  purchase_date?:         string;
-  purchase_price?:        string;
-  sun_demand?:            string;
-  water_demand?:          string;
-  frost_tolerance_min_c?: string;
-  soil_type?:             string;
-  health_status?:         string;
-  care_notes?:            string;
-};
+/**
+ * Scalar fields the AI can suggest (mirrors the scalar fields of PlantInput,
+ * excluding positions / attachments / schedules which the AI must not touch).
+ */
+export type PlantEditFields = Partial<{
+  icon:                  string;
+  name_common:           string;
+  name_botanical:        string;
+  description:           string;
+  category:              string;
+  origin_type:           string;
+  lifecycle:             string;
+  location:              string;
+  watering_zone:         string;
+  purchase_date:         string;
+  purchase_price:        string;
+  sun_demand:            string;
+  water_demand:          string;
+  frost_tolerance_min_c: string;
+  soil_type:             string;
+  health_status:         string;
+  temperature_protected: boolean;
+  care_notes:            string;
+}>;
 
-export type OpenPlantEditArgs = {
-  plantId?: string;
-  prefill?: PlantEditFields;
-};
-
+/** The single handler registered by PlantsView. */
 type PlantEditHandler = {
-  openPlantEdit:   (args: OpenPlantEditArgs, plants: Plant[]) => void;
-  updatePlantEdit: (fields: PlantEditFields) => boolean; // returns false if dialog closed
+  /**
+   * Open the plant edit dialog and apply AI field suggestions.
+   * id === null  → new plant mode
+   * id === str   → edit mode for that plant ID (looked up from garden data)
+   */
+  editPlant: (id: string | null, fields: PlantEditFields) => void;
 };
 
 // Module-level singleton
 let _handler: PlantEditHandler | null = null;
 
-/** Called by PlantsView to register the current handler. */
+/** Called by PlantsView to register the current handler. Returns an unregister fn. */
 export function registerPlantEditHandler(h: PlantEditHandler): () => void {
   _handler = h;
   return () => { if (_handler === h) _handler = null; };
 }
 
-/** Called by AiPanel to dispatch tool calls. Returns null if not mounted. */
+/** Called by AiPanel to dispatch tool calls. Returns null if PlantsView not mounted. */
 export function getPlantEditHandler(): PlantEditHandler | null {
   return _handler;
 }
 
 /**
  * Hook for PlantsView — registers the handler on mount, unregisters on unmount.
+ * The handler object must be stable (built with useCallback / useMemo by the caller).
  */
 export function usePlantEditHandler(handler: PlantEditHandler) {
   useEffect(() => {
     return registerPlantEditHandler(handler);
-  // We intentionally capture the handler reference once — callers must
-  // use stable references (useCallback) or re-register explicitly.
+  // Intentionally runs once — caller must pass a stable handler reference.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 }

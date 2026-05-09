@@ -4,7 +4,7 @@ import { AiPanel } from "@/components/AiPanel";
 import { useAiPanelState } from "@/hooks/useAiPanelState";
 import { PlantEditDialog, type PlantEditDialogHandle } from "@/components/PlantEditDialog";
 import { usePlantEditDialog } from "@/hooks/usePlantEditDialog";
-import { usePlantEditHandler, type OpenPlantEditArgs, type PlantEditFields } from "@/hooks/usePlantEditContext";
+import { usePlantEditHandler, type PlantEditFields } from "@/hooks/usePlantEditContext";
 import { GardenPlanWidget } from "@/components/GardenPlanWidget";
 import { apiClient } from "@/api/client";
 import type { Plant }            from "@api/plant";
@@ -61,38 +61,32 @@ export function PlantsView() {
   const [planUrl,   setPlanUrl]   = useState<string | null>(null);
 
   const edit = usePlantEditDialog();
-  const dialogRef = useRef<PlantEditDialogHandle>(null);
+  const dialogRef  = useRef<PlantEditDialogHandle>(null);
+  const plantsRef  = useRef<Plant[]>(plants);
+  // Keep plantsRef in sync so the stable editPlant handler always sees current data
+  useEffect(() => { plantsRef.current = plants; }, [plants]);
 
-  // Register AI tool handlers so AiPanel can dispatch openPlantEdit / updatePlantEdit
-  const openPlantEditHandler = useCallback((args: OpenPlantEditArgs, allPlants: Plant[]) => {
-    if (args.plantId) {
-      const found = allPlants.find((p) => p.id === args.plantId);
+  // Register AI tool handler: editPlant(id, fields)
+  // Stable reference — reads latest plants via plantsRef to avoid stale closure.
+  const editPlantHandler = useCallback((id: string | null, fields: PlantEditFields) => {
+    const applyAfterOpen = () => {
+      if (Object.keys(fields).length > 0) {
+        setTimeout(() => dialogRef.current?.applyAiFields(fields), 50);
+      }
+    };
+    if (id === null) {
+      edit.openNew();
+      applyAfterOpen();
+    } else {
+      const found = plantsRef.current.find((p) => p.id === id);
       if (found) {
         edit.openEdit(found);
-        // After dialog mounts, apply any prefill
-        if (args.prefill) {
-          // Give React one tick to mount the dialog + set up the ref
-          setTimeout(() => dialogRef.current?.applyAiFields(args.prefill!), 50);
-        }
-      }
-    } else {
-      edit.openNew();
-      if (args.prefill) {
-        setTimeout(() => dialogRef.current?.applyAiFields(args.prefill!), 50);
+        applyAfterOpen();
       }
     }
   }, [edit]);
 
-  const updatePlantEditHandler = useCallback((fields: PlantEditFields): boolean => {
-    if (edit.editTarget === undefined) return false;
-    dialogRef.current?.applyAiFields(fields);
-    return true;
-  }, [edit.editTarget]);
-
-  usePlantEditHandler({
-    openPlantEdit: (args) => openPlantEditHandler(args, plants),
-    updatePlantEdit: updatePlantEditHandler,
-  });
+  usePlantEditHandler({ editPlant: editPlantHandler });
 
   useEffect(() => {
     apiClient.getGarden()

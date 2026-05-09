@@ -7,7 +7,7 @@ import { useAiPanelState }         from "@/hooks/useAiPanelState";
 import { buildSystemPrompt }       from "@/lib/aiPrompt";
 import type { AssistantContext }   from "@api/assistant-context";
 import { getPlantEditHandler }     from "@/hooks/usePlantEditContext";
-import type { Plant }              from "@api/plant";
+import type { PlantEditFields }    from "@/hooks/usePlantEditContext";
 
 interface AiPanelProps {
   /** Context bar text, e.g. "✏️ Bearbeite: 🌹 Rose" or "⚙️ Einstellungen" */
@@ -41,53 +41,33 @@ export function parseToolCall(raw: string): {
 
 /**
  * Dispatches a parsed tool call to the appropriate handler.
- * Returns a feedback string to append to the chat (for the user to see).
+ * Returns a feedback string to append to the chat (visible to the user).
  *
  * Exported as dispatchToolCallForTest for unit testing.
  */
 export function dispatchToolCallForTest(
   toolCall: Record<string, unknown>,
-  plants: Plant[],
   lang: "de" | "en",
 ): string {
-  return dispatchToolCall(toolCall, plants, lang);
+  return dispatchToolCall(toolCall, lang);
 }
 
 function dispatchToolCall(
   toolCall: Record<string, unknown>,
-  plants: Plant[],
   lang: "de" | "en",
 ): string {
   const handler = getPlantEditHandler();
   const tool = toolCall.tool as string | undefined;
 
-  if (tool === "openPlantEdit") {
+  if (tool === "editPlant") {
     if (!handler) {
       return lang === "de"
-        ? "⚠️ Die Pflanzenverwaltung ist gerade nicht geöffnet."
-        : "⚠️ Plant management is not currently open.";
+        ? "⚠️ Die Pflanzenverwaltung ist gerade nicht geöffnet. Bitte wechsle zur Pflanzenansicht."
+        : "⚠️ Plant management is not currently open. Please switch to the Plants view.";
     }
-    handler.openPlantEdit({
-      plantId: (toolCall.plant_id as string | undefined),
-      prefill:  toolCall.prefill as Record<string, string> | undefined,
-    }, plants);
-    return "";
-  }
-
-  if (tool === "updatePlantEdit") {
-    if (!handler) {
-      return lang === "de"
-        ? "⚠️ Die Pflanzenverwaltung ist gerade nicht geöffnet."
-        : "⚠️ Plant management is not currently open.";
-    }
-    const ok = handler.updatePlantEdit(
-      (toolCall.fields as Record<string, string>) ?? {}
-    );
-    if (!ok) {
-      return lang === "de"
-        ? "⚠️ Kein Pflanzendialog ist gerade geöffnet. Bitte öffne zuerst eine Pflanze zum Bearbeiten."
-        : "⚠️ No plant dialog is currently open. Please open a plant for editing first.";
-    }
+    const id     = (toolCall.id as string | null) ?? null;
+    const fields = (toolCall.fields as PlantEditFields) ?? {};
+    handler.editPlant(id, fields);
     return "";
   }
 
@@ -177,8 +157,7 @@ export function AiPanel({ context, assistantContext }: AiPanelProps) {
       const { toolCall, displayText } = parseToolCall(res.content);
       let feedback = "";
       if (toolCall) {
-        const plants = assistantContext?.garden?.plants ?? [];
-        feedback = dispatchToolCall(toolCall, plants, lang);
+        feedback = dispatchToolCall(toolCall, lang);
       }
 
       // Show the display text (tool block stripped) + any error feedback
