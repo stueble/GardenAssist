@@ -778,7 +778,7 @@ function GrunddatenFields({
             zIndex:       1,
           }}
         >
-          {isSelect ? "▾" : "×"}
+          ×
         </button>
       </div>
     );
