@@ -356,6 +356,62 @@ describe("buildSystemBlocks — block 5: current situation last (AC #5)", () => 
   });
 });
 
+// ── Missing-field regression tests ───────────────────────────────────────────
+
+describe("serializeGarden — previously missing fields now included", () => {
+  it("includes watering_zone when set", () => {
+    const plant: Plant = { ...PLANT, watering_zone: "Zone A" };
+    const garden: Garden = { ...GARDEN, plants: [plant] };
+    const result = serializeGarden(garden);
+    expect(result).toContain("Zone A");
+    expect(result).toContain("Bewässerungszone");
+  });
+
+  it("omits watering_zone label when value is null", () => {
+    const plant: Plant = { ...PLANT, watering_zone: null };
+    const garden: Garden = { ...GARDEN, plants: [plant] };
+    const result = serializeGarden(garden);
+    expect(result).not.toContain("Bewässerungszone");
+  });
+
+  it("includes Task.week in the task line", () => {
+    const result = serializeGarden(GARDEN);
+    // PLANT has task with week "2024-W20"
+    expect(result).toContain("2024-W20");
+    expect(result).toContain("Woche");
+  });
+
+  it("includes JournalEntry.week when set", () => {
+    const entry = {
+      ...PLANT.journal_entries[0],
+      week: "2024-W18",
+      schedule_id: "s-1",
+    };
+    const plant: Plant = { ...PLANT, journal_entries: [entry] };
+    const garden: Garden = { ...GARDEN, plants: [plant] };
+    const result = serializeGarden(garden);
+    expect(result).toContain("2024-W18");
+  });
+
+  it("includes JournalEntry.schedule_id when set", () => {
+    const entry = {
+      ...PLANT.journal_entries[0],
+      schedule_id: "s-1",
+      week: null,
+    };
+    const plant: Plant = { ...PLANT, journal_entries: [entry] };
+    const garden: Garden = { ...GARDEN, plants: [plant] };
+    const result = serializeGarden(garden);
+    expect(result).toContain("schedule_id: s-1");
+  });
+
+  it("omits schedule_id label when schedule_id is null on journal entry", () => {
+    // default PLANT journal entry has schedule_id: null
+    const result = serializeGarden(GARDEN);
+    expect(result).not.toContain("schedule_id:");
+  });
+});
+
 describe("buildSystemBlocks — backward compat: buildSystemPrompt still works", () => {
   it("buildSystemPrompt returns joined blocks", () => {
     const ctx: AssistantContext = { view: "plants", garden: GARDEN };

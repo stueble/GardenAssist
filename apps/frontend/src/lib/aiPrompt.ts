@@ -242,6 +242,7 @@ function serializePlantBase(p: Plant): string {
   let out = `## ${p.name_common}${p.name_botanical ? ` (${p.name_botanical})` : ""}\n`;
   out += nl("id", p.id);
   out += nl("Standort", p.location);
+  out += nl("Bewässerungszone", p.watering_zone);
   out += nl("Kategorie", p.category);
   out += nl("Lebenszyklus", p.lifecycle);
   out += nl("Herkunft", p.origin_type);
@@ -284,7 +285,10 @@ function serializeSchedule(s: Schedule): string {
 }
 
 function serializeJournalEntry(e: JournalEntry): string {
-  let out = `    - [${e.date}] ${e.entry_type}`;
+  let out = `    - [${e.date}]`;
+  if (e.week) out += ` [Woche: ${e.week}]`;
+  out += ` ${e.entry_type}`;
+  if (e.schedule_id) out += ` [schedule_id: ${e.schedule_id}]`;
   if (e.title) out += `: ${e.title}`;
   if (e.notes) out += `\n      ${e.notes}`;
   return out;
@@ -292,7 +296,7 @@ function serializeJournalEntry(e: JournalEntry): string {
 
 function serializeTask(t: Task): string {
   const s = t.schedule;
-  return `    - ${t.status}: ${s.schedule_type}${s.label ? ` (${s.label})` : ""}, KW ${s.start_week}–${s.end_week}`;
+  return `    - ${t.status}: ${s.schedule_type}${s.label ? ` (${s.label})` : ""}, KW ${s.start_week}–${s.end_week} [Woche: ${t.week}]`;
 }
 
 function serializePlantDynamic(p: Plant): string {
