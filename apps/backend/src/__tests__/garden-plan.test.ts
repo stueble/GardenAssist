@@ -14,10 +14,20 @@ import { mkdtemp, rm, mkdir, readdir, unlink } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import app from "../index.js";
-import { db } from "../db/index.js";
+import { createTestDb } from "../test-setup/createTestDb.js";
 import { garden } from "../db/schema.js";
 import { eq } from "drizzle-orm";
+
+// vi.mock is hoisted before variable initialization — use a factory function
+// so createTestDb() runs inside the mock factory (which IS hoisted safely).
+vi.mock("../db/index.js", async () => {
+  const { createTestDb: create } = await import("../test-setup/createTestDb.js");
+  const db = create();
+  return { db };
+});
+
+import app from "../index.js";
+import { db } from "../db/index.js";
 
 let tmpDir: string;
 

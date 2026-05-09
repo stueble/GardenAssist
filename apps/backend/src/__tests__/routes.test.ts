@@ -5,7 +5,13 @@
  * Uses Hono's built-in test helper (app.request) — no real server needed.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+import { createTestDb } from "../test-setup/createTestDb.js";
+
+// Replace the production DB with a fresh in-memory database so tests
+// never touch gardenassist.db. Must be hoisted before `app` is imported.
+vi.mock("../db/index.js", () => ({ db: createTestDb() }));
+
 import app from "../index.js";
 
 // Helper: parse JSON from a Response
