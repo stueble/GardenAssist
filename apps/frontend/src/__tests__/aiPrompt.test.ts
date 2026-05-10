@@ -646,3 +646,65 @@ describe("buildSystemBlocks — backward compat: buildSystemPrompt still works",
     expect(prompt).toBe(joined);
   });
 });
+
+// ── TASK-071: PFLICHT-ANALYSE / PRE-FLIGHT ANALYSIS in Block 1 ────────────────
+
+describe("buildSystemBlocks — pre-flight analysis instruction (TASK-071)", () => {
+  const ctx: AssistantContext = { view: "plants", garden: GARDEN };
+
+  it("AC #1/#2: Block 1 (DE) contains PFLICHT-ANALYSE with visibility requirement", () => {
+    const block1 = buildSystemBlocks(ctx, "de")[0].text;
+    expect(block1).toContain("PFLICHT-ANALYSE");
+    expect(block1).toContain("in der Antwort sichtbar");
+  });
+
+  it("AC #1/#2: Block 1 (EN) contains PRE-FLIGHT ANALYSIS with visibility requirement", () => {
+    const block1 = buildSystemBlocks(ctx, "en")[0].text;
+    expect(block1).toContain("PRE-FLIGHT ANALYSIS");
+    expect(block1).toContain("visibly in the response");
+  });
+
+  it("AC #3: DE Block 1 covers scalar fields with (leer) marker and schedules with UUID", () => {
+    const block1 = buildSystemBlocks(ctx, "de")[0].text;
+    expect(block1).toContain("(leer)");
+    expect(block1).toContain("UUID");
+  });
+
+  it("AC #3: EN Block 1 covers scalar fields with (empty) marker and schedules with UUID", () => {
+    const block1 = buildSystemBlocks(ctx, "en")[0].text;
+    expect(block1).toContain("(empty)");
+    expect(block1).toContain("UUID");
+  });
+
+  it("AC #4/#5: DE Block 1 instructs to only fill empty fields and only add missing schedules", () => {
+    const block1 = buildSystemBlocks(ctx, "de")[0].text;
+    expect(block1).toContain("Nur \"(leer)\"-Felder befüllen");
+    expect(block1).toContain("Nur eintragen, was im BESTAND fehlt");
+  });
+
+  it("AC #4/#5: EN Block 1 instructs to only fill empty fields and only add missing schedules", () => {
+    const block1 = buildSystemBlocks(ctx, "en")[0].text;
+    expect(block1).toContain('only fill in "(empty)" fields');
+    expect(block1).toContain("only add what is absent from CURRENT STATE");
+  });
+
+  it("AC #6: DE Block 1 allows schedule update/remove when BESTAND diverges from SOLL", () => {
+    const block1 = buildSystemBlocks(ctx, "de")[0].text;
+    expect(block1).toContain("BESTAND vom SOLL abweicht");
+  });
+
+  it("AC #6: EN Block 1 allows schedule update/remove when CURRENT STATE diverges from TARGET STATE", () => {
+    const block1 = buildSystemBlocks(ctx, "en")[0].text;
+    expect(block1).toContain("CURRENT STATE diverges from TARGET STATE");
+  });
+
+  it("AC #7: redundant duplicate-schedule rule is removed from DE Block 1", () => {
+    const block1 = buildSystemBlocks(ctx, "de")[0].text;
+    expect(block1).not.toContain("NIEMALS add verwenden für einen Zeitplan, der bereits existiert");
+  });
+
+  it("AC #7: redundant duplicate-schedule rule is removed from EN Block 1", () => {
+    const block1 = buildSystemBlocks(ctx, "en")[0].text;
+    expect(block1).not.toContain("NEVER add a schedule that already exists");
+  });
+});

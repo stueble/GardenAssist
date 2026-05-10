@@ -103,18 +103,34 @@ Werkzeug: editPlant
        remove und update nur auf ausdrückliche Anweisung des Benutzers.
        Diese Typen sind rein informativ (Kalender/Gantt) — sie erzeugen KEINE Aufgaben.
        Aufgaben entstehen nur aus: pruning, fertilization, misc.
-    2. NIEMALS add verwenden für einen Zeitplan, der bereits existiert (erkennbar an Typ + Wochenbereich).
-       Prüfe zuerst die vorhandenen Zeitpläne der Pflanze.
-    3. Bei remove/update: UUID exakt so verwenden wie in den Gartendaten angegeben.
-    4. Der Benutzer sagt "Aufgaben reduzieren" → nur pruning/fertilization/misc anpassen, nie bloom/foliage/growth.
-    5. NOTIZEN PFLICHT: Bei jedem add von pruning, fertilization oder misc das Feld notes IMMER befüllen.
+     2. Bei remove/update: UUID exakt so verwenden wie in den Gartendaten angegeben.
+     3. Der Benutzer sagt "Aufgaben reduzieren" → nur pruning/fertilization/misc anpassen, nie bloom/foliage/growth.
+     4. NOTIZEN PFLICHT: Bei jedem add von pruning, fertilization oder misc das Feld notes IMMER befüllen.
        Die Notiz muss enthalten:
          a) Warum — kurze Begründung (z.B. "Fördert kräftige Blütenbildung vor der Hauptblüte")
          b) Priorität — wichtig oder optional? (z.B. "Optional — einmaliges Auslassen schadet der Pflanze nicht")
          c) Alternative — einfachere oder seltener nötige Option (z.B. "Für pflegeleichte Gärten reicht eine Gabe Langzeit-Dünger im Frühling")
-       Passe Länge und Detailtiefe dem aktiven Gärtner-Profil an: Hobbyist → kurz und simpel, Experte → detaillierter.
+        Passe Länge und Detailtiefe dem aktiven Gärtner-Profil an: Hobbyist → kurz und simpel, Experte → detaillierter.
 
-    Felder pro Operation:
+  PFLICHT-ANALYSE — vor jedem editPlant-Aufruf in der Antwort sichtbar durchführen:
+
+    SCHRITT 1 — BESTAND:
+      a) Skalare Felder: Liste alle relevanten Felder der Pflanze mit ihrem aktuellen Wert auf.
+         Leere Felder als "(leer)" markieren.
+      b) Zeitpläne: Liste alle vorhandenen Zeitpläne auf (Typ, KW-Start–KW-Ende, UUID).
+
+    SCHRITT 2 — SOLL:
+      Was möchte der Nutzer erreichen? Welche Felder / Zeitpläne sollen am Ende vorhanden sein?
+
+    SCHRITT 3 — DELTA:
+      a) Skalare Felder: Nur "(leer)"-Felder befüllen — außer der Nutzer verlangt ausdrücklich
+         eine Änderung eines vorhandenen Wertes.
+      b) Zeitpläne add: Nur eintragen, was im BESTAND fehlt.
+      c) Zeitpläne update/remove: Wenn der BESTAND vom SOLL abweicht, korrigieren.
+
+    SCHRITT 4 — AKTION: Nur das Delta aus Schritt 3 in den Tool-Aufruf einfügen.
+
+     Felder pro Operation:
       action         (genau eines von: "add" | "remove" | "update")
       id             (string, nur bei remove/update: die UUID direkt aus den Gartendaten, z.B. "a1b2c3d4-...")
       schedule_type  (bei add/update: genau eines von "bloom"|"growth"|"foliage"|"pruning"|"fertilization"|"misc")
@@ -179,18 +195,34 @@ Tool: editPlant
        remove and update only on explicit user instruction.
        These types are purely informational (calendar/Gantt) — they do NOT generate tasks.
        Tasks are only generated from: pruning, fertilization, misc.
-    2. NEVER add a schedule that already exists (identifiable by type + week range).
-       Always check the plant's existing schedules first.
-    3. For remove/update: use the UUID exactly as shown in the garden data.
-    4. If the user says "reduce tasks" → only adjust pruning/fertilization/misc, never bloom/foliage/growth.
-    5. NOTES REQUIRED: When adding pruning, fertilization or misc, ALWAYS populate the notes field.
+     2. For remove/update: use the UUID exactly as shown in the garden data.
+     3. If the user says "reduce tasks" → only adjust pruning/fertilization/misc, never bloom/foliage/growth.
+     4. NOTES REQUIRED: When adding pruning, fertilization or misc, ALWAYS populate the notes field.
        The note must include:
          a) Why — short reason (e.g. "Supports strong bloom formation before the main flowering period")
          b) Priority — important or optional? (e.g. "Optional — skipping once will not harm the plant")
          c) Alternative — a simpler or less frequent option (e.g. "A single slow-release fertilizer in spring is sufficient for low-maintenance gardens")
-       Adapt length and detail to the active gardener profile: Hobbyist → short and simple, Expert → more detailed.
+        Adapt length and detail to the active gardener profile: Hobbyist → short and simple, Expert → more detailed.
 
-    Fields per operation:
+  PRE-FLIGHT ANALYSIS — perform visibly in the response before every editPlant call:
+
+    STEP 1 — CURRENT STATE:
+      a) Scalar fields: list all relevant fields of the plant with their current value.
+         Mark empty fields as "(empty)".
+      b) Schedules: list all existing schedules (type, week start–end, UUID).
+
+    STEP 2 — TARGET STATE:
+      What does the user want to achieve? Which fields / schedules should exist afterwards?
+
+    STEP 3 — DELTA:
+      a) Scalar fields: only fill in "(empty)" fields — unless the user explicitly requests
+         a change to an existing value.
+      b) Schedules add: only add what is absent from CURRENT STATE.
+      c) Schedules update/remove: correct where CURRENT STATE diverges from TARGET STATE.
+
+    STEP 4 — ACTION: include only the delta from Step 3 in the tool call.
+
+     Fields per operation:
       action         (exactly one of: "add" | "remove" | "update")
       id             (string, only for remove/update: the UUID directly from garden data, e.g. "a1b2c3d4-...")
       schedule_type  (for add/update: exactly one of "bloom"|"growth"|"foliage"|"pruning"|"fertilization"|"misc")
