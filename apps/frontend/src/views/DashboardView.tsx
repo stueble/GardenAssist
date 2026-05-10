@@ -258,10 +258,10 @@ export function DashboardView({ garden, loading, invalidateGarden }: DashboardVi
       </div>
 
       {/* ── Center: garden plan + monthly band ── */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, overflow: "hidden" }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, overflow: "visible" }}>
 
         {/* Garden plan */}
-        <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+        <div style={{ flex: 1, display: "flex", overflow: "hidden", minHeight: 0 }}>
           {loading ? (
             <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-light)", fontSize: "13px" }}>
               Wird geladen …
@@ -768,7 +768,7 @@ function MonthTooltip({ monthName, groups }: MonthTooltipProps) {
 
   return (
     <div
-      style={{ position: "absolute", inset: 0, zIndex: 201 }}
+      style={{ position: "absolute", inset: 0, zIndex: 9999 }}
       onMouseEnter={() => setVisible(true)}
       onMouseLeave={() => setVisible(false)}
     >
@@ -786,7 +786,7 @@ function MonthTooltip({ monthName, groups }: MonthTooltipProps) {
             padding:      "10px 12px",
             minWidth:     "160px",
             maxWidth:     "220px",
-            zIndex:       201,
+            zIndex:       9999,
             boxShadow:    "var(--shadow-ga-lg)",
             fontSize:     "11px",
             lineHeight:   "1.6",

@@ -12,7 +12,7 @@
  * Used in: PlantsView (Edit Dialog center column), DashboardView (future).
  */
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, type MouseEvent as ReactMouseEvent } from "react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -340,6 +340,14 @@ export function GardenPlanWidget({
     // deactivating with no other mode: leave current transform as-is
   };
 
+  // ── Hover state for pin tooltips (position:fixed — avoids overflow:hidden clipping) ──
+
+  const [hoveredPin, setHoveredPin] = useState<{
+    pin: PlanPin;
+    x: number;   // viewport x (clientX)
+    y: number;   // viewport y (clientY — tooltip appears above this)
+  } | null>(null);
+
   // ── render ────────────────────────────────────────────────────────────────────
 
   const currentScale = stateRef.current.scale;
@@ -381,6 +389,13 @@ export function GardenPlanWidget({
                 data-pin
                 data-testid={`plan-pin-${i}`}
                 onClick={(e) => { e.stopPropagation(); onPinClick?.(pin, i); }}
+                onMouseEnter={isDashboard && pin.tooltip ? (e: ReactMouseEvent) => {
+                  setHoveredPin({ pin, x: e.clientX, y: e.clientY });
+                } : undefined}
+                onMouseMove={isDashboard && pin.tooltip ? (e: ReactMouseEvent) => {
+                  setHoveredPin((prev) => prev ? { ...prev, x: e.clientX, y: e.clientY } : prev);
+                } : undefined}
+                onMouseLeave={isDashboard && pin.tooltip ? () => setHoveredPin(null) : undefined}
                 style={{
                   position:  "absolute",
                   left:      `${pin.x}%`,
@@ -393,44 +408,6 @@ export function GardenPlanWidget({
                   alignItems: "center",
                 }}
               >
-                {/* Tooltip (Dashboard mode) */}
-                {isDashboard && pin.tooltip && (
-                  <div className="gpw-tooltip" style={{
-                    display:       "none",
-                    position:      "absolute",
-                    bottom:        "calc(100% + 6px)",
-                    left:          "50%",
-                    transform:     "translateX(-50%)",
-                    background:    "var(--green-deep)",
-                    color:         "white",
-                    borderRadius:  "8px",
-                    padding:       "8px 10px",
-                    minWidth:      "160px",
-                    zIndex:        100,
-                    boxShadow:     "0 4px 16px rgba(0,0,0,.25)",
-                    fontSize:      "11px",
-                    lineHeight:    "1.5",
-                    pointerEvents: "none",
-                    whiteSpace:    "nowrap",
-                  }}>
-                    <div style={{ fontWeight: 600, fontSize: "12px", marginBottom: "3px", color: "var(--green-pale)" }}>
-                      {pin.name}
-                    </div>
-                    {pin.tooltip.status && (
-                      <div style={{ color: "rgba(255,255,255,.8)" }}>{pin.tooltip.status}</div>
-                    )}
-                    {pin.tooltip.nextTask && (
-                      <div style={{ color: "#f5c0b8", marginTop: "3px", fontWeight: 500 }}>{pin.tooltip.nextTask}</div>
-                    )}
-                    {/* Arrow */}
-                    <div style={{
-                      position: "absolute", top: "100%", left: "50%",
-                      transform: "translateX(-50%)",
-                      border: "5px solid transparent",
-                      borderTopColor: "var(--green-deep)",
-                    }} />
-                  </div>
-                )}
 
                 {/* Pin circle */}
                 <div style={{
@@ -612,14 +589,55 @@ export function GardenPlanWidget({
         </div>
       )}
 
-      {/* CSS: animation + tooltip hover */}
+      {/* CSS: animation only */}
       <style>{`
         @keyframes gpw-pulse {
           0%   { transform: translate(-50%, -50%) scale(1);   opacity: .8; }
           100% { transform: translate(-50%, -50%) scale(2.2); opacity: 0;  }
         }
-        [data-pin]:hover .gpw-tooltip { display: block !important; }
       `}</style>
+
+      {/* Pin tooltip — position:fixed so it is never clipped by overflow:hidden parents
+          and always renders above every other layer (zIndex:9999). */}
+      {hoveredPin && hoveredPin.pin.tooltip && (
+        <div
+          data-testid="pin-tooltip-fixed"
+          style={{
+            position:      "fixed",
+            left:          hoveredPin.x,
+            top:           hoveredPin.y - 12,
+            transform:     "translate(-50%, -100%)",
+            background:    "var(--green-deep)",
+            color:         "white",
+            borderRadius:  "8px",
+            padding:       "8px 10px",
+            minWidth:      "160px",
+            zIndex:        9999,
+            boxShadow:     "0 4px 16px rgba(0,0,0,.25)",
+            fontSize:      "11px",
+            lineHeight:    "1.5",
+            pointerEvents: "none",
+            whiteSpace:    "nowrap",
+          }}
+        >
+          <div style={{ fontWeight: 600, fontSize: "12px", marginBottom: "3px", color: "var(--green-pale)" }}>
+            {hoveredPin.pin.name}
+          </div>
+          {hoveredPin.pin.tooltip.status && (
+            <div style={{ color: "rgba(255,255,255,.8)" }}>{hoveredPin.pin.tooltip.status}</div>
+          )}
+          {hoveredPin.pin.tooltip.nextTask && (
+            <div style={{ color: "#f5c0b8", marginTop: "3px", fontWeight: 500 }}>{hoveredPin.pin.tooltip.nextTask}</div>
+          )}
+          {/* Arrow */}
+          <div style={{
+            position: "absolute", top: "100%", left: "50%",
+            transform: "translateX(-50%)",
+            border: "5px solid transparent",
+            borderTopColor: "var(--green-deep)",
+          }} />
+        </div>
+      )}
     </div>
   );
 }

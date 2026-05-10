@@ -145,6 +145,51 @@ describe("GardenPlanWidget — pick mode", () => {
   });
 });
 
+describe("GardenPlanWidget — pin tooltip fixed (TASK-072 AC #1)", () => {
+  it("shows fixed tooltip on pin mouseenter", () => {
+    const pins: PlanPin[] = [
+      { x: 20, y: 30, emoji: "🌹", name: "Rose", tooltip: { status: "OK", nextTask: "✂️ Schneiden (KW 9–10)" } },
+    ];
+    renderWidget({ planUrl: "/static/garden/plan.png", pins });
+    expect(screen.queryByTestId("pin-tooltip-fixed")).not.toBeInTheDocument();
+    fireEvent.mouseEnter(screen.getByTestId("plan-pin-0"));
+    expect(screen.getByTestId("pin-tooltip-fixed")).toBeInTheDocument();
+    expect(screen.getByTestId("pin-tooltip-fixed")).toHaveTextContent("Rose");
+    expect(screen.getByTestId("pin-tooltip-fixed")).toHaveTextContent("OK");
+  });
+
+  it("hides fixed tooltip on pin mouseleave", () => {
+    const pins: PlanPin[] = [
+      { x: 20, y: 30, emoji: "🌹", name: "Rose", tooltip: { status: "OK" } },
+    ];
+    renderWidget({ planUrl: "/static/garden/plan.png", pins });
+    fireEvent.mouseEnter(screen.getByTestId("plan-pin-0"));
+    expect(screen.getByTestId("pin-tooltip-fixed")).toBeInTheDocument();
+    fireEvent.mouseLeave(screen.getByTestId("plan-pin-0"));
+    expect(screen.queryByTestId("pin-tooltip-fixed")).not.toBeInTheDocument();
+  });
+
+  it("tooltip has position:fixed style (never clipped by overflow:hidden)", () => {
+    const pins: PlanPin[] = [
+      { x: 50, y: 50, emoji: "🌿", name: "Pflanze", tooltip: { status: "Aktuell" } },
+    ];
+    renderWidget({ planUrl: "/static/garden/plan.png", pins });
+    fireEvent.mouseEnter(screen.getByTestId("plan-pin-0"));
+    const tooltip = screen.getByTestId("pin-tooltip-fixed");
+    expect(tooltip.style.position).toBe("fixed");
+    expect(parseInt(tooltip.style.zIndex)).toBeGreaterThanOrEqual(9999);
+  });
+
+  it("no tooltip shown for non-dashboard pins (edit mode)", () => {
+    const pins: PlanPin[] = [
+      { x: 20, y: 30, label: "1" },  // no emoji → edit mode pin
+    ];
+    renderWidget({ planUrl: "/static/garden/plan.png", pins });
+    fireEvent.mouseEnter(screen.getByTestId("plan-pin-0"));
+    expect(screen.queryByTestId("pin-tooltip-fixed")).not.toBeInTheDocument();
+  });
+});
+
 describe("GardenPlanWidget — pin photo (TASK-068)", () => {
   it("AC #1: shows photo img when photoUrl is set on a dashboard pin", () => {
     const pins: PlanPin[] = [
