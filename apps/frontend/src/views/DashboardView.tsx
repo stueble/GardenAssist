@@ -16,14 +16,12 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import type { AssistantContext, PendingPlantEdit } from "@api/assistant-context";
 import { useAssistantSettings } from "@/hooks/useAssistantSettings";
 import { setAssistantContext } from "@/hooks/useAssistantContext";
 import { GardenPlanWidget, type PlanPin } from "@/components/GardenPlanWidget";
 import { PlantDetailPanel } from "@/components/PlantDetailPanel";
-import { PlantEditDialog } from "@/components/PlantEditDialog";
-import { usePlantEditDialog } from "@/hooks/usePlantEditDialog";
 import { apiClient } from "@/api/client";
+import { getPlantEditHandler } from "@/hooks/usePlantEditContext";
 import type { Plant } from "@api/plant";
 import type { Garden, Warning } from "@api/garden";
 import type { Task } from "@api/task";
@@ -116,10 +114,6 @@ export function DashboardView({ garden, loading, invalidateGarden }: DashboardVi
   const assistantSettings = useAssistantSettings();
 
   const [selected, setSelected] = useState<Plant | null>(null);
-  const [pendingPlantEdit, setPendingPlantEdit] = useState<PendingPlantEdit | null>(null);
-
-  const edit = usePlantEditDialog();
-
   // currentWeek month index (0-based)
   const cw = currentWeek();
 
@@ -199,11 +193,11 @@ export function DashboardView({ garden, loading, invalidateGarden }: DashboardVi
   useEffect(() => {
     setAssistantContext(
       garden
-        ? { view: "dashboard", garden, selectedPlant: selected ?? undefined, settings: assistantSettings, pendingPlantEdit: pendingPlantEdit ?? undefined }
+        ? { view: "dashboard", garden, selectedPlant: selected ?? undefined, settings: assistantSettings }
         : undefined
     );
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [garden, selected, assistantSettings, pendingPlantEdit]);
+  }, [garden, selected, assistantSettings]);
 
   return (
     <div
@@ -262,67 +256,43 @@ export function DashboardView({ garden, loading, invalidateGarden }: DashboardVi
           ) : (
             <GardenPlanWidget
               planUrl={garden?.plan_url ?? null}
-              pins={
-                edit.editTarget !== undefined
-                  ? edit.positions.map((p, i) => ({ x: p.x, y: p.y, label: String(i + 1) }))
-                  : pins.map((p) => p.pin)
-              }
-              onPinClick={edit.editTarget === undefined ? handlePinClick : undefined}
-              pickMode={edit.pickMode}
-              onPick={(x, y) => edit.addPosition(x, y)}
-              legend={edit.editTarget === undefined}
+              pins={pins.map((p) => p.pin)}
+              onPinClick={handlePinClick}
+              legend={true}
             />
           )}
         </div>
 
-        {/* Monthly band — hidden while editing */}
-        {edit.editTarget === undefined && (
-          <MonthBand monthData={monthData} currentMonthIdx={weekToMonthIdx(cw)} />
-        )}
+        {/* Monthly band */}
+        <MonthBand monthData={monthData} currentMonthIdx={weekToMonthIdx(cw)} />
       </div>
 
-      {/* ── Right panel: Detail view OR Edit dialog (same slot, right of center) ── */}
+      {/* ── Right panel: Detail view ── */}
       <div
         data-testid="dashboard-detail-panel"
         style={{
-          width:         (selected && edit.editTarget === undefined) || edit.editTarget !== undefined ? "360px" : "0",
-          minWidth:      (selected && edit.editTarget === undefined) || edit.editTarget !== undefined ? "360px" : "0",
+          width:         selected ? "360px" : "0",
+          minWidth:      selected ? "360px" : "0",
           overflow:      "hidden",
           background:    "var(--warm-white)",
-          borderLeft:    selected || edit.editTarget !== undefined ? "1px solid var(--border)" : "none",
+          borderLeft:    selected ? "1px solid var(--border)" : "none",
           display:       "flex",
           flexDirection: "column",
           transition:    "width .3s ease, min-width .3s ease",
           flexShrink:    0,
         }}
       >
-        {edit.editTarget !== undefined ? (
-          <PlantEditDialog
-            plant={edit.editTarget}
-            onClose={edit.close}
-            onSaved={(saved) => {
-              void edit.handleSaved(saved, () => {
-                invalidateGarden();
-              }).then((fresh) => setSelected(fresh));
-            }}
-            onPendingChange={setPendingPlantEdit}
-            positions={edit.positions}
-            onPositionsChange={edit.onPositionsChange}
-            initialPositions={edit.initialPositions}
-            pickMode={edit.pickMode}
-            onPickModeChange={edit.onPickModeChange}
-          />
-        ) : selected ? (
+        {selected && (
           <PlantDetailPanel
             plant={selected}
             onClose={handleDetailClose}
-            onEdit={(p) => edit.openEdit(p)}
+            onEdit={(p) => getPlantEditHandler()?.editPlant(p.id, {})}
             onDelete={() => {
               invalidateGarden();
               setSelected(null);
             }}
           />
-        ) : null}
+        )}
       </div>
 
       {/* AiPanel is rendered once in App.tsx — not here */}

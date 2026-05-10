@@ -13,15 +13,12 @@ import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { setAssistantContext } from "@/hooks/useAssistantContext";
 import { PlantDetailPanel } from "@/components/PlantDetailPanel";
-import { PlantEditDialog } from "@/components/PlantEditDialog";
-import { GardenPlanWidget } from "@/components/GardenPlanWidget";
-import { usePlantEditDialog } from "@/hooks/usePlantEditDialog";
 import { useAssistantSettings } from "@/hooks/useAssistantSettings";
 import { invalidateGarden }     from "@/hooks/useGarden";
+import { getPlantEditHandler }   from "@/hooks/usePlantEditContext";
 import type { Plant }            from "@api/plant";
 import type { Garden }           from "@api/garden";
 import type { Schedule }         from "@api/schedule";
-import type { AssistantContext, PendingPlantEdit } from "@api/assistant-context";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -78,13 +75,9 @@ export function CalendarView({ garden, loading }: CalendarViewProps) {
   const assistantSettings = useAssistantSettings();
 
   const plants = garden?.plants ?? [];
-  const planUrl = garden?.plan_url ?? null;
-
   const [search,    setSearch]   = useState("");
   const [activeType, setActiveType] = useState<Schedule["schedule_type"]>("bloom");
   const [selected,  setSelected] = useState<Plant | null>(null);
-  const [pendingPlantEdit, setPendingPlantEdit] = useState<PendingPlantEdit | null>(null);
-
   // Keep selected in sync with garden updates (e.g. after save)
   useEffect(() => {
     if (selected && garden) {
@@ -93,8 +86,6 @@ export function CalendarView({ garden, loading }: CalendarViewProps) {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [garden]);
-
-  const edit = usePlantEditDialog();
 
   const cw           = currentWeekNumber();
   const currentMonth = weekToMonthIdx(cw);
@@ -116,11 +107,11 @@ export function CalendarView({ garden, loading }: CalendarViewProps) {
   useEffect(() => {
     setAssistantContext(
       garden
-        ? { view: "calendar", garden, selectedPlant: selected ?? undefined, settings: assistantSettings, pendingPlantEdit: pendingPlantEdit ?? undefined }
+        ? { view: "calendar", garden, selectedPlant: selected ?? undefined, settings: assistantSettings }
         : undefined
     );
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [garden, selected, assistantSettings, pendingPlantEdit]);
+  }, [garden, selected, assistantSettings]);
 
   return (
     <div
@@ -196,22 +187,12 @@ export function CalendarView({ garden, loading }: CalendarViewProps) {
           </div>
         </div>
 
-        {/* Garden plan — replaces Gantt while edit dialog is open */}
-        {edit.editTarget !== undefined && (
-          <GardenPlanWidget
-            planUrl={planUrl}
-            pins={edit.positions.map((p, i) => ({ x: p.x, y: p.y, label: String(i + 1) }))}
-            pickMode={edit.pickMode}
-            onPick={(x, y) => edit.addPosition(x, y)}
-          />
-        )}
-
-        {/* Gantt table — hidden when edit dialog is open */}
-        {edit.editTarget === undefined && loading ? (
+        {/* Gantt table */}
+        {loading ? (
           <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-light)", fontSize: "13px" }}>
             Wird geladen …
           </div>
-        ) : edit.editTarget === undefined ? (
+        ) : (
           <div style={{ flex: 1, overflow: "auto" }}>
             <table
               data-testid="calendar-table"
@@ -293,48 +274,33 @@ export function CalendarView({ garden, loading }: CalendarViewProps) {
               </tbody>
             </table>
           </div>
-        ) : null}
+        )}
       </div>
 
-      {/* ── Detail/Edit panel — right of center, left of AiPanel (AC #6) ── */}
+      {/* ── Detail panel — right of center, left of AiPanel (AC #6) ── */}
       <div
         data-testid="calendar-detail-panel"
         style={{
-          width:         (selected && edit.editTarget === undefined) || edit.editTarget !== undefined ? "360px" : "0",
-          minWidth:      (selected && edit.editTarget === undefined) || edit.editTarget !== undefined ? "360px" : "0",
+          width:         selected ? "360px" : "0",
+          minWidth:      selected ? "360px" : "0",
           overflow:      "hidden",
           background:    "var(--warm-white)",
-          borderLeft:    selected || edit.editTarget !== undefined ? "1px solid var(--border)" : "none",
+          borderLeft:    selected ? "1px solid var(--border)" : "none",
           display:       "flex",
           flexDirection: "column",
           transition:    "width .3s ease, min-width .3s ease",
           flexShrink:    0,
         }}
       >
-        {selected && edit.editTarget === undefined && (
+        {selected && (
           <PlantDetailPanel
             plant={selected}
             onClose={() => setSelected(null)}
-            onEdit={(p) => { edit.openEdit(p); }}
+            onEdit={(p) => { getPlantEditHandler()?.editPlant(p.id, {}); }}
             onDelete={() => {
               invalidateGarden();
               setSelected(null);
             }}
-          />
-        )}
-        {edit.editTarget !== undefined && (
-          <PlantEditDialog
-            plant={edit.editTarget}
-            onClose={edit.close}
-            onSaved={(saved) => {
-              void edit.handleSaved(saved).then((fresh) => setSelected(fresh));
-            }}
-            onPendingChange={setPendingPlantEdit}
-            positions={edit.positions}
-            onPositionsChange={edit.onPositionsChange}
-            initialPositions={edit.initialPositions}
-            pickMode={edit.pickMode}
-            onPickModeChange={edit.onPickModeChange}
           />
         )}
       </div>

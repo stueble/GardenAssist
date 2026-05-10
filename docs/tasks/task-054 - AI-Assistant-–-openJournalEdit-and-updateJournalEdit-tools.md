@@ -4,11 +4,12 @@ title: AI Assistant – openJournalEdit() and updateJournalEdit() tools
 status: Ready
 assignee: []
 created_date: '2026-05-09 00:39'
-updated_date: '2026-05-09 00:43'
+updated_date: '2026-05-10 21:47'
 labels: []
 dependencies: []
 references:
   - ui-mockups/ai-fild-suggestion/ai-field-suggestion.html
+ordinal: 65000
 ---
 
 ## Description

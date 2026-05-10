@@ -1,6 +1,7 @@
 import { Routes, Route }        from "react-router-dom";
 import { NavBar }                from "@/components/NavBar";
 import { AiPanel }               from "@/components/AiPanel";
+import { GlobalPlantEditOverlay } from "@/components/GlobalPlantEditOverlay";
 import { DashboardView }         from "@/views/DashboardView";
 import { PlantsView }            from "@/views/PlantsView";
 import { CalendarView }          from "@/views/CalendarView";
@@ -38,6 +39,12 @@ export function App() {
         {/* Single persistent AiPanel — never unmounts, retains chat history */}
         <AiPanel assistantContext={assistantContext} />
       </main>
+
+      {/* Global plant edit overlay — always mounted, visible when editPlant tool is dispatched */}
+      <GlobalPlantEditOverlay
+        planUrl={garden?.plan_url ?? null}
+        invalidateGarden={invalidateGarden}
+      />
     </div>
   );
 }

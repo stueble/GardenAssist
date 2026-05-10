@@ -14,6 +14,7 @@ import { App } from "../App";
 import { resetAiPanelState } from "../hooks/useAiPanelState";
 import { resetAssistantContext } from "../hooks/useAssistantContext";
 import { _resetGardenForTest } from "../hooks/useGarden";
+import { getPlantEditHandler } from "../hooks/usePlantEditContext";
 
 // JSDOM stub for ResizeObserver (used by GardenPlanWidget)
 global.ResizeObserver = class {
@@ -121,5 +122,49 @@ describe("App — AiPanel in App.tsx (TASK-059 AC #1, #2)", () => {
     // The panel open state is in the singleton — remains open when context changes
     const panel = screen.getByTestId("ai-chat-panel") as HTMLElement;
     expect(panel.style.width).toBe("310px");
+  });
+});
+
+describe("GlobalPlantEditOverlay — editPlant handler available from any view (TASK-067)", () => {
+  it("editPlant handler is registered when JournalView is the active view", async () => {
+    renderAt("/journal");
+    // GlobalPlantEditOverlay is mounted in App.tsx regardless of active view.
+    // After mount the handler must be registered.
+    await waitFor(() => {
+      expect(screen.getByTestId("journal-view")).toBeInTheDocument();
+    });
+    expect(getPlantEditHandler()).not.toBeNull();
+  });
+
+  it("editPlant handler is registered when SettingsView is the active view", async () => {
+    renderAt("/settings");
+    await waitFor(() => {
+      expect(screen.getByText(/Einstellungen/i)).toBeInTheDocument();
+    });
+    expect(getPlantEditHandler()).not.toBeNull();
+  });
+
+  it("editPlant dispatches successfully from JournalView context (no error message)", async () => {
+    renderAt("/journal");
+    await waitFor(() => {
+      expect(screen.getByTestId("journal-view")).toBeInTheDocument();
+    });
+
+    const handler = getPlantEditHandler();
+    expect(handler).not.toBeNull();
+    // Calling editPlant should not throw — new-plant mode
+    expect(() => handler!.editPlant(null, {})).not.toThrow();
+  });
+
+  it("editPlant dispatches successfully from SettingsView context (no error message)", async () => {
+    renderAt("/settings");
+    await waitFor(() => {
+      expect(screen.getByText(/Einstellungen/i)).toBeInTheDocument();
+    });
+
+    const handler = getPlantEditHandler();
+    expect(handler).not.toBeNull();
+    // Calling editPlant should not throw — new-plant mode
+    expect(() => handler!.editPlant(null, {})).not.toThrow();
   });
 });

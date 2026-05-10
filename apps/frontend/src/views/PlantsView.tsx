@@ -1,15 +1,11 @@
-import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useAiPanelState } from "@/hooks/useAiPanelState";
-import { PlantEditDialog, type PlantEditDialogHandle } from "@/components/PlantEditDialog";
-import { usePlantEditDialog } from "@/hooks/usePlantEditDialog";
-import { usePlantEditHandler, type PlantEditFields } from "@/hooks/usePlantEditContext";
+import { getPlantEditHandler } from "@/hooks/usePlantEditContext";
 import { useAssistantSettings } from "@/hooks/useAssistantSettings";
 import { setAssistantContext } from "@/hooks/useAssistantContext";
-import { GardenPlanWidget } from "@/components/GardenPlanWidget";
 import type { Plant }            from "@api/plant";
 import type { Garden }           from "@api/garden";
-import type { AssistantContext, PendingPlantEdit } from "@api/assistant-context";
+import type { PendingPlantEdit } from "@api/assistant-context";
 import { invalidateGarden }      from "@/hooks/useGarden";
 import type { Schedule } from "@api/schedule";
 import {
@@ -56,9 +52,8 @@ export function PlantsView({ garden, loading }: PlantsViewProps) {
   const { t } = useTranslation("plants");
   const assistantSettings = useAssistantSettings();
 
-  // Derive plants and planUrl directly from the shared garden prop.
+  // Derive plants from the shared garden prop.
   const plants = garden?.plants ?? [];
-  const planUrl = garden?.plan_url ?? null;
 
   const error = !loading && garden === null;
   const [search,    setSearch]    = useState("");
@@ -76,38 +71,6 @@ export function PlantsView({ garden, loading }: PlantsViewProps) {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [garden]);
-
-  const edit = usePlantEditDialog();
-  const dialogRef  = useRef<PlantEditDialogHandle>(null);
-  const plantsRef  = useRef<Plant[]>(plants);
-  const editRef    = useRef(edit);
-  // Keep refs current on every render — no stale closures.
-  useEffect(() => { plantsRef.current = plants; }, [plants]);
-  editRef.current = edit;
-
-  // Register AI tool handler: editPlant(id, fields)
-  // Stable identity via usePlantEditHandler's internal ref proxy.
-  const editPlantHandler = useCallback((id: string | null, fields: PlantEditFields) => {
-    const applyAfterOpen = () => {
-      if (Object.keys(fields).length > 0) {
-        setTimeout(() => dialogRef.current?.applyAiFields(fields), 50);
-      }
-    };
-    if (id === null) {
-      editRef.current.openNew();
-      applyAfterOpen();
-    } else {
-      const found = plantsRef.current.find((p) => p.id === id);
-      if (found) {
-        editRef.current.openEdit(found);
-        applyAfterOpen();
-      }
-    }
-  // No deps needed — all state read via refs.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  usePlantEditHandler({ editPlant: editPlantHandler });
 
   // Filter
   const filtered = useMemo(() => {
@@ -305,18 +268,8 @@ export function PlantsView({ garden, loading }: PlantsViewProps) {
         {/* Main area: garden plan (when editing) or table/card list */}
         <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
 
-          {/* Garden plan — shown when edit dialog is open (story-028 AC #1) */}
-          {edit.editTarget !== undefined && (
-            <GardenPlanWidget
-              planUrl={planUrl}
-              pins={edit.positions.map((p, i) => ({ x: p.x, y: p.y, label: String(i + 1) }))}
-              pickMode={edit.pickMode}
-              onPick={(x, y) => edit.addPosition(x, y)}
-            />
-          )}
-
-          {/* Table view — hidden when edit dialog open */}
-          {edit.editTarget === undefined && view === "table" && (
+          {/* Table view */}
+          {view === "table" && (
             <div style={{ flex: 1, overflow: "auto" }} data-testid="plants-table">
               {sorted.length === 0 ? (
                 <EmptyState search={search} t={t} />
@@ -350,8 +303,8 @@ export function PlantsView({ garden, loading }: PlantsViewProps) {
             </div>
           )}
 
-          {/* Card view — hidden when edit dialog open */}
-          {edit.editTarget === undefined && view === "card" && (
+          {/* Card view */}
+          {view === "card" && (
             <div
               style={{
                 flex:                1,
@@ -383,12 +336,12 @@ export function PlantsView({ garden, loading }: PlantsViewProps) {
           )}
         </div>
 
-        {/* FAB (AC #6) — hidden while edit dialog is open (would overlap the plan) */}
-        {edit.editTarget === undefined && <button
+        {/* FAB (AC #6) */}
+        <button
           type="button"
           title={t("overview.add_plant")}
           data-testid="fab-add-plant"
-          onClick={() => edit.openNew()}
+          onClick={() => getPlantEditHandler()?.editPlant(null, {})}
           style={{
             position:       "absolute",
             bottom:         "24px",
@@ -413,62 +366,29 @@ export function PlantsView({ garden, loading }: PlantsViewProps) {
           className="hover:bg-green-mid"
         >
           ＋
-        </button>}
-      </div>
-
-      {/* Edit dialog — AC #1: left panel per ADR-006, slides open */}
-      <div
-        data-testid="edit-dialog"
-        style={{
-          width:        edit.editTarget !== undefined ? "360px" : "0",
-          minWidth:     edit.editTarget !== undefined ? "360px" : "0",
-          overflow:     "hidden",
-          background:   "var(--warm-white)",
-          borderLeft:   edit.editTarget !== undefined ? "1px solid var(--border)" : "none",
-          display:      "flex",
-          flexDirection:"column",
-          transition:   "width .3s ease, min-width .3s ease",
-          flexShrink:   0,
-        }}
-      >
-        {edit.editTarget !== undefined && (
-          <PlantEditDialog
-            ref={dialogRef}
-            plant={edit.editTarget}
-            onClose={edit.close}
-            onSaved={(saved) => {
-              void edit.handleSaved(saved).then((fresh) => setSelected(fresh));
-            }}
-            onPendingChange={setPendingPlantEdit}
-            positions={edit.positions}
-            onPositionsChange={edit.onPositionsChange}
-            initialPositions={edit.initialPositions}
-            pickMode={edit.pickMode}
-            onPickModeChange={edit.onPickModeChange}
-          />
-        )}
+        </button>
       </div>
 
       {/* Detail panel — right of content, left of AI panel, full height */}
       <div
         data-testid="detail-panel"
         style={{
-          width:        selected && edit.editTarget === undefined ? "360px" : "0",
-          minWidth:     selected && edit.editTarget === undefined ? "360px" : "0",
+          width:        selected ? "360px" : "0",
+          minWidth:     selected ? "360px" : "0",
           overflow:     "hidden",
           background:   "var(--warm-white)",
-          borderLeft:   selected && edit.editTarget === undefined ? "1px solid var(--border)" : "none",
+          borderLeft:   selected ? "1px solid var(--border)" : "none",
           display:      "flex",
           flexDirection:"column",
           transition:   "width .3s ease, min-width .3s ease",
           flexShrink:   0,
         }}
       >
-        {selected && edit.editTarget === undefined && (
+        {selected && (
           <PlantDetailPanel
             plant={selected}
             onClose={() => setSelected(null)}
-            onEdit={(p) => { edit.openEdit(p); }}
+            onEdit={(p) => { getPlantEditHandler()?.editPlant(p.id, {}); }}
             onDelete={() => {
               invalidateGarden();
               setSelected(null);
