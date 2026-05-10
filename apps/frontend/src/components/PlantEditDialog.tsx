@@ -857,6 +857,77 @@ function EditSection({ title, accent, defaultOpen = false, count, children }: Ed
   );
 }
 
+// ── AiField ───────────────────────────────────────────────────────────────────
+// Must be defined as a top-level component (not inside GrunddatenFields) to
+// prevent React from treating it as a new component type on every re-render,
+// which would unmount/remount the wrapped input and lose focus on every keystroke.
+
+interface AiFieldProps {
+  fieldKey:        AiSuggestableField;
+  children:        React.ReactNode;
+  isSelect?:       boolean;
+  selectRef?:      React.RefObject<HTMLSelectElement | null>;
+  aiMarked:        AiSuggestionsMap;
+  onRevertAiField: (key: AiSuggestableField) => void;
+}
+
+function AiField({
+  fieldKey, children, isSelect = false, selectRef,
+  aiMarked, onRevertAiField,
+}: AiFieldProps) {
+  if (!aiMarked[fieldKey]) return <>{children}</>;
+
+  function handleRevert() {
+    onRevertAiField(fieldKey);
+    if (isSelect && selectRef?.current) {
+      // Open the dropdown after revert so the user can immediately pick a value.
+      // setTimeout 0 lets React flush the state update (restoring original value) first.
+      setTimeout(() => selectRef.current?.focus(), 0);
+    }
+  }
+
+  return (
+    <div style={{ position: "relative" }} data-testid={`ai-field-${fieldKey}`}>
+      <div style={{
+        background:   "#fff4e6",
+        border:       "1.5px solid #e07b00",
+        borderRadius: "8px",
+        padding:      "1px",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "4px", padding: "0 4px 0 6px" }}>
+          <span aria-hidden="true" style={{ fontSize: "11px", color: "#e07b00", flexShrink: 0 }}>✦</span>
+          <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={handleRevert}
+        data-testid={`ai-revert-${fieldKey}`}
+        title={isSelect ? "KI-Änderung verwerfen und Auswahl öffnen" : "KI-Änderung rückgängig"}
+        aria-label="KI-Änderung rückgängig machen"
+        style={{
+          position:     "absolute",
+          right:        isSelect ? "6px" : "4px",
+          top:          "50%",
+          transform:    "translateY(-50%)",
+          background:   "none",
+          border:       "none",
+          cursor:       "pointer",
+          color:        "#e07b00",
+          // For selects: match the size of a typical native dropdown arrow
+          fontSize:     isSelect ? "13px" : "15px",
+          lineHeight:   1,
+          padding:      "2px 4px",
+          borderRadius: "4px",
+          zIndex:       1,
+        }}
+      >
+        ×
+      </button>
+    </div>
+  );
+}
+
 // ── GrunddatenFields ──────────────────────────────────────────────────────────
 
 interface GrunddatenProps {
@@ -903,74 +974,6 @@ function GrunddatenFields({
       // Hide the native dropdown arrow — the ▾ button in AiField replaces it
       ...(isSelect ? { appearance: "none" as const, paddingRight: "28px" } : {}),
     };
-  }
-
-  /**
-   * Wraps a field with orange AI-suggestion styling + revert control.
-   *
-   * For select fields (isSelect=true) the × button sits exactly where the
-   * native dropdown arrow would be and, after reverting, programmatically
-   * opens the select — so it feels like a single interaction.
-   */
-  function AiField({
-    fieldKey, children, isSelect = false, selectRef,
-  }: {
-    fieldKey:   AiSuggestableField;
-    children:   React.ReactNode;
-    isSelect?:  boolean;
-    selectRef?: React.RefObject<HTMLSelectElement | null>;
-  }) {
-    if (!aiMarked[fieldKey]) return <>{children}</>;
-
-    function handleRevert() {
-      onRevertAiField(fieldKey);
-      if (isSelect && selectRef?.current) {
-        // Open the dropdown after revert so the user can immediately pick a value.
-        // setTimeout 0 lets React flush the state update (restoring original value) first.
-        setTimeout(() => selectRef.current?.focus(), 0);
-      }
-    }
-
-    return (
-      <div style={{ position: "relative" }} data-testid={`ai-field-${fieldKey}`}>
-        <div style={{
-          background:   "#fff4e6",
-          border:       "1.5px solid #e07b00",
-          borderRadius: "8px",
-          padding:      "1px",
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "4px", padding: "0 4px 0 6px" }}>
-            <span aria-hidden="true" style={{ fontSize: "11px", color: "#e07b00", flexShrink: 0 }}>✦</span>
-            <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={handleRevert}
-          data-testid={`ai-revert-${fieldKey}`}
-          title={isSelect ? "KI-Änderung verwerfen und Auswahl öffnen" : "KI-Änderung rückgängig"}
-          aria-label="KI-Änderung rückgängig machen"
-          style={{
-            position:     "absolute",
-            right:        isSelect ? "6px" : "4px",
-            top:          "50%",
-            transform:    "translateY(-50%)",
-            background:   "none",
-            border:       "none",
-            cursor:       "pointer",
-            color:        "#e07b00",
-            // For selects: match the size of a typical native dropdown arrow
-            fontSize:     isSelect ? "13px" : "15px",
-            lineHeight:   1,
-            padding:      "2px 4px",
-            borderRadius: "4px",
-            zIndex:       1,
-          }}
-        >
-          ×
-        </button>
-      </div>
-    );
   }
 
   function selectIcon(emoji: string) {
@@ -1052,7 +1055,7 @@ function GrunddatenFields({
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "11px" }}>
         <div>
           <div style={fieldLabelStyle}>{t("edit.field_name")}</div>
-          <AiField fieldKey="name_common">
+          <AiField fieldKey="name_common" aiMarked={aiMarked} onRevertAiField={onRevertAiField}>
             <input
               type="text"
               value={form.name_common}
@@ -1070,7 +1073,7 @@ function GrunddatenFields({
         </div>
         <div>
           <div style={fieldLabelStyle}>{t("edit.field_botanical")}</div>
-          <AiField fieldKey="name_botanical">
+          <AiField fieldKey="name_botanical" aiMarked={aiMarked} onRevertAiField={onRevertAiField}>
             <input
               type="text"
               value={form.name_botanical}
@@ -1085,7 +1088,7 @@ function GrunddatenFields({
 
       {/* Description */}
       <FieldRow label={t("edit.field_description")}>
-        <AiField fieldKey="description">
+        <AiField fieldKey="description" aiMarked={aiMarked} onRevertAiField={onRevertAiField}>
           <textarea
             value={form.description}
             onChange={(e) => patch("description", e.target.value)}
@@ -1101,7 +1104,7 @@ function GrunddatenFields({
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "11px" }}>
         <div>
           <div style={fieldLabelStyle}>{t("edit.field_category")}</div>
-          <AiField fieldKey="category" isSelect selectRef={refCategory}>
+          <AiField fieldKey="category" isSelect selectRef={refCategory} aiMarked={aiMarked} onRevertAiField={onRevertAiField}>
             <select
               ref={refCategory}
               value={form.category}
@@ -1116,7 +1119,7 @@ function GrunddatenFields({
         </div>
         <div>
           <div style={fieldLabelStyle}>{t("edit.field_origin")}</div>
-          <AiField fieldKey="origin_type" isSelect selectRef={refOrigin}>
+          <AiField fieldKey="origin_type" isSelect selectRef={refOrigin} aiMarked={aiMarked} onRevertAiField={onRevertAiField}>
             <select
               ref={refOrigin}
               value={form.origin_type}
@@ -1137,7 +1140,7 @@ function GrunddatenFields({
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "11px" }}>
         <div>
           <div style={fieldLabelStyle}>{t("edit.field_lifecycle")}</div>
-          <AiField fieldKey="lifecycle" isSelect selectRef={refLifecycle}>
+          <AiField fieldKey="lifecycle" isSelect selectRef={refLifecycle} aiMarked={aiMarked} onRevertAiField={onRevertAiField}>
             <select
               ref={refLifecycle}
               value={form.lifecycle}
@@ -1154,7 +1157,7 @@ function GrunddatenFields({
         </div>
         <div>
           <div style={fieldLabelStyle}>{t("edit.field_health")}</div>
-          <AiField fieldKey="health_status" isSelect selectRef={refHealth}>
+          <AiField fieldKey="health_status" isSelect selectRef={refHealth} aiMarked={aiMarked} onRevertAiField={onRevertAiField}>
             <select
               ref={refHealth}
               value={form.health_status}
@@ -1175,7 +1178,7 @@ function GrunddatenFields({
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "11px" }}>
         <div>
           <div style={fieldLabelStyle}>{t("edit.field_location")}</div>
-          <AiField fieldKey="location">
+          <AiField fieldKey="location" aiMarked={aiMarked} onRevertAiField={onRevertAiField}>
             <input
               type="text"
               value={form.location}
@@ -1188,7 +1191,7 @@ function GrunddatenFields({
         </div>
         <div>
           <div style={fieldLabelStyle}>{t("edit.field_watering")}</div>
-          <AiField fieldKey="watering_zone" isSelect selectRef={refWatering}>
+          <AiField fieldKey="watering_zone" isSelect selectRef={refWatering} aiMarked={aiMarked} onRevertAiField={onRevertAiField}>
             <select
               ref={refWatering}
               value={form.watering_zone}
@@ -1207,7 +1210,7 @@ function GrunddatenFields({
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "11px" }}>
         <div>
           <div style={fieldLabelStyle}>{t("edit.field_sun")}</div>
-          <AiField fieldKey="sun_demand" isSelect selectRef={refSun}>
+          <AiField fieldKey="sun_demand" isSelect selectRef={refSun} aiMarked={aiMarked} onRevertAiField={onRevertAiField}>
             <select
               ref={refSun}
               value={form.sun_demand}
@@ -1224,7 +1227,7 @@ function GrunddatenFields({
         </div>
         <div>
           <div style={fieldLabelStyle}>{t("edit.field_water")}</div>
-          <AiField fieldKey="water_demand" isSelect selectRef={refWater}>
+          <AiField fieldKey="water_demand" isSelect selectRef={refWater} aiMarked={aiMarked} onRevertAiField={onRevertAiField}>
             <select
               ref={refWater}
               value={form.water_demand}
@@ -1245,7 +1248,7 @@ function GrunddatenFields({
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "11px" }}>
         <div>
           <div style={fieldLabelStyle}>{t("edit.field_soil")}</div>
-          <AiField fieldKey="soil_type" isSelect selectRef={refSoil}>
+          <AiField fieldKey="soil_type" isSelect selectRef={refSoil} aiMarked={aiMarked} onRevertAiField={onRevertAiField}>
             <select
               ref={refSoil}
               value={form.soil_type}
@@ -1264,7 +1267,7 @@ function GrunddatenFields({
         </div>
         <div>
           <div style={fieldLabelStyle}>{t("edit.field_temp")}</div>
-          <AiField fieldKey="frost_tolerance_min_c">
+          <AiField fieldKey="frost_tolerance_min_c" aiMarked={aiMarked} onRevertAiField={onRevertAiField}>
             <input
               type="number"
               value={form.frost_tolerance_min_c}
@@ -1295,7 +1298,7 @@ function GrunddatenFields({
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "11px" }}>
         <div>
           <div style={fieldLabelStyle}>{t("edit.field_purchase_date")}</div>
-          <AiField fieldKey="purchase_date">
+          <AiField fieldKey="purchase_date" aiMarked={aiMarked} onRevertAiField={onRevertAiField}>
             <input
               type="date"
               value={form.purchase_date}
@@ -1307,7 +1310,7 @@ function GrunddatenFields({
         </div>
         <div>
           <div style={fieldLabelStyle}>{t("edit.field_purchase_price")}</div>
-          <AiField fieldKey="purchase_price">
+          <AiField fieldKey="purchase_price" aiMarked={aiMarked} onRevertAiField={onRevertAiField}>
             <input
               type="number"
               min="0"
@@ -1324,7 +1327,7 @@ function GrunddatenFields({
 
       {/* Care notes */}
       <FieldRow label={t("edit.field_care_notes")}>
-        <AiField fieldKey="care_notes">
+        <AiField fieldKey="care_notes" aiMarked={aiMarked} onRevertAiField={onRevertAiField}>
           <textarea
             value={form.care_notes}
             onChange={(e) => patch("care_notes", e.target.value)}
