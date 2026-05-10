@@ -10,7 +10,8 @@ import { useTranslation } from "react-i18next";
 import { useAiPanelState } from "@/hooks/useAiPanelState";
 import { useAssistantSettings } from "@/hooks/useAssistantSettings";
 import { setAssistantContext } from "@/hooks/useAssistantContext";
-import { apiClient } from "@/api/client";
+import { invalidateGarden }    from "@/hooks/useGarden";
+import { apiClient }           from "@/api/client";
 import type { JournalEntry, JournalEntryType } from "@api/journal-entry";
 import type { Attachment }      from "@api/attachment";
 import type { Plant }           from "@api/plant";
@@ -62,43 +63,42 @@ function monthLabel(key: string): string {
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
-export function JournalView() {
+interface JournalViewProps {
+  garden:           Garden | null;
+  loading:          boolean;
+  invalidateGarden: () => void;
+}
+
+export function JournalView({ garden, loading }: JournalViewProps) {
   const { t } = useTranslation("journal");
   const { open: aiOpen } = useAiPanelState();
   const assistantSettings = useAssistantSettings();
 
-  const [entries,      setEntries]      = useState<JournalEntry[]>([]);
-  const [plants,       setPlants]       = useState<Plant[]>([]);
-  const [garden,       setGarden]       = useState<Garden | null>(null);
+  // Local derived state — rebuilt whenever the shared garden prop updates.
+  const [entries,       setEntries]       = useState<JournalEntry[]>([]);
+  const [plants,        setPlants]        = useState<Plant[]>([]);
   const [attachmentMap, setAttachmentMap] = useState<Map<string, Attachment>>(new Map());
-  const [loading,      setLoading]      = useState(true);
-  const [search,       setSearch]       = useState("");
-  const [activeType,   setActiveType]   = useState<JournalEntryType | null>(null);
+  const [search,        setSearch]        = useState("");
+  const [activeType,    setActiveType]    = useState<JournalEntryType | null>(null);
   // Panel state: null=closed, undefined=new, JournalEntry=edit
   const [panelEntry, setPanelEntry] = useState<JournalEntry | null | undefined>(undefined);
 
-  function loadGarden() {
-    return apiClient.getGarden().then((g) => {
-      setGarden(g);
-      const sorted = [...g.journal_entries].sort((a, b) => b.date.localeCompare(a.date));
-      setEntries(sorted);
-      setPlants(g.plants);
-      // Build attachment lookup: garden + journal_entry attachments
-      const map = new Map<string, Attachment>();
-      g.attachments.forEach((a) => map.set(a.id, a));
-      setAttachmentMap(map);
-      setLoading(false);
-    }).catch(() => setLoading(false));
-  }
-
-  useEffect(() => { void loadGarden(); }, []);
+  // Derive local state from the shared garden prop whenever it updates.
+  useEffect(() => {
+    if (!garden) return;
+    const sorted = [...garden.journal_entries].sort((a, b) => b.date.localeCompare(a.date));
+    setEntries(sorted);
+    setPlants(garden.plants);
+    const map = new Map<string, Attachment>();
+    garden.attachments.forEach((a) => map.set(a.id, a));
+    setAttachmentMap(map);
+  }, [garden]);
 
   // Report AssistantContext to the shared AiPanel in App.tsx; clear on unmount
-  const assistantContext = garden
-    ? { view: "journal" as const, garden, settings: assistantSettings }
-    : undefined;
   useEffect(() => {
-    setAssistantContext(assistantContext);
+    setAssistantContext(
+      garden ? { view: "journal" as const, garden, settings: assistantSettings } : undefined
+    );
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [garden, assistantSettings]);
 
@@ -284,11 +284,11 @@ export function JournalView() {
             onClose={() => setPanelEntry(undefined)}
             onSaved={() => {
               setPanelEntry(undefined);
-              void loadGarden();
+              invalidateGarden();
             }}
             onDeleted={() => {
               setPanelEntry(undefined);
-              void loadGarden();
+              invalidateGarden();
             }}
           />
         )}

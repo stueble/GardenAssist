@@ -16,6 +16,7 @@ import i18n from "../i18n/index";
 import { DashboardView } from "../views/DashboardView";
 import { resetAiPanelState } from "../hooks/useAiPanelState";
 import type { Plant } from "@api/plant";
+import type { Garden } from "@api/garden";
 
 // JSDOM stub for ResizeObserver
 if (!("ResizeObserver" in window)) {
@@ -130,10 +131,58 @@ beforeEach(async () => {
   resetAiPanelState();
 });
 
-function renderDashboard() {
+const MOCK_GARDEN: Garden = {
+  plan_url:  "/static/garden/plan.png",
+  plan_name: "Gartenplan",
+  plants: [
+    {
+      id: "p1", name_common: "Rote Rose", name_botanical: "Rosa",
+      icon: "🌹", origin_type: "native", category: "Strauch",
+      lifecycle: "perennial", description: null, care_notes: null,
+      sun_demand: "sunny", water_demand: "medium", soil_type: "loamy",
+      frost_tolerance_min_c: -15, temperature_protected: false,
+      health_status: "good", location: "Westbeet", watering_zone: null,
+      purchase_date: null, purchase_price: null,
+      positions: [{ x_percent: 25, y_percent: 40 }],
+      attachments: [], journal_entries: [],
+      schedules: [{
+        id: "s1", schedule_type: "pruning",
+        start_week: 9, end_week: 11,
+        color: "#27ae60", label: "Frühjahrsschnitt",
+        notes: null, created_at: "", updated_at: "",
+      }],
+      tasks: [{
+        status: "overdue",
+        schedule: {
+          id: "s1", schedule_type: "pruning",
+          start_week: 9, end_week: 11,
+          color: "#27ae60", label: "Frühjahrsschnitt",
+          notes: null, created_at: "", updated_at: "",
+        },
+        week: "2026-W09",
+      }],
+      created_at: "", updated_at: "",
+    },
+    {
+      id: "p2", name_common: "Tulpe", name_botanical: null,
+      icon: "🌷", origin_type: null, category: null,
+      lifecycle: null, description: null, care_notes: null,
+      sun_demand: null, water_demand: null, soil_type: null,
+      frost_tolerance_min_c: null, temperature_protected: false,
+      health_status: null, location: null, watering_zone: null,
+      purchase_date: null, purchase_price: null,
+      positions: [], attachments: [], journal_entries: [], schedules: [], tasks: [],
+      created_at: "", updated_at: "",
+    },
+  ],
+  attachments: [], journal_entries: [],
+  warnings: [{ message: "Wettermodul nicht verfügbar", sub: "Folgt in einer späteren Version." }],
+};
+
+function renderDashboard(garden: Garden | null = MOCK_GARDEN) {
   return render(
     <I18nextProvider i18n={i18n}>
-      <DashboardView />
+      <DashboardView garden={garden} loading={garden === null} invalidateGarden={vi.fn()} />
     </I18nextProvider>
   );
 }

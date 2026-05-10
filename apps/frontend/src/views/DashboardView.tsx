@@ -105,12 +105,16 @@ function plantToPin(plant: Plant, posIdx: number, selectedId: string | null): Pl
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
-export function DashboardView() {
+interface DashboardViewProps {
+  garden:           Garden | null;
+  loading:          boolean;
+  invalidateGarden: () => void;
+}
+
+export function DashboardView({ garden, loading, invalidateGarden }: DashboardViewProps) {
   const { t }             = useTranslation("common");
   const assistantSettings = useAssistantSettings();
 
-  const [garden,   setGarden]   = useState<Garden | null>(null);
-  const [loading,  setLoading]  = useState(true);
   const [selected, setSelected] = useState<Plant | null>(null);
   const [pendingPlantEdit, setPendingPlantEdit] = useState<PendingPlantEdit | null>(null);
 
@@ -118,12 +122,6 @@ export function DashboardView() {
 
   // currentWeek month index (0-based)
   const cw = currentWeek();
-
-  useEffect(() => {
-    apiClient.getGarden()
-      .then((g) => { setGarden(g); setLoading(false); })
-      .catch(() => setLoading(false));
-  }, []);
 
   // Build pin list: one pin per position per plant
   const pins: Array<{ pin: PlanPin; plant: Plant }> = [];
@@ -198,10 +196,6 @@ export function DashboardView() {
   }
 
 
-  const assistantContext: AssistantContext | undefined = garden
-    ? { view: "dashboard", garden, selectedPlant: selected ?? undefined, settings: assistantSettings, pendingPlantEdit: pendingPlantEdit ?? undefined }
-    : undefined;
-
   useEffect(() => {
     setAssistantContext(
       garden
@@ -249,11 +243,7 @@ export function DashboardView() {
         <TodoList
           garden={garden}
           loading={loading}
-          onTaskResolved={() => {
-            apiClient.getGarden()
-              .then((g) => setGarden(g))
-              .catch(() => {});
-          }}
+          onTaskResolved={invalidateGarden}
           onPlantSelect={(plant) => {
             setSelected((prev) => prev?.id === plant.id ? null : plant);
           }}
@@ -311,8 +301,8 @@ export function DashboardView() {
             plant={edit.editTarget}
             onClose={edit.close}
             onSaved={(saved) => {
-              void edit.handleSaved(saved, (g) => {
-                setGarden(g);
+              void edit.handleSaved(saved, () => {
+                invalidateGarden();
               }).then((fresh) => setSelected(fresh));
             }}
             onPendingChange={setPendingPlantEdit}
@@ -328,10 +318,7 @@ export function DashboardView() {
             onClose={handleDetailClose}
             onEdit={(p) => edit.openEdit(p)}
             onDelete={() => {
-              setGarden((g) => g
-                ? { ...g, plants: g.plants.filter((p) => p.id !== selected.id) }
-                : g
-              );
+              invalidateGarden();
               setSelected(null);
             }}
           />

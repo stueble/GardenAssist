@@ -10,8 +10,7 @@
 import { useState, useCallback } from "react";
 import type { Plant } from "@api/plant";
 import type { PositionRow } from "@/components/PlantEditDialog";
-import { apiClient } from "@/api/client";
-import type { Garden } from "@api/garden";
+import { invalidateGarden, getGardenSnapshot } from "@/hooks/useGarden";
 
 export interface UsePlantEditDialogResult {
   /** null = new plant, Plant = edit existing, undefined = closed */
@@ -28,10 +27,12 @@ export interface UsePlantEditDialogResult {
   close:            () => void;
   /**
    * Called after a successful save.
-   * Reloads the garden, calls onRefresh with the fresh Garden, and
-   * returns the fresh Plant object (for re-selecting in the caller).
+   * Calls invalidateGarden() and returns the fresh Plant object
+   * (looked up from the updated garden snapshot) for re-selecting in the caller.
+   * The optional onRefresh callback is kept for backward compatibility but
+   * no longer receives a Garden object — pass a no-op if not needed.
    */
-  handleSaved:      (saved: Plant, onRefresh: (g: Garden) => void) => Promise<Plant>;
+  handleSaved:      (saved: Plant, onRefresh?: () => void) => Promise<Plant>;
 
   setPositions:     (rows: PositionRow[]) => void;
   addPosition:      (x: number, y: number) => void;
@@ -71,16 +72,14 @@ export function usePlantEditDialog(): UsePlantEditDialogResult {
 
   const handleSaved = useCallback(async (
     saved: Plant,
-    onRefresh: (g: Garden) => void,
+    onRefresh?: () => void,
   ): Promise<Plant> => {
     close();
-    try {
-      const g = await apiClient.getGarden();
-      onRefresh(g);
-      return g.plants.find((p) => p.id === saved.id) ?? saved;
-    } catch {
-      return saved;
-    }
+    invalidateGarden();
+    onRefresh?.();
+    // Return saved immediately — the view will re-derive selected from the
+    // fresh garden state once invalidateGarden() completes asynchronously.
+    return saved;
   }, [close]);
 
   function addPosition(x: number, y: number) {

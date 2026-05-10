@@ -126,11 +126,11 @@ beforeEach(async () => {
   resetAiPanelState();
 });
 
-function renderView() {
+function renderView(garden: Garden | null = MOCK_GARDEN) {
   return render(
     <MemoryRouter>
       <I18nextProvider i18n={i18n}>
-        <PlantsView />
+        <PlantsView garden={garden} loading={garden === null} invalidateGarden={vi.fn()} />
       </I18nextProvider>
     </MemoryRouter>
   );

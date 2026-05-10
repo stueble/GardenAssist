@@ -17,7 +17,7 @@ import { PlantEditDialog } from "@/components/PlantEditDialog";
 import { GardenPlanWidget } from "@/components/GardenPlanWidget";
 import { usePlantEditDialog } from "@/hooks/usePlantEditDialog";
 import { useAssistantSettings } from "@/hooks/useAssistantSettings";
-import { apiClient } from "@/api/client";
+import { invalidateGarden }     from "@/hooks/useGarden";
 import type { Plant }            from "@api/plant";
 import type { Garden }           from "@api/garden";
 import type { Schedule }         from "@api/schedule";
@@ -67,29 +67,37 @@ function weekToMonthIdx(week: number): number {
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
-export function CalendarView() {
+interface CalendarViewProps {
+  garden:           Garden | null;
+  loading:          boolean;
+  invalidateGarden: () => void;
+}
+
+export function CalendarView({ garden, loading }: CalendarViewProps) {
   const { t } = useTranslation("calendar");
   const assistantSettings = useAssistantSettings();
 
-  const [plants,    setPlants]   = useState<Plant[]>([]);
-  const [garden,    setGarden]   = useState<Garden | null>(null);
-  const [loading,   setLoading]  = useState(true);
+  const plants = garden?.plants ?? [];
+  const planUrl = garden?.plan_url ?? null;
+
   const [search,    setSearch]   = useState("");
   const [activeType, setActiveType] = useState<Schedule["schedule_type"]>("bloom");
   const [selected,  setSelected] = useState<Plant | null>(null);
-  const [planUrl,   setPlanUrl]  = useState<string | null>(null);
   const [pendingPlantEdit, setPendingPlantEdit] = useState<PendingPlantEdit | null>(null);
+
+  // Keep selected in sync with garden updates (e.g. after save)
+  useEffect(() => {
+    if (selected && garden) {
+      const fresh = garden.plants.find((p) => p.id === selected.id);
+      if (fresh) setSelected(fresh);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [garden]);
 
   const edit = usePlantEditDialog();
 
   const cw           = currentWeekNumber();
   const currentMonth = weekToMonthIdx(cw);
-
-  useEffect(() => {
-    apiClient.getGarden()
-      .then((g) => { setGarden(g); setPlants(g.plants); setPlanUrl(g.plan_url); setLoading(false); })
-      .catch(() => setLoading(false));
-  }, []);
 
   // Filter + sort: plants with bars for active type first, then alphabetical
   const filtered = plants.filter((p) =>
@@ -104,11 +112,6 @@ export function CalendarView() {
     if (!aHas && bHas) return 1;
     return a.name_common.localeCompare(b.name_common);
   });
-
-
-  const assistantContext: AssistantContext | undefined = garden
-    ? { view: "calendar", garden, selectedPlant: selected ?? undefined, settings: assistantSettings, pendingPlantEdit: pendingPlantEdit ?? undefined }
-    : undefined;
 
   useEffect(() => {
     setAssistantContext(
@@ -314,7 +317,7 @@ export function CalendarView() {
             onClose={() => setSelected(null)}
             onEdit={(p) => { edit.openEdit(p); }}
             onDelete={() => {
-              setPlants((prev) => prev.filter((p) => p.id !== selected.id));
+              invalidateGarden();
               setSelected(null);
             }}
           />
@@ -324,10 +327,7 @@ export function CalendarView() {
             plant={edit.editTarget}
             onClose={edit.close}
             onSaved={(saved) => {
-              void edit.handleSaved(saved, (g) => {
-                setGarden(g);
-                setPlants(g.plants);
-              }).then((fresh) => setSelected(fresh));
+              void edit.handleSaved(saved).then((fresh) => setSelected(fresh));
             }}
             onPendingChange={setPendingPlantEdit}
             positions={edit.positions}

@@ -12,6 +12,7 @@ import { I18nextProvider } from "react-i18next";
 import i18n from "../i18n/index";
 import { JournalView } from "../views/JournalView";
 import { resetAiPanelState } from "../hooks/useAiPanelState";
+import type { Garden } from "@api/garden";
 
 vi.mock("../api/client", () => ({
   apiClient: {
@@ -76,10 +77,46 @@ beforeEach(async () => {
   resetAiPanelState();
 });
 
-function renderJournal() {
+const MOCK_GARDEN: Garden = {
+  plan_url: null, plan_name: null, attachments: [], warnings: [],
+  plants: [
+    {
+      id: "p1", name_common: "Rote Rose", name_botanical: "Rosa",
+      icon: "🌹", origin_type: null, category: null, lifecycle: null,
+      description: null, care_notes: null, sun_demand: null, water_demand: null,
+      soil_type: null, frost_tolerance_min_c: null, temperature_protected: false,
+      health_status: null, location: null, watering_zone: null,
+      purchase_date: null, purchase_price: null,
+      positions: [], attachments: [], schedules: [], tasks: [],
+      journal_entries: [], created_at: "", updated_at: "",
+    },
+  ],
+  journal_entries: [
+    {
+      id: "je1", plant_id: "p1", schedule_id: null, week: null,
+      entry_type: "done", date: "2026-05-01",
+      title: "Rosen geschnitten", notes: "Frühjahrsschnitt durchgeführt.",
+      attachment_ids: [], created_at: "", updated_at: "",
+    },
+    {
+      id: "je2", plant_id: null, schedule_id: null, week: null,
+      entry_type: "manual", date: "2026-04-15",
+      title: "Dünger gekauft", notes: null,
+      attachment_ids: [], created_at: "", updated_at: "",
+    },
+    {
+      id: "je3", plant_id: "p1", schedule_id: null, week: null,
+      entry_type: "skipped", date: "2026-05-02",
+      title: null, notes: "Zu nass",
+      attachment_ids: [], created_at: "", updated_at: "",
+    },
+  ],
+};
+
+function renderJournal(garden: Garden | null = MOCK_GARDEN) {
   return render(
     <I18nextProvider i18n={i18n}>
-      <JournalView />
+      <JournalView garden={garden} loading={garden === null} invalidateGarden={vi.fn()} />
     </I18nextProvider>
   );
 }

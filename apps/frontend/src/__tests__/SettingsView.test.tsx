@@ -13,6 +13,7 @@ import { I18nextProvider } from "react-i18next";
 import i18n from "../i18n/index";
 import { SettingsView } from "../views/SettingsView";
 import type { Settings } from "@api/settings";
+import type { Garden } from "@api/garden";
 
 // Mock the API client — data must be inlined in factory (vi.mock is hoisted)
 vi.mock("../api/client", () => ({
@@ -44,11 +45,16 @@ beforeEach(async () => {
   vi.clearAllMocks();
 });
 
-function renderSettings() {
+const MOCK_GARDEN: Garden = {
+  plan_url: null, plan_name: null, plants: [],
+  journal_entries: [], attachments: [], warnings: [],
+};
+
+function renderSettings(garden: Garden | null = MOCK_GARDEN) {
   return render(
     <MemoryRouter>
       <I18nextProvider i18n={i18n}>
-        <SettingsView />
+        <SettingsView garden={garden} loading={garden === null} invalidateGarden={vi.fn()} />
       </I18nextProvider>
     </MemoryRouter>
   );

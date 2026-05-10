@@ -16,6 +16,7 @@ import i18n from "../i18n/index";
 import { CalendarView } from "../views/CalendarView";
 import { resetAiPanelState } from "../hooks/useAiPanelState";
 import type { Plant } from "@api/plant";
+import type { Garden } from "@api/garden";
 
 const MOCK_PLANT: Plant = {
   id: "p1", name_common: "Rote Rose", name_botanical: "Rosa",
@@ -96,10 +97,16 @@ beforeEach(async () => {
   resetAiPanelState();
 });
 
-function renderCalendar() {
+const MOCK_GARDEN: Garden = {
+  plan_url: null, plan_name: null,
+  plants: [MOCK_PLANT, MOCK_PLANT_2],
+  attachments: [], journal_entries: [], warnings: [],
+};
+
+function renderCalendar(garden: Garden | null = MOCK_GARDEN) {
   return render(
     <I18nextProvider i18n={i18n}>
-      <CalendarView />
+      <CalendarView garden={garden} loading={garden === null} invalidateGarden={vi.fn()} />
     </I18nextProvider>
   );
 }

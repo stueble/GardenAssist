@@ -7,10 +7,10 @@ import { usePlantEditHandler, type PlantEditFields } from "@/hooks/usePlantEditC
 import { useAssistantSettings } from "@/hooks/useAssistantSettings";
 import { setAssistantContext } from "@/hooks/useAssistantContext";
 import { GardenPlanWidget } from "@/components/GardenPlanWidget";
-import { apiClient } from "@/api/client";
 import type { Plant }            from "@api/plant";
 import type { Garden }           from "@api/garden";
 import type { AssistantContext, PendingPlantEdit } from "@api/assistant-context";
+import { invalidateGarden }      from "@/hooks/useGarden";
 import type { Schedule } from "@api/schedule";
 import {
   derivePlantStatus,
@@ -46,21 +46,36 @@ function bloomColors(schedules: Schedule[]): string[] {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export function PlantsView() {
+interface PlantsViewProps {
+  garden:           Garden | null;
+  loading:          boolean;
+  invalidateGarden: () => void;
+}
+
+export function PlantsView({ garden, loading }: PlantsViewProps) {
   const { t } = useTranslation("plants");
   const assistantSettings = useAssistantSettings();
 
-  const [plants,    setPlants]    = useState<Plant[]>([]);
-  const [garden,    setGarden]    = useState<Garden | null>(null);
-  const [loading,   setLoading]   = useState(true);
-  const [error,     setError]     = useState(false);
+  // Derive plants and planUrl directly from the shared garden prop.
+  const plants = garden?.plants ?? [];
+  const planUrl = garden?.plan_url ?? null;
+
+  const error = !loading && garden === null;
   const [search,    setSearch]    = useState("");
   const [view,      setView]      = useState<ViewMode>("table");
   const [sortKey,   setSortKey]   = useState<SortKey>("name_common");
   const [sortDir,   setSortDir]   = useState<SortDir>("asc");
   const [selected,  setSelected]  = useState<Plant | null>(null);
-  const [planUrl,   setPlanUrl]   = useState<string | null>(null);
   const [pendingPlantEdit, setPendingPlantEdit] = useState<PendingPlantEdit | null>(null);
+
+  // Keep selected in sync with garden updates (e.g. after save)
+  useEffect(() => {
+    if (selected && garden) {
+      const fresh = garden.plants.find((p) => p.id === selected.id);
+      if (fresh) setSelected(fresh);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [garden]);
 
   const edit = usePlantEditDialog();
   const dialogRef  = useRef<PlantEditDialogHandle>(null);
@@ -93,12 +108,6 @@ export function PlantsView() {
   }, []);
 
   usePlantEditHandler({ editPlant: editPlantHandler });
-
-  useEffect(() => {
-    apiClient.getGarden()
-      .then((g) => { setGarden(g); setPlants(g.plants); setPlanUrl(g.plan_url); setLoading(false); })
-      .catch(() => { setError(true); setLoading(false); });
-  }, []);
 
   // Filter
   const filtered = useMemo(() => {
@@ -168,13 +177,6 @@ export function PlantsView() {
   }
 
 
-  const assistantContext: AssistantContext | undefined = garden
-    ? { view: "plants", garden, selectedPlant: selected ?? undefined, settings: assistantSettings, pendingPlantEdit: pendingPlantEdit ?? undefined }
-    : undefined;
-
-  // Report context to the shared AiPanel in App.tsx.
-  // Dependencies are primitives/stable refs — not the object itself — to avoid
-  // infinite loops (new object reference on every render would re-trigger the effect).
   useEffect(() => {
     setAssistantContext(
       garden
@@ -435,10 +437,7 @@ export function PlantsView() {
             plant={edit.editTarget}
             onClose={edit.close}
             onSaved={(saved) => {
-              void edit.handleSaved(saved, (g) => {
-                 setGarden(g);
-                 setPlants(g.plants);
-              }).then((fresh) => setSelected(fresh));
+              void edit.handleSaved(saved).then((fresh) => setSelected(fresh));
             }}
             onPendingChange={setPendingPlantEdit}
             positions={edit.positions}
@@ -471,7 +470,7 @@ export function PlantsView() {
             onClose={() => setSelected(null)}
             onEdit={(p) => { edit.openEdit(p); }}
             onDelete={() => {
-              setPlants((prev) => prev.filter((p) => p.id !== selected.id));
+              invalidateGarden();
               setSelected(null);
             }}
           />

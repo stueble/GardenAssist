@@ -13,6 +13,14 @@ import i18n from "../i18n/index";
 import { App } from "../App";
 import { resetAiPanelState } from "../hooks/useAiPanelState";
 import { resetAssistantContext } from "../hooks/useAssistantContext";
+import { _resetGardenForTest } from "../hooks/useGarden";
+
+// JSDOM stub for ResizeObserver (used by GardenPlanWidget)
+global.ResizeObserver = class {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};
 
 // All views load data via apiClient — mock to prevent real requests
 vi.mock("../api/client", () => ({
@@ -33,6 +41,7 @@ beforeEach(async () => {
   await i18n.changeLanguage("de");
   resetAiPanelState();
   resetAssistantContext();
+  _resetGardenForTest();
 });
 
 function renderAt(path: string) {
@@ -51,13 +60,15 @@ describe("App routing", () => {
     expect(screen.getByTestId("dashboard-view")).toBeInTheDocument();
   });
 
-  it("/plants renders the Plants view", () => {
+  it("/plants renders the Plants view", async () => {
     renderAt("/plants");
-    // PlantsView shows a search input (no h1) — check for loading state or search
-    expect(
-      screen.getByText(/Pflanzen werden geladen/i) ||
-      screen.queryByTestId("plants-search")
-    ).toBeTruthy();
+    // PlantsView initially shows loading, then transitions to the search input
+    // after getGarden() resolves. Either state is acceptable here.
+    await waitFor(() => {
+      const hasLoader = !!screen.queryByText(/Pflanzen werden geladen/i);
+      const hasSearch = !!screen.queryByTestId("plants-search");
+      expect(hasLoader || hasSearch).toBe(true);
+    });
   });
 
   it("/calendar renders the Calendar view", () => {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { SettingsSection } from "@/components/SettingsSection";
 import { SaveBar } from "@/components/SaveBar";
@@ -17,17 +17,17 @@ import { ColorPresetsSection }  from "@/components/settings/ColorPresetsSection"
 import { LanguageSection }      from "@/components/settings/LanguageSection";
 import { apiClient }          from "@/api/client";
 
-export function SettingsView() {
+interface SettingsViewProps {
+  garden:           Garden | null;
+  loading:          boolean;
+  invalidateGarden: () => void;
+}
+
+export function SettingsView({ garden }: SettingsViewProps) {
   const { t, i18n } = useTranslation("settings");
   const { form, dirty: settingsDirty, status, loading, error, updateForm, save: saveSettings, discard: discardSettings } = useSettings();
   const plan = useGardenPlan();
   const assistantSettings = useAssistantSettings();
-  const [garden, setGarden] = useState<Garden | null>(null);
-
-  // Load garden once for the AI assistant context (settings view also benefits from garden data)
-  useEffect(() => {
-    apiClient.getGarden().then(setGarden).catch(() => {});
-  }, []);
 
   // Report context to the shared AiPanel in App.tsx; clear on unmount
   useEffect(() => {
