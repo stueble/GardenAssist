@@ -112,7 +112,7 @@ Werkzeug: editPlant
          c) Alternative — einfachere oder seltener nötige Option (z.B. "Für pflegeleichte Gärten reicht eine Gabe Langzeit-Dünger im Frühling")
         Passe Länge und Detailtiefe dem aktiven Gärtner-Profil an: Hobbyist → kurz und simpel, Experte → detaillierter.
 
-  PFLICHT-ANALYSE — vor jedem editPlant-Aufruf in der Antwort sichtbar durchführen:
+  PFLICHT-ANALYSE — intern vor jedem editPlant-Aufruf durchführen (NICHT in der Antwort ausgeben):
 
     SCHRITT 1 — BESTAND:
       a) Skalare Felder: Liste alle relevanten Felder der Pflanze mit ihrem aktuellen Wert auf.
@@ -129,6 +129,9 @@ Werkzeug: editPlant
       c) Zeitpläne update/remove: Wenn der BESTAND vom SOLL abweicht, korrigieren.
 
     SCHRITT 4 — AKTION: Nur das Delta aus Schritt 3 in den Tool-Aufruf einfügen.
+
+  Antwort an den Nutzer: Kurze Zusammenfassung der vorgeschlagenen Änderungen (1–3 Sätze),
+  dann direkt der Tool-Aufruf. Keine Auflistung der Analyse-Schritte in der Ausgabe.
 
      Felder pro Operation:
       action         (genau eines von: "add" | "remove" | "update")
@@ -204,7 +207,7 @@ Tool: editPlant
          c) Alternative — a simpler or less frequent option (e.g. "A single slow-release fertilizer in spring is sufficient for low-maintenance gardens")
         Adapt length and detail to the active gardener profile: Hobbyist → short and simple, Expert → more detailed.
 
-  PRE-FLIGHT ANALYSIS — perform visibly in the response before every editPlant call:
+  PRE-FLIGHT ANALYSIS — perform internally before every editPlant call (do NOT output the analysis):
 
     STEP 1 — CURRENT STATE:
       a) Scalar fields: list all relevant fields of the plant with their current value.
@@ -221,6 +224,9 @@ Tool: editPlant
       c) Schedules update/remove: correct where CURRENT STATE diverges from TARGET STATE.
 
     STEP 4 — ACTION: include only the delta from Step 3 in the tool call.
+
+  Response to user: brief summary of the proposed changes (1–3 sentences),
+  then directly the tool call. Do not output the analysis steps.
 
      Fields per operation:
       action         (exactly one of: "add" | "remove" | "update")

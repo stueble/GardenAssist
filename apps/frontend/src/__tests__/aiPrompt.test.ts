@@ -652,16 +652,18 @@ describe("buildSystemBlocks — backward compat: buildSystemPrompt still works",
 describe("buildSystemBlocks — pre-flight analysis instruction (TASK-071)", () => {
   const ctx: AssistantContext = { view: "plants", garden: GARDEN };
 
-  it("AC #1/#2: Block 1 (DE) contains PFLICHT-ANALYSE with visibility requirement", () => {
+  it("AC #1/#2: Block 1 (DE) contains PFLICHT-ANALYSE and instructs internal use + summary output", () => {
     const block1 = buildSystemBlocks(ctx, "de")[0].text;
     expect(block1).toContain("PFLICHT-ANALYSE");
-    expect(block1).toContain("in der Antwort sichtbar");
+    expect(block1).toContain("intern");
+    expect(block1).toContain("Zusammenfassung");
   });
 
-  it("AC #1/#2: Block 1 (EN) contains PRE-FLIGHT ANALYSIS with visibility requirement", () => {
+  it("AC #1/#2: Block 1 (EN) contains PRE-FLIGHT ANALYSIS and instructs internal use + summary output", () => {
     const block1 = buildSystemBlocks(ctx, "en")[0].text;
     expect(block1).toContain("PRE-FLIGHT ANALYSIS");
-    expect(block1).toContain("visibly in the response");
+    expect(block1).toContain("internally");
+    expect(block1).toContain("brief summary");
   });
 
   it("AC #3: DE Block 1 covers scalar fields with (leer) marker and schedules with UUID", () => {
