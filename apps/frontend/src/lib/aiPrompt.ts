@@ -107,6 +107,12 @@ Werkzeug: editPlant
        Prüfe zuerst die vorhandenen Zeitpläne der Pflanze.
     3. Bei remove/update: UUID exakt so verwenden wie in den Gartendaten angegeben.
     4. Der Benutzer sagt "Aufgaben reduzieren" → nur pruning/fertilization/misc anpassen, nie bloom/foliage/growth.
+    5. NOTIZEN PFLICHT: Bei jedem add von pruning, fertilization oder misc das Feld notes IMMER befüllen.
+       Die Notiz muss enthalten:
+         a) Warum — kurze Begründung (z.B. "Fördert kräftige Blütenbildung vor der Hauptblüte")
+         b) Priorität — wichtig oder optional? (z.B. "Optional — einmaliges Auslassen schadet der Pflanze nicht")
+         c) Alternative — einfachere oder seltener nötige Option (z.B. "Für pflegeleichte Gärten reicht eine Gabe Langzeit-Dünger im Frühling")
+       Passe Länge und Detailtiefe dem aktiven Gärtner-Profil an: Hobbyist → kurz und simpel, Experte → detaillierter.
 
     Felder pro Operation:
       action         (genau eines von: "add" | "remove" | "update")
@@ -177,6 +183,12 @@ Tool: editPlant
        Always check the plant's existing schedules first.
     3. For remove/update: use the UUID exactly as shown in the garden data.
     4. If the user says "reduce tasks" → only adjust pruning/fertilization/misc, never bloom/foliage/growth.
+    5. NOTES REQUIRED: When adding pruning, fertilization or misc, ALWAYS populate the notes field.
+       The note must include:
+         a) Why — short reason (e.g. "Supports strong bloom formation before the main flowering period")
+         b) Priority — important or optional? (e.g. "Optional — skipping once will not harm the plant")
+         c) Alternative — a simpler or less frequent option (e.g. "A single slow-release fertilizer in spring is sufficient for low-maintenance gardens")
+       Adapt length and detail to the active gardener profile: Hobbyist → short and simple, Expert → more detailed.
 
     Fields per operation:
       action         (exactly one of: "add" | "remove" | "update")

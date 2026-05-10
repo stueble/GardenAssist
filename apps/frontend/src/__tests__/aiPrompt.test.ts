@@ -592,6 +592,51 @@ describe("buildSystemPrompt — gardener profile in Block 2 (TASK-062)", () => {
   });
 });
 
+// ── TASK-063: notes instruction in Block 1 ────────────────────────────────────
+
+describe("buildSystemPrompt — notes instruction for new tasks (TASK-063)", () => {
+  const ctx: AssistantContext = { view: "plants", garden: GARDEN };
+
+  it("Block 1 (DE) instructs to populate notes on add (AC #1)", () => {
+    const prompt = buildSystemPrompt(ctx, "de");
+    expect(prompt).toContain("NOTIZEN PFLICHT");
+    expect(prompt).toContain("notes");
+  });
+
+  it("Block 1 (EN) instructs to populate notes on add (AC #1)", () => {
+    const prompt = buildSystemPrompt(ctx, "en");
+    expect(prompt).toContain("NOTES REQUIRED");
+    expect(prompt).toContain("notes");
+  });
+
+  it("DE instruction covers why, priority and alternative (AC #2)", () => {
+    const prompt = buildSystemPrompt(ctx, "de");
+    expect(prompt).toContain("Warum");
+    expect(prompt).toContain("Priorität");
+    expect(prompt).toContain("Alternative");
+  });
+
+  it("EN instruction covers why, priority and alternative (AC #2)", () => {
+    const prompt = buildSystemPrompt(ctx, "en");
+    expect(prompt).toContain("Why");
+    expect(prompt).toContain("Priority");
+    expect(prompt).toContain("Alternative");
+  });
+
+  it("instruction references gardener profile adaptation (AC #3)", () => {
+    const de = buildSystemPrompt(ctx, "de");
+    const en = buildSystemPrompt(ctx, "en");
+    expect(de).toContain("Gärtner-Profil");
+    expect(en).toContain("gardener profile");
+  });
+
+  it("instruction is in Block 1 (static — independent of settings)", () => {
+    // Block 1 must contain the notes instruction regardless of context
+    const blocks = buildSystemBlocks(ctx, "de");
+    expect(blocks[0].text).toContain("NOTIZEN PFLICHT");
+  });
+});
+
 describe("buildSystemBlocks — backward compat: buildSystemPrompt still works", () => {
   it("buildSystemPrompt returns joined blocks", () => {
     const ctx: AssistantContext = { view: "plants", garden: GARDEN };
