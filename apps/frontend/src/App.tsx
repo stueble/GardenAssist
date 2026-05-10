@@ -24,7 +24,7 @@ export function App() {
   return (
     <div className="flex flex-col h-screen bg-warm-white">
       <NavBar />
-      <main className="flex flex-1 min-h-0 overflow-hidden">
+      <main className="flex flex-1 min-h-0 overflow-hidden relative">
         {/* Route outlet — takes up all remaining space */}
         <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
           <Routes>
@@ -38,13 +38,13 @@ export function App() {
 
         {/* Single persistent AiPanel — never unmounts, retains chat history */}
         <AiPanel assistantContext={assistantContext} />
-      </main>
 
-      {/* Global plant edit overlay — always mounted, visible when editPlant tool is dispatched */}
-      <GlobalPlantEditOverlay
-        planUrl={garden?.plan_url ?? null}
-        invalidateGarden={invalidateGarden}
-      />
+        {/* Global plant edit overlay — sits inside <main> so it respects NavBar + AiPanel */}
+        <GlobalPlantEditOverlay
+          planUrl={garden?.plan_url ?? null}
+          invalidateGarden={invalidateGarden}
+        />
+      </main>
     </div>
   );
 }

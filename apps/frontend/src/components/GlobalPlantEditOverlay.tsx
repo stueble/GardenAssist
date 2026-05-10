@@ -64,9 +64,9 @@ export function GlobalPlantEditOverlay({ planUrl, invalidateGarden }: GlobalPlan
     <div
       data-testid="global-plant-edit-overlay"
       style={{
-        position:  "fixed",
+        position:  "absolute",
         inset:     0,
-        zIndex:    200,
+        zIndex:    100,
         display:   "flex",
         overflow:  "hidden",
         background:"var(--cream)",
