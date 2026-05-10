@@ -89,10 +89,13 @@ function plantToPin(plant: Plant, posIdx: number, selectedId: string | null): Pl
 
   const statusLabel = { overdue: "Überfällig", due: "Aktuell", upcoming: "Geplant", ok: "OK" }[status];
 
+  const firstPhoto = plant.attachments.find((a) => a.attachment_type === "image");
+
   return {
     x:        pos.x_percent,
     y:        pos.y_percent,
     emoji:    plant.icon ?? "🌿",
+    photoUrl: firstPhoto?.url,
     name:     plant.name_common,
     color:      "rgba(255,255,255,.15)",
     taskStatus: (status === "overdue" || status === "due") ? status : undefined,

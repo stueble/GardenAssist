@@ -21,6 +21,8 @@ export interface PlanPin {
   y:          number;   // 0–100, percent of plan image height
   label?:     string;   // shown inside pin dot (e.g. "1") — used in Edit mode
   emoji?:     string;   // shown inside pin circle — used in Dashboard mode
+  /** First photo attachment URL — shown instead of emoji when available (AC #1) */
+  photoUrl?:  string;
   name?:      string;   // plant name — shown as label below pin + in tooltip
   color?:     string;   // pin background color; default: var(--green-deep)
   taskStatus?: "overdue" | "due";  // dot indicator: red=overdue, yellow=due
@@ -452,7 +454,22 @@ export function GardenPlanWidget({
                   position:       "relative",
                   transition:     "box-shadow .2s",
                 }}>
-                  {isDashboard ? pin.emoji : pin.label}
+                  {isDashboard ? (
+                    pin.photoUrl
+                      ? <img
+                          src={pin.photoUrl}
+                          alt=""
+                          data-testid="pin-photo"
+                          style={{
+                            width:        "100%",
+                            height:       "100%",
+                            objectFit:    "cover",
+                            borderRadius: "50%",
+                            display:      "block",
+                          }}
+                        />
+                      : pin.emoji
+                  ) : pin.label}
 
                   {/* Status dot: red=overdue, yellow=due (AC #3) */}
                   {pin.taskStatus && (

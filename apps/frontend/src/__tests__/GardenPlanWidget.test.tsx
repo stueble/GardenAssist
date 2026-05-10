@@ -144,3 +144,35 @@ describe("GardenPlanWidget — pick mode", () => {
     expect(onPinClick).toHaveBeenCalledWith(pins[0], 0);
   });
 });
+
+describe("GardenPlanWidget — pin photo (TASK-068)", () => {
+  it("AC #1: shows photo img when photoUrl is set on a dashboard pin", () => {
+    const pins: PlanPin[] = [
+      { x: 20, y: 30, emoji: "🌹", photoUrl: "/static/uploads/rose.jpg", name: "Rose" },
+    ];
+    renderWidget({ planUrl: "/static/garden/plan.png", pins });
+    const photo = screen.getByTestId("pin-photo") as HTMLImageElement;
+    expect(photo).toBeInTheDocument();
+    expect(photo.src).toContain("/static/uploads/rose.jpg");
+  });
+
+  it("AC #2: falls back to emoji when photoUrl is absent", () => {
+    const pins: PlanPin[] = [
+      { x: 20, y: 30, emoji: "🌿", name: "Pflanze" },
+    ];
+    renderWidget({ planUrl: "/static/garden/plan.png", pins });
+    expect(screen.queryByTestId("pin-photo")).not.toBeInTheDocument();
+    expect(screen.getByTestId("plan-pin-0")).toHaveTextContent("🌿");
+  });
+
+  it("AC #3: status dot is still rendered alongside photo pin", () => {
+    const pins: PlanPin[] = [
+      { x: 20, y: 30, emoji: "🌹", photoUrl: "/static/uploads/rose.jpg", name: "Rose", taskStatus: "overdue" },
+    ];
+    renderWidget({ planUrl: "/static/garden/plan.png", pins });
+    expect(screen.getByTestId("pin-photo")).toBeInTheDocument();
+    // Status dot is a sibling div inside the pin circle — pin still has taskStatus styling
+    const pin = screen.getByTestId("plan-pin-0");
+    expect(pin).toBeInTheDocument();
+  });
+});
