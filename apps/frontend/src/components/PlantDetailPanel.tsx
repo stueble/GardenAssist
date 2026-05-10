@@ -176,6 +176,18 @@ export function PlantDetailPanel({ plant, onClose, onEdit, onDelete }: PlantDeta
     .filter((s) => TASK_TYPES.includes(s.schedule_type))
     .sort((a, b) => a.start_week - b.start_week);
 
+  // IDs of task schedules whose notes are currently COLLAPSED.
+  // Default is expanded — so this set starts empty.
+  const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
+
+  function toggleNotes(id: string) {
+    setCollapsedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) { next.delete(id); } else { next.add(id); }
+      return next;
+    });
+  }
+
   const factCell = (label: string, value: string) => (
     <div key={label} style={{ background: "var(--green-mist)", borderRadius: "8px", padding: "8px 10px" }}>
       <div style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.5px", textTransform: "uppercase", color: "var(--text-light)", marginBottom: "3px" }}>{label}</div>
@@ -342,25 +354,81 @@ export function PlantDetailPanel({ plant, onClose, onEdit, onDelete }: PlantDeta
         {sortedSchedules.length > 0 && (
           <div>
             <div style={sectionTitleStyle}>{t("detail.section_tasks")}</div>
-            <div style={{ display: "grid", gridTemplateColumns: "20px 1fr 12px auto", alignItems: "center", rowGap: "6px", columnGap: "6px" }}>
-              {sortedSchedules.map((s) => (
-                <>
-                  <span key={`${s.id}-icon`} style={{ fontSize: "13px", textAlign: "center" }}>
-                    {SCHEDULE_ICON[s.schedule_type] ?? "📌"}
-                  </span>
-                  <span key={`${s.id}-label`} style={{ fontSize: "12px", fontWeight: 500, color: "var(--text-dark)" }}>
-                    {s.label ?? s.schedule_type}
-                  </span>
-                  <div key={`${s.id}-swatch`} style={{
-                    width: "10px", height: "10px", borderRadius: "2px",
-                    background: s.color ?? "var(--border)",
-                    border: "1px solid rgba(0,0,0,.1)", justifySelf: "center",
-                  }} />
-                  <span key={`${s.id}-period`} style={{ fontSize: "11px", color: "var(--text-light)", whiteSpace: "nowrap" }}>
-                    {weekRangeLabel(s.start_week, s.end_week)}
-                  </span>
-                </>
-              ))}
+            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+              {sortedSchedules.map((s) => {
+                const hasNotes   = !!s.notes;
+                const isCollapsed = collapsedIds.has(s.id);
+                return (
+                  <div key={s.id}>
+                    {/* Header row — always visible */}
+                    <div
+                      role={hasNotes ? "button" : undefined}
+                      tabIndex={hasNotes ? 0 : undefined}
+                      data-testid={`task-row-${s.id}`}
+                      onClick={hasNotes ? () => toggleNotes(s.id) : undefined}
+                      onKeyDown={hasNotes ? (e) => (e.key === "Enter" || e.key === " ") && toggleNotes(s.id) : undefined}
+                      style={{
+                        display:     "grid",
+                        gridTemplateColumns: "20px 1fr 12px auto" + (hasNotes ? " 14px" : ""),
+                        alignItems:  "center",
+                        columnGap:   "6px",
+                        cursor:      hasNotes ? "pointer" : "default",
+                        borderRadius: "6px",
+                        padding:     "2px 0",
+                      }}
+                    >
+                      <span style={{ fontSize: "13px", textAlign: "center" }}>
+                        {SCHEDULE_ICON[s.schedule_type] ?? "📌"}
+                      </span>
+                      <span style={{ fontSize: "12px", fontWeight: 500, color: "var(--text-dark)" }}>
+                        {s.label ?? s.schedule_type}
+                      </span>
+                      <div style={{
+                        width: "10px", height: "10px", borderRadius: "2px",
+                        background: s.color ?? "var(--border)",
+                        border: "1px solid rgba(0,0,0,.1)", justifySelf: "center",
+                      }} />
+                      <span style={{ fontSize: "11px", color: "var(--text-light)", whiteSpace: "nowrap" }}>
+                        {weekRangeLabel(s.start_week, s.end_week)}
+                      </span>
+                      {hasNotes && (
+                        <span
+                          data-testid={`task-toggle-${s.id}`}
+                          style={{
+                            fontSize:   "11px",
+                            color:      "var(--text-light)",
+                            transition: "transform .15s",
+                            display:    "inline-block",
+                            transform:  isCollapsed ? "rotate(-90deg)" : "none",
+                          }}
+                        >
+                          ▾
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Notes — shown by default, hidden when collapsed */}
+                    {hasNotes && !isCollapsed && (
+                      <div
+                        data-testid={`task-notes-${s.id}`}
+                        style={{
+                          marginLeft:  "26px",
+                          marginTop:   "3px",
+                          marginBottom:"4px",
+                          fontSize:    "11.5px",
+                          color:       "var(--text-mid)",
+                          lineHeight:  1.55,
+                          background:  "var(--green-mist)",
+                          borderRadius:"6px",
+                          padding:     "6px 10px",
+                        }}
+                      >
+                        {s.notes}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

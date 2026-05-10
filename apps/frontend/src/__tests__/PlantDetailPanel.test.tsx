@@ -176,6 +176,74 @@ describe("PlantDetailPanel — tasks (AC #5)", () => {
   });
 });
 
+// ── TASK-064: expandable task notes ──────────────────────────────────────────
+
+describe("PlantDetailPanel — expandable task notes (TASK-064)", () => {
+  const PLANT_WITH_NOTES: Plant = {
+    ...MOCK_PLANT,
+    schedules: [
+      {
+        id: "s-notes", schedule_type: "pruning",
+        start_week: 9, end_week: 11,
+        color: null, label: "Frühjahrsschnitt",
+        notes: "Fördert kräftiges Wachstum. Optional — einmaliges Auslassen schadet nicht.",
+        created_at: "", updated_at: "",
+      },
+      {
+        id: "s-nonotes", schedule_type: "fertilization",
+        start_week: 13, end_week: 14,
+        color: null, label: "Düngen",
+        notes: null,
+        created_at: "", updated_at: "",
+      },
+    ],
+  };
+
+  function renderWithNotes() {
+    return render(
+      <I18nextProvider i18n={i18n}>
+        <PlantDetailPanel
+          plant={PLANT_WITH_NOTES}
+          onClose={vi.fn()}
+          onEdit={vi.fn()}
+          onDelete={vi.fn()}
+        />
+      </I18nextProvider>
+    );
+  }
+
+  it("notes are visible by default (expanded)", () => {
+    renderWithNotes();
+    expect(screen.getByTestId("task-notes-s-notes")).toBeInTheDocument();
+    expect(screen.getByText(/Fördert kräftiges Wachstum/)).toBeInTheDocument();
+  });
+
+  it("toggle button only appears for schedules that have notes", () => {
+    renderWithNotes();
+    expect(screen.getByTestId("task-toggle-s-notes")).toBeInTheDocument();
+    expect(screen.queryByTestId("task-toggle-s-nonotes")).not.toBeInTheDocument();
+  });
+
+  it("clicking toggle collapses the notes", () => {
+    renderWithNotes();
+    fireEvent.click(screen.getByTestId("task-row-s-notes"));
+    expect(screen.queryByTestId("task-notes-s-notes")).not.toBeInTheDocument();
+  });
+
+  it("clicking toggle again re-expands the notes", () => {
+    renderWithNotes();
+    fireEvent.click(screen.getByTestId("task-row-s-notes"));
+    fireEvent.click(screen.getByTestId("task-row-s-notes"));
+    expect(screen.getByTestId("task-notes-s-notes")).toBeInTheDocument();
+  });
+
+  it("schedules without notes are not clickable (no role=button)", () => {
+    renderWithNotes();
+    const row = screen.getByTestId("task-row-s-nonotes");
+    expect(row).not.toHaveAttribute("role", "button");
+  });
+});
+
 describe("PlantDetailPanel — actions (AC #6)", () => {
   it("calls onEdit when Bearbeiten is clicked (AC #6)", () => {
     const { onEdit } = renderPanel();
