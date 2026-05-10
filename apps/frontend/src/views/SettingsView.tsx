@@ -179,6 +179,22 @@ export function SettingsView({ garden }: SettingsViewProps) {
               {form && <LocationSection form={form} onChange={updateForm} />}
             </SettingsSection>
 
+            {/* Daten & Backup */}
+            <SettingsSection
+              icon="💾"
+              title={t("sections.data")}
+              subtitle={t("section_subtitles.data")}
+              defaultOpen={false}
+            >
+              <DataSection
+                onExportBackup={handleExportBackup}
+                onImportBackup={handleImportBackup}
+                onExportCsv={handleExportCsv}
+                onDeleteAll={handleDeleteAll}
+                onInstallDefaults={handleInstallDefaults}
+              />
+            </SettingsSection>
+
             {/* Bewässerungszonen */}
             <SettingsSection
               icon="💧"
@@ -227,22 +243,6 @@ export function SettingsView({ garden }: SettingsViewProps) {
               defaultOpen={false}
             >
               {form && <LanguageSection form={form} onChange={updateForm} />}
-            </SettingsSection>
-
-            {/* Daten & Backup */}
-            <SettingsSection
-              icon="💾"
-              title={t("sections.data")}
-              subtitle={t("section_subtitles.data")}
-              defaultOpen={false}
-            >
-              <DataSection
-                onExportBackup={handleExportBackup}
-                onImportBackup={handleImportBackup}
-                onExportCsv={handleExportCsv}
-                onDeleteAll={handleDeleteAll}
-                onInstallDefaults={handleInstallDefaults}
-              />
             </SettingsSection>
 
           </div>
