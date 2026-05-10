@@ -114,6 +114,16 @@ export function DashboardView({ garden, loading, invalidateGarden }: DashboardVi
   const assistantSettings = useAssistantSettings();
 
   const [selected, setSelected] = useState<Plant | null>(null);
+
+  // Keep selected in sync with garden updates (e.g. after save via GlobalPlantEditOverlay)
+  useEffect(() => {
+    if (selected && garden) {
+      const fresh = garden.plants.find((p) => p.id === selected.id);
+      if (fresh) setSelected(fresh);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [garden]);
+
   // currentWeek month index (0-based)
   const cw = currentWeek();
 
