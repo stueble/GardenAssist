@@ -1,12 +1,15 @@
 ---
 id: TASK-065
 title: Verify and fix local Docker build
-status: Ready
-assignee: []
+status: In Progress
+assignee:
+  - '@agent'
 created_date: '2026-05-10 21:29'
+updated_date: '2026-05-11 16:36'
 labels:
   - infrastructure
 dependencies: []
+priority: high
 ordinal: 60000
 ---
 

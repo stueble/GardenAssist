@@ -30,6 +30,8 @@ ENV NODE_ENV=production
 
 # Copy compiled output (rootDir=../.. means output mirrors the monorepo structure)
 COPY --from=builder /app/apps/backend/dist ./dist
+# Migration SQL files are needed at runtime by drizzle-orm/better-sqlite3/migrator
+COPY --from=builder /app/apps/backend/drizzle ./drizzle
 # With --node-linker=hoisted, node_modules contains real files (no symlinks)
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/apps/backend/package.json ./package.json
