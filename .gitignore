@@ -1,3 +1,6 @@
+# Local plant images — not tracked in git
+pics/
+
 # Node
 node_modules/
 dist/
