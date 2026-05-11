@@ -742,60 +742,58 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }: EntryPanelPr
           </div>
         )}
 
-        {/* Type selector:
-            - With schedule: done + skipped (which action was taken)
-            - Without schedule: observation + problem (free-form types; default = manual) */}
+        {/* Type selector — all four types always visible.
+            observation/problem are disabled when a schedule is selected
+            (a schedule-linked entry is always done or skipped). */}
         <div>
           <div style={labelStyle}>{t("fields.entry_type")}</div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
-            {PANEL_TYPE_VALUES
-              .filter((typeVal) =>
-                hasSchedule
-                  ? typeVal === "done" || typeVal === "skipped"
-                  : typeVal === "observation" || typeVal === "problem"
-              )
-              .map((typeVal) => {
-                const tc = TYPE_COLOR[typeVal] ?? TYPE_COLOR.manual;
-                const active = entryType === typeVal;
-                return (
-                  <button
-                    key={typeVal}
-                    type="button"
-                    data-testid={`panel-type-${typeVal}`}
-                    onClick={() => {
-                      setEntryType(typeVal);
-                      // Update title suggestion when done↔skipped changes with schedule selected
-                      if (isNew && hasSchedule) {
-                        const schedule = availableSchedules.find((s) => s.id === scheduleId);
-                        if (schedule) {
-                          const type = typeVal === "skipped" ? "skipped" : "done";
-                          setTitle(buildTitleSuggestion(type, schedule, selectedPlant));
-                        }
+            {PANEL_TYPE_VALUES.map((typeVal) => {
+              const tc = TYPE_COLOR[typeVal] ?? TYPE_COLOR.manual;
+              const active = entryType === typeVal;
+              // observation/problem make no sense when a schedule is selected
+              const disabled = hasSchedule && (typeVal === "observation" || typeVal === "problem");
+              return (
+                <button
+                  key={typeVal}
+                  type="button"
+                  data-testid={`panel-type-${typeVal}`}
+                  onClick={() => {
+                    if (disabled) return;
+                    setEntryType(typeVal);
+                    // Update title suggestion when done↔skipped changes with schedule selected
+                    if (isNew && hasSchedule) {
+                      const schedule = availableSchedules.find((s) => s.id === scheduleId);
+                      if (schedule) {
+                        const type = typeVal === "skipped" ? "skipped" : "done";
+                        setTitle(buildTitleSuggestion(type, schedule, selectedPlant));
                       }
-                    }}
-                    style={{
-                      padding:      "7px 8px",
-                      borderRadius: "8px",
-                      fontSize:     "11.5px",
-                      fontWeight:   500,
-                      border:       active ? `1.5px solid ${tc.border}` : "1.5px solid var(--border)",
-                      background:   active ? tc.bg : "none",
-                      color:        active ? tc.text : "var(--text-mid)",
-                      cursor:       "pointer",
-                      fontFamily:   "var(--font-body)",
-                      transition:   "all .15s",
-                      display:      "flex",
-                      alignItems:   "center",
-                      gap:          "5px",
-                    }}
-                  >
-                    {t(`entry_type_badge.${typeVal}` as any)}
-                  </button>
-                );
-              })}
+                    }
+                  }}
+                  style={{
+                    padding:      "7px 8px",
+                    borderRadius: "8px",
+                    fontSize:     "11.5px",
+                    fontWeight:   500,
+                    border:       active ? `1.5px solid ${tc.border}` : "1.5px solid var(--border)",
+                    background:   active ? tc.bg : "none",
+                    color:        active ? tc.text : disabled ? "var(--border)" : "var(--text-mid)",
+                    cursor:       disabled ? "default" : "pointer",
+                    fontFamily:   "var(--font-body)",
+                    transition:   "all .15s",
+                    display:      "flex",
+                    alignItems:   "center",
+                    gap:          "5px",
+                    opacity:      disabled ? 0.35 : 1,
+                  }}
+                >
+                  {t(`entry_type_badge.${typeVal}` as any)}
+                </button>
+              );
+            })}
           </div>
-          {/* Hint: when no schedule selected, entry is automatically manual */}
-          {!hasSchedule && entryType !== "observation" && entryType !== "problem" && (
+          {/* Hint: done/skipped without schedule saves as manual entry */}
+          {!hasSchedule && (entryType === "done" || entryType === "skipped") && (
             <div style={{ fontSize: "10.5px", color: "var(--text-light)", marginTop: "6px" }}>
               {t("panel.manual_hint")}
             </div>

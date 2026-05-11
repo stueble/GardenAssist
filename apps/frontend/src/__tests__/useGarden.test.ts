@@ -60,8 +60,8 @@ describe("useGarden — invalidateGarden", () => {
     expect(result.current.garden?.plan_name).toBeNull();
 
     act(() => { invalidateGarden(); });
-    await waitFor(() => expect(result.current.loading).toBe(false));
-    expect(result.current.garden?.plan_name).toBe("Updated");
+    // invalidateGarden no longer sets loading:true — wait directly for the updated garden
+    await waitFor(() => expect(result.current.garden?.plan_name).toBe("Updated"));
     expect((apiClient.getGarden as ReturnType<typeof vi.fn>).mock.calls.length).toBe(2);
   });
 });

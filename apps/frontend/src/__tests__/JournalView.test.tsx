@@ -281,12 +281,12 @@ describe("JournalView — entry panel fields (story-036 AC #2, #3, #4)", () => {
   it("shows type selector buttons (AC #2)", async () => {
     renderJournal();
     fireEvent.click(screen.getByTestId("journal-fab"));
-    // Without a schedule selected, observation + problem are shown (manual is implicit)
-    await waitFor(() => screen.getByTestId("panel-type-observation"));
+    // All four type buttons always visible
+    await waitFor(() => screen.getByTestId("panel-type-done"));
+    expect(screen.getByTestId("panel-type-done")).toBeInTheDocument();
+    expect(screen.getByTestId("panel-type-skipped")).toBeInTheDocument();
     expect(screen.getByTestId("panel-type-observation")).toBeInTheDocument();
     expect(screen.getByTestId("panel-type-problem")).toBeInTheDocument();
-    // done/skipped are NOT shown without a schedule (they appear when schedule is selected)
-    expect(screen.queryByTestId("panel-type-done")).not.toBeInTheDocument();
   });
 
   it("shows plant picker with plants (AC #3)", async () => {
