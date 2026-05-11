@@ -23,7 +23,7 @@ interface SettingsViewProps {
   invalidateGarden: () => void;
 }
 
-export function SettingsView({ garden }: SettingsViewProps) {
+export function SettingsView({ garden, invalidateGarden }: SettingsViewProps) {
   const { t, i18n } = useTranslation("settings");
   const { form, dirty: settingsDirty, status, loading, error, updateForm, save: saveSettings, discard: discardSettings } = useSettings();
   const plan = useGardenPlan();
@@ -44,6 +44,8 @@ export function SettingsView({ garden }: SettingsViewProps) {
       plan.dirty ? plan.save() : Promise.resolve(),
       saveSettings(),
     ]);
+    // Notify App.tsx so DashboardView picks up the new plan_url
+    if (plan.dirty) invalidateGarden();
   }
 
   function discard() {
