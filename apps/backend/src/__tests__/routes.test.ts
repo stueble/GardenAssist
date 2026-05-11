@@ -13,6 +13,8 @@ import { createTestDb } from "../test-setup/createTestDb.js";
 vi.mock("../db/index.js", () => ({ db: createTestDb() }));
 
 import app from "../index.js";
+import { db } from "../db/index.js";
+import * as schema from "../db/schema.js";
 
 // Helper: parse JSON from a Response
 async function json(res: Response): Promise<Record<string, unknown>> {
@@ -161,7 +163,36 @@ describe("Journal routes", () => {
     expect((gardenAfter.journal_entries as unknown[]).length).toBeGreaterThan(countBefore);
   });
 
-  it("POST /api/journal 'done' auto-generates title from entry_type (AC #5)", async () => {
+  it("POST /api/journal 'done' with schedule_id uses schedule label as title (AC #5)", async () => {
+    // Insert a plant + schedule so we can reference them
+    db.insert(schema.plants).values({
+      id: "p-auto", name_common: "Rhododendron", temperature_protected: false,
+      created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+    }).run();
+    db.insert(schema.schedules).values({
+      id: "s-auto", plant_id: "p-auto", schedule_type: "pruning",
+      start_week: 9, end_week: 10, label: "Auslichten",
+      created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+    }).run();
+
+    const res = await app.request("/api/journal", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...manualEntry,
+        plant_id:   "p-auto",
+        schedule_id:"s-auto",
+        entry_type: "done",
+        title:      null,
+      }),
+    });
+    expect(res.status).toBe(201);
+    const body = await json(res);
+    // Title is just the schedule label — no "Erledigt:" prefix, no plant name
+    expect(body.title).toBe("Auslichten");
+  });
+
+  it("POST /api/journal 'done' without schedule yields null title (AC #5)", async () => {
     const res = await app.request("/api/journal", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -173,24 +204,8 @@ describe("Journal routes", () => {
     });
     expect(res.status).toBe(201);
     const body = await json(res);
-    // Title should start with "Erledigt" when no plant/schedule available
-    expect(typeof body.title).toBe("string");
-    expect((body.title as string)).toContain("Erledigt");
-  });
-
-  it("POST /api/journal 'skipped' auto-generates title (AC #2, #5)", async () => {
-    const res = await app.request("/api/journal", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...manualEntry,
-        entry_type: "skipped",
-        title:      null,
-      }),
-    });
-    expect(res.status).toBe(201);
-    const body = await json(res);
-    expect((body.title as string)).toContain("Übersprungen");
+    // No schedule → no auto-title, title stays null
+    expect(body.title).toBeNull();
   });
 
   it("PUT /api/journal/:id updates an existing entry", async () => {

@@ -20,14 +20,12 @@ const SCHEDULE_TYPE_LABEL: Record<string, string> = {
 function buildAutoTitle(
   entryType: "done" | "skipped" | "manual" | "observation" | "problem",
   scheduleType: string | null,
-  plantName: string | null,
+  _plantName: string | null,
   scheduleLabel: string | null,
 ): string | null {
   if (entryType === "manual" || entryType === "observation" || entryType === "problem") return null;
-  const action    = entryType === "done" ? "Erledigt" : "Übersprungen";
-  const taskLabel = scheduleLabel ?? (scheduleType ? SCHEDULE_TYPE_LABEL[scheduleType] : null) ?? "Aufgabe";
-  if (plantName) return `${action}: ${taskLabel} – ${plantName}`;
-  return `${action}: ${taskLabel}`;
+  // Only the schedule label — type and plant are visible in the UI already
+  return scheduleLabel ?? (scheduleType ? SCHEDULE_TYPE_LABEL[scheduleType] : null) ?? null;
 }
 
 // ── Map DB row → JournalEntry ─────────────────────────────────────────────────
