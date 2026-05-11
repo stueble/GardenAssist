@@ -24,10 +24,8 @@ An interactive layout of your garden showing the position and size of each plant
 A conversational assistant that supports you throughout the app:
 - Answer questions about plants, care routines, and gardening best practices
 - Explain *why* a task is recommended at a given time
-- Add or update plant data through natural language
-- Identify plants from uploaded photos
-- Search for suitable reference images
-- Analyze uploaded documents or photos for relevant gardening context
+- Add or update plant data as well as journal entries through natural language
+
 
 ### 📖 Garden Journal
 A diary for logging completed tasks, observations, and notes over time. Provides a personal history of your garden's development.
@@ -39,7 +37,9 @@ A central overview combining urgent hints and warnings, open and upcoming tasks,
 
 ## Planned Integrations *(future)*
 
-- **Weather** – current conditions, frost warnings, rain forecast, and watering recommendations
+- **Moisture** calculation based on whether information and irrigation information
+- **User** authentication based on OpenID Connect
+- **Photo analysis** Identify plants from uploaded photos, search for suitable reference images, or analyze uploaded documents or photos for relevant gardening context
 - **Calendar sync** – export or sync garden tasks to external calendar apps
 - **Email notifications** – reminders for upcoming or overdue tasks
 
@@ -169,4 +169,19 @@ No copying or code generation required — the alias resolves directly to `docs/
 
 ## Project Status
 
-🚧 In scaffolding — core structure in place, features not yet implemented.
+🌱 **Development** — core features implemented and in use.
+
+| Feature | Status |
+|---|---|
+| Plant management (list, detail, edit, attachments) | ✅ Done |
+| Dashboard (task list, warnings, garden plan, weather widget) | ✅ Done |
+| Garden calendar (Gantt, color presets) | ✅ Done |
+| Journal (timeline, filters, manual entries, done/skipped tasks) | ✅ Done |
+| Settings (all sections, API integration, language switch) | ✅ Done |
+| Garden plan upload | ✅ Done |
+| AI Assistant (provider-agnostic, persistent across views) | ✅ Done |
+| Export / Import (JSON, backup tar.gz) | ✅ Done |
+| Weather widget (Open-Meteo, real-time, 5-day forecast) | ✅ Done |
+| Docker build + ghcr.io publish (GitHub Actions) | ✅ Done |
+| CSV export | 🔲 Ready |
+| Soil moisture / water balance (Open-Meteo Archive) | 🔲 Ready |

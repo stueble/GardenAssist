@@ -3,7 +3,7 @@ id: doc-004
 title: 004 - UX/UI Concept - Dashboard
 type: other
 created_date: '2026-05-02 20:45'
-updated_date: '2026-05-04 17:06'
+updated_date: '2026-05-11 22:20'
 ---
 # UI Concept – Dashboard
 
@@ -173,13 +173,15 @@ Interactive HTML mockup: `ui-mockups/dashboard/dashboard-mockup.html`
 
 ## 9. Open Questions
 
-- [ ] Where does weather data come from? Widget is implemented in the mockup but data source (API, mock, manual) is not yet decided.
-- [ ] When the chat opens via todo click, should it auto-populate a message or just set context silently?
+
 
 **Resolved:**
 - [x] Garden plan is uploaded by the user as an image file.
 - [x] When all todos are completed, the list stays visible but empty — no special message or auto-hiding.
 - [x] The current month is always highlighted in the monthly band; the user cannot set a different active month.
+- [x] Weather data comes from Open-Meteo (free, no API key required). The backend geocodes
+      `location_city` from Settings via the Open-Meteo Geocoding API, then fetches current
+      conditions and a 5-day forecast from the Open-Meteo Forecast API. See ADR-011.
 
 ---
 
