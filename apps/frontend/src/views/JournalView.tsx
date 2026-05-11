@@ -570,7 +570,7 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }: EntryPanelPr
   const [scheduleId, setScheduleId] = useState<string>(entry?.schedule_id ?? "");
   const [date,       setDate]       = useState(entry?.date ?? new Date().toISOString().slice(0, 10));
   const [title,      setTitle]      = useState(
-    entry?.title ?? (isNew ? "Manuell: " : "")
+    entry?.title ?? ""
   );
   const [notes,      setNotes]      = useState(entry?.notes ?? "");
 
@@ -584,7 +584,7 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }: EntryPanelPr
   function handlePlantChange(newPlantId: string) {
     setPlantId(newPlantId);
     setScheduleId("");
-    if (isNew) setTitle("Manuell: ");
+    if (isNew) setTitle("");
   }
 
   // Build a title suggestion — just the task label (type + plant shown via UI already)
@@ -602,7 +602,7 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }: EntryPanelPr
     if (!isNew) return; // don't overwrite title in edit mode
     if (newScheduleId === "") {
       // Back to no schedule → reset to manual prefix
-      setTitle("Manuell: ");
+      setTitle("");
     } else {
       const schedule = availableSchedules.find((s) => s.id === newScheduleId);
       if (schedule) {
