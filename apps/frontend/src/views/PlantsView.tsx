@@ -487,12 +487,19 @@ function PlantRow({ plant, selected, onClick, t }: PlantRowProps) {
               background:     "var(--green-mist)",
               flexShrink:     0,
               overflow:       "hidden",
+              position:       "relative",
             }}
           >
             {thumbImg
               ? <img src={thumbImg.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               : plant.icon ?? "🌿"
             }
+            {plant.temperature_protected && (
+              <div
+                title={t("detail.protected_badge")}
+                style={{ position: "absolute", bottom: "-2px", left: "-2px", fontSize: "10px", lineHeight: 1, filter: "drop-shadow(0 1px 1px rgba(0,0,0,.4))", userSelect: "none" }}
+              >🏠</div>
+            )}
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "2px", minWidth: 0 }}>
             <span style={{ fontWeight: 600, color: "var(--text-dark)", fontSize: "13px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
@@ -710,11 +717,11 @@ function PlantCard({ plant, selected, onClick, t: _t }: PlantCardProps) {
           {plant.temperature_protected && (
             <span
               data-testid="card-protected-badge"
-              title={_t("detail.protected_badge")}
               style={{
                 display:      "inline-flex",
                 alignItems:   "center",
-                padding:      "3px 7px",
+                gap:          "4px",
+                padding:      "3px 10px",
                 borderRadius: "12px",
                 fontSize:     "10px",
                 fontWeight:   500,
@@ -722,7 +729,7 @@ function PlantCard({ plant, selected, onClick, t: _t }: PlantCardProps) {
                 color:        "#3a5ea8",
               }}
             >
-              🏠
+              🏠 {_t("detail.protected_badge")}
             </span>
           )}
           {careTask && (

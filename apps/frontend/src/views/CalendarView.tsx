@@ -484,12 +484,19 @@ function PlantRow({ plant, activeType, currentMonth, selected, onClick }: PlantR
               fontSize:    "22px",
               flexShrink:  0,
               overflow:    "hidden",
+              position:    "relative",
             }}
           >
             {firstImg ? (
               <img src={firstImg.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             ) : (
               plant.icon ?? "🌿"
+            )}
+            {plant.temperature_protected && (
+              <div
+                title="Kälteschutz/Indoor"
+                style={{ position: "absolute", bottom: "-2px", left: "-2px", fontSize: "10px", lineHeight: 1, filter: "drop-shadow(0 1px 1px rgba(0,0,0,.4))", userSelect: "none" }}
+              >🏠</div>
             )}
           </div>
           <div style={{ minWidth: 0 }}>
