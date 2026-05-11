@@ -1009,33 +1009,46 @@ interface MonthTooltipProps {
 }
 
 function MonthTooltip({ monthName, groups }: MonthTooltipProps) {
-  const [visible, setVisible] = useState(false);
+  const [rect, setRect] = useState<DOMRect | null>(null);
+  const triggerRef = useRef<HTMLDivElement>(null);
+
+  function handleMouseEnter() {
+    if (triggerRef.current) setRect(triggerRef.current.getBoundingClientRect());
+  }
+  function handleMouseLeave() {
+    setRect(null);
+  }
+
+  const visible = rect !== null;
+  const tipLeft = rect ? rect.left + rect.width / 2 : 0;
+  const tipBottom = rect ? window.innerHeight - rect.top + 8 : 0;
 
   return (
     <div
+      ref={triggerRef}
       style={{ position: "absolute", inset: 0, zIndex: 9999 }}
-      onMouseEnter={() => setVisible(true)}
-      onMouseLeave={() => setVisible(false)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       {visible && (
         <div
           data-testid="month-tooltip"
           style={{
-            position:     "absolute",
-            bottom:       "calc(100% + 8px)",
-            left:         "50%",
+            position:     "fixed",
+            bottom:       `${tipBottom}px`,
+            left:         `${tipLeft}px`,
             transform:    "translateX(-50%)",
             background:   "var(--green-deep)",
             color:        "white",
             borderRadius: "8px",
             padding:      "10px 12px",
             minWidth:     "160px",
-            maxWidth:     "220px",
-            zIndex:       9999,
+            maxWidth:     "300px",
+            zIndex:       99999,
             boxShadow:    "var(--shadow-ga-lg)",
             fontSize:     "11px",
             lineHeight:   "1.6",
-            whiteSpace:   "nowrap",
+            whiteSpace:   "normal",
             pointerEvents:"none",
           }}
         >
