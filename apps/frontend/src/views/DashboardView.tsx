@@ -21,7 +21,7 @@ import { setAssistantContext } from "@/hooks/useAssistantContext";
 import { GardenPlanWidget, type PlanPin } from "@/components/GardenPlanWidget";
 import { PlantDetailPanel } from "@/components/PlantDetailPanel";
 import { apiClient, getWeather } from "@/api/client";
-import type { WeatherData } from "@api/weather";
+import type { WeatherData }  from "@api/weather";
 import { getPlantEditHandler } from "@/hooks/usePlantEditContext";
 import type { Plant } from "@api/plant";
 import type { Garden, Warning } from "@api/garden";
@@ -118,6 +118,7 @@ export function DashboardView({ garden, loading, invalidateGarden }: DashboardVi
   const assistantSettings = useAssistantSettings();
 
   const [selected, setSelected] = useState<Plant | null>(null);
+  const [weather,  setWeather]  = useState<WeatherData | null>(null);
 
   // Keep selected in sync with garden updates (e.g. after save via GlobalPlantEditOverlay)
   useEffect(() => {
@@ -207,11 +208,17 @@ export function DashboardView({ garden, loading, invalidateGarden }: DashboardVi
   useEffect(() => {
     setAssistantContext(
       garden
-        ? { view: "dashboard", garden, selectedPlant: selected ?? undefined, settings: assistantSettings }
+        ? {
+            view:         "dashboard",
+            garden,
+            selectedPlant: selected ?? undefined,
+            settings:     assistantSettings,
+            weather:      weather ?? undefined,
+          }
         : undefined
     );
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [garden, selected, assistantSettings]);
+  }, [garden, selected, assistantSettings, weather]);
 
   return (
     <div
@@ -237,8 +244,8 @@ export function DashboardView({ garden, loading, invalidateGarden }: DashboardVi
           overflow:      "hidden",
         }}
       >
-        {/* Weather widget (stub) */}
-        <WeatherWidget />
+        {/* Weather widget */}
+        <WeatherWidget onWeatherLoaded={setWeather} />
 
         <div style={{ height: "1px", background: "var(--border)", flexShrink: 0 }} />
 
@@ -316,6 +323,8 @@ export function DashboardView({ garden, loading, invalidateGarden }: DashboardVi
 
 // ── WeatherWidget ─────────────────────────────────────────────────────────────
 
+const WEATHER_POLL_MS = 60 * 60 * 1000; // 60 minutes
+
 type WeatherState =
   | { status: "loading" }
   | { status: "no_location" }
@@ -337,25 +346,41 @@ function shortWeekday(isoDate: string, locale: string): string {
   return d.toLocaleDateString(locale === "de" ? "de-DE" : "en-GB", { weekday: "short" });
 }
 
-function WeatherWidget() {
+function WeatherWidget({ onWeatherLoaded }: { onWeatherLoaded: (data: WeatherData | null) => void }) {
   const { t, i18n } = useTranslation("common");
   const [state, setState] = useState<WeatherState>({ status: "loading" });
 
   useEffect(() => {
     let cancelled = false;
-    getWeather()
-      .then((data) => {
-        if (cancelled) return;
-        if (data === null) {
-          setState({ status: "no_location" });
-        } else {
-          setState({ status: "ok", data });
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setState({ status: "error" });
-      });
-    return () => { cancelled = true; };
+
+    function fetchWeather() {
+      getWeather()
+        .then((data) => {
+          if (cancelled) return;
+          if (data === null) {
+            setState({ status: "no_location" });
+            onWeatherLoaded(null);
+          } else {
+            setState({ status: "ok", data });
+            onWeatherLoaded(data);
+          }
+        })
+        .catch(() => {
+          if (!cancelled) setState({ status: "error" });
+        });
+    }
+
+    // Fetch immediately on mount
+    fetchWeather();
+
+    // Poll every 60 minutes
+    const interval = setInterval(fetchWeather, WEATHER_POLL_MS);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const tw = t as (k: string) => string;

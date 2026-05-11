@@ -25,6 +25,7 @@ import type { JournalEntry }     from "@api/journal-entry";
 import type { Task }             from "@api/task";
 import type { AssistantContext, PendingPlantEdit } from "@api/assistant-context";
 import type { GardenerProfile }                   from "@api/settings";
+import type { WeatherData }                       from "@api/weather";
 
 // ── Public types ──────────────────────────────────────────────────────────────
 
@@ -582,6 +583,32 @@ function serializePendingPlantEdit(pending: PendingPlantEdit, lang: "de" | "en")
   return out.trimEnd();
 }
 
+function serializeWeather(w: WeatherData, lang: "de" | "en"): string {
+  const isDE = lang === "de";
+  const lines: string[] = [];
+
+  lines.push(
+    isDE
+      ? `Aktuelles Wetter in ${w.city}: ${w.current_temp}°C, Niederschlag: ${w.current_precipitation} mm, Wind: ${w.current_wind_kmh} km/h`
+      : `Current weather in ${w.city}: ${w.current_temp}°C, precipitation: ${w.current_precipitation} mm, wind: ${w.current_wind_kmh} km/h`,
+  );
+
+  const forecastLines = w.forecast.map((day) => {
+    const date = day.date;
+    return isDE
+      ? `  ${date}: max ${day.temp_max}°C / min ${day.temp_min}°C, Niederschlag: ${day.precipitation} mm`
+      : `  ${date}: max ${day.temp_max}°C / min ${day.temp_min}°C, precipitation: ${day.precipitation} mm`;
+  });
+
+  lines.push(
+    isDE
+      ? `5-Tage-Vorhersage:\n${forecastLines.join("\n")}`
+      : `5-day forecast:\n${forecastLines.join("\n")}`,
+  );
+
+  return (isDE ? "Wetter:\n" : "Weather:\n") + lines.join("\n");
+}
+
 function buildBlock5(ctx: AssistantContext, lang: "de" | "en"): string {
   const isDE = lang === "de";
   const viewLabel = VIEW_LABEL[ctx.view]?.[lang] ?? ctx.view;
@@ -589,6 +616,10 @@ function buildBlock5(ctx: AssistantContext, lang: "de" | "en"): string {
   let out = isDE
     ? `Aktuelle Ansicht: ${viewLabel}\n`
     : `Current view: ${viewLabel}\n`;
+
+  if (ctx.weather) {
+    out += "\n" + serializeWeather(ctx.weather, lang) + "\n";
+  }
 
   if (ctx.selectedPlant) {
     const p = ctx.selectedPlant;
@@ -598,8 +629,8 @@ function buildBlock5(ctx: AssistantContext, lang: "de" | "en"): string {
       p.location ? (isDE ? `Standort: ${p.location}` : `Location: ${p.location}`) : null,
     ].filter(Boolean).join(" — ");
     out += isDE
-      ? `Ausgewählte Pflanze: ${id}\n`
-      : `Selected plant: ${id}\n`;
+      ? `\nAusgewählte Pflanze: ${id}\n`
+      : `\nSelected plant: ${id}\n`;
   }
 
   if (ctx.pendingPlantEdit) {

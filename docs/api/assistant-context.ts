@@ -2,6 +2,7 @@ import type { Garden }          from "./garden";
 import type { Plant }           from "./plant";
 import type { ColorPreset }     from "./color-preset";
 import type { GardenerProfile } from "./settings";
+import type { WeatherData }     from "./weather";
 
 /**
  * Context passed from each view to AiPanel so the assistant can build
@@ -80,4 +81,6 @@ export type AssistantContext = {
   settings?:      AssistantSettings;
   /** Optional — AI-suggested changes staged in the open PlantEditDialog. */
   pendingPlantEdit?: PendingPlantEdit;
+  /** Optional — current weather data; included in the situation block (Block 5). */
+  weather?:       WeatherData;
 };

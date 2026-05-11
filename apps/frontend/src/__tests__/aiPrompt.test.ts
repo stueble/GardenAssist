@@ -710,3 +710,50 @@ describe("buildSystemBlocks — pre-flight analysis instruction (TASK-071)", () 
     expect(block1).not.toContain("NEVER add a schedule that already exists");
   });
 });
+
+// ── Weather in system prompt ───────────────────────────────────────────────────
+
+const MOCK_WEATHER = {
+  city:                  "Berlin",
+  current_temp:          18.3,
+  current_weather_code:  2,
+  current_precipitation: 0.0,
+  current_wind_kmh:      12,
+  forecast: [
+    { date: "2026-05-11", weather_code: 2, temp_max: 20.1, temp_min: 10.5, precipitation: 0.0 },
+    { date: "2026-05-12", weather_code: 3, temp_max: 18.5, temp_min:  9.0, precipitation: 0.5 },
+  ],
+};
+
+describe("buildSystemPrompt — weather in Block 5", () => {
+  it("includes city, temp, precipitation and wind in DE prompt", () => {
+    const ctx: AssistantContext = { view: "dashboard", garden: GARDEN, weather: MOCK_WEATHER };
+    const prompt = buildSystemPrompt(ctx, "de");
+    expect(prompt).toContain("Berlin");
+    expect(prompt).toContain("18.3°C");
+    expect(prompt).toContain("0 mm");
+    expect(prompt).toContain("12 km/h");
+  });
+
+  it("includes city, temp, precipitation and wind in EN prompt", () => {
+    const ctx: AssistantContext = { view: "dashboard", garden: GARDEN, weather: MOCK_WEATHER };
+    const prompt = buildSystemPrompt(ctx, "en");
+    expect(prompt).toContain("Berlin");
+    expect(prompt).toContain("18.3°C");
+    expect(prompt).toContain("wind: 12 km/h");
+  });
+
+  it("includes 5-day forecast dates", () => {
+    const ctx: AssistantContext = { view: "dashboard", garden: GARDEN, weather: MOCK_WEATHER };
+    const prompt = buildSystemPrompt(ctx, "de");
+    expect(prompt).toContain("2026-05-11");
+    expect(prompt).toContain("2026-05-12");
+  });
+
+  it("omits weather section when weather is absent from context", () => {
+    const ctx: AssistantContext = { view: "dashboard", garden: GARDEN };
+    const prompt = buildSystemPrompt(ctx, "de");
+    expect(prompt).not.toContain("Wetter:");
+    expect(prompt).not.toContain("Weather:");
+  });
+});
