@@ -281,9 +281,10 @@ describe("JournalView — entry panel fields (story-036 AC #2, #3, #4)", () => {
   it("shows type selector buttons (AC #2)", async () => {
     renderJournal();
     fireEvent.click(screen.getByTestId("journal-fab"));
-    await waitFor(() => screen.getByTestId("panel-type-0"));
-    expect(screen.getByTestId("panel-type-0")).toBeInTheDocument();
-    expect(screen.getByTestId("panel-type-1")).toBeInTheDocument();
+    await waitFor(() => screen.getByTestId("panel-type-done"));
+    expect(screen.getByTestId("panel-type-done")).toBeInTheDocument();
+    expect(screen.getByTestId("panel-type-observation")).toBeInTheDocument();
+    expect(screen.getByTestId("panel-type-manual")).toBeInTheDocument();
   });
 
   it("shows plant picker with plants (AC #3)", async () => {
@@ -336,7 +337,7 @@ describe("JournalView — edit existing entry (story-036 AC #7)", () => {
     await waitFor(() => screen.getAllByTestId("entry-edit-btn"));
     fireEvent.click(screen.getAllByTestId("entry-edit-btn")[0]);
     await waitFor(() =>
-      expect(screen.getByText("Eintrag bearbeiten")).toBeInTheDocument()
+      expect(screen.getByTestId("panel-save")).toBeInTheDocument()
     );
   });
 
@@ -348,5 +349,111 @@ describe("JournalView — edit existing entry (story-036 AC #7)", () => {
     await waitFor(() => screen.getByTestId("panel-save"));
     fireEvent.click(screen.getByTestId("panel-save"));
     await waitFor(() => expect(apiClient.updateJournalEntry).toHaveBeenCalledOnce());
+  });
+});
+
+// ── TASK-050: Schedule picker + manual type ───────────────────────────────────
+
+const GARDEN_WITH_SCHEDULES: Garden = {
+  plan_url: null, plan_name: null, attachments: [], warnings: [],
+  journal_entries: [],
+  plants: [
+    {
+      id: "p1", name_common: "Rose", name_botanical: null, icon: "🌹",
+      origin_type: null, category: null, lifecycle: null, description: null,
+      care_notes: null, sun_demand: null, water_demand: null, soil_type: null,
+      frost_tolerance_min_c: null, temperature_protected: false, health_status: null,
+      location: "Westbeet", watering_zone: null, purchase_date: null, purchase_price: null,
+      positions: [], attachments: [], tasks: [], journal_entries: [],
+      schedules: [
+        {
+          id: "s1", schedule_type: "pruning", start_week: 9, end_week: 10,
+          color: null, label: "Frühjahrsschnitt", notes: null,
+          created_at: "", updated_at: "",
+        },
+        {
+          id: "s2", schedule_type: "fertilization", start_week: 15, end_week: 16,
+          color: null, label: null, notes: null,
+          created_at: "", updated_at: "",
+        },
+        {
+          // bloom is NOT a care type — should not appear in schedule picker
+          id: "s3", schedule_type: "bloom", start_week: 17, end_week: 36,
+          color: "#c0392b", label: "Hauptblüte", notes: null,
+          created_at: "", updated_at: "",
+        },
+      ],
+    },
+  ],
+};
+
+function renderJournalWithSchedules() {
+  return render(
+    <I18nextProvider i18n={i18n}>
+      <JournalView
+        garden={GARDEN_WITH_SCHEDULES}
+        loading={false}
+        invalidateGarden={vi.fn()}
+      />
+    </I18nextProvider>
+  );
+}
+
+describe("JournalView — TASK-050: schedule picker (AC #1)", () => {
+  it("schedule picker is hidden before a plant is selected", async () => {
+    renderJournalWithSchedules();
+    fireEvent.click(screen.getByTestId("journal-fab"));
+    await waitFor(() => screen.getByTestId("panel-plant"));
+    expect(screen.queryByTestId("panel-schedule")).not.toBeInTheDocument();
+  });
+
+  it("schedule picker appears after selecting a plant with care schedules", async () => {
+    renderJournalWithSchedules();
+    fireEvent.click(screen.getByTestId("journal-fab"));
+    await waitFor(() => screen.getByTestId("panel-plant"));
+    fireEvent.change(screen.getByTestId("panel-plant"), { target: { value: "p1" } });
+    await waitFor(() => screen.getByTestId("panel-schedule"));
+    expect(screen.getByTestId("panel-schedule")).toBeInTheDocument();
+  });
+
+  it("schedule picker shows only care schedules (not bloom)", async () => {
+    renderJournalWithSchedules();
+    fireEvent.click(screen.getByTestId("journal-fab"));
+    await waitFor(() => screen.getByTestId("panel-plant"));
+    fireEvent.change(screen.getByTestId("panel-plant"), { target: { value: "p1" } });
+    await waitFor(() => screen.getByTestId("panel-schedule"));
+    const select = screen.getByTestId("panel-schedule") as HTMLSelectElement;
+    // pruning and fertilization are present
+    expect(select.innerHTML).toContain("Frühjahrsschnitt");
+    // bloom should NOT be in the picker
+    expect(select.innerHTML).not.toContain("Hauptblüte");
+  });
+
+  it("createJournalEntry is called with correct schedule_id when schedule selected", async () => {
+    const { apiClient } = await import("../api/client");
+    renderJournalWithSchedules();
+    fireEvent.click(screen.getByTestId("journal-fab"));
+    await waitFor(() => screen.getByTestId("panel-plant"));
+    fireEvent.change(screen.getByTestId("panel-plant"), { target: { value: "p1" } });
+    await waitFor(() => screen.getByTestId("panel-schedule"));
+    fireEvent.change(screen.getByTestId("panel-schedule"), { target: { value: "s1" } });
+    fireEvent.click(screen.getByTestId("panel-save"));
+    await waitFor(() => expect(apiClient.createJournalEntry).toHaveBeenCalledOnce());
+    expect(apiClient.createJournalEntry).toHaveBeenCalledWith(
+      expect.objectContaining({ schedule_id: "s1", entry_type: "done" })
+    );
+  });
+
+  it("schedule_id is null when no schedule selected (AC #2 manual entry)", async () => {
+    const { apiClient } = await import("../api/client");
+    renderJournalWithSchedules();
+    fireEvent.click(screen.getByTestId("journal-fab"));
+    await waitFor(() => screen.getByTestId("panel-type-manual"));
+    fireEvent.click(screen.getByTestId("panel-type-manual"));
+    fireEvent.click(screen.getByTestId("panel-save"));
+    await waitFor(() => expect(apiClient.createJournalEntry).toHaveBeenCalledOnce());
+    expect(apiClient.createJournalEntry).toHaveBeenCalledWith(
+      expect.objectContaining({ schedule_id: null, entry_type: "manual" })
+    );
   });
 });

@@ -1,10 +1,10 @@
 ---
 id: TASK-054
-title: AI Assistant – openJournalEdit() and updateJournalEdit() tools
+title: AI Assistant – Add editJournal() tool
 status: Ready
 assignee: []
 created_date: '2026-05-09 00:39'
-updated_date: '2026-05-10 21:47'
+updated_date: '2026-05-11 15:00'
 labels: []
 dependencies: []
 references:
@@ -15,7 +15,7 @@ ordinal: 65000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Wire the AI assistant to the JournalEditDialog via two tools: openJournalEdit() opens the panel (optionally prefilled), updateJournalEdit() sets fields in an already-open panel on behalf of the assistant.\n\nThe assistant must never call createJournalEntry() or updateJournalEntry() directly — the user always confirms by clicking Save.\n\nAI-suggested fields use the same visual treatment as PlantEditDialog (green tint, ti-sparkles icon, × revert button) via the shared applyAiSuggestions() utility introduced in the Plant AI story.
+Wire the AI assistant to the JournalEditDialog via tool editJournal() to optionally open the journal edit dialog to add a new or edit an existing journal entry. AI-suggested fields use the same visual treatment as PlantEditDialog (green tint, ti-sparkles icon, × revert button) via the shared applyAiSuggestions() utility introduced in the Plant AI story. Changes are only applied if the user clicks "save"
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria

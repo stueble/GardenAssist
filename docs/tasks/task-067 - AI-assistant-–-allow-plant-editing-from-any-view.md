@@ -1,15 +1,15 @@
 ---
 id: TASK-067
 title: AI assistant – allow plant editing from any view
-status: In Progress
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-10 21:35'
-updated_date: '2026-05-10 22:01'
+updated_date: '2026-05-10 22:30'
 labels:
   - user story
 dependencies: []
-ordinal: 2000
+ordinal: 61000
 ---
 
 ## Description

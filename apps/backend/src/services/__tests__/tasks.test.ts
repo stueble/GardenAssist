@@ -206,7 +206,7 @@ describe("deriveTasks — resolved suppression", () => {
   it("suppresses a schedule when 'done' entry exists for schedule_id", () => {
     const tasks = deriveTasks({
       schedules:      [makeSchedule({ start_week: 18, end_week: 20 })],
-      journalEntries: [{ schedule_id: "sched-001", week: CURRENT_WEEK, entry_type: "done" }],
+      journalEntries: [{ schedule_id: "sched-001", week: CURRENT_WEEK, entry_type: "done" , date: "2026-04-01" }],
       lookbackWeeks:  4,
       lookaheadWeeks: 4,
       now:            NOW,
@@ -217,7 +217,7 @@ describe("deriveTasks — resolved suppression", () => {
   it("suppresses a schedule when 'skipped' entry exists for schedule_id", () => {
     const tasks = deriveTasks({
       schedules:      [makeSchedule({ start_week: 18, end_week: 20 })],
-      journalEntries: [{ schedule_id: "sched-001", week: CURRENT_WEEK, entry_type: "skipped" }],
+      journalEntries: [{ schedule_id: "sched-001", week: CURRENT_WEEK, entry_type: "skipped" , date: "2026-04-01" }],
       lookbackWeeks:  4,
       lookaheadWeeks: 4,
       now:            NOW,
@@ -228,7 +228,7 @@ describe("deriveTasks — resolved suppression", () => {
   it("does NOT suppress for 'manual' journal entries", () => {
     const tasks = deriveTasks({
       schedules:      [makeSchedule({ start_week: 18, end_week: 20 })],
-      journalEntries: [{ schedule_id: "sched-001", week: CURRENT_WEEK, entry_type: "manual" }],
+      journalEntries: [{ schedule_id: "sched-001", week: CURRENT_WEEK, entry_type: "manual" , date: "2026-04-01" }],
       lookbackWeeks:  4,
       lookaheadWeeks: 4,
       now:            NOW,
@@ -242,7 +242,7 @@ describe("deriveTasks — resolved suppression", () => {
         makeSchedule({ id: "sched-001", start_week: 18, end_week: 20 }),
         makeSchedule({ id: "sched-002", start_week: 18, end_week: 20 }),
       ],
-      journalEntries: [{ schedule_id: "sched-001", week: CURRENT_WEEK, entry_type: "done" }],
+      journalEntries: [{ schedule_id: "sched-001", week: CURRENT_WEEK, entry_type: "done" , date: "2026-04-01" }],
       lookbackWeeks:  4,
       lookaheadWeeks: 4,
       now:            NOW,
@@ -255,7 +255,7 @@ describe("deriveTasks — resolved suppression", () => {
     // done entry references a different week — still suppresses the schedule
     const tasks = deriveTasks({
       schedules:      [makeSchedule({ start_week: 13, end_week: 16 })],
-      journalEntries: [{ schedule_id: "sched-001", week: "2026-W13", entry_type: "done" }],
+      journalEntries: [{ schedule_id: "sched-001", week: "2026-W13", entry_type: "done" , date: "2026-04-01" }],
       lookbackWeeks:  8,
       lookaheadWeeks: 4,
       now:            NOW,
@@ -299,9 +299,50 @@ describe("deriveTasks — wrapping schedules (end_week < start_week)", () => {
   it("suppresses wrapping schedule when done entry exists", () => {
     const tasks = deriveTasks({
       schedules:      [wrapping],
-      journalEntries: [{ schedule_id: "wrap", week: "2026-W51", entry_type: "done" }],
+      journalEntries: [{ schedule_id: "wrap", week: "2026-W51", entry_type: "done", date: "2026-04-01" }],
       lookbackWeeks:  0,
       lookaheadWeeks: 40,
+      now:            NOW,
+    });
+    expect(tasks).toHaveLength(0);
+  });
+});
+
+// ── 26-week resolution lookback (TASK-050) ────────────────────────────────────
+
+describe("deriveTasks — 26-week resolution lookback", () => {
+  // NOW = 2026-05-05; cutoff = NOW - 182 days = 2025-11-04
+
+  it("suppresses schedule when done entry date is within 26 weeks", () => {
+    const tasks = deriveTasks({
+      schedules:      [makeSchedule({ start_week: 18, end_week: 20 })],
+      journalEntries: [{ schedule_id: "sched-001", week: CURRENT_WEEK, entry_type: "done", date: "2026-01-01" }],
+      lookbackWeeks:  4,
+      lookaheadWeeks: 4,
+      now:            NOW,
+    });
+    expect(tasks).toHaveLength(0);
+  });
+
+  it("does NOT suppress schedule when done entry date is older than 26 weeks", () => {
+    // 2025-10-01 is > 26 weeks before 2026-05-05
+    const tasks = deriveTasks({
+      schedules:      [makeSchedule({ start_week: 18, end_week: 20 })],
+      journalEntries: [{ schedule_id: "sched-001", week: CURRENT_WEEK, entry_type: "done", date: "2025-10-01" }],
+      lookbackWeeks:  4,
+      lookaheadWeeks: 4,
+      now:            NOW,
+    });
+    expect(tasks).toHaveLength(1);
+  });
+
+  it("suppresses schedule when entry date is exactly at the 26-week boundary", () => {
+    // Cutoff = 2026-05-05 - 182 days = 2025-11-04; date on cutoff → still valid
+    const tasks = deriveTasks({
+      schedules:      [makeSchedule({ start_week: 18, end_week: 20 })],
+      journalEntries: [{ schedule_id: "sched-001", week: CURRENT_WEEK, entry_type: "done", date: "2025-11-04" }],
+      lookbackWeeks:  4,
+      lookaheadWeeks: 4,
       now:            NOW,
     });
     expect(tasks).toHaveLength(0);

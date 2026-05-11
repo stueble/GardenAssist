@@ -8,12 +8,41 @@
     "done":        "Erledigt",
     "skipped":     "Übersprungen"
   },
+  "entry_type_badge": {
+    "manual":      "📝 Manuell",
+    "observation": "👁 Beobachtung",
+    "problem":     "⚠️ Problem",
+    "done":        "✅ Erledigt",
+    "skipped":     "⏭ Übersprungen"
+  },
+  "filter": {
+    "all":         "Alle",
+    "done":        "✅ Erledigt",
+    "skipped":     "⏭ Übersprungen",
+    "observation": "👁 Beobachtung",
+    "problem":     "⚠️ Problem"
+  },
   "fields": {
     "date": "Datum",
     "title": "Titel",
+    "title_placeholder": "Kurze Beschreibung …",
     "notes": "Notizen",
-    "plant": "Pflanze",
-    "entry_type": "Typ"
+    "notes_placeholder": "Details, Beobachtungen …",
+    "plant": "Pflanze / Bezug",
+    "plant_general": "🌿 Garten (allgemein)",
+    "schedule": "Aufgabe (Zeitplan)",
+    "schedule_none": "— Kein Zeitplan —",
+    "entry_type": "Typ",
+    "photos": "Fotos",
+    "photos_add": "＋ Foto hinzufügen"
+  },
+  "panel": {
+    "new": "Neuer Eintrag",
+    "edit": "Eintrag bearbeiten",
+    "save": "Speichern",
+    "cancel": "✕ Abbrechen",
+    "saving": "…",
+    "save_error": "Speichern fehlgeschlagen. Bitte erneut versuchen."
   },
   "actions": {
     "delete": "Eintrag löschen",

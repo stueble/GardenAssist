@@ -141,7 +141,7 @@ export function weeksInYear(year: number): number {
 
 export interface DeriveTasksOptions {
   schedules:     Schedule[];
-  journalEntries: Pick<JournalEntry, "schedule_id" | "week" | "entry_type">[];
+  journalEntries: Pick<JournalEntry, "schedule_id" | "week" | "entry_type" | "date">[];
   lookbackWeeks: number;
   lookaheadWeeks: number;
   /** Reference date — defaults to today if not provided (injectable for tests) */
@@ -218,11 +218,18 @@ export function deriveTasks(opts: DeriveTasksOptions): Task[] {
   const windowStartWeek = Math.max(1, currentWeekNum - opts.lookbackWeeks);
   const windowEndWeek   = Math.min(53, currentWeekNum + opts.lookaheadWeeks);
 
-  // Resolved: any schedule_id with a done/skipped entry is suppressed entirely
+  // Resolved: any schedule_id with a done/skipped entry within the last 26 weeks
+  // is suppressed. Entries older than 26 weeks are ignored so tasks reappear in
+  // the next season (roughly the following year).
+  const resolutionCutoff = new Date(now);
+  resolutionCutoff.setDate(resolutionCutoff.getDate() - 26 * 7);
+  const resolutionCutoffStr = resolutionCutoff.toISOString().slice(0, 10);
+
   const resolvedScheduleIds = new Set<string>(
     opts.journalEntries
       .filter((e) => e.entry_type === "done" || e.entry_type === "skipped")
       .filter((e) => e.schedule_id != null)
+      .filter((e) => e.date >= resolutionCutoffStr)
       .map((e) => e.schedule_id!)
   );
 

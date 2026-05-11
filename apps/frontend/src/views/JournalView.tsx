@@ -13,6 +13,7 @@ import { setAssistantContext } from "@/hooks/useAssistantContext";
 import { invalidateGarden }    from "@/hooks/useGarden";
 import { apiClient }           from "@/api/client";
 import type { JournalEntry, JournalEntryType } from "@api/journal-entry";
+import type { Schedule }         from "@api/schedule";
 import type { Attachment }      from "@api/attachment";
 import type { Plant }           from "@api/plant";
 import type { Garden }          from "@api/garden";
@@ -28,20 +29,16 @@ const TYPE_COLOR: Record<string, { border: string; bg: string; text: string; bad
    problem:     { border: "#c0392b", bg: "#fdf0ee", text: "#c0392b", badge: "⚠️" },
 };
 
-const TYPE_LABEL: Record<string, string> = {
-  done:        "Erledigt",
-  skipped:     "Übersprungen",
-  manual:      "Manuell",
-  observation: "Beobachtung",
-  problem:     "Problem",
-};
+const FILTER_CHIP_TYPES: JournalEntryType[] = ["done", "skipped", "observation", "problem"];
 
-const FILTER_CHIPS: Array<{ type: JournalEntryType; label: string }> = [
-  { type: "done",        label: "✅ Erledigt"     },
-  { type: "skipped",     label: "⏭ Übersprungen"  },
-  { type: "observation", label: "👁 Beobachtung"  },
-  { type: "problem",     label: "⚠️ Problem"       },
-];
+/** Care schedule types that generate tasks — only these appear in the schedule picker. */
+const CARE_SCHEDULE_TYPES = new Set(["pruning", "fertilization", "misc"]);
+
+const SCHEDULE_TYPE_ICON: Record<string, string> = {
+  pruning:       "✂️",
+  fertilization: "💧",
+  misc:          "📋",
+};
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -176,7 +173,7 @@ export function JournalView({ garden, loading }: JournalViewProps) {
 
           {/* Filter chips */}
           <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
-            {FILTER_CHIPS.map(({ type, label }) => (
+            {FILTER_CHIP_TYPES.map((type) => (
               <button
                 key={type}
                 type="button"
@@ -196,7 +193,7 @@ export function JournalView({ garden, loading }: JournalViewProps) {
                   whiteSpace:   "nowrap",
                 }}
               >
-                {label}
+                {t(`filter.${type}` as any)}
               </button>
             ))}
           </div>
@@ -342,6 +339,7 @@ interface EntryCardProps {
 }
 
 function EntryCard({ entry, plant, attachmentMap, onEdit }: EntryCardProps) {
+  const { t } = useTranslation("journal");
   const [expanded, setExpanded] = useState(false);
 
   const colors = TYPE_COLOR[entry.entry_type] ?? TYPE_COLOR.manual;
@@ -394,7 +392,7 @@ function EntryCard({ entry, plant, attachmentMap, onEdit }: EntryCardProps) {
               flexShrink:   0,
             }}
           >
-            {colors.badge} {TYPE_LABEL[entry.entry_type] ?? entry.entry_type}
+            {t(`entry_type_badge.${entry.entry_type}` as any) ?? entry.entry_type}
           </span>
 
           {/* Plant tag — icon + name + first bloom color + location */}
@@ -541,15 +539,8 @@ function EntryCard({ entry, plant, attachmentMap, onEdit }: EntryCardProps) {
 
 // ── EntryPanel ────────────────────────────────────────────────────────────────
 
-/** Panel form entry types (maps to API types) */
-const PANEL_TYPES: Array<{ value: JournalEntryType; label: string; style: string }> = [
-  { value: "done",        label: "✅ Erledigt",     style: "done"        },
-  { value: "observation", label: "👁 Beobachtung",  style: "observation" },
-  { value: "problem",     label: "⚠️ Problem",       style: "problem"     },
-  { value: "skipped",     label: "⏭ Übersprungen",  style: "skipped"     },
-];
-
-type PanelTypeIdx = 0 | 1 | 2 | 3;
+/** Panel entry type options — manual added (AC #2) */
+const PANEL_TYPE_VALUES: JournalEntryType[] = ["done", "skipped", "observation", "problem", "manual"];
 
 interface EntryPanelProps {
   entry:     JournalEntry | null;   // null = new entry
@@ -563,20 +554,30 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }: EntryPanelPr
   const { t } = useTranslation("journal");
   const isNew = entry === null;
 
-  // Determine initial type index from entry_type
-  function entryTypeToIdx(type: JournalEntryType): PanelTypeIdx {
-    if (type === "done")        return 0;
-    if (type === "observation") return 1;
-    if (type === "problem")     return 2;
-    if (type === "skipped")     return 3;
-    return 1; // manual → Beobachtung as default
-  }
+  const initType: JournalEntryType = entry?.entry_type ?? "done";
 
-  const [typeIdx,    setTypeIdx]    = useState<PanelTypeIdx>(entry ? entryTypeToIdx(entry.entry_type) : 0);
+  const [entryType,  setEntryType]  = useState<JournalEntryType>(initType);
   const [plantId,    setPlantId]    = useState<string>(entry?.plant_id ?? "");
+  const [scheduleId, setScheduleId] = useState<string>(entry?.schedule_id ?? "");
   const [date,       setDate]       = useState(entry?.date ?? new Date().toISOString().slice(0, 10));
   const [title,      setTitle]      = useState(entry?.title ?? "");
   const [notes,      setNotes]      = useState(entry?.notes ?? "");
+
+  // Schedules available for the selected plant (care types only)
+  const selectedPlant = plantId ? plants.find((p) => p.id === plantId) ?? null : null;
+  const availableSchedules: Schedule[] = selectedPlant
+    ? selectedPlant.schedules.filter((s) => CARE_SCHEDULE_TYPES.has(s.schedule_type))
+    : [];
+
+  // Reset scheduleId when plant changes
+  function handlePlantChange(newPlantId: string) {
+    setPlantId(newPlantId);
+    setScheduleId("");
+  }
+
+  // When schedule is selected, restrict type to done/skipped
+  const hasSchedule = scheduleId !== "";
+  const effectiveType: JournalEntryType = hasSchedule && entryType !== "skipped" ? "done" : entryType;
   const [saving,        setSaving]        = useState(false);
   const [error,         setError]         = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -585,8 +586,6 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }: EntryPanelPr
   const [localFiles,    setLocalFiles]    = useState<Array<{ file: File; previewUrl: string }>>([]);
   const [existingAttIds, setExistingAttIds] = useState<string[]>(entry?.attachment_ids ?? []);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const selectedType = PANEL_TYPES[typeIdx];
 
   const fieldStyle: React.CSSProperties = {
     width:        "100%",
@@ -613,14 +612,13 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }: EntryPanelPr
   async function handleSave() {
     setSaving(true);
     setError(null);
-    const apiType = selectedType.value;
     try {
       // 1. Create or update the journal entry
       const basePayload = {
         plant_id:       plantId || null,
-        schedule_id:    null,
+        schedule_id:    scheduleId || null,
         week:           null,
-        entry_type:     apiType,
+        entry_type:     effectiveType,
         date,
         title:          title.trim() || null,
         notes:          notes.trim() || null,
@@ -651,7 +649,7 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }: EntryPanelPr
 
       onSaved();
     } catch {
-      setError("Speichern fehlgeschlagen. Bitte erneut versuchen.");
+      setError(t("panel.save_error"));
     } finally {
       setSaving(false);
     }
@@ -684,7 +682,7 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }: EntryPanelPr
         flexShrink:     0,
       }}>
         <div style={{ fontFamily: "var(--font-display)", fontSize: "15px", color: "var(--green-deep)", fontWeight: 600 }}>
-          {isNew ? "Neuer Eintrag" : "Eintrag bearbeiten"}
+          {isNew ? t("panel.new") : t("panel.edit")}
         </div>
         <button
           type="button"
@@ -705,17 +703,19 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }: EntryPanelPr
 
         {/* Type selector */}
         <div>
-          <div style={labelStyle}>Typ</div>
+          <div style={labelStyle}>{t("fields.entry_type")}</div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
-            {PANEL_TYPES.map((pt, i) => {
-              const tc = TYPE_COLOR[pt.style] ?? TYPE_COLOR.manual;
-              const active = typeIdx === i;
+            {PANEL_TYPE_VALUES.map((typeVal, i) => {
+              const tc = TYPE_COLOR[typeVal] ?? TYPE_COLOR.manual;
+              const active = entryType === typeVal;
+              // If a schedule is selected, only done/skipped are relevant
+              const disabled = hasSchedule && typeVal !== "done" && typeVal !== "skipped";
               return (
                 <button
-                  key={i}
+                  key={typeVal}
                   type="button"
-                  data-testid={`panel-type-${i}`}
-                  onClick={() => setTypeIdx(i as PanelTypeIdx)}
+                  data-testid={`panel-type-${typeVal}`}
+                  onClick={() => !disabled && setEntryType(typeVal)}
                   style={{
                     padding:      "7px 8px",
                     borderRadius: "8px",
@@ -723,17 +723,19 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }: EntryPanelPr
                     fontWeight:   500,
                     border:       active ? `1.5px solid ${tc.border}` : "1.5px solid var(--border)",
                     background:   active ? tc.bg : "none",
-                    color:        active ? tc.text : "var(--text-mid)",
-                    cursor:       "pointer",
+                    color:        active ? tc.text : disabled ? "var(--border)" : "var(--text-mid)",
+                    cursor:       disabled ? "default" : "pointer",
                     fontFamily:   "var(--font-body)",
                     transition:   "all .15s",
                     display:      "flex",
                     alignItems:   "center",
                     gap:          "5px",
-                    ...(i === 3 ? { gridColumn: "1/-1" } : {}),
+                    opacity:      disabled ? 0.4 : 1,
+                    // Last item (manual) spans full width
+                    ...(i === PANEL_TYPE_VALUES.length - 1 ? { gridColumn: "1/-1" } : {}),
                   }}
                 >
-                  {pt.label}
+                  {t(`entry_type_badge.${typeVal}` as any)}
                 </button>
               );
             })}
@@ -742,14 +744,14 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }: EntryPanelPr
 
         {/* Plant picker */}
         <div>
-          <div style={labelStyle}>Pflanze / Bezug</div>
+          <div style={labelStyle}>{t("fields.plant")}</div>
           <select
             value={plantId}
-            onChange={(e) => setPlantId(e.target.value)}
+            onChange={(e) => handlePlantChange(e.target.value)}
             data-testid="panel-plant"
             style={{ ...fieldStyle, cursor: "pointer" }}
           >
-            <option value="">🌿 Garten (allgemein)</option>
+            <option value="">{t("fields.plant_general")}</option>
             {plants.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.icon ?? "🌿"} {p.name_common}{p.location ? ` · ${p.location}` : ""}
@@ -758,9 +760,33 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }: EntryPanelPr
           </select>
         </div>
 
+        {/* Schedule picker — shown when a plant is selected and has care schedules (AC #1) */}
+        {selectedPlant && availableSchedules.length > 0 && (
+          <div>
+            <div style={labelStyle}>{t("fields.schedule")}</div>
+            <select
+              value={scheduleId}
+              onChange={(e) => setScheduleId(e.target.value)}
+              data-testid="panel-schedule"
+              style={{ ...fieldStyle, cursor: "pointer" }}
+            >
+              <option value="">{t("fields.schedule_none")}</option>
+              {availableSchedules.map((s) => {
+                const icon = SCHEDULE_TYPE_ICON[s.schedule_type] ?? "📋";
+                const label = s.label ?? t(`entry_type.${s.schedule_type}` as any, s.schedule_type);
+                return (
+                  <option key={s.id} value={s.id}>
+                    {icon} {label} (KW {s.start_week}–{s.end_week})
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+        )}
+
         {/* Date */}
         <div>
-          <div style={labelStyle}>Datum</div>
+          <div style={labelStyle}>{t("fields.date")}</div>
           <input
             type="date"
             value={date}
@@ -772,12 +798,12 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }: EntryPanelPr
 
         {/* Title */}
         <div>
-          <div style={labelStyle}>Titel</div>
+          <div style={labelStyle}>{t("fields.title")}</div>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Kurze Beschreibung …"
+            placeholder={t("fields.title_placeholder")}
             data-testid="panel-title"
             style={fieldStyle}
           />
@@ -785,11 +811,11 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }: EntryPanelPr
 
         {/* Notes */}
         <div>
-          <div style={labelStyle}>Notizen</div>
+          <div style={labelStyle}>{t("fields.notes")}</div>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Details, Beobachtungen …"
+            placeholder={t("fields.notes_placeholder")}
             rows={4}
             data-testid="panel-notes"
             style={{ ...fieldStyle, resize: "vertical", minHeight: "90px", lineHeight: "1.5" }}
@@ -799,7 +825,7 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }: EntryPanelPr
         {/* Photo upload */}
         <div>
           <div style={labelStyle}>
-            Fotos
+            {t("fields.photos")}
             {(existingAttIds.length + localFiles.length) > 0 && (
               <span style={{ marginLeft: "6px", fontSize: "10px", background: "var(--green-mist)", color: "var(--text-mid)", padding: "1px 6px", borderRadius: "10px", fontWeight: 600 }}>
                 {existingAttIds.length + localFiles.length}
@@ -897,7 +923,7 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }: EntryPanelPr
             }}
             className="hover:border-green-mid hover:text-green-deep hover:bg-green-mist"
           >
-            ＋ Foto hinzufügen
+            {t("fields.photos_add")}
           </button>
         </div>
       </div>
@@ -966,7 +992,7 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }: EntryPanelPr
                   border: "1.5px solid var(--border)", background: "none", color: "var(--text-mid)",
                 }}
               >
-                <span>✕</span> Abbrechen
+                {t("panel.cancel")}
               </button>
               <button
                 type="button"
@@ -979,7 +1005,7 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }: EntryPanelPr
                   border: "1.5px solid var(--green-deep)", background: "var(--green-deep)", color: "white",
                 }}
               >
-                <span>✓</span> {saving ? "…" : "Speichern"}
+                <span>✓</span> {saving ? t("panel.saving") : t("panel.save")}
               </button>
             </div>
             {!isNew && (

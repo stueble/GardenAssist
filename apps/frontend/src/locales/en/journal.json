@@ -8,12 +8,41 @@
     "done":        "Done",
     "skipped":     "Skipped"
   },
+  "entry_type_badge": {
+    "manual":      "📝 Manual",
+    "observation": "👁 Observation",
+    "problem":     "⚠️ Problem",
+    "done":        "✅ Done",
+    "skipped":     "⏭ Skipped"
+  },
+  "filter": {
+    "all":         "All",
+    "done":        "✅ Done",
+    "skipped":     "⏭ Skipped",
+    "observation": "👁 Observation",
+    "problem":     "⚠️ Problem"
+  },
   "fields": {
     "date": "Date",
     "title": "Title",
+    "title_placeholder": "Short description …",
     "notes": "Notes",
-    "plant": "Plant",
-    "entry_type": "Type"
+    "notes_placeholder": "Details, observations …",
+    "plant": "Plant / Reference",
+    "plant_general": "🌿 Garden (general)",
+    "schedule": "Task (schedule)",
+    "schedule_none": "— No schedule —",
+    "entry_type": "Type",
+    "photos": "Photos",
+    "photos_add": "＋ Add photo"
+  },
+  "panel": {
+    "new": "New entry",
+    "edit": "Edit entry",
+    "save": "Save",
+    "cancel": "✕ Cancel",
+    "saving": "…",
+    "save_error": "Failed to save. Please try again."
   },
   "actions": {
     "delete": "Delete entry",
