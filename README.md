@@ -109,15 +109,44 @@ pnpm typecheck
 
 ### Docker (production / on-premise)
 
+#### Using pre-built images from ghcr.io (recommended)
+
+No local build required. Images are published automatically on every push to `main`
+and on every version tag (`v*.*.*`).
+
+```bash
+# 1. Copy and adjust environment variables
+cp .env.example .env          # set GARDENASSIST_PORT if needed
+
+# 2. Pull the latest images and start the stack
+docker compose -f docker-compose.prod.yml pull
+docker compose -f docker-compose.prod.yml up -d
+```
+
+The frontend is reachable at `http://<server>:3110` (or the port set via `GARDENASSIST_PORT`).
+
+To pin a specific version instead of `latest`, edit `docker-compose.prod.yml` and replace
+`:latest` with the desired tag, e.g. `:1.2.0`.
+
+To update to a newer version:
+
+```bash
+docker compose -f docker-compose.prod.yml pull
+docker compose -f docker-compose.prod.yml up -d
+```
+
+Data (SQLite database + attachments) is persisted in the named Docker volume `gardenassist_data`
+and survives container restarts and image updates.
+
+#### Building locally
+
 ```bash
 # Copy and adjust environment variables
 cp .env.example .env
 
-# Start the full stack (frontend on http://localhost:3000)
-docker-compose up --build
+# Build images locally and start the stack
+docker compose up --build
 ```
-
-Data (SQLite database + attachments) is persisted in a Docker volume (`gardenassist_data`).
 
 To use PostgreSQL instead of SQLite, set `DATABASE_URL` in `.env`:
 

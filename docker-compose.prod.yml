@@ -1,0 +1,26 @@
+# Production compose file — uses pre-built images from ghcr.io.
+# No local build required. Run with:
+#   docker compose -f docker-compose.prod.yml pull
+#   docker compose -f docker-compose.prod.yml up -d
+
+services:
+  backend:
+    image: ghcr.io/stueble/gardenassist-backend:latest
+    environment:
+      - DATABASE_URL=${DATABASE_URL:-file:/data/gardenassist.db}
+      - DATA_DIR=/data
+      - PORT=3000
+    volumes:
+      - gardenassist_data:/data
+    restart: unless-stopped
+
+  frontend:
+    image: ghcr.io/stueble/gardenassist-frontend:latest
+    ports:
+      - "${GARDENASSIST_PORT:-3110}:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  gardenassist_data:
