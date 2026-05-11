@@ -160,7 +160,48 @@ Bestehenden Zeitplan entfernen (UUID aus den Gartendaten):
 {"tool":"editPlant","id":"<plant-id>","fields":{"schedules":[{"action":"remove","id":"<uuid-aus-gartendaten>"}]}}
 \`\`\`
 
-Wenn die Pflanzenverwaltung nicht geöffnet ist, teile dem Benutzer mit, dass er zuerst zur Pflanzenansicht wechseln soll.`,
+Wenn die Pflanzenverwaltung nicht geöffnet ist, teile dem Benutzer mit, dass er zuerst zur Pflanzenansicht wechseln soll.
+
+---
+
+Werkzeug: openJournalEdit
+  Öffnet das Tagebuch-Eingabe-Panel, optional vorausgefüllt mit Feldern.
+  entry_id (string, optional): ID eines bestehenden Eintrags zum Bearbeiten. Weglassen für neuen Eintrag.
+  prefill  (object, optional): Felder die vorausgefüllt werden sollen.
+
+  Erlaubte prefill-Felder:
+    entry_type  (genau eines von: "done" | "skipped" | "observation" | "problem")
+    plant_id    (string — ID der Pflanze aus den Gartendaten)
+    date        (string, Format YYYY-MM-DD)
+    title       (string)
+    notes       (string)
+
+Werkzeug: updateJournalEdit
+  Setzt Felder im aktuell geöffneten Tagebuch-Panel als KI-Vorschläge.
+  Wenn kein Panel geöffnet ist, antworte stattdessen mit einer Fehlermeldung — rufe das Werkzeug NICHT auf.
+  fields (object): Felder die gesetzt werden sollen (gleiche Felder wie prefill bei openJournalEdit).
+
+WICHTIG: Rufe createJournalEntry() oder updateJournalEntry() NIEMALS direkt auf.
+Der Benutzer bestätigt alle Änderungen selbst durch Klick auf Speichern.
+
+Beispiele:
+
+Neuen Tagebucheintrag öffnen und vorausfüllen:
+\`\`\`tool
+{"tool":"openJournalEdit","prefill":{"entry_type":"observation","date":"2026-05-11","title":"Blattläuse entdeckt"}}
+\`\`\`
+
+Felder in geöffnetem Panel aktualisieren:
+\`\`\`tool
+{"tool":"updateJournalEdit","fields":{"notes":"Befallsstärke: mittel. Behandlung mit Neemöl empfohlen."}}
+\`\`\`
+
+Bestehenden Eintrag zum Bearbeiten öffnen:
+\`\`\`tool
+{"tool":"openJournalEdit","entry_id":"<entry-id>","prefill":{"notes":"Aktualisierte Beobachtung."}}
+\`\`\`
+
+Wenn das Tagebuch nicht geöffnet ist und updateJournalEdit aufgerufen werden soll, teile dem Benutzer mit, dass er zuerst zur Tagebuch-Ansicht wechseln soll.`,
 
   en: `You have access to one tool to help the user directly within the app.
 Use it when the user asks you to create, open, fill in plant fields, or manage schedules.
@@ -255,7 +296,48 @@ Remove an existing schedule (UUID from garden data):
 {"tool":"editPlant","id":"<plant-id>","fields":{"schedules":[{"action":"remove","id":"<uuid-from-garden-data>"}]}}
 \`\`\`
 
-If the Plants view is not open, tell the user to switch there first.`,
+If the Plants view is not open, tell the user to switch there first.
+
+---
+
+Tool: openJournalEdit
+  Opens the journal entry panel, optionally prefilled with fields.
+  entry_id (string, optional): ID of an existing entry to edit. Omit for a new entry.
+  prefill  (object, optional): fields to pre-fill.
+
+  Allowed prefill fields:
+    entry_type  (exactly one of: "done" | "skipped" | "observation" | "problem")
+    plant_id    (string — plant ID from garden data)
+    date        (string, format YYYY-MM-DD)
+    title       (string)
+    notes       (string)
+
+Tool: updateJournalEdit
+  Sets fields in the currently open journal panel as AI suggestions.
+  If no panel is open, reply with an error message instead — do NOT call the tool.
+  fields (object): fields to set (same fields as prefill in openJournalEdit).
+
+IMPORTANT: NEVER call createJournalEntry() or updateJournalEntry() directly.
+The user always confirms changes themselves by clicking Save.
+
+Examples:
+
+Open a new journal entry and pre-fill:
+\`\`\`tool
+{"tool":"openJournalEdit","prefill":{"entry_type":"observation","date":"2026-05-11","title":"Aphids discovered"}}
+\`\`\`
+
+Update fields in open panel:
+\`\`\`tool
+{"tool":"updateJournalEdit","fields":{"notes":"Infestation level: medium. Treatment with neem oil recommended."}}
+\`\`\`
+
+Open existing entry for editing:
+\`\`\`tool
+{"tool":"openJournalEdit","entry_id":"<entry-id>","prefill":{"notes":"Updated observation."}}
+\`\`\`
+
+If the Journal view is not open and updateJournalEdit is requested, tell the user to switch to the Journal view first.`,
 };
 
 function buildBlock1(lang: "de" | "en"): string {

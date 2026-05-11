@@ -1,16 +1,20 @@
 /**
- * JournalView — story-035 + story-036.
+ * JournalView — story-035 + story-036 + story-054.
  *
  * story-035: Timeline & Entry List
  * story-036: New Entry Panel & Edit
+ * story-054: AI openJournalEdit / updateJournalEdit tools
  */
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import { useTranslation } from "react-i18next";
 import { useAssistantSettings } from "@/hooks/useAssistantSettings";
 import { setAssistantContext } from "@/hooks/useAssistantContext";
 import { invalidateGarden }    from "@/hooks/useGarden";
 import { apiClient }           from "@/api/client";
+import { applyAiSuggestions }  from "@/lib/applyAiSuggestions";
+import { useJournalEditHandler } from "@/hooks/useJournalEditContext";
+import type { JournalEditFields } from "@/hooks/useJournalEditContext";
 import type { JournalEntry, JournalEntryType } from "@api/journal-entry";
 import type { Schedule }         from "@api/schedule";
 import type { Attachment }      from "@api/attachment";
@@ -75,8 +79,14 @@ export function JournalView({ garden, loading }: JournalViewProps) {
   const [attachmentMap, setAttachmentMap] = useState<Map<string, Attachment>>(new Map());
   const [search,        setSearch]        = useState("");
   const [activeType,    setActiveType]    = useState<JournalEntryType | null>(null);
-  // Panel state: null=closed, undefined=new, JournalEntry=edit
+  // Panel state: undefined=closed, null=new entry, JournalEntry=edit existing
   const [panelEntry, setPanelEntry] = useState<JournalEntry | null | undefined>(undefined);
+
+  // Ref to the EntryPanel — used by AI tool handler to call applyAiFields()
+  const entryPanelRef = useRef<EntryPanelHandle>(null);
+
+  // Pending AI prefill — applied once the panel mounts
+  const pendingPrefillRef = useRef<JournalEditFields | null>(null);
 
   // Derive local state from the shared garden prop whenever it updates.
   useEffect(() => {
@@ -96,6 +106,42 @@ export function JournalView({ garden, loading }: JournalViewProps) {
     );
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [garden, assistantSettings]);
+
+  // ── AI tool handler ─────────────────────────────────────────────────────────
+  useJournalEditHandler({
+    openJournalEdit: (entry_id, prefill) => {
+      if (entry_id !== undefined) {
+        // Edit existing entry
+        const entry = entries.find((e) => e.id === entry_id) ?? null;
+        pendingPrefillRef.current = Object.keys(prefill).length > 0 ? prefill : null;
+        setPanelEntry(entry);
+      } else {
+        // New entry
+        pendingPrefillRef.current = Object.keys(prefill).length > 0 ? prefill : null;
+        setPanelEntry(null);
+      }
+    },
+    updateJournalEdit: (fields) => {
+      if (panelEntry === undefined) {
+        return "Journal entry panel is not open. Please open it first.";
+      }
+      entryPanelRef.current?.applyAiFields(fields);
+      return "";
+    },
+  });
+
+  // Apply pending prefill once EntryPanel mounts (after setPanelEntry triggers re-render)
+  useEffect(() => {
+    if (panelEntry !== undefined && pendingPrefillRef.current) {
+      // Small delay so the panel has mounted and the ref is populated
+      const fields = pendingPrefillRef.current;
+      pendingPrefillRef.current = null;
+      // Use setTimeout to ensure the panel ref is available after render
+      setTimeout(() => {
+        entryPanelRef.current?.applyAiFields(fields);
+      }, 0);
+    }
+  }, [panelEntry]);
 
   // Plant lookup map
   const plantById = new Map(plants.map((p) => [p.id, p]));
@@ -274,6 +320,7 @@ export function JournalView({ garden, loading }: JournalViewProps) {
       >
         {panelEntry !== undefined && (
           <EntryPanel
+            ref={entryPanelRef}
             entry={panelEntry}
             plants={plants}
             onClose={() => setPanelEntry(undefined)}
@@ -554,7 +601,22 @@ interface EntryPanelProps {
   onDeleted: () => void;
 }
 
-function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }: EntryPanelProps) {
+/** Public handle exposed to JournalView via forwardRef / useImperativeHandle */
+export interface EntryPanelHandle {
+  applyAiFields: (fields: JournalEditFields) => void;
+}
+
+/** Form state shape — mirrors the suggestable fields */
+type EntryForm = {
+  entry_type: JournalEntryType;
+  plant_id:   string;
+  date:       string;
+  title:      string;
+  notes:      string;
+};
+
+const EntryPanel = forwardRef<EntryPanelHandle, EntryPanelProps>(
+function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }, ref) {
   const { t } = useTranslation("journal");
   const isNew = entry === null;
 
@@ -569,10 +631,49 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }: EntryPanelPr
   const [plantId,    setPlantId]    = useState<string>(entry?.plant_id ?? "");
   const [scheduleId, setScheduleId] = useState<string>(entry?.schedule_id ?? "");
   const [date,       setDate]       = useState(entry?.date ?? new Date().toISOString().slice(0, 10));
-  const [title,      setTitle]      = useState(
-    entry?.title ?? ""
-  );
+  const [title,      setTitle]      = useState(entry?.title ?? "");
   const [notes,      setNotes]      = useState(entry?.notes ?? "");
+
+  // AI suggestion markers
+  const [aiMarked, setAiMarked] = useState<Partial<Record<keyof EntryForm, true>>>({});
+  const [aiPrev,   setAiPrev]   = useState<Partial<EntryForm>>({});
+
+  // Expose applyAiFields to JournalView
+  useImperativeHandle(ref, () => ({
+    applyAiFields(fields: JournalEditFields) {
+      const current: EntryForm = { entry_type: entryType, plant_id: plantId, date, title, notes };
+      // Only include keys that exist in EntryForm
+      const suggestion: Partial<EntryForm> = {};
+      if (fields.entry_type !== undefined) suggestion.entry_type = fields.entry_type;
+      if (fields.plant_id   !== undefined) suggestion.plant_id   = fields.plant_id;
+      if (fields.date       !== undefined) suggestion.date       = fields.date;
+      if (fields.title      !== undefined) suggestion.title      = fields.title;
+      if (fields.notes      !== undefined) suggestion.notes      = fields.notes;
+
+      const { nextForm, nextMarked, prevValues } = applyAiSuggestions<EntryForm>(current, suggestion);
+      setEntryType(nextForm.entry_type);
+      setPlantId(nextForm.plant_id);
+      setDate(nextForm.date);
+      setTitle(nextForm.title);
+      setNotes(nextForm.notes);
+      setAiMarked((prev) => ({ ...prev, ...nextMarked }));
+      setAiPrev((prev) => ({ ...prev, ...prevValues }));
+    },
+  }));
+
+  /** Revert a single AI-suggested field to its previous value. */
+  function revertAiField(key: keyof EntryForm) {
+    const prev = aiPrev[key];
+    if (key === "entry_type" && prev !== undefined) setEntryType(prev as JournalEntryType);
+    if (key === "plant_id"   && prev !== undefined) setPlantId(prev as string);
+    if (key === "date"       && prev !== undefined) setDate(prev as string);
+    if (key === "title"      && prev !== undefined) setTitle(prev as string);
+    if (key === "notes"      && prev !== undefined) setNotes(prev as string);
+    setAiMarked((prev) => { const n = { ...prev }; delete n[key]; return n; });
+    setAiPrev((prev)   => { const n = { ...prev }; delete n[key]; return n; });
+  }
+
+  const aiSuggestionCount = Object.keys(aiMarked).length;
 
   // Schedules available for the selected plant (care types only)
   const selectedPlant = plantId ? plants.find((p) => p.id === plantId) ?? null : null;
@@ -639,6 +740,13 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }: EntryPanelPr
     color:        "var(--text-dark)",
     outline:      "none",
     boxSizing:    "border-box",
+  };
+
+  const aiFieldStyle: React.CSSProperties = {
+    ...fieldStyle,
+    background:  "var(--ai-suggestion-bg, #edfaf3)",
+    border:      "1.5px solid var(--ai-suggestion-border, #27ae60)",
+    paddingLeft: "28px",
   };
 
   const labelStyle: React.CSSProperties = {
@@ -742,6 +850,31 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }: EntryPanelPr
           </div>
         )}
 
+        {/* AI suggestions status bar */}
+        {aiSuggestionCount > 0 && (
+          <div
+            data-testid="ai-suggestions-bar"
+            style={{
+              fontSize:     "11px",
+              color:        "var(--green-deep)",
+              background:   "var(--ai-suggestion-bg, #edfaf3)",
+              border:       "1px solid var(--ai-suggestion-border, #27ae60)",
+              borderRadius: "6px",
+              padding:      "5px 10px",
+              display:      "flex",
+              alignItems:   "center",
+              gap:          "6px",
+            }}
+          >
+            <span>✦</span>
+            <span>
+              {aiSuggestionCount === 1
+                ? "1 KI-Vorschlag aktiv"
+                : `${aiSuggestionCount} KI-Vorschläge aktiv`}
+            </span>
+          </div>
+        )}
+
         {/* Type selector — all four types always visible.
             observation/problem are disabled when a schedule is selected
             (a schedule-linked entry is always done or skipped). */}
@@ -753,6 +886,8 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }: EntryPanelPr
               const active = entryType === typeVal;
               // observation/problem make no sense when a schedule is selected
               const disabled = hasSchedule && (typeVal === "observation" || typeVal === "problem");
+              // AI marker: highlight the active button when entry_type is AI-suggested
+              const isAiActive = aiMarked.entry_type && active;
               return (
                 <button
                   key={typeVal}
@@ -760,6 +895,7 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }: EntryPanelPr
                   data-testid={`panel-type-${typeVal}`}
                   onClick={() => {
                     if (disabled) return;
+                    setAiMarked((p) => { const n={...p}; delete n.entry_type; return n; });
                     setEntryType(typeVal);
                     // Update title suggestion when done↔skipped changes with schedule selected
                     if (isNew && hasSchedule) {
@@ -775,8 +911,12 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }: EntryPanelPr
                     borderRadius: "8px",
                     fontSize:     "11.5px",
                     fontWeight:   500,
-                    border:       active ? `1.5px solid ${tc.border}` : "1.5px solid var(--border)",
-                    background:   active ? tc.bg : "none",
+                    border:       isAiActive
+                      ? "1.5px solid var(--ai-suggestion-border, #27ae60)"
+                      : active ? `1.5px solid ${tc.border}` : "1.5px solid var(--border)",
+                    background:   isAiActive
+                      ? "var(--ai-suggestion-bg, #edfaf3)"
+                      : active ? tc.bg : "none",
                     color:        active ? tc.text : disabled ? "var(--border)" : "var(--text-mid)",
                     cursor:       disabled ? "default" : "pointer",
                     fontFamily:   "var(--font-body)",
@@ -785,9 +925,19 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }: EntryPanelPr
                     alignItems:   "center",
                     gap:          "5px",
                     opacity:      disabled ? 0.35 : 1,
+                    position:     "relative",
                   }}
                 >
+                  {isAiActive && <span style={{ fontSize: "10px" }}>✦</span>}
                   {t(`entry_type_badge.${typeVal}` as any)}
+                  {isAiActive && (
+                    <span
+                      data-testid="ai-revert-entry_type"
+                      onClick={(e) => { e.stopPropagation(); revertAiField("entry_type"); }}
+                      style={{ marginLeft: "auto", cursor: "pointer", fontSize: "13px", color: "var(--green-deep)", lineHeight: 1 }}
+                      title="KI-Vorschlag zurücksetzen"
+                    >×</span>
+                  )}
                 </button>
               );
             })}
@@ -803,19 +953,33 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }: EntryPanelPr
         {/* Plant picker */}
         <div>
           <div style={labelStyle}>{t("fields.plant")}</div>
-          <select
-            value={plantId}
-            onChange={(e) => handlePlantChange(e.target.value)}
-            data-testid="panel-plant"
-            style={{ ...fieldStyle, cursor: "pointer" }}
-          >
-            <option value="">{t("fields.plant_general")}</option>
-            {plants.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.icon ?? "🌿"} {p.name_common}{p.location ? ` · ${p.location}` : ""}
-              </option>
-            ))}
-          </select>
+          <div style={{ position: "relative" }}>
+            {aiMarked.plant_id && (
+              <span style={{ position: "absolute", left: "9px", top: "50%", transform: "translateY(-50%)", fontSize: "11px", color: "var(--green-deep)", zIndex: 1, pointerEvents: "none" }}>✦</span>
+            )}
+            <select
+              value={plantId}
+              onChange={(e) => { setAiMarked((p) => { const n={...p}; delete n.plant_id; return n; }); handlePlantChange(e.target.value); }}
+              data-testid="panel-plant"
+              style={{ ...(aiMarked.plant_id ? aiFieldStyle : fieldStyle), cursor: "pointer" }}
+            >
+              <option value="">{t("fields.plant_general")}</option>
+              {plants.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.icon ?? "🌿"} {p.name_common}{p.location ? ` · ${p.location}` : ""}
+                </option>
+              ))}
+            </select>
+            {aiMarked.plant_id && (
+              <button
+                type="button"
+                data-testid="ai-revert-plant_id"
+                onClick={() => revertAiField("plant_id")}
+                style={{ position: "absolute", right: "28px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--green-deep)", fontSize: "13px", lineHeight: 1, padding: "2px" }}
+                title="KI-Vorschlag zurücksetzen"
+              >×</button>
+            )}
+          </div>
         </div>
 
         {/* Schedule picker — shown when a plant is selected and has care schedules (AC #1) */}
@@ -845,39 +1009,84 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }: EntryPanelPr
         {/* Date */}
         <div>
           <div style={labelStyle}>{t("fields.date")}</div>
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            data-testid="panel-date"
-            style={fieldStyle}
-          />
+          <div style={{ position: "relative" }}>
+            {aiMarked.date && (
+              <span style={{ position: "absolute", left: "9px", top: "50%", transform: "translateY(-50%)", fontSize: "11px", color: "var(--green-deep)", zIndex: 1, pointerEvents: "none" }}>✦</span>
+            )}
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => { setAiMarked((p) => { const n={...p}; delete n.date; return n; }); setDate(e.target.value); }}
+              data-testid="panel-date"
+              style={aiMarked.date ? aiFieldStyle : fieldStyle}
+            />
+            {aiMarked.date && (
+              <button
+                type="button"
+                data-testid="ai-revert-date"
+                onClick={() => revertAiField("date")}
+                style={{ position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--green-deep)", fontSize: "13px", lineHeight: 1, padding: "2px" }}
+                title="KI-Vorschlag zurücksetzen"
+              >×</button>
+            )}
+          </div>
         </div>
 
         {/* Title */}
         <div>
           <div style={labelStyle}>{t("fields.title")}</div>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder={t("fields.title_placeholder")}
-            data-testid="panel-title"
-            style={fieldStyle}
-          />
+          <div style={{ position: "relative" }}>
+            {aiMarked.title && (
+              <span style={{ position: "absolute", left: "9px", top: "50%", transform: "translateY(-50%)", fontSize: "11px", color: "var(--green-deep)", zIndex: 1, pointerEvents: "none" }}>✦</span>
+            )}
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => { setAiMarked((p) => { const n={...p}; delete n.title; return n; }); setTitle(e.target.value); }}
+              placeholder={t("fields.title_placeholder")}
+              data-testid="panel-title"
+              style={aiMarked.title ? aiFieldStyle : fieldStyle}
+            />
+            {aiMarked.title && (
+              <button
+                type="button"
+                data-testid="ai-revert-title"
+                onClick={() => revertAiField("title")}
+                style={{ position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--green-deep)", fontSize: "13px", lineHeight: 1, padding: "2px" }}
+                title="KI-Vorschlag zurücksetzen"
+              >×</button>
+            )}
+          </div>
         </div>
 
         {/* Notes */}
         <div>
           <div style={labelStyle}>{t("fields.notes")}</div>
-          <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder={t("fields.notes_placeholder")}
-            rows={4}
-            data-testid="panel-notes"
-            style={{ ...fieldStyle, resize: "vertical", minHeight: "90px", lineHeight: "1.5" }}
-          />
+          <div style={{ position: "relative" }}>
+            {aiMarked.notes && (
+              <span style={{ position: "absolute", left: "9px", top: "10px", fontSize: "11px", color: "var(--green-deep)", zIndex: 1, pointerEvents: "none" }}>✦</span>
+            )}
+            <textarea
+              value={notes}
+              onChange={(e) => { setAiMarked((p) => { const n={...p}; delete n.notes; return n; }); setNotes(e.target.value); }}
+              placeholder={t("fields.notes_placeholder")}
+              rows={4}
+              data-testid="panel-notes"
+              style={{
+                ...(aiMarked.notes ? aiFieldStyle : fieldStyle),
+                resize: "vertical", minHeight: "90px", lineHeight: "1.5",
+              }}
+            />
+            {aiMarked.notes && (
+              <button
+                type="button"
+                data-testid="ai-revert-notes"
+                onClick={() => revertAiField("notes")}
+                style={{ position: "absolute", right: "8px", top: "8px", background: "none", border: "none", cursor: "pointer", color: "var(--green-deep)", fontSize: "13px", lineHeight: 1, padding: "2px" }}
+                title="KI-Vorschlag zurücksetzen"
+              >×</button>
+            )}
+          </div>
         </div>
 
         {/* Photo upload */}
@@ -1085,4 +1294,6 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }: EntryPanelPr
       </div>
     </>
   );
-}
+});
+
+EntryPanel.displayName = "EntryPanel";

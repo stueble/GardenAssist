@@ -8,8 +8,10 @@ import type { ChatMessage }        from "@/api/client";
 import { useAiPanelState }         from "@/hooks/useAiPanelState";
 import { buildSystemBlocks }       from "@/lib/aiPrompt";
 import type { AssistantContext }   from "@api/assistant-context";
-import { getPlantEditHandler }     from "@/hooks/usePlantEditContext";
-import type { PlantEditFields }    from "@/hooks/usePlantEditContext";
+import { getPlantEditHandler }      from "@/hooks/usePlantEditContext";
+import type { PlantEditFields }     from "@/hooks/usePlantEditContext";
+import { getJournalEditHandler }   from "@/hooks/useJournalEditContext";
+import type { JournalEditFields }  from "@/hooks/useJournalEditContext";
 
 interface AiPanelProps {
   /** Structured context for the AI system prompt (garden data, active view, selected plant) */
@@ -73,6 +75,36 @@ function dispatchToolCall(
     const id     = (toolCall.id as string | null) ?? null;
     const fields = (toolCall.fields as PlantEditFields) ?? {};
     handler.editPlant(id, fields);
+    return "";
+  }
+
+  if (tool === "openJournalEdit") {
+    const journalHandler = getJournalEditHandler();
+    if (!journalHandler) {
+      return lang === "de"
+        ? "⚠️ Das Tagebuch ist gerade nicht geöffnet. Bitte wechsle zur Tagebuch-Ansicht."
+        : "⚠️ The journal is not currently open. Please switch to the Journal view.";
+    }
+    const entryId = (toolCall.entry_id as string | undefined) ?? undefined;
+    const prefill = (toolCall.prefill as JournalEditFields) ?? {};
+    journalHandler.openJournalEdit(entryId, prefill);
+    return "";
+  }
+
+  if (tool === "updateJournalEdit") {
+    const journalHandler = getJournalEditHandler();
+    if (!journalHandler) {
+      return lang === "de"
+        ? "⚠️ Das Tagebuch ist gerade nicht geöffnet. Bitte wechsle zur Tagebuch-Ansicht."
+        : "⚠️ The journal is not currently open. Please switch to the Journal view.";
+    }
+    const fields = (toolCall.fields as JournalEditFields) ?? {};
+    const err = journalHandler.updateJournalEdit(fields);
+    if (err) {
+      return lang === "de"
+        ? `⚠️ ${err}`
+        : `⚠️ ${err}`;
+    }
     return "";
   }
 

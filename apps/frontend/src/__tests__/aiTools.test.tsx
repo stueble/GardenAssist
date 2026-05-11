@@ -483,3 +483,337 @@ describe("System prompt contains schedule documentation (AC #4, #5)", () => {
     expect(prompt).toMatch(/start_week.*>.*end_week|Jahres/);
   });
 });
+
+// ── TASK-054: openJournalEdit / updateJournalEdit tools ───────────────────────
+
+import {
+  registerJournalEditHandler,
+  getJournalEditHandler,
+} from "../hooks/useJournalEditContext";
+import type { JournalEditFields } from "../hooks/useJournalEditContext";
+import { JournalView } from "../views/JournalView";
+import type { Garden } from "@api/garden";
+
+const MOCK_GARDEN: Garden = {
+  plan_url: null, plan_name: null,
+  plants: [], attachments: [],
+  journal_entries: [],
+  warnings: [],
+};
+
+// Helper to render JournalView (which registers the journal edit handler)
+function renderJournalView(garden: Garden = MOCK_GARDEN) {
+  return render(
+    <I18nextProvider i18n={i18n}>
+      <JournalView garden={garden} loading={false} invalidateGarden={() => {}} />
+    </I18nextProvider>
+  );
+}
+
+describe("TASK-054 — openJournalEdit tool (AC #1)", () => {
+  it("openJournalEdit with no entry_id opens the panel in new-entry mode", async () => {
+    renderJournalView();
+    const handler = getJournalEditHandler();
+    expect(handler).not.toBeNull();
+
+    // Panel should be closed initially
+    expect(screen.queryByTestId("panel-save")).toBeNull();
+
+    // Open new entry panel
+    act(() => {
+      handler!.openJournalEdit(undefined, {});
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("panel-save")).toBeDefined();
+    });
+  });
+
+  it("openJournalEdit prefills date field with AI marker", async () => {
+    renderJournalView();
+    const handler = getJournalEditHandler();
+
+    act(() => {
+      handler!.openJournalEdit(undefined, { date: "2026-06-15" });
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("panel-date")).toBeDefined();
+    });
+
+    // Date field should have AI-suggested value
+    await waitFor(() => {
+      const dateInput = screen.getByTestId("panel-date") as HTMLInputElement;
+      expect(dateInput.value).toBe("2026-06-15");
+    });
+
+    // AI suggestions bar should be visible
+    await waitFor(() => {
+      expect(screen.getByTestId("ai-suggestions-bar")).toBeDefined();
+    });
+  });
+
+  it("openJournalEdit prefills title with AI marker", async () => {
+    renderJournalView();
+    const handler = getJournalEditHandler();
+
+    act(() => {
+      handler!.openJournalEdit(undefined, { title: "Blattläuse entdeckt" });
+    });
+
+    await waitFor(() => {
+      const titleInput = screen.getByTestId("panel-title") as HTMLInputElement;
+      expect(titleInput.value).toBe("Blattläuse entdeckt");
+    });
+  });
+
+  it("openJournalEdit prefills notes with AI marker", async () => {
+    renderJournalView();
+    const handler = getJournalEditHandler();
+
+    act(() => {
+      handler!.openJournalEdit(undefined, { notes: "Behandlung empfohlen." });
+    });
+
+    await waitFor(() => {
+      const notesInput = screen.getByTestId("panel-notes") as HTMLTextAreaElement;
+      expect(notesInput.value).toBe("Behandlung empfohlen.");
+    });
+  });
+});
+
+describe("TASK-054 — updateJournalEdit tool (AC #2)", () => {
+  it("updateJournalEdit returns error when panel is not open", () => {
+    renderJournalView();
+    const handler = getJournalEditHandler();
+    expect(handler).not.toBeNull();
+
+    const result = handler!.updateJournalEdit({ title: "Test" });
+    expect(result).toMatch(/not open|nicht geöffnet/i);
+  });
+
+  it("updateJournalEdit applies fields to open panel", async () => {
+    renderJournalView();
+    const handler = getJournalEditHandler();
+
+    // First open the panel
+    act(() => {
+      handler!.openJournalEdit(undefined, {});
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("panel-save")).toBeDefined();
+    });
+
+    // Then update a field
+    act(() => {
+      const result = handler!.updateJournalEdit({ title: "KI-Titel" });
+      expect(result).toBe("");
+    });
+
+    await waitFor(() => {
+      const titleInput = screen.getByTestId("panel-title") as HTMLInputElement;
+      expect(titleInput.value).toBe("KI-Titel");
+    });
+  });
+
+  it("updateJournalEdit shows AI suggestions bar after applying fields", async () => {
+    renderJournalView();
+    const handler = getJournalEditHandler();
+
+    act(() => { handler!.openJournalEdit(undefined, {}); });
+    await waitFor(() => expect(screen.getByTestId("panel-save")).toBeDefined());
+
+    act(() => { handler!.updateJournalEdit({ notes: "KI-Notiz" }); });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("ai-suggestions-bar")).toBeDefined();
+    });
+  });
+});
+
+describe("TASK-054 — AI field visual treatment (AC #3)", () => {
+  it("title field shows revert button when AI-suggested", async () => {
+    renderJournalView();
+    const handler = getJournalEditHandler();
+
+    act(() => { handler!.openJournalEdit(undefined, { title: "KI-Titel" }); });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("ai-revert-title")).toBeDefined();
+    });
+  });
+
+  it("notes field shows revert button when AI-suggested", async () => {
+    renderJournalView();
+    const handler = getJournalEditHandler();
+
+    act(() => { handler!.openJournalEdit(undefined, { notes: "KI-Notiz" }); });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("ai-revert-notes")).toBeDefined();
+    });
+  });
+
+  it("date field shows revert button when AI-suggested", async () => {
+    renderJournalView();
+    const handler = getJournalEditHandler();
+
+    act(() => { handler!.openJournalEdit(undefined, { date: "2026-12-01" }); });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("ai-revert-date")).toBeDefined();
+    });
+  });
+
+  it("AI suggestions bar counts active suggestions correctly", async () => {
+    renderJournalView();
+    const handler = getJournalEditHandler();
+
+    act(() => { handler!.openJournalEdit(undefined, { title: "T", notes: "N", date: "2026-01-01" }); });
+
+    await waitFor(() => {
+      const bar = screen.getByTestId("ai-suggestions-bar");
+      expect(bar.textContent).toMatch(/3/);
+    });
+  });
+});
+
+describe("TASK-054 — × revert restores previous value (AC #3 revert)", () => {
+  it("clicking × on title reverts to original value and removes marker", async () => {
+    renderJournalView();
+    const handler = getJournalEditHandler();
+
+    act(() => { handler!.openJournalEdit(undefined, { title: "KI-Titel" }); });
+
+    await waitFor(() => expect(screen.getByTestId("ai-revert-title")).toBeDefined());
+
+    // Title should be AI value
+    const titleInput = screen.getByTestId("panel-title") as HTMLInputElement;
+    expect(titleInput.value).toBe("KI-Titel");
+
+    // Click revert
+    fireEvent.click(screen.getByTestId("ai-revert-title"));
+
+    await waitFor(() => {
+      // Title should be reverted to original (empty for new entry)
+      const input = screen.getByTestId("panel-title") as HTMLInputElement;
+      expect(input.value).toBe("");
+      // Revert button should be gone
+      expect(screen.queryByTestId("ai-revert-title")).toBeNull();
+    });
+  });
+
+  it("clicking × on notes reverts to original value", async () => {
+    renderJournalView();
+    const handler = getJournalEditHandler();
+
+    act(() => { handler!.openJournalEdit(undefined, { notes: "KI-Notiz" }); });
+    await waitFor(() => expect(screen.getByTestId("ai-revert-notes")).toBeDefined());
+
+    fireEvent.click(screen.getByTestId("ai-revert-notes"));
+
+    await waitFor(() => {
+      const input = screen.getByTestId("panel-notes") as HTMLTextAreaElement;
+      expect(input.value).toBe("");
+      expect(screen.queryByTestId("ai-revert-notes")).toBeNull();
+    });
+  });
+});
+
+describe("TASK-054 — dispatchToolCall for journal tools (AC #1 + #2)", () => {
+  it("openJournalEdit tool returns empty string when handler registered", () => {
+    const openFn = vi.fn();
+    const updateFn = vi.fn().mockReturnValue("");
+    registerJournalEditHandler({ openJournalEdit: openFn, updateJournalEdit: updateFn });
+
+    const result = dispatchToolCallForTest(
+      { tool: "openJournalEdit", prefill: { entry_type: "observation" } },
+      "de"
+    );
+    expect(result).toBe("");
+    expect(openFn).toHaveBeenCalledWith(undefined, { entry_type: "observation" });
+  });
+
+  it("openJournalEdit tool returns error when handler not registered", () => {
+    // Unregister by registering a dummy then clearing
+    const dummy = { openJournalEdit: vi.fn(), updateJournalEdit: vi.fn().mockReturnValue("") };
+    const unregister = registerJournalEditHandler(dummy);
+    unregister();
+
+    const result = dispatchToolCallForTest(
+      { tool: "openJournalEdit", prefill: {} },
+      "de"
+    );
+    expect(result).toMatch(/Tagebuch|journal/i);
+  });
+
+  it("updateJournalEdit tool calls handler and returns empty string on success", () => {
+    const openFn = vi.fn();
+    const updateFn = vi.fn().mockReturnValue("");
+    registerJournalEditHandler({ openJournalEdit: openFn, updateJournalEdit: updateFn });
+
+    const fields: JournalEditFields = { notes: "Test" };
+    const result = dispatchToolCallForTest({ tool: "updateJournalEdit", fields }, "de");
+    expect(result).toBe("");
+    expect(updateFn).toHaveBeenCalledWith(fields);
+  });
+
+  it("updateJournalEdit tool wraps error message from handler", () => {
+    const openFn = vi.fn();
+    const updateFn = vi.fn().mockReturnValue("Panel is not open");
+    registerJournalEditHandler({ openJournalEdit: openFn, updateJournalEdit: updateFn });
+
+    const result = dispatchToolCallForTest({ tool: "updateJournalEdit", fields: {} }, "de");
+    expect(result).toMatch(/Panel is not open/);
+  });
+
+  it("updateJournalEdit tool returns error when handler not registered", () => {
+    const dummy = { openJournalEdit: vi.fn(), updateJournalEdit: vi.fn().mockReturnValue("") };
+    const unregister = registerJournalEditHandler(dummy);
+    unregister();
+
+    const result = dispatchToolCallForTest({ tool: "updateJournalEdit", fields: {} }, "en");
+    expect(result).toMatch(/journal/i);
+  });
+});
+
+describe("TASK-054 — AC #4: AI never calls journal API directly", () => {
+  it("openJournalEdit does not call createJournalEntry or updateJournalEntry", async () => {
+    const { apiClient } = await import("../api/client");
+    renderJournalView();
+    const handler = getJournalEditHandler();
+
+    act(() => {
+      handler!.openJournalEdit(undefined, { title: "Test", notes: "Test notes" });
+    });
+
+    await waitFor(() => expect(screen.getByTestId("panel-save")).toBeDefined());
+
+    // No API calls should have been made
+    expect(apiClient.createPlant).not.toHaveBeenCalled();
+  });
+
+  it("aiPrompt.ts includes journal tool descriptions (de)", async () => {
+    const { buildSystemPrompt } = await import("../lib/aiPrompt");
+    const ctx = {
+      view: "journal" as const,
+      garden: MOCK_GARDEN,
+    };
+    const prompt = buildSystemPrompt(ctx, "de");
+    expect(prompt).toContain("openJournalEdit");
+    expect(prompt).toContain("updateJournalEdit");
+    expect(prompt).toContain("createJournalEntry");
+  });
+
+  it("aiPrompt.ts includes journal tool descriptions (en)", async () => {
+    const { buildSystemPrompt } = await import("../lib/aiPrompt");
+    const ctx = {
+      view: "journal" as const,
+      garden: MOCK_GARDEN,
+    };
+    const prompt = buildSystemPrompt(ctx, "en");
+    expect(prompt).toContain("openJournalEdit");
+    expect(prompt).toContain("updateJournalEdit");
+  });
+});
