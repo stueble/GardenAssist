@@ -26,6 +26,7 @@ export interface PlanPin {
   name?:      string;   // plant name — shown as label below pin + in tooltip
   color?:     string;   // pin background color; default: var(--green-deep)
   taskStatus?: "overdue" | "due";  // dot indicator: red=overdue, yellow=due
+  protected?:  boolean;            // 🏠 badge: plant is cold-protected / indoor
   selected?:  boolean;  // green highlight ring
   /** Tooltip content — shown on hover */
   tooltip?: {
@@ -497,6 +498,24 @@ export function GardenPlanWidget({
                       background:   pin.taskStatus === "overdue" ? "var(--red-warn)" : "var(--yellow-warn)",
                       border:       "2px solid white",
                     }} />
+                  )}
+
+                  {/* Cold-protection badge: 🏠 bottom-left */}
+                  {pin.protected && (
+                    <div
+                      title="Kälteschutz/Indoor"
+                      style={{
+                        position:   "absolute",
+                        bottom:     "-4px",
+                        left:       "-4px",
+                        fontSize:   "10px",
+                        lineHeight: 1,
+                        filter:     "drop-shadow(0 1px 1px rgba(0,0,0,.4))",
+                        userSelect: "none",
+                      }}
+                    >
+                      🏠
+                    </div>
                   )}
                 </div>
 

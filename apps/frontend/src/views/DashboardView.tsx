@@ -99,9 +99,10 @@ function plantToPin(plant: Plant, posIdx: number, selectedId: string | null): Pl
     photoUrl: firstPhoto?.url,
     name:     plant.name_common,
     color:      "rgba(255,255,255,.15)",
-    taskStatus: (status === "overdue" || status === "due") ? status : undefined,
-    selected: selectedId === plant.id,
-    tooltip:  { status: statusLabel, nextTask: taskStr },
+    taskStatus:  (status === "overdue" || status === "due") ? status : undefined,
+    protected:   plant.temperature_protected || undefined,
+    selected:    selectedId === plant.id,
+    tooltip:     { status: statusLabel, nextTask: taskStr },
   };
 }
 
