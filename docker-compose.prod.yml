@@ -5,22 +5,19 @@
 
 services:
   backend:
-    image: ghcr.io/stueble/gardenassist-backend:latest
+    image: ghcr.io/stueble/gardenassist-backend:${GARDENASSIST_VERSION:-latest}
     environment:
       - DATABASE_URL=${DATABASE_URL:-file:/data/gardenassist.db}
       - DATA_DIR=/data
       - PORT=3000
     volumes:
-      - gardenassist_data:/data
+      - ./data:/data
     restart: unless-stopped
 
   frontend:
-    image: ghcr.io/stueble/gardenassist-frontend:latest
+    image: ghcr.io/stueble/gardenassist-frontend:${GARDENASSIST_VERSION:-latest}
     ports:
       - "${GARDENASSIST_PORT:-3110}:80"
     depends_on:
       - backend
     restart: unless-stopped
-
-volumes:
-  gardenassist_data:
