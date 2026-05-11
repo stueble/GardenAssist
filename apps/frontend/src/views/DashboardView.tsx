@@ -421,8 +421,8 @@ function WeatherWidget() {
         )}
       </div>
 
-      {/* 5-day forecast */}
-      <div style={{ display: "flex", gap: "4px" }}>
+      {/* 5-day forecast — stretch to full widget width */}
+      <div style={{ display: "flex", gap: "3px", margin: "0 -18px", padding: "0 18px" }}>
         {state.status === "ok"
           ? state.data.forecast.map((day) => {
               const dk = resolveWeatherCodeKey(day.weather_code);
@@ -430,7 +430,15 @@ function WeatherWidget() {
                 <div
                   key={day.date}
                   title={tw(`weather.weather_code.${dk}`)}
-                  style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", background: "var(--green-mist)", borderRadius: "7px", padding: "6px 2px" }}
+                  style={{
+                    flex: 1,
+                    display: "flex", flexDirection: "column",
+                    alignItems: "center", justifyContent: "center",
+                    gap: "2px",
+                    background: "var(--green-mist)", borderRadius: "7px",
+                    padding: "6px 4px",
+                    textAlign: "center",
+                  }}
                 >
                   <div style={{ fontSize: "10px", fontWeight: 600, color: "var(--text-light)" }}>
                     {shortWeekday(day.date, i18n.language)}
@@ -439,7 +447,7 @@ function WeatherWidget() {
                     {tw(`weather.weather_icon.${dk}`)}
                   </span>
                   <div style={{ fontSize: "11px", fontWeight: 500, color: "var(--text-mid)", whiteSpace: "nowrap" }}>
-                    {day.temp_max}° <span style={{ color: "var(--text-light)", fontWeight: 400 }}>{day.temp_min}°</span>
+                    {day.temp_max}°/<span style={{ color: "var(--text-light)", fontWeight: 400 }}>{day.temp_min}°</span>
                   </div>
                   <div style={{ fontSize: "10px", color: "var(--text-light)" }}>
                     {day.precipitation > 0 ? `${day.precipitation} mm` : "0 mm"}
@@ -448,10 +456,10 @@ function WeatherWidget() {
               );
             })
           : [1,2,3,4,5].map((i) => (
-              <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", background: "var(--green-mist)", borderRadius: "7px", padding: "6px 2px" }}>
+              <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "2px", background: "var(--green-mist)", borderRadius: "7px", padding: "6px 4px", textAlign: "center" }}>
                 <div style={{ fontSize: "10px", fontWeight: 600, color: "var(--text-light)" }}>—</div>
                 <span style={{ fontSize: "22px", lineHeight: 1.2 }}>—</span>
-                <div style={{ fontSize: "11px", color: "var(--text-light)" }}>—°</div>
+                <div style={{ fontSize: "11px", color: "var(--text-light)" }}>—°/—°</div>
                 <div style={{ fontSize: "10px", color: "var(--text-light)" }}>— mm</div>
               </div>
             ))
