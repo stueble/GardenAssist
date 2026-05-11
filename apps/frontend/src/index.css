@@ -59,7 +59,7 @@
 
   /* ── Layout ── */
   --height-nav:        52px;   /* NavBar height */
-  --width-nav-logo:    280px;  /* NavBar logo area */
+  --width-nav-logo:    320px;  /* NavBar logo area */
 
   /* ── Shadows ── */
   --shadow-ga:    0 2px 12px rgba(45, 74, 45, 0.10);
