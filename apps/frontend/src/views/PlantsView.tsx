@@ -707,6 +707,24 @@ function PlantCard({ plant, selected, onClick, t: _t }: PlantCardProps) {
               {plant.category}
             </span>
           )}
+          {plant.temperature_protected && (
+            <span
+              data-testid="card-protected-badge"
+              title={_t("detail.protected_badge")}
+              style={{
+                display:      "inline-flex",
+                alignItems:   "center",
+                padding:      "3px 7px",
+                borderRadius: "12px",
+                fontSize:     "10px",
+                fontWeight:   500,
+                background:   "#e8f0fe",
+                color:        "#3a5ea8",
+              }}
+            >
+              🏠
+            </span>
+          )}
           {careTask && (
             <TaskPill
               status={careTask.status as PlantStatus}
@@ -715,7 +733,6 @@ function PlantCard({ plant, selected, onClick, t: _t }: PlantCardProps) {
               t={_t}
             />
           )}
-
         </div>
       </div>
     </div>

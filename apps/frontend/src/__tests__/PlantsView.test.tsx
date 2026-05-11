@@ -281,6 +281,32 @@ describe("PlantsView — FAB (AC #6)", () => {
   });
 });
 
+// ── TASK-075: Cold protection badge in PlantCard ──────────────────────────────
+
+describe("PlantsView — cold protection badge in card (TASK-075 AC #5)", () => {
+  it("shows 🏠 badge on card when temperature_protected is true", async () => {
+    const garden = { ...MOCK_GARDEN, plants: [makePlant({ temperature_protected: true })] };
+    render(
+      <I18nextProvider i18n={i18n}>
+        <PlantsView garden={garden} loading={false} invalidateGarden={vi.fn()} />
+      </I18nextProvider>
+    );
+    await waitFor(() => expect(screen.getAllByTestId("plant-row")).toHaveLength(1));
+    fireEvent.click(screen.getByTestId("view-card"));
+    await waitFor(() => {
+      expect(screen.getAllByTestId("card-protected-badge")).toHaveLength(1);
+    });
+  });
+
+  it("does not show 🏠 badge when temperature_protected is false", async () => {
+    renderView(); // all 3 plants have temperature_protected: false
+    await waitFor(() => expect(screen.getAllByTestId("plant-row")).toHaveLength(3));
+    fireEvent.click(screen.getByTestId("view-card"));
+    await waitFor(() => screen.getAllByTestId("plant-card"));
+    expect(screen.queryAllByTestId("card-protected-badge")).toHaveLength(0);
+  });
+});
+
 describe("PlantsView — detail panel", () => {
   it("opens detail panel on row click", async () => {
     renderView();

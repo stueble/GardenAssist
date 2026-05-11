@@ -345,3 +345,23 @@ describe("PlantDetailPanel — delete failure (story-040 AC #7)", () => {
     expect(screen.getByText("Rote Rose")).toBeInTheDocument();
   });
 });
+
+// ── TASK-075: Cold protection badge ──────────────────────────────────────────
+
+describe("PlantDetailPanel — cold protection badge (TASK-075 AC #4)", () => {
+  it("shows protected badge when temperature_protected is true", () => {
+    const plant: Plant = { ...MOCK_PLANT, temperature_protected: true };
+    render(
+      <I18nextProvider i18n={i18n}>
+        <PlantDetailPanel plant={plant} onClose={vi.fn()} onEdit={vi.fn()} onDelete={vi.fn()} />
+      </I18nextProvider>
+    );
+    expect(screen.getByTestId("protected-badge")).toBeInTheDocument();
+    expect(screen.getByTestId("protected-badge").textContent).toContain("Kälteschutz/Indoor");
+  });
+
+  it("does not show protected badge when temperature_protected is false", () => {
+    renderPanel(); // MOCK_PLANT has temperature_protected: false
+    expect(screen.queryByTestId("protected-badge")).not.toBeInTheDocument();
+  });
+});

@@ -342,6 +342,28 @@ export function PlantDetailPanel({ plant, onClose, onEdit, onDelete }: PlantDeta
           </div>
         </div>
 
+        {/* Cold protection badge — shown only when temperature_protected === true */}
+        {plant.temperature_protected && (
+          <div>
+            <span
+              data-testid="protected-badge"
+              style={{
+                display:      "inline-flex",
+                alignItems:   "center",
+                gap:          "4px",
+                padding:      "3px 10px",
+                borderRadius: "12px",
+                fontSize:     "11px",
+                fontWeight:   500,
+                background:   "#e8f0fe",
+                color:        "#3a5ea8",
+              }}
+            >
+              🏠 {t("detail.protected_badge")}
+            </span>
+          </div>
+        )}
+
         {/* Care notes — AC #4 */}
         {plant.care_notes && (
           <div>
