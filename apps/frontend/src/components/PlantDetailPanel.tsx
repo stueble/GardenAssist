@@ -230,6 +230,28 @@ export function PlantDetailPanel({ plant, onClose, onEdit, onDelete }: PlantDeta
       {/* Body */}
       <div style={{ flex: 1, overflowY: "auto", padding: "16px 18px", display: "flex", flexDirection: "column", gap: "16px" }}>
 
+        {/* Cold protection badge — top of body, before images */}
+        {plant.temperature_protected && (
+          <div>
+            <span
+              data-testid="protected-badge"
+              style={{
+                display:      "inline-flex",
+                alignItems:   "center",
+                gap:          "4px",
+                padding:      "3px 10px",
+                borderRadius: "12px",
+                fontSize:     "11px",
+                fontWeight:   500,
+                background:   "#e8f0fe",
+                color:        "#3a5ea8",
+              }}
+            >
+              🏠 {t("detail.protected_badge")}
+            </span>
+          </div>
+        )}
+
         {/* Description */}
         {plant.description && (
           <div>
@@ -341,28 +363,6 @@ export function PlantDetailPanel({ plant, onClose, onEdit, onDelete }: PlantDeta
             ].map(({ label, value }) => factCell(label, value))}
           </div>
         </div>
-
-        {/* Cold protection badge — shown only when temperature_protected === true */}
-        {plant.temperature_protected && (
-          <div>
-            <span
-              data-testid="protected-badge"
-              style={{
-                display:      "inline-flex",
-                alignItems:   "center",
-                gap:          "4px",
-                padding:      "3px 10px",
-                borderRadius: "12px",
-                fontSize:     "11px",
-                fontWeight:   500,
-                background:   "#e8f0fe",
-                color:        "#3a5ea8",
-              }}
-            >
-              🏠 {t("detail.protected_badge")}
-            </span>
-          </div>
-        )}
 
         {/* Care notes — AC #4 */}
         {plant.care_notes && (
