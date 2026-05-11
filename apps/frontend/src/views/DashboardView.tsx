@@ -228,7 +228,7 @@ export function DashboardView({ garden, loading, invalidateGarden }: DashboardVi
       <div
         data-testid="dashboard-sidebar"
         style={{
-          width:         "280px",
+          width:         "320px",
           flexShrink:    0,
           background:    "var(--warm-white)",
           borderRight:   "1px solid var(--border)",
@@ -421,8 +421,8 @@ function WeatherWidget() {
         )}
       </div>
 
-      {/* 5-day forecast — stretch to full widget width */}
-      <div style={{ display: "flex", gap: "3px", margin: "0 -18px", padding: "0 18px" }}>
+      {/* 5-day forecast */}
+      <div style={{ display: "flex", gap: "3px" }}>
         {state.status === "ok"
           ? state.data.forecast.map((day) => {
               const dk = resolveWeatherCodeKey(day.weather_code);
