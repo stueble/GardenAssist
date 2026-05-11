@@ -8,10 +8,18 @@ dist/
 apps/backend/gardenassist.db
 apps/backend/gardenassist.db-wal
 apps/backend/gardenassist.db-shm
+# Ignore attachment and garden plan files but keep directory structure
+apps/backend/data/static/attachments/*
+!apps/backend/data/static/attachments/.gitkeep
+apps/backend/data/static/garden/*
+!apps/backend/data/static/garden/.gitkeep
 apps/backend/data/attachments/
 apps/backend/data/garden/
-# Keep the data directory structure
-!apps/backend/data/.gitkeep
+
+# Docker bind-mount data directory — ignore contents, keep markers
+data/*
+!data/.gitkeep
+!data/.gitignore
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
