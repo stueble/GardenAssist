@@ -7,7 +7,6 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { useAiPanelState } from "@/hooks/useAiPanelState";
 import { useAssistantSettings } from "@/hooks/useAssistantSettings";
 import { setAssistantContext } from "@/hooks/useAssistantContext";
 import { invalidateGarden }    from "@/hooks/useGarden";
@@ -68,7 +67,6 @@ interface JournalViewProps {
 
 export function JournalView({ garden, loading }: JournalViewProps) {
   const { t } = useTranslation("journal");
-  const { open: aiOpen } = useAiPanelState();
   const assistantSettings = useAssistantSettings();
 
   // Local derived state — rebuilt whenever the shared garden prop updates.
@@ -302,7 +300,7 @@ export function JournalView({ garden, loading }: JournalViewProps) {
           style={{
             position:       "absolute",
             bottom:         "24px",
-            right:          aiOpen ? "346px" : "60px", // shifts with AI panel (36px strip / 36+310px open)
+            right:          "24px",
             transition:     "right .3s ease",
             width:          "48px",
             height:         "48px",
