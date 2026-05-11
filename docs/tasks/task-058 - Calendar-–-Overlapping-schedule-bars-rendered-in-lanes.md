@@ -1,16 +1,17 @@
 ---
 id: TASK-058
 title: Calendar – Overlapping schedule bars rendered in lanes
-status: Ready
-assignee: []
+status: Done
+assignee:
+  - '@agent'
 created_date: '2026-05-09 17:55'
-updated_date: '2026-05-11 16:26'
+updated_date: '2026-05-11 17:14'
 labels:
   - frontend
   - calendar
 dependencies: []
 priority: medium
-ordinal: 66000
+ordinal: 68000
 ---
 
 ## Description
@@ -47,15 +48,21 @@ After:
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 When a plant has multiple schedules of the same type that overlap in time, they are rendered as separate thinner bars stacked vertically within the row
-- [ ] #2 Non-overlapping bars for the same plant continue to use the full row height
-- [ ] #3 Lane assignment is calculated per plant row: each overlapping group of bars is split into the minimum number of lanes needed (no two bars in the same lane overlap)
-- [ ] #4 Bar height scales with the number of lanes: 1 lane = 28px (current), 2 lanes = 13px each, 3+ lanes = proportionally smaller, with 2px gap between lanes
-- [ ] #5 Row height grows to accommodate multiple lanes so bars are never clipped
-- [ ] #6 Tooltips (label + month range) still appear on hover for each individual bar
-- [ ] #7 Wrapping schedules (end_week < start_week) are handled correctly in lane assignment
-- [ ] #8 Tests cover lane assignment logic for overlapping and non-overlapping schedules
+- [x] #1 When a plant has multiple schedules of the same type that overlap in time, they are rendered as separate thinner bars stacked vertically within the row
+- [x] #2 Non-overlapping bars for the same plant continue to use the full row height
+- [x] #3 Lane assignment is calculated per plant row: each overlapping group of bars is split into the minimum number of lanes needed (no two bars in the same lane overlap)
+- [x] #4 Bar height scales with the number of lanes: 1 lane = 28px (current), 2 lanes = 13px each, 3+ lanes = proportionally smaller, with 2px gap between lanes
+- [x] #5 Row height grows to accommodate multiple lanes so bars are never clipped
+- [x] #6 Tooltips (label + month range) still appear on hover for each individual bar
+- [x] #7 Wrapping schedules (end_week < start_week) are handled correctly in lane assignment
+- [x] #8 Tests cover lane assignment logic for overlapping and non-overlapping schedules
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Implemented assignLanes() greedy first-fit algorithm in CalendarView.tsx. Overlapping schedules are assigned to separate vertical lanes; non-overlapping share a lane. Bar height scales with lane count (28px for 1 lane, proportionally smaller for more, min 8px). Row height grows dynamically to fit all lanes. Labels hidden below 18px bar height (tooltip always shown). Wrapping schedules handled via interval expansion. 25 new tests (unit: schedulesOverlap, assignLanes, computeLaneGeometry; integration: overlapping bars in DOM). 469/469 tests pass, typecheck clean.
+<!-- SECTION:FINAL_SUMMARY:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
