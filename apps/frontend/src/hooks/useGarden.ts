@@ -62,7 +62,8 @@ function fetchGarden(): Promise<void> {
  * Call this after any mutation: save plant, delete plant, import, delete-all.
  */
 export function invalidateGarden(): void {
-  setState({ ..._state, loading: true });
+  // Do NOT set loading:true — keeps the current garden visible while the
+  // refresh runs so GardenPlanWidget stays mounted and retains zoom/pan state.
   void fetchGarden();
 }
 
