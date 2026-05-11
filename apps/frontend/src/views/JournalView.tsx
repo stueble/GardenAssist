@@ -589,16 +589,13 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }: EntryPanelPr
     if (isNew) setTitle("Manuell: ");
   }
 
-  // Build a title suggestion matching the backend buildAutoTitle logic
+  // Build a title suggestion — just the task label (type + plant shown via UI already)
   function buildTitleSuggestion(
-    type: "done" | "skipped",
+    _type: "done" | "skipped",
     schedule: Schedule,
-    plant: { name_common: string } | null,
+    _plant: { name_common: string } | null,
   ): string {
-    const action = type === "done" ? "Erledigt" : "Übersprungen";
-    const taskLabel = schedule.label ?? SCHEDULE_TYPE_LABEL_DE[schedule.schedule_type] ?? "Aufgabe";
-    if (plant) return `${action}: ${taskLabel} – ${plant.name_common}`;
-    return `${action}: ${taskLabel}`;
+    return schedule.label ?? SCHEDULE_TYPE_LABEL_DE[schedule.schedule_type] ?? "Aufgabe";
   }
 
   // Handle schedule selection — auto-fill title suggestion
