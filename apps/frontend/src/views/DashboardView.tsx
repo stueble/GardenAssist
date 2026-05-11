@@ -116,14 +116,17 @@ function plantToPin(plant: Plant, posIdx: number, selectedId: string | null): Pl
  * Returns one Warning per affected plant, showing the first day the
  * forecast temp_min falls below the plant's limit.
  */
+/** Warning extended with an optional plant ID for click-to-select behaviour. */
+export type FrostWarning = Warning & { plantId?: string };
+
 export function computeFrostWarnings(
   plants: Plant[],
   forecast: import("@api/weather").WeatherDay[],
   language: string,
-): Warning[] {
+): FrostWarning[] {
   const locale = language === "de" ? "de-DE" : "en-GB";
   const isDE   = language === "de";
-  const warnings: Warning[] = [];
+  const warnings: FrostWarning[] = [];
 
   for (const plant of plants) {
     if (plant.temperature_protected) continue;
@@ -142,10 +145,10 @@ export function computeFrostWarnings(
       : plant.name_common;
 
     const sub = isDE
-      ? `Frost erwartet: ${weekday}, ${dateStr} · ${firstDay.temp_min}°C (Limit: ${limit}°C)`
-      : `Frost expected: ${weekday}, ${dateStr} · ${firstDay.temp_min}°C (limit: ${limit}°C)`;
+      ? `Mindesttemperatur unterschritten: ${weekday}, ${dateStr} · ${firstDay.temp_min}°C (Limit: ${limit}°C)`
+      : `Min. temperature exceeded: ${weekday}, ${dateStr} · ${firstDay.temp_min}°C (limit: ${limit}°C)`;
 
-    warnings.push({ message: `❄️ ${name}`, sub });
+    warnings.push({ message: `❄️ ${name}`, sub, plantId: plant.id });
   }
 
   return warnings;
@@ -305,7 +308,13 @@ export function DashboardView({ garden, loading, invalidateGarden }: DashboardVi
 
         {/* Frost warnings — computed from weather forecast × plant frost limits */}
         {frostWarnings.length > 0 && (
-          <WarningsSection warnings={frostWarnings} />
+          <WarningsSection
+            warnings={frostWarnings}
+            onPlantSelect={(plantId) => {
+              const plant = garden?.plants.find((p) => p.id === plantId);
+              if (plant) setSelected((prev) => prev?.id === plantId ? null : plant);
+            }}
+          />
         )}
 
         {/* Todo list always in left column */}
@@ -570,7 +579,13 @@ function WeatherWidget({ onWeatherLoaded }: { onWeatherLoaded: (data: WeatherDat
 
 // ── WarningsSection ───────────────────────────────────────────────────────────
 
-function WarningsSection({ warnings }: { warnings: Warning[] }) {
+function WarningsSection({
+  warnings,
+  onPlantSelect,
+}: {
+  warnings: FrostWarning[];
+  onPlantSelect?: (plantId: string) => void;
+}) {
   return (
     <div data-testid="warnings-section">
       {/* Section label */}
@@ -582,46 +597,53 @@ function WarningsSection({ warnings }: { warnings: Warning[] }) {
         ⚠️ Warnungen
       </div>
 
-      {warnings.map((w, i) => (
-        <div
-          key={i}
-          data-testid="warning-item"
-          style={{
-            display:    "flex",
-            gap:        "7px",
-            padding:    "10px 14px 10px 12px",
-            borderLeft: "3px solid #e67e22",
-          }}
-        >
-          {/* Orange dot — 20px wide to align with task icon column */}
-          <div style={{
-            width:          "20px",
-            flexShrink:     0,
-            display:        "flex",
-            alignItems:     "flex-start",
-            justifyContent: "center",
-            paddingTop:     "5px",
-          }}>
+      {warnings.map((w, i) => {
+        const clickable = !!(w.plantId && onPlantSelect);
+        return (
+          <div
+            key={i}
+            data-testid="warning-item"
+            onClick={clickable ? () => onPlantSelect!(w.plantId!) : undefined}
+            style={{
+              display:    "flex",
+              gap:        "7px",
+              padding:    "10px 14px 10px 12px",
+              borderLeft: "3px solid #e67e22",
+              cursor:     clickable ? "pointer" : "default",
+              transition: "background .12s",
+            }}
+            className={clickable ? "hover:bg-green-mist" : ""}
+          >
+            {/* Orange dot — 20px wide to align with task icon column */}
             <div style={{
-              width:        "8px",
-              height:       "8px",
-              borderRadius: "50%",
-              background:   "#e67e22",
-              flexShrink:   0,
-            }} />
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: "13px", fontWeight: 500, color: "var(--text-dark)", lineHeight: 1.35 }}>
-              {w.message}
+              width:          "20px",
+              flexShrink:     0,
+              display:        "flex",
+              alignItems:     "flex-start",
+              justifyContent: "center",
+              paddingTop:     "5px",
+            }}>
+              <div style={{
+                width:        "8px",
+                height:       "8px",
+                borderRadius: "50%",
+                background:   "#e67e22",
+                flexShrink:   0,
+              }} />
             </div>
-            {w.sub && (
-              <div style={{ fontSize: "11px", color: "var(--text-light)", marginTop: "2px" }}>
-                {w.sub}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: "13px", fontWeight: 500, color: "var(--text-dark)", lineHeight: 1.35 }}>
+                {w.message}
               </div>
-            )}
+              {w.sub && (
+                <div style={{ fontSize: "11px", color: "var(--text-light)", marginTop: "2px" }}>
+                  {w.sub}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
 
       <div style={{ height: "1px", background: "var(--border)", margin: "6px 18px" }} />
     </div>

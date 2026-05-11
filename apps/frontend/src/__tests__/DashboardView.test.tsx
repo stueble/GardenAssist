@@ -469,7 +469,19 @@ describe("computeFrostWarnings", () => {
   it("uses English locale for EN language", () => {
     const plant = makePlantForFrost({ frost_tolerance_min_c: -2 });
     const result = computeFrostWarnings([plant], makeForecast([{ temp_min: -3 }]), "en");
-    expect(result[0].sub).toMatch(/Frost expected/);
+    expect(result[0].sub).toMatch(/Min\. temperature exceeded/);
     expect(result[0].sub).toMatch(/limit/);
+  });
+
+  it("sub text uses 'Mindesttemperatur unterschritten' in German", () => {
+    const plant = makePlantForFrost({ frost_tolerance_min_c: -2 });
+    const result = computeFrostWarnings([plant], makeForecast([{ temp_min: -3 }]), "de");
+    expect(result[0].sub).toContain("Mindesttemperatur unterschritten");
+  });
+
+  it("warning carries plantId for click-to-select", () => {
+    const plant = makePlantForFrost({ id: "plant-xyz", frost_tolerance_min_c: -2 });
+    const result = computeFrostWarnings([plant], makeForecast([{ temp_min: -3 }]), "de");
+    expect(result[0].plantId).toBe("plant-xyz");
   });
 });
