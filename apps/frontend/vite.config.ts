@@ -13,7 +13,7 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5173,
+    port: 3110,
     proxy: {
       "/api":    "http://localhost:3000",
       "/static": "http://localhost:3000",

@@ -128,7 +128,7 @@ pnpm --filter backend db:seed
 
 # Dev servers
 pnpm dev:backend    # http://localhost:3000
-pnpm dev:frontend   # http://localhost:5173
+pnpm dev:frontend   # http://localhost:3110
 
 # Tests + typecheck
 pnpm --filter backend test
