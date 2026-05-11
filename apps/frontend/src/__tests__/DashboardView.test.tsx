@@ -64,6 +64,7 @@ const MOCK_PLANT_NO_POS: Plant = {
 };
 
 vi.mock("../api/client", () => ({
+  getWeather: vi.fn().mockResolvedValue(null),
   apiClient: {
     getGarden: vi.fn().mockResolvedValue({
       plan_url:    "/static/garden/plan.png",

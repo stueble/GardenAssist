@@ -35,7 +35,8 @@ vi.mock("../api/client", () => ({
     uploadGardenPlan: vi.fn(),
     deleteGardenPlan: vi.fn(),
   },
-  chatWithAi: vi.fn().mockResolvedValue({ content: "Antwort vom Assistenten" }),
+  chatWithAi:  vi.fn().mockResolvedValue({ content: "Antwort vom Assistenten" }),
+  getWeather:  vi.fn().mockResolvedValue(null),
 }));
 
 beforeEach(async () => {

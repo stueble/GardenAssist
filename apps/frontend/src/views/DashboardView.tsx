@@ -20,7 +20,8 @@ import { useAssistantSettings } from "@/hooks/useAssistantSettings";
 import { setAssistantContext } from "@/hooks/useAssistantContext";
 import { GardenPlanWidget, type PlanPin } from "@/components/GardenPlanWidget";
 import { PlantDetailPanel } from "@/components/PlantDetailPanel";
-import { apiClient } from "@/api/client";
+import { apiClient, getWeather } from "@/api/client";
+import type { WeatherData } from "@api/weather";
 import { getPlantEditHandler } from "@/hooks/usePlantEditContext";
 import type { Plant } from "@api/plant";
 import type { Garden, Warning } from "@api/garden";
@@ -313,33 +314,133 @@ export function DashboardView({ garden, loading, invalidateGarden }: DashboardVi
   );
 }
 
-// ── WeatherWidget (stub) ──────────────────────────────────────────────────────
+// ── WeatherWidget ─────────────────────────────────────────────────────────────
+
+type WeatherState =
+  | { status: "loading" }
+  | { status: "no_location" }
+  | { status: "error" }
+  | { status: "ok"; data: WeatherData };
+
+/** Maps a WMO weather code to the nearest key defined in i18n. */
+function resolveWeatherCodeKey(code: number): string {
+  const known = [0,1,2,3,45,48,51,53,55,61,63,65,71,73,75,80,81,82,85,86,95,96,99];
+  // Find exact match first, then nearest lower value
+  if (known.includes(code)) return String(code);
+  const lower = [...known].reverse().find((k) => k <= code);
+  return String(lower ?? 0);
+}
+
+/** Short weekday label from an ISO date string ("2026-05-11" → "Mo"). */
+function shortWeekday(isoDate: string, locale: string): string {
+  const d = new Date(isoDate + "T12:00:00");
+  return d.toLocaleDateString(locale === "de" ? "de-DE" : "en-GB", { weekday: "short" });
+}
 
 function WeatherWidget() {
+  const { t, i18n } = useTranslation("common");
+  const [state, setState] = useState<WeatherState>({ status: "loading" });
+
+  useEffect(() => {
+    let cancelled = false;
+    getWeather()
+      .then((data) => {
+        if (cancelled) return;
+        if (data === null) {
+          setState({ status: "no_location" });
+        } else {
+          setState({ status: "ok", data });
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setState({ status: "error" });
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  const tw = t as (k: string) => string;
+  const codeKey = state.status === "ok"
+    ? resolveWeatherCodeKey(state.data.current_weather_code)
+    : "0";
+  const icon  = state.status === "ok" ? tw(`weather.weather_icon.${codeKey}`) : "🌤️";
+  const label = state.status === "ok" ? tw(`weather.weather_code.${codeKey}`) : "";
+
   return (
     <div
       data-testid="weather-widget"
       style={{ padding: "14px 18px 12px", flexShrink: 0 }}
     >
+      {/* Current conditions row */}
       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
-        <span style={{ fontSize: "26px" }}>🌤</span>
-        <div>
-          <div style={{ fontFamily: "var(--font-display)", fontSize: "22px", fontWeight: 600, color: "var(--green-deep)", lineHeight: 1 }}>
-            —°C
-          </div>
-          <div style={{ fontSize: "11px", color: "var(--text-light)", marginTop: "2px" }}>
-            Wetterdaten folgen
-          </div>
+        <span style={{ fontSize: "26px" }} aria-hidden="true">{String(icon)}</span>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          {state.status === "loading" && (
+            <div style={{ fontSize: "11px", color: "var(--text-light)" }}>
+              {t("weather.loading")}
+            </div>
+          )}
+          {state.status === "error" && (
+            <div style={{ fontSize: "11px", color: "var(--text-light)" }}>
+              {t("weather.error")}
+            </div>
+          )}
+          {state.status === "no_location" && (
+            <>
+              <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-mid)" }}>
+                {t("weather.no_location")}
+              </div>
+              <div style={{ fontSize: "10px", color: "var(--text-light)", marginTop: "2px" }}>
+                {t("weather.no_location_hint")}
+              </div>
+            </>
+          )}
+          {state.status === "ok" && (
+            <>
+              <div style={{ fontFamily: "var(--font-display)", fontSize: "22px", fontWeight: 600, color: "var(--green-deep)", lineHeight: 1 }}>
+                {state.data.current_temp}°C
+              </div>
+              <div style={{ fontSize: "11px", color: "var(--text-light)", marginTop: "2px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                 {state.data.city} · {String(label)}
+              </div>
+            </>
+          )}
         </div>
       </div>
+
+      {/* 5-day forecast */}
       <div style={{ display: "flex", gap: "4px" }}>
-        {["Mo","Di","Mi","Do","Fr"].map((d) => (
-          <div key={d} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", background: "var(--green-mist)", borderRadius: "7px", padding: "5px 2px" }}>
-            <div style={{ fontSize: "10px", fontWeight: 600, color: "var(--text-light)" }}>{d}</div>
-            <span style={{ fontSize: "14px" }}>—</span>
-            <div style={{ fontSize: "10px", color: "var(--text-light)" }}>—°</div>
-          </div>
-        ))}
+        {state.status === "ok"
+          ? state.data.forecast.map((day) => {
+              const dk = resolveWeatherCodeKey(day.weather_code);
+              return (
+                <div
+                  key={day.date}
+                  title={tw(`weather.weather_code.${dk}`)}
+                  style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", background: "var(--green-mist)", borderRadius: "7px", padding: "5px 2px" }}
+                >
+                  <div style={{ fontSize: "10px", fontWeight: 600, color: "var(--text-light)" }}>
+                    {shortWeekday(day.date, i18n.language)}
+                  </div>
+                  <span style={{ fontSize: "14px" }} aria-hidden="true">
+                    {tw(`weather.weather_icon.${dk}`)}
+                  </span>
+                  <div style={{ fontSize: "10px", color: "var(--text-dark)", fontWeight: 600 }}>
+                    {day.temp_max}°
+                  </div>
+                  <div style={{ fontSize: "10px", color: "var(--text-light)" }}>
+                    {day.temp_min}°
+                  </div>
+                </div>
+              );
+            })
+          : [1,2,3,4,5].map((i) => (
+              <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", background: "var(--green-mist)", borderRadius: "7px", padding: "5px 2px" }}>
+                <div style={{ fontSize: "10px", fontWeight: 600, color: "var(--text-light)" }}>—</div>
+                <span style={{ fontSize: "14px" }}>—</span>
+                <div style={{ fontSize: "10px", color: "var(--text-light)" }}>—°</div>
+              </div>
+            ))
+        }
       </div>
     </div>
   );

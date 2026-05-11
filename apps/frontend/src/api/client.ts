@@ -4,6 +4,8 @@ import type { Plant }        from "@api/plant";
 import type { JournalEntry } from "@api/journal-entry";
 import type { Attachment }   from "@api/attachment";
 import type { Settings }     from "@api/settings";
+import type { WeatherData }  from "@api/weather";
+export type { WeatherData };
 
 const BASE = "/api";
 
@@ -134,6 +136,22 @@ export const apiClient: Api = {
     return request("/export/import/backup", { method: "POST", headers: {}, body: form });
   },
 };
+
+// ── Weather (outside Api interface) ──────────────────────────────────────────
+
+/**
+ * Returns current weather + 5-day forecast for the configured location.
+ * Returns null when no location is configured (204).
+ * Throws on 422 (city not found) or 502 (upstream error).
+ */
+export async function getWeather(): Promise<WeatherData | null> {
+  const res = await fetch("/api/weather");
+  if (res.status === 204) return null;
+  if (!res.ok) {
+    throw new Error(`Weather API error ${res.status}`);
+  }
+  return res.json() as Promise<WeatherData>;
+}
 
 // ── AI chat (outside Api interface — not part of the typed contract yet) ──────
 
