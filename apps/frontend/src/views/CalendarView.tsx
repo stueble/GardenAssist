@@ -62,6 +62,119 @@ function weekToMonthIdx(week: number): number {
   return Math.min(11, Math.floor((week - 1) / (TOTAL_WEEKS / 12)));
 }
 
+// ── Lane assignment ────────────────────────────────────────────────────────────
+
+/**
+ * Returns true when two schedules overlap in time.
+ * Wrapping schedules (end_week < start_week) are normalised to two intervals
+ * [start..52] and [1..end] for comparison.
+ */
+export function schedulesOverlap(
+  a: { start_week: number; end_week: number },
+  b: { start_week: number; end_week: number },
+): boolean {
+  // Expand each schedule into at most two [lo, hi] intervals (week-inclusive).
+  const intervalsA = toIntervals(a.start_week, a.end_week);
+  const intervalsB = toIntervals(b.start_week, b.end_week);
+
+  for (const [aLo, aHi] of intervalsA) {
+    for (const [bLo, bHi] of intervalsB) {
+      if (aLo <= bHi && bLo <= aHi) return true;
+    }
+  }
+  return false;
+}
+
+function toIntervals(start: number, end: number): Array<[number, number]> {
+  if (end >= start) return [[start, end]];
+  // Wrapping: split at year boundary
+  return [[start, TOTAL_WEEKS], [1, end]];
+}
+
+export interface LaneResult {
+  /** Maps schedule id → zero-based lane index */
+  laneMap:    Map<string, number>;
+  totalLanes: number;
+}
+
+/**
+ * Assign each schedule a lane so that no two schedules in the same lane
+ * overlap. Uses a greedy first-fit algorithm after sorting by start_week.
+ * Wrapping schedules (end_week < start_week) are handled via schedulesOverlap.
+ */
+export function assignLanes(
+  schedules: Array<{ id: string; start_week: number; end_week: number }>,
+): LaneResult {
+  if (schedules.length === 0) return { laneMap: new Map(), totalLanes: 0 };
+
+  // Sort by start_week; wrapping schedules (end < start) sort by effective start
+  const sorted = [...schedules].sort((a, b) => a.start_week - b.start_week);
+
+  // lanes[i] = array of schedules already assigned to lane i
+  const lanes: Array<typeof sorted> = [];
+  const laneMap = new Map<string, number>();
+
+  for (const sched of sorted) {
+    let assigned = false;
+    for (let i = 0; i < lanes.length; i++) {
+      const conflicts = lanes[i].some((existing) => schedulesOverlap(sched, existing));
+      if (!conflicts) {
+        lanes[i].push(sched);
+        laneMap.set(sched.id, i);
+        assigned = true;
+        break;
+      }
+    }
+    if (!assigned) {
+      laneMap.set(sched.id, lanes.length);
+      lanes.push([sched]);
+    }
+  }
+
+  return { laneMap, totalLanes: lanes.length };
+}
+
+// ── Lane geometry ──────────────────────────────────────────────────────────────
+
+const BASE_ROW_HEIGHT = 60;
+const BASE_BAR_HEIGHT = 28;
+const BAR_GAP         = 2;
+const ROW_PADDING     = 8;   // top and bottom padding inside the bars div
+const MIN_BAR_HEIGHT  = 8;
+const LABEL_MIN_BAR_HEIGHT = 18;
+
+export interface LaneGeometry {
+  barHeight:  number;
+  rowHeight:  number;
+  /** Returns the absolute `top` (px) for a given lane index */
+  topForLane: (lane: number) => number;
+}
+
+export function computeLaneGeometry(totalLanes: number): LaneGeometry {
+  if (totalLanes <= 1) {
+    return {
+      barHeight:  BASE_BAR_HEIGHT,
+      rowHeight:  BASE_ROW_HEIGHT,
+      topForLane: () => ROW_PADDING + (BASE_BAR_HEIGHT / 2),   // unused; top = "50%" path
+    };
+  }
+
+  const usableHeight = BASE_ROW_HEIGHT - 2 * ROW_PADDING;
+  const barHeight = Math.max(
+    MIN_BAR_HEIGHT,
+    Math.floor((usableHeight - (totalLanes - 1) * BAR_GAP) / totalLanes),
+  );
+
+  // Grow row height if bars would overflow
+  const needed = 2 * ROW_PADDING + totalLanes * barHeight + (totalLanes - 1) * BAR_GAP;
+  const rowHeight = Math.max(BASE_ROW_HEIGHT, needed);
+
+  const topForLane = (lane: number) =>
+    ROW_PADDING + lane * (barHeight + BAR_GAP);
+
+  return { barHeight, rowHeight, topForLane };
+}
+
 // ── Main component ─────────────────────────────────────────────────────────────
 
 interface CalendarViewProps {
@@ -323,6 +436,10 @@ interface PlantRowProps {
 function PlantRow({ plant, activeType, currentMonth, selected, onClick }: PlantRowProps) {
   const bars = plant.schedules.filter((s) => s.schedule_type === activeType);
 
+  // ── Lane assignment + geometry ──
+  const { laneMap, totalLanes } = assignLanes(bars);
+  const geo = computeLaneGeometry(totalLanes);
+
   // Thumbnail: first image in sort_order (backend returns attachments sorted by sort_order)
   const firstImg = plant.attachments.find((a) => a.attachment_type === "image");
 
@@ -396,7 +513,7 @@ function PlantRow({ plant, activeType, currentMonth, selected, onClick }: PlantR
           position:      "relative",
           verticalAlign: "middle",
           overflow:      "visible",
-          height:        "60px",
+          height:        `${geo.rowHeight}px`,
         }}
       >
         {/* Month grid lines + current month tint */}
@@ -421,17 +538,29 @@ function PlantRow({ plant, activeType, currentMonth, selected, onClick }: PlantR
         </div>
 
         {/* Bars — wrapping schedules (end < start) rendered as two segments */}
-        <div style={{ position: "relative", height: "100%", padding: "8px 0" }}>
+        <div style={{ position: "relative", height: "100%" }}>
           {bars.length === 0 ? null : (
             bars.flatMap((s) => {
-              const color = s.color ?? "var(--green-mid)";
-              const barStyle = (left: number, width: number, showLabel: boolean): React.CSSProperties => ({
+              const color     = s.color ?? "var(--green-mid)";
+              const lane      = laneMap.get(s.id) ?? 0;
+              const topPx     = totalLanes <= 1
+                ? undefined          // use top:"50%" + transform for single-lane (unchanged look)
+                : geo.topForLane(lane);
+              const barH      = geo.barHeight;
+              const showLabel = barH >= LABEL_MIN_BAR_HEIGHT;
+
+              const barStyle = (
+                left: number,
+                width: number,
+                extraRadius?: React.CSSProperties,
+              ): React.CSSProperties => ({
                 position:    "absolute",
                 left:        `${left}%`,
                 width:       `${width}%`,
-                top:         "50%",
-                transform:   "translateY(-50%)",
-                height:      "28px",
+                ...(topPx !== undefined
+                  ? { top: `${topPx}px` }
+                  : { top: "50%", transform: "translateY(-50%)" }),
+                height:      `${barH}px`,
                 background:  color,
                 borderRadius:"6px",
                 display:     "flex",
@@ -447,8 +576,17 @@ function PlantRow({ plant, activeType, currentMonth, selected, onClick }: PlantR
                 textShadow:  "0 1px 2px rgba(0,0,0,.2)",
                 cursor:      "pointer",
                 zIndex:      10,
-                ...(showLabel ? {} : {}),
+                ...extraRadius,
               });
+
+              // Build tooltip: label + month range
+              const startMonth = MONTHS_DE[weekToMonthIdx(s.start_week)];
+              const endMonth   = MONTHS_DE[weekToMonthIdx(
+                s.end_week >= s.start_week ? s.end_week : s.end_week,
+              )];
+              const tooltip = s.label
+                ? `${s.label} (${startMonth}–${endMonth})`
+                : `${startMonth}–${endMonth}`;
 
               if (s.end_week >= s.start_week) {
                 // Normal (non-wrapping) schedule — single bar
@@ -456,10 +594,10 @@ function PlantRow({ plant, activeType, currentMonth, selected, onClick }: PlantR
                   <div
                     key={s.id}
                     data-testid="calendar-bar"
-                    title={s.label ?? ""}
-                    style={barStyle(weekToPercent(s.start_week), durationToPercent(s.start_week, s.end_week), true)}
+                    title={tooltip}
+                    style={barStyle(weekToPercent(s.start_week), durationToPercent(s.start_week, s.end_week))}
                   >
-                    {s.label ?? ""}
+                    {showLabel ? (s.label ?? "") : ""}
                   </div>
                 )];
               } else {
@@ -472,24 +610,22 @@ function PlantRow({ plant, activeType, currentMonth, selected, onClick }: PlantR
                   <div
                     key={`${s.id}-a`}
                     data-testid="calendar-bar"
-                    title={s.label ?? ""}
-                    style={{
-                      ...barStyle(leftW1, widthW1, true),
+                    title={tooltip}
+                    style={barStyle(leftW1, widthW1, {
                       borderTopRightRadius:    0,
                       borderBottomRightRadius: 0,
-                    }}
+                    })}
                   >
-                    {s.label ?? ""}
+                    {showLabel ? (s.label ?? "") : ""}
                   </div>,
                   <div
                     key={`${s.id}-b`}
                     data-testid="calendar-bar"
-                    title={s.label ?? ""}
-                    style={{
-                      ...barStyle(leftW2, widthW2, false),
+                    title={tooltip}
+                    style={barStyle(leftW2, widthW2, {
                       borderTopLeftRadius:    0,
                       borderBottomLeftRadius: 0,
-                    }}
+                    })}
                   />,
                 ];
               }
