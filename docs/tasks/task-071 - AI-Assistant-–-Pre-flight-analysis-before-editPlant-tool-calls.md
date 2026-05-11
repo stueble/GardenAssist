@@ -1,16 +1,16 @@
 ---
 id: TASK-071
 title: AI Assistant – Pre-flight analysis before editPlant tool calls
-status: In Review
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-10 22:33'
-updated_date: '2026-05-10 22:39'
+updated_date: '2026-05-11 16:28'
 labels:
   - ai
   - frontend
 dependencies: []
-ordinal: 69000
+ordinal: 65000
 ---
 
 ## Description

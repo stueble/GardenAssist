@@ -1,16 +1,16 @@
 ---
 id: TASK-065
 title: Verify and fix local Docker build
-status: In Progress
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-10 21:29'
-updated_date: '2026-05-11 16:36'
+updated_date: '2026-05-11 16:58'
 labels:
   - infrastructure
 dependencies: []
 priority: high
-ordinal: 60000
+ordinal: 66000
 ---
 
 ## Description
@@ -21,12 +21,12 @@ The Docker configuration (Dockerfiles, docker-compose.yml) was created in TASK-0
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 docker compose up --build completes without build errors
-- [ ] #2 Frontend is reachable at http://localhost:3000 and renders the application
-- [ ] #3 Backend responds to http://localhost:3000/health with {status: ok}
-- [ ] #4 API calls from the frontend reach the backend through the nginx proxy (/api/)
-- [ ] #5 Data persists across container restarts (Docker volume)
-- [ ] #6 All Dockerfile paths and CMD entries match the actual build output structure
+- [x] #1 docker compose up --build completes without build errors
+- [x] #2 Frontend is reachable at http://localhost:3000 and renders the application
+- [x] #3 Backend responds to http://localhost:3000/health with {status: ok}
+- [x] #4 API calls from the frontend reach the backend through the nginx proxy (/api/)
+- [x] #5 Data persists across container restarts (Docker volume)
+- [x] #6 All Dockerfile paths and CMD entries match the actual build output structure
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -39,6 +39,18 @@ The Docker configuration (Dockerfiles, docker-compose.yml) was created in TASK-0
 5. Update README.md if needed
 6. Check off ACs, add final summary, move to In Review
 <!-- SECTION:PLAN:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Three fixes applied to make docker compose up --build produce a working stack:
+
+1. apps/backend/src/server.ts: Added drizzle-orm migrate() call before serve() so DB schema is applied automatically on container start.
+2. apps/backend/Dockerfile: Added COPY for apps/backend/drizzle/ into the run-stage (migration SQL files are required at runtime by the migrator).
+3. apps/frontend/nginx.conf: Added location /health and location /static/ proxy blocks to forward health checks and attachment/garden-plan images to the backend.
+
+All 6 ACs verified manually with docker compose up --build: build succeeded, frontend rendered at localhost:3000, health returned {status:ok}, API calls proxied correctly, data persisted across restarts, and CMD path matched the actual dist structure.
+<!-- SECTION:FINAL_SUMMARY:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->

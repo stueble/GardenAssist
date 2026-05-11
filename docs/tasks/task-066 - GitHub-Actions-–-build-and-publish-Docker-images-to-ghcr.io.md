@@ -4,11 +4,12 @@ title: GitHub Actions – build and publish Docker images to ghcr.io
 status: Ready
 assignee: []
 created_date: '2026-05-10 21:29'
-updated_date: '2026-05-10 21:47'
+updated_date: '2026-05-11 16:57'
 labels:
   - infrastructure
 dependencies:
   - TASK-065
+priority: medium
 ordinal: 66250
 ---
 

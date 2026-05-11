@@ -1,15 +1,15 @@
 ---
 id: TASK-072
 title: Mouse-over of Pins only partly visible
-status: In Review
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-10 22:39'
-updated_date: '2026-05-10 22:45'
+updated_date: '2026-05-11 16:28'
 labels:
   - bug
 dependencies: []
-ordinal: 2000
+ordinal: 63000
 ---
 
 ## Description

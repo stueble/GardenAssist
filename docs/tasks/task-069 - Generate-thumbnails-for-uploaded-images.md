@@ -4,11 +4,12 @@ title: Generate thumbnails for uploaded images
 status: Ready
 assignee: []
 created_date: '2026-05-10 21:39'
-updated_date: '2026-05-10 21:47'
+updated_date: '2026-05-11 16:25'
 labels:
   - infrastructure
 dependencies: []
-ordinal: 66500
+priority: low
+ordinal: 73000
 ---
 
 ## Description

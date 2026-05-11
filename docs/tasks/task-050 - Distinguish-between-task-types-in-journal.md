@@ -1,15 +1,15 @@
 ---
 id: TASK-050
 title: Distinguish between task types in journal
-status: In Review
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-08 23:15'
-updated_date: '2026-05-11 15:26'
+updated_date: '2026-05-11 16:28'
 labels:
   - bug
 dependencies: []
-ordinal: 4000
+ordinal: 64000
 ---
 
 ## Description

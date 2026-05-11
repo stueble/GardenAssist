@@ -4,11 +4,12 @@ title: Export CVS
 status: Ready
 assignee: []
 created_date: '2026-05-08 20:37'
-updated_date: '2026-05-10 21:47'
+updated_date: '2026-05-11 16:57'
 labels:
   - user story
 dependencies: []
-ordinal: 67000
+priority: low
+ordinal: 74000
 ---
 
 ## Description

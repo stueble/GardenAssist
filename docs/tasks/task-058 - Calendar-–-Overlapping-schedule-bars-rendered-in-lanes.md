@@ -4,11 +4,12 @@ title: Calendar – Overlapping schedule bars rendered in lanes
 status: Ready
 assignee: []
 created_date: '2026-05-09 17:55'
-updated_date: '2026-05-10 21:47'
+updated_date: '2026-05-11 16:26'
 labels:
   - frontend
   - calendar
 dependencies: []
+priority: medium
 ordinal: 66000
 ---
 

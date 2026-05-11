@@ -4,9 +4,11 @@ title: Weather widget – integrate Open-Meteo API
 status: Ready
 assignee: []
 created_date: '2026-05-10 21:48'
+updated_date: '2026-05-11 16:57'
 labels:
   - user story
 dependencies: []
+priority: medium
 ordinal: 68000
 ---
 
