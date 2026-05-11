@@ -105,6 +105,9 @@ export function GardenPlanWidget({
     return el ? { w: el.clientWidth, h: el.clientHeight } : { w: 800, h: 600 };
   };
 
+  // Previous area size — used by handleResize to preserve viewport center.
+  const prevAreaSize = useRef({ w: 0, h: 0 });
+
   const initPlan = useCallback(() => {
     const img = imgRef.current;
     const plan = planRef.current;
@@ -120,6 +123,28 @@ export function GardenPlanWidget({
     s.ty       = (h - s.imgH * sc) / 2;
     plan.style.width  = s.imgW + "px";
     plan.style.height = s.imgH + "px";
+    prevAreaSize.current = { w, h };
+    applyT(false);
+  }, [applyT]);
+
+  /**
+   * Called by ResizeObserver when the area size changes (e.g. AI panel opens,
+   * todo item removed). Preserves the current zoom and pan by shifting tx/ty
+   * so that the viewport centre stays on the same point in the image.
+   * Only falls back to initPlan on the very first call (prevAreaSize = 0,0).
+   */
+  const handleResize = useCallback(() => {
+    const { w: newW, h: newH } = getAreaSize();
+    const { w: oldW, h: oldH } = prevAreaSize.current;
+    prevAreaSize.current = { w: newW, h: newH };
+
+    // First call (before image loaded) — nothing to preserve yet
+    if (oldW === 0 || oldH === 0) return;
+
+    const s = stateRef.current;
+    // Shift tx/ty by half the delta so the visible centre stays constant
+    s.tx += (newW - oldW) / 2;
+    s.ty += (newH - oldH) / 2;
     applyT(false);
   }, [applyT]);
 
@@ -265,14 +290,14 @@ export function GardenPlanWidget({
     };
     const onTouchEnd = () => { s.dragging = false; };
 
-    // Resize — re-apply current fit mode, or re-fit-inside if free
+    // Resize — re-apply current fit mode, or preserve current zoom/pan.
     // ResizeObserver on the area element catches ALL size changes:
     // window resize, CSS transitions (AI panel open/close), panel toggles.
     const resizeObserver = new ResizeObserver(() => {
       const fitH = modeFitHRef.current;
       const fitW = modeFitWRef.current;
       if (fitH || fitW) applyCurrentMode(fitH, fitW, false);
-      else initPlan();
+      else handleResize();
     });
     resizeObserver.observe(area);
 
@@ -294,7 +319,7 @@ export function GardenPlanWidget({
       area.removeEventListener("touchmove",   onTouchMove);
       area.removeEventListener("touchend",    onTouchEnd);
     };
-  }, [applyT, zoomAt, initPlan]);
+  }, [applyT, zoomAt, initPlan, handleResize]);
 
   // Keep pickModeRef in sync and re-apply cursor — without touching the main effect
   useEffect(() => {
