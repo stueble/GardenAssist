@@ -744,8 +744,8 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }, ref) {
 
   const aiFieldStyle: React.CSSProperties = {
     ...fieldStyle,
-    background:  "var(--ai-suggestion-bg, #edfaf3)",
-    border:      "1.5px solid var(--ai-suggestion-border, #27ae60)",
+    background:  "#fff4e6",
+    border:      "1.5px solid #e07b00",
     paddingLeft: "28px",
   };
 
@@ -850,30 +850,7 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }, ref) {
           </div>
         )}
 
-        {/* AI suggestions status bar */}
-        {aiSuggestionCount > 0 && (
-          <div
-            data-testid="ai-suggestions-bar"
-            style={{
-              fontSize:     "11px",
-              color:        "var(--green-deep)",
-              background:   "var(--ai-suggestion-bg, #edfaf3)",
-              border:       "1px solid var(--ai-suggestion-border, #27ae60)",
-              borderRadius: "6px",
-              padding:      "5px 10px",
-              display:      "flex",
-              alignItems:   "center",
-              gap:          "6px",
-            }}
-          >
-            <span>✦</span>
-            <span>
-              {aiSuggestionCount === 1
-                ? "1 KI-Vorschlag aktiv"
-                : `${aiSuggestionCount} KI-Vorschläge aktiv`}
-            </span>
-          </div>
-        )}
+
 
         {/* Type selector — all four types always visible.
             observation/problem are disabled when a schedule is selected
@@ -912,10 +889,10 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }, ref) {
                     fontSize:     "11.5px",
                     fontWeight:   500,
                     border:       isAiActive
-                      ? "1.5px solid var(--ai-suggestion-border, #27ae60)"
+                      ? "1.5px solid #e07b00"
                       : active ? `1.5px solid ${tc.border}` : "1.5px solid var(--border)",
                     background:   isAiActive
-                      ? "var(--ai-suggestion-bg, #edfaf3)"
+                      ? "#fff4e6"
                       : active ? tc.bg : "none",
                     color:        active ? tc.text : disabled ? "var(--border)" : "var(--text-mid)",
                     cursor:       disabled ? "default" : "pointer",
@@ -928,13 +905,13 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }, ref) {
                     position:     "relative",
                   }}
                 >
-                  {isAiActive && <span style={{ fontSize: "10px" }}>✦</span>}
+                  {isAiActive && <span aria-hidden="true" style={{ fontSize: "10px", color: "#e07b00" }}>✦</span>}
                   {t(`entry_type_badge.${typeVal}` as any)}
                   {isAiActive && (
                     <span
                       data-testid="ai-revert-entry_type"
                       onClick={(e) => { e.stopPropagation(); revertAiField("entry_type"); }}
-                      style={{ marginLeft: "auto", cursor: "pointer", fontSize: "13px", color: "var(--green-deep)", lineHeight: 1 }}
+                      style={{ marginLeft: "auto", cursor: "pointer", fontSize: "13px", color: "#e07b00", lineHeight: 1 }}
                       title="KI-Vorschlag zurücksetzen"
                     >×</span>
                   )}
@@ -955,7 +932,7 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }, ref) {
           <div style={labelStyle}>{t("fields.plant")}</div>
           <div style={{ position: "relative" }}>
             {aiMarked.plant_id && (
-              <span style={{ position: "absolute", left: "9px", top: "50%", transform: "translateY(-50%)", fontSize: "11px", color: "var(--green-deep)", zIndex: 1, pointerEvents: "none" }}>✦</span>
+              <span aria-hidden="true" style={{ position: "absolute", left: "9px", top: "50%", transform: "translateY(-50%)", fontSize: "11px", color: "#e07b00", zIndex: 1, pointerEvents: "none" }}>✦</span>
             )}
             <select
               value={plantId}
@@ -975,7 +952,7 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }, ref) {
                 type="button"
                 data-testid="ai-revert-plant_id"
                 onClick={() => revertAiField("plant_id")}
-                style={{ position: "absolute", right: "28px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--green-deep)", fontSize: "13px", lineHeight: 1, padding: "2px" }}
+                style={{ position: "absolute", right: "28px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#e07b00", fontSize: "13px", lineHeight: 1, padding: "2px" }}
                 title="KI-Vorschlag zurücksetzen"
               >×</button>
             )}
@@ -1011,7 +988,7 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }, ref) {
           <div style={labelStyle}>{t("fields.date")}</div>
           <div style={{ position: "relative" }}>
             {aiMarked.date && (
-              <span style={{ position: "absolute", left: "9px", top: "50%", transform: "translateY(-50%)", fontSize: "11px", color: "var(--green-deep)", zIndex: 1, pointerEvents: "none" }}>✦</span>
+              <span aria-hidden="true" style={{ position: "absolute", left: "9px", top: "50%", transform: "translateY(-50%)", fontSize: "11px", color: "#e07b00", zIndex: 1, pointerEvents: "none" }}>✦</span>
             )}
             <input
               type="date"
@@ -1025,7 +1002,7 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }, ref) {
                 type="button"
                 data-testid="ai-revert-date"
                 onClick={() => revertAiField("date")}
-                style={{ position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--green-deep)", fontSize: "13px", lineHeight: 1, padding: "2px" }}
+                style={{ position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#e07b00", fontSize: "13px", lineHeight: 1, padding: "2px" }}
                 title="KI-Vorschlag zurücksetzen"
               >×</button>
             )}
@@ -1037,7 +1014,7 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }, ref) {
           <div style={labelStyle}>{t("fields.title")}</div>
           <div style={{ position: "relative" }}>
             {aiMarked.title && (
-              <span style={{ position: "absolute", left: "9px", top: "50%", transform: "translateY(-50%)", fontSize: "11px", color: "var(--green-deep)", zIndex: 1, pointerEvents: "none" }}>✦</span>
+              <span aria-hidden="true" style={{ position: "absolute", left: "9px", top: "50%", transform: "translateY(-50%)", fontSize: "11px", color: "#e07b00", zIndex: 1, pointerEvents: "none" }}>✦</span>
             )}
             <input
               type="text"
@@ -1052,7 +1029,7 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }, ref) {
                 type="button"
                 data-testid="ai-revert-title"
                 onClick={() => revertAiField("title")}
-                style={{ position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--green-deep)", fontSize: "13px", lineHeight: 1, padding: "2px" }}
+                style={{ position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#e07b00", fontSize: "13px", lineHeight: 1, padding: "2px" }}
                 title="KI-Vorschlag zurücksetzen"
               >×</button>
             )}
@@ -1064,7 +1041,7 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }, ref) {
           <div style={labelStyle}>{t("fields.notes")}</div>
           <div style={{ position: "relative" }}>
             {aiMarked.notes && (
-              <span style={{ position: "absolute", left: "9px", top: "10px", fontSize: "11px", color: "var(--green-deep)", zIndex: 1, pointerEvents: "none" }}>✦</span>
+              <span aria-hidden="true" style={{ position: "absolute", left: "9px", top: "10px", fontSize: "11px", color: "#e07b00", zIndex: 1, pointerEvents: "none" }}>✦</span>
             )}
             <textarea
               value={notes}
@@ -1082,7 +1059,7 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }, ref) {
                 type="button"
                 data-testid="ai-revert-notes"
                 onClick={() => revertAiField("notes")}
-                style={{ position: "absolute", right: "8px", top: "8px", background: "none", border: "none", cursor: "pointer", color: "var(--green-deep)", fontSize: "13px", lineHeight: 1, padding: "2px" }}
+                style={{ position: "absolute", right: "8px", top: "8px", background: "none", border: "none", cursor: "pointer", color: "#e07b00", fontSize: "13px", lineHeight: 1, padding: "2px" }}
                 title="KI-Vorschlag zurücksetzen"
               >×</button>
             )}
@@ -1194,6 +1171,31 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }, ref) {
           </button>
         </div>
       </div>
+
+      {/* AI suggestions status bar — same design as PlantEditDialog */}
+      {aiSuggestionCount > 0 && (
+        <div
+          data-testid="ai-suggestions-bar"
+          style={{
+            display:    "flex",
+            alignItems: "center",
+            gap:        "6px",
+            padding:    "6px 18px",
+            background: "#fff4e6",
+            borderTop:  "1px solid #f0c080",
+            fontSize:   "11px",
+            color:      "#a05000",
+            flexShrink: 0,
+          }}
+        >
+          <span aria-hidden="true" style={{ fontSize: "13px" }}>✦</span>
+          <span>
+            {aiSuggestionCount === 1
+              ? "1 Feld vom Assistenten vorgeschlagen — klicke × zum Verwerfen"
+              : `${aiSuggestionCount} Felder vom Assistenten vorgeschlagen — klicke × zum Verwerfen`}
+          </span>
+        </div>
+      )}
 
       {/* Actions — normal mode OR delete-confirm replaces the whole footer */}
       <div style={{ padding: "12px 18px", borderTop: "1px solid var(--border)", flexShrink: 0 }}>
