@@ -32,6 +32,7 @@
     "plant_general": "🌿 Garten (allgemein)",
     "schedule": "Aufgabe (Zeitplan)",
     "schedule_none": "— Kein Zeitplan —",
+    "schedule_none_manual": "— Kein Zeitplan, manueller Eintrag —",
     "entry_type": "Typ",
     "photos": "Fotos",
     "photos_add": "＋ Foto hinzufügen"
@@ -42,7 +43,8 @@
     "save": "Speichern",
     "cancel": "✕ Abbrechen",
     "saving": "…",
-    "save_error": "Speichern fehlgeschlagen. Bitte erneut versuchen."
+    "save_error": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+    "manual_hint": "Kein Zeitplan ausgewählt — wird als manueller Eintrag gespeichert."
   },
   "actions": {
     "delete": "Eintrag löschen",

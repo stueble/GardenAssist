@@ -539,8 +539,14 @@ function EntryCard({ entry, plant, attachmentMap, onEdit }: EntryCardProps) {
 
 // ── EntryPanel ────────────────────────────────────────────────────────────────
 
-/** Panel entry type options — manual added (AC #2) */
-const PANEL_TYPE_VALUES: JournalEntryType[] = ["done", "skipped", "observation", "problem", "manual"];
+/** Panel entry type buttons — manual is implicit (no schedule selected) */
+const PANEL_TYPE_VALUES: JournalEntryType[] = ["done", "skipped", "observation", "problem"];
+
+const SCHEDULE_TYPE_LABEL_DE: Record<string, string> = {
+  pruning:       "Schneiden",
+  fertilization: "Düngen",
+  misc:          "Aufgabe",
+};
 
 interface EntryPanelProps {
   entry:     JournalEntry | null;   // null = new entry
@@ -554,13 +560,20 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }: EntryPanelPr
   const { t } = useTranslation("journal");
   const isNew = entry === null;
 
-  const initType: JournalEntryType = entry?.entry_type ?? "done";
+  // For existing entries: if entry_type is "manual", default the button to "done"
+  // (manual is now implicit — no button needed)
+  const initType: JournalEntryType =
+    (entry?.entry_type && entry.entry_type !== "manual")
+      ? entry.entry_type
+      : "done";
 
   const [entryType,  setEntryType]  = useState<JournalEntryType>(initType);
   const [plantId,    setPlantId]    = useState<string>(entry?.plant_id ?? "");
   const [scheduleId, setScheduleId] = useState<string>(entry?.schedule_id ?? "");
   const [date,       setDate]       = useState(entry?.date ?? new Date().toISOString().slice(0, 10));
-  const [title,      setTitle]      = useState(entry?.title ?? "");
+  const [title,      setTitle]      = useState(
+    entry?.title ?? (isNew ? "Manuell: " : "")
+  );
   const [notes,      setNotes]      = useState(entry?.notes ?? "");
 
   // Schedules available for the selected plant (care types only)
@@ -569,15 +582,48 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }: EntryPanelPr
     ? selectedPlant.schedules.filter((s) => CARE_SCHEDULE_TYPES.has(s.schedule_type))
     : [];
 
-  // Reset scheduleId when plant changes
+  // Reset scheduleId and title when plant changes
   function handlePlantChange(newPlantId: string) {
     setPlantId(newPlantId);
     setScheduleId("");
+    if (isNew) setTitle("Manuell: ");
   }
 
-  // When schedule is selected, restrict type to done/skipped
+  // Build a title suggestion matching the backend buildAutoTitle logic
+  function buildTitleSuggestion(
+    type: "done" | "skipped",
+    schedule: Schedule,
+    plant: { name_common: string } | null,
+  ): string {
+    const action = type === "done" ? "Erledigt" : "Übersprungen";
+    const taskLabel = schedule.label ?? SCHEDULE_TYPE_LABEL_DE[schedule.schedule_type] ?? "Aufgabe";
+    if (plant) return `${action}: ${taskLabel} – ${plant.name_common}`;
+    return `${action}: ${taskLabel}`;
+  }
+
+  // Handle schedule selection — auto-fill title suggestion
+  function handleScheduleChange(newScheduleId: string) {
+    setScheduleId(newScheduleId);
+    if (!isNew) return; // don't overwrite title in edit mode
+    if (newScheduleId === "") {
+      // Back to no schedule → reset to manual prefix
+      setTitle("Manuell: ");
+    } else {
+      const schedule = availableSchedules.find((s) => s.id === newScheduleId);
+      if (schedule) {
+        const type = entryType === "skipped" ? "skipped" : "done";
+        setTitle(buildTitleSuggestion(type, schedule, selectedPlant));
+      }
+    }
+  }
+
+  // When schedule is selected, restrict type to done/skipped;
+  // when no schedule and type is done/skipped, use "manual" as effective type
   const hasSchedule = scheduleId !== "";
-  const effectiveType: JournalEntryType = hasSchedule && entryType !== "skipped" ? "done" : entryType;
+  const effectiveType: JournalEntryType = hasSchedule
+    ? (entryType === "skipped" ? "skipped" : "done")
+    : (entryType === "done" || entryType === "skipped") ? "manual"
+    : entryType;
   const [saving,        setSaving]        = useState(false);
   const [error,         setError]         = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -701,45 +747,64 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }: EntryPanelPr
           </div>
         )}
 
-        {/* Type selector */}
+        {/* Type selector:
+            - With schedule: done + skipped (which action was taken)
+            - Without schedule: observation + problem (free-form types; default = manual) */}
         <div>
           <div style={labelStyle}>{t("fields.entry_type")}</div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
-            {PANEL_TYPE_VALUES.map((typeVal, i) => {
-              const tc = TYPE_COLOR[typeVal] ?? TYPE_COLOR.manual;
-              const active = entryType === typeVal;
-              // If a schedule is selected, only done/skipped are relevant
-              const disabled = hasSchedule && typeVal !== "done" && typeVal !== "skipped";
-              return (
-                <button
-                  key={typeVal}
-                  type="button"
-                  data-testid={`panel-type-${typeVal}`}
-                  onClick={() => !disabled && setEntryType(typeVal)}
-                  style={{
-                    padding:      "7px 8px",
-                    borderRadius: "8px",
-                    fontSize:     "11.5px",
-                    fontWeight:   500,
-                    border:       active ? `1.5px solid ${tc.border}` : "1.5px solid var(--border)",
-                    background:   active ? tc.bg : "none",
-                    color:        active ? tc.text : disabled ? "var(--border)" : "var(--text-mid)",
-                    cursor:       disabled ? "default" : "pointer",
-                    fontFamily:   "var(--font-body)",
-                    transition:   "all .15s",
-                    display:      "flex",
-                    alignItems:   "center",
-                    gap:          "5px",
-                    opacity:      disabled ? 0.4 : 1,
-                    // Last item (manual) spans full width
-                    ...(i === PANEL_TYPE_VALUES.length - 1 ? { gridColumn: "1/-1" } : {}),
-                  }}
-                >
-                  {t(`entry_type_badge.${typeVal}` as any)}
-                </button>
-              );
-            })}
+            {PANEL_TYPE_VALUES
+              .filter((typeVal) =>
+                hasSchedule
+                  ? typeVal === "done" || typeVal === "skipped"
+                  : typeVal === "observation" || typeVal === "problem"
+              )
+              .map((typeVal) => {
+                const tc = TYPE_COLOR[typeVal] ?? TYPE_COLOR.manual;
+                const active = entryType === typeVal;
+                return (
+                  <button
+                    key={typeVal}
+                    type="button"
+                    data-testid={`panel-type-${typeVal}`}
+                    onClick={() => {
+                      setEntryType(typeVal);
+                      // Update title suggestion when done↔skipped changes with schedule selected
+                      if (isNew && hasSchedule) {
+                        const schedule = availableSchedules.find((s) => s.id === scheduleId);
+                        if (schedule) {
+                          const type = typeVal === "skipped" ? "skipped" : "done";
+                          setTitle(buildTitleSuggestion(type, schedule, selectedPlant));
+                        }
+                      }
+                    }}
+                    style={{
+                      padding:      "7px 8px",
+                      borderRadius: "8px",
+                      fontSize:     "11.5px",
+                      fontWeight:   500,
+                      border:       active ? `1.5px solid ${tc.border}` : "1.5px solid var(--border)",
+                      background:   active ? tc.bg : "none",
+                      color:        active ? tc.text : "var(--text-mid)",
+                      cursor:       "pointer",
+                      fontFamily:   "var(--font-body)",
+                      transition:   "all .15s",
+                      display:      "flex",
+                      alignItems:   "center",
+                      gap:          "5px",
+                    }}
+                  >
+                    {t(`entry_type_badge.${typeVal}` as any)}
+                  </button>
+                );
+              })}
           </div>
+          {/* Hint: when no schedule selected, entry is automatically manual */}
+          {!hasSchedule && entryType !== "observation" && entryType !== "problem" && (
+            <div style={{ fontSize: "10.5px", color: "var(--text-light)", marginTop: "6px" }}>
+              {t("panel.manual_hint")}
+            </div>
+          )}
         </div>
 
         {/* Plant picker */}
@@ -766,11 +831,11 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }: EntryPanelPr
             <div style={labelStyle}>{t("fields.schedule")}</div>
             <select
               value={scheduleId}
-              onChange={(e) => setScheduleId(e.target.value)}
+              onChange={(e) => handleScheduleChange(e.target.value)}
               data-testid="panel-schedule"
               style={{ ...fieldStyle, cursor: "pointer" }}
             >
-              <option value="">{t("fields.schedule_none")}</option>
+              <option value="">{t("fields.schedule_none_manual")}</option>
               {availableSchedules.map((s) => {
                 const icon = SCHEDULE_TYPE_ICON[s.schedule_type] ?? "📋";
                 const label = s.label ?? t(`entry_type.${s.schedule_type}` as any, s.schedule_type);

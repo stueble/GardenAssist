@@ -281,10 +281,12 @@ describe("JournalView — entry panel fields (story-036 AC #2, #3, #4)", () => {
   it("shows type selector buttons (AC #2)", async () => {
     renderJournal();
     fireEvent.click(screen.getByTestId("journal-fab"));
-    await waitFor(() => screen.getByTestId("panel-type-done"));
-    expect(screen.getByTestId("panel-type-done")).toBeInTheDocument();
+    // Without a schedule selected, observation + problem are shown (manual is implicit)
+    await waitFor(() => screen.getByTestId("panel-type-observation"));
     expect(screen.getByTestId("panel-type-observation")).toBeInTheDocument();
-    expect(screen.getByTestId("panel-type-manual")).toBeInTheDocument();
+    expect(screen.getByTestId("panel-type-problem")).toBeInTheDocument();
+    // done/skipped are NOT shown without a schedule (they appear when schedule is selected)
+    expect(screen.queryByTestId("panel-type-done")).not.toBeInTheDocument();
   });
 
   it("shows plant picker with plants (AC #3)", async () => {
@@ -365,6 +367,7 @@ const GARDEN_WITH_SCHEDULES: Garden = {
       frost_tolerance_min_c: null, temperature_protected: false, health_status: null,
       location: "Westbeet", watering_zone: null, purchase_date: null, purchase_price: null,
       positions: [], attachments: [], tasks: [], journal_entries: [],
+      created_at: "", updated_at: "",
       schedules: [
         {
           id: "s1", schedule_type: "pruning", start_week: 9, end_week: 10,
@@ -444,12 +447,12 @@ describe("JournalView — TASK-050: schedule picker (AC #1)", () => {
     );
   });
 
-  it("schedule_id is null when no schedule selected (AC #2 manual entry)", async () => {
+  it("schedule_id is null and entry_type is manual when no schedule selected (AC #2)", async () => {
     const { apiClient } = await import("../api/client");
     renderJournalWithSchedules();
     fireEvent.click(screen.getByTestId("journal-fab"));
-    await waitFor(() => screen.getByTestId("panel-type-manual"));
-    fireEvent.click(screen.getByTestId("panel-type-manual"));
+    // Without a schedule, just save directly — effectiveType will be "manual"
+    await waitFor(() => screen.getByTestId("panel-save"));
     fireEvent.click(screen.getByTestId("panel-save"));
     await waitFor(() => expect(apiClient.createJournalEntry).toHaveBeenCalledOnce());
     expect(apiClient.createJournalEntry).toHaveBeenCalledWith(
