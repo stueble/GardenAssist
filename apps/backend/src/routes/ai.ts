@@ -32,7 +32,7 @@ const OPENAI_URL        = "https://api.openai.com/v1/chat/completions";
 const OPENROUTER_URL    = "https://openrouter.ai/api/v1/chat/completions";
 const ANTHROPIC_URL     = "https://api.anthropic.com/v1/messages";
 const ANTHROPIC_VERSION = "2023-06-01";
-const MAX_TOKENS        = 1024;
+const MAX_TOKENS        = 4096;
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 

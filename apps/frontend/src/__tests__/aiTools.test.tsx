@@ -259,20 +259,33 @@ describe("Tool use does not trigger API writes (AC #6)", () => {
 describe("parseToolCall", () => {
   it("parses a valid editPlant tool block", () => {
     const raw = `Ich öffne den Dialog.\n\`\`\`tool\n{"tool":"editPlant","id":null,"fields":{"sun_demand":"sunny"}}\n\`\`\``;
-    const { toolCall, displayText } = parseToolCall(raw);
+    const { toolCall, displayText, parseError } = parseToolCall(raw);
     expect(toolCall).toEqual({ tool: "editPlant", id: null, fields: { sun_demand: "sunny" } });
     expect(displayText).toBe("Ich öffne den Dialog.");
+    expect(parseError).toBe(false);
   });
 
-  it("returns null toolCall for plain text", () => {
-    const { toolCall, displayText } = parseToolCall("Kein Tool.");
+  it("returns null toolCall and parseError:false for plain text", () => {
+    const { toolCall, displayText, parseError } = parseToolCall("Kein Tool.");
     expect(toolCall).toBeNull();
     expect(displayText).toBe("Kein Tool.");
+    expect(parseError).toBe(false);
   });
 
-  it("returns null toolCall for malformed JSON", () => {
-    const { toolCall } = parseToolCall("```tool\nnot-json\n```");
+  it("returns parseError:true for malformed JSON in complete block", () => {
+    const { toolCall, parseError } = parseToolCall("```tool\nnot-json\n```");
     expect(toolCall).toBeNull();
+    expect(parseError).toBe(true);
+  });
+
+  it("returns parseError:true for truncated response (no closing ```)", () => {
+    const raw = `Ich erstelle die Pflanze.\n\`\`\`tool\n{"tool":"editPlant","id":null,"fields":{"name_common":"Zitrone",`;
+    const { toolCall, parseError, displayText } = parseToolCall(raw);
+    expect(toolCall).toBeNull();
+    expect(parseError).toBe(true);
+    // Broken block should be stripped from displayText
+    expect(displayText).not.toContain("```tool");
+    expect(displayText).toContain("Ich erstelle die Pflanze.");
   });
 
   it("strips the tool block from displayText", () => {
@@ -281,6 +294,14 @@ describe("parseToolCall", () => {
     expect(displayText).not.toContain("```tool");
     expect(displayText).toContain("Antwort.");
     expect(displayText).toContain("Ende.");
+  });
+
+  it("strips broken block from displayText on invalid JSON", () => {
+    const raw = `Text davor.\n\`\`\`tool\n{invalid json}\n\`\`\``;
+    const { displayText, parseError } = parseToolCall(raw);
+    expect(parseError).toBe(true);
+    expect(displayText).not.toContain("```tool");
+    expect(displayText).toContain("Text davor.");
   });
 });
 

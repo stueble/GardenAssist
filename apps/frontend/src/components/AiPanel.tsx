@@ -27,23 +27,40 @@ interface AiPanelProps {
  * Exported for testing.
  */
 export function parseToolCall(raw: string): {
-  toolCall: Record<string, unknown> | null;
+  toolCall:   Record<string, unknown> | null;
   displayText: string;
+  /** True when a tool block was found but the JSON was invalid/truncated. */
+  parseError: boolean;
 } {
+  // Case 1: complete ```tool ... ``` block present
   const match = /```tool\s*\n([\s\S]*?)\n```/m.exec(raw);
-  if (!match) return { toolCall: null, displayText: raw };
-  try {
-    const toolCall = JSON.parse(match[1].trim()) as Record<string, unknown>;
-    // Remove the block including any surrounding blank lines, then collapse
-    // multiple consecutive blank lines into one to avoid visible gaps.
-    const displayText = raw
-      .replace(/\n*```tool\s*\n[\s\S]*?\n```\n*/m, "\n")
-      .trim()
-      .replace(/\n{3,}/g, "\n\n");
-    return { toolCall, displayText };
-  } catch {
-    return { toolCall: null, displayText: raw };
+  if (match) {
+    try {
+      const toolCall = JSON.parse(match[1].trim()) as Record<string, unknown>;
+      // Remove the block including surrounding blank lines, collapse extra blank lines.
+      const displayText = raw
+        .replace(/\n*```tool\s*\n[\s\S]*?\n```\n*/m, "\n")
+        .trim()
+        .replace(/\n{3,}/g, "\n\n");
+      return { toolCall, displayText, parseError: false };
+    } catch {
+      // Block found but JSON is invalid — strip broken block, signal error
+      const displayText = raw
+        .replace(/\n*```tool\s*\n[\s\S]*?\n```\n*/m, "\n")
+        .trim()
+        .replace(/\n{3,}/g, "\n\n");
+      return { toolCall: null, displayText, parseError: true };
+    }
   }
+
+  // Case 2: opening ```tool present but no closing ``` — response was truncated
+  if (/```tool/m.test(raw)) {
+    const displayText = raw.replace(/\n*```tool[\s\S]*$/m, "").trim();
+    return { toolCall: null, displayText, parseError: true };
+  }
+
+  // Case 3: no tool block at all
+  return { toolCall: null, displayText: raw, parseError: false };
 }
 
 /**
@@ -224,10 +241,14 @@ export function AiPanel({ assistantContext }: AiPanelProps) {
       const res = await chatWithAi(apiMessages, lang, undefined, systemBlocks);
 
       // Parse tool calls from assistant response
-      const { toolCall, displayText } = parseToolCall(res.content);
+      const { toolCall, displayText, parseError } = parseToolCall(res.content);
       let feedback = "";
       if (toolCall) {
         feedback = dispatchToolCall(toolCall, lang);
+      } else if (parseError) {
+        feedback = lang === "de"
+          ? "⚠️ Die Antwort war zu lang und wurde abgeschnitten. Bitte vereinfache die Anfrage – z.\u00a0B. weniger Zeitpläne oder kürzere Notizen."
+          : "⚠️ The response was too long and got cut off. Please simplify the request – e.g. fewer schedules or shorter notes.";
       }
 
       // Show the display text (tool block stripped) + any error feedback
