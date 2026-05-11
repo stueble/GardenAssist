@@ -321,7 +321,9 @@ export function DashboardView({ garden, loading, invalidateGarden }: DashboardVi
   );
 }
 
-// ── WeatherWidget ─────────────────────────────────────────────────────────────
+// ── WeatherWidget — module-level singleton cache ──────────────────────────────
+// State survives navigation (Dashboard unmount/remount) — no loading flash.
+// Polling runs once globally; components just subscribe to the cached state.
 
 const WEATHER_POLL_MS = 60 * 60 * 1000; // 60 minutes
 
@@ -331,10 +333,49 @@ type WeatherState =
   | { status: "error" }
   | { status: "ok"; data: WeatherData };
 
+// Singleton state + listener set (same pattern as useAiPanelState)
+let _weatherState: WeatherState = { status: "loading" };
+let _weatherInterval: ReturnType<typeof setInterval> | null = null;
+let _weatherFetching = false;
+const _weatherListeners = new Set<(s: WeatherState) => void>();
+
+function setWeatherState(s: WeatherState) {
+  _weatherState = s;
+  _weatherListeners.forEach((fn) => fn(s));
+}
+
+function startWeatherPolling(onLoaded: (data: WeatherData | null) => void) {
+  if (_weatherInterval !== null) return; // already running
+
+  function fetchWeather() {
+    if (_weatherFetching) return;
+    _weatherFetching = true;
+    getWeather()
+      .then((data) => {
+        _weatherFetching = false;
+        if (data === null) {
+          setWeatherState({ status: "no_location" });
+          onLoaded(null);
+        } else {
+          setWeatherState({ status: "ok", data });
+          onLoaded(data);
+        }
+      })
+      .catch(() => {
+        _weatherFetching = false;
+        setWeatherState({ status: "error" });
+      });
+  }
+
+  // Fetch immediately (only if still on initial "loading" — skip if cached)
+  if (_weatherState.status === "loading") fetchWeather();
+
+  _weatherInterval = setInterval(fetchWeather, WEATHER_POLL_MS);
+}
+
 /** Maps a WMO weather code to the nearest key defined in i18n. */
 function resolveWeatherCodeKey(code: number): string {
   const known = [0,1,2,3,45,48,51,53,55,61,63,65,71,73,75,80,81,82,85,86,95,96,99];
-  // Find exact match first, then nearest lower value
   if (known.includes(code)) return String(code);
   const lower = [...known].reverse().find((k) => k <= code);
   return String(lower ?? 0);
@@ -348,38 +389,17 @@ function shortWeekday(isoDate: string, locale: string): string {
 
 function WeatherWidget({ onWeatherLoaded }: { onWeatherLoaded: (data: WeatherData | null) => void }) {
   const { t, i18n } = useTranslation("common");
-  const [state, setState] = useState<WeatherState>({ status: "loading" });
+  // Subscribe to singleton — starts with cached value (no flash on re-mount)
+  const [state, setState] = useState<WeatherState>(_weatherState);
 
   useEffect(() => {
-    let cancelled = false;
-
-    function fetchWeather() {
-      getWeather()
-        .then((data) => {
-          if (cancelled) return;
-          if (data === null) {
-            setState({ status: "no_location" });
-            onWeatherLoaded(null);
-          } else {
-            setState({ status: "ok", data });
-            onWeatherLoaded(data);
-          }
-        })
-        .catch(() => {
-          if (!cancelled) setState({ status: "error" });
-        });
-    }
-
-    // Fetch immediately on mount
-    fetchWeather();
-
-    // Poll every 60 minutes
-    const interval = setInterval(fetchWeather, WEATHER_POLL_MS);
-
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
+    _weatherListeners.add(setState);
+    // Start polling (no-op if already running)
+    startWeatherPolling(onWeatherLoaded);
+    // If data is already cached, notify context immediately (no fetch needed)
+    if (_weatherState.status === "ok") onWeatherLoaded(_weatherState.data);
+    else if (_weatherState.status === "no_location") onWeatherLoaded(null);
+    return () => { _weatherListeners.delete(setState); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
