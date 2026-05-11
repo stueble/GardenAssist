@@ -14,7 +14,7 @@
  * AC #7  Legend bottom-left
  */
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useAssistantSettings } from "@/hooks/useAssistantSettings";
 import { setAssistantContext } from "@/hooks/useAssistantContext";
@@ -106,6 +106,51 @@ function plantToPin(plant: Plant, posIdx: number, selectedId: string | null): Pl
   };
 }
 
+// ── Frost warnings ────────────────────────────────────────────────────────────
+
+/**
+ * Computes frost warnings from the 5-day weather forecast for plants that:
+ * - have a frost_tolerance_min_c set
+ * - are NOT cold-protected (temperature_protected === false)
+ *
+ * Returns one Warning per affected plant, showing the first day the
+ * forecast temp_min falls below the plant's limit.
+ */
+export function computeFrostWarnings(
+  plants: Plant[],
+  forecast: import("@api/weather").WeatherDay[],
+  language: string,
+): Warning[] {
+  const locale = language === "de" ? "de-DE" : "en-GB";
+  const isDE   = language === "de";
+  const warnings: Warning[] = [];
+
+  for (const plant of plants) {
+    if (plant.temperature_protected) continue;
+    if (plant.frost_tolerance_min_c === null) continue;
+
+    const limit = plant.frost_tolerance_min_c;
+    const firstDay = forecast.find((day) => day.temp_min < limit);
+    if (!firstDay) continue;
+
+    const d = new Date(firstDay.date + "T12:00:00");
+    const weekday = d.toLocaleDateString(locale, { weekday: "long" });
+    const dateStr = d.toLocaleDateString(locale, { day: "2-digit", month: "2-digit" });
+
+    const name = plant.location
+      ? `${plant.name_common} (${plant.location})`
+      : plant.name_common;
+
+    const sub = isDE
+      ? `Frost erwartet: ${weekday}, ${dateStr} · ${firstDay.temp_min}°C (Limit: ${limit}°C)`
+      : `Frost expected: ${weekday}, ${dateStr} · ${firstDay.temp_min}°C (limit: ${limit}°C)`;
+
+    warnings.push({ message: `❄️ ${name}`, sub });
+  }
+
+  return warnings;
+}
+
 // ── Main component ─────────────────────────────────────────────────────────────
 
 interface DashboardViewProps {
@@ -115,11 +160,19 @@ interface DashboardViewProps {
 }
 
 export function DashboardView({ garden, loading, invalidateGarden }: DashboardViewProps) {
-  const { t }             = useTranslation("common");
+  const { t, i18n }       = useTranslation("common");
   const assistantSettings = useAssistantSettings();
 
   const [selected, setSelected] = useState<Plant | null>(null);
   const [weather,  setWeather]  = useState<WeatherData | null>(null);
+
+  // Frost warnings — recomputed whenever garden plants or weather forecast changes
+  const frostWarnings = useMemo(
+    () => (garden && weather)
+      ? computeFrostWarnings(garden.plants, weather.forecast, i18n.language)
+      : [],
+    [garden, weather, i18n.language],
+  );
 
   // Keep selected in sync with garden updates (e.g. after save via GlobalPlantEditOverlay)
   useEffect(() => {
@@ -250,9 +303,9 @@ export function DashboardView({ garden, loading, invalidateGarden }: DashboardVi
 
         <div style={{ height: "1px", background: "var(--border)", flexShrink: 0 }} />
 
-        {/* Warnings section — only shown when warnings exist (AC #1) */}
-        {garden?.warnings && garden.warnings.length > 0 && (
-          <WarningsSection warnings={garden.warnings} />
+        {/* Frost warnings — computed from weather forecast × plant frost limits */}
+        {frostWarnings.length > 0 && (
+          <WarningsSection warnings={frostWarnings} />
         )}
 
         {/* Todo list always in left column */}

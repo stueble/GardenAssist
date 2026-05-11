@@ -193,13 +193,8 @@ export async function getGarden(db: Db): Promise<Garden> {
     .filter((a) => a.owner_type === "garden" || a.owner_type === "journal_entry")
     .map(mapAttachment);
 
-  // Hardcoded warnings — will be replaced by weather API integration in a future story
-  const warnings: Warning[] = [
-    {
-      message: "Wettermodul nicht verfügbar",
-      sub:     "Wetterinformationen und Frostwarnungen folgen in einer späteren Version.",
-    },
-  ];
+  // Warnings are computed client-side from weather forecast data (see DashboardView)
+  const warnings: Warning[] = [];
 
   return {
     plan_url:        gardenRow?.plan_url   ?? null,

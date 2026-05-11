@@ -13,10 +13,11 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { I18nextProvider } from "react-i18next";
 import i18n from "../i18n/index";
-import { DashboardView } from "../views/DashboardView";
+import { DashboardView, computeFrostWarnings } from "../views/DashboardView";
 import { resetAiPanelState } from "../hooks/useAiPanelState";
 import type { Plant } from "@api/plant";
 import type { Garden } from "@api/garden";
+import type { WeatherDay } from "@api/weather";
 
 // JSDOM stub for ResizeObserver
 if (!("ResizeObserver" in window)) {
@@ -111,7 +112,7 @@ vi.mock("../api/client", () => ({
         },
       ],
       attachments: [], journal_entries: [],
-      warnings: [{ message: "Wettermodul nicht verfügbar", sub: "Folgt in einer späteren Version." }],
+      warnings: [],
     }),
     deletePlant:         vi.fn().mockResolvedValue(undefined),
     deleteAttachment:    vi.fn().mockResolvedValue(undefined),
@@ -177,7 +178,7 @@ const MOCK_GARDEN: Garden = {
     },
   ],
   attachments: [], journal_entries: [],
-  warnings: [{ message: "Wettermodul nicht verfügbar", sub: "Folgt in einer späteren Version." }],
+  warnings: [],
 };
 
 function renderDashboard(garden: Garden | null = MOCK_GARDEN) {
@@ -218,20 +219,12 @@ describe("DashboardView — layout", () => {
   });
 });
 
-describe("DashboardView — warnings section (story-031 AC #1)", () => {
-  it("renders warnings section when warnings are present", async () => {
+describe("DashboardView — frost warnings section", () => {
+  it("shows no warnings section when no frost risk exists", async () => {
+    // MOCK_GARDEN plants have no frost_tolerance_min_c set → no warnings
     renderDashboard();
-    await waitFor(() =>
-      expect(screen.getByTestId("warnings-section")).toBeInTheDocument()
-    );
-  });
-
-  it("renders warning item with message text", async () => {
-    renderDashboard();
-    await waitFor(() =>
-      expect(screen.getByTestId("warning-item")).toBeInTheDocument()
-    );
-    expect(screen.getByText("Wettermodul nicht verfügbar")).toBeInTheDocument();
+    await waitFor(() => screen.getByTestId("dashboard-view"));
+    expect(screen.queryByTestId("warnings-section")).not.toBeInTheDocument();
   });
 });
 
@@ -376,5 +369,107 @@ describe("DashboardView — MonthBand (story-032)", () => {
     await waitFor(() =>
       expect(screen.queryByTestId("month-tooltip")).not.toBeInTheDocument()
     );
+  });
+});
+
+// ── computeFrostWarnings unit tests ──────────────────────────────────────────
+
+function makeForecast(overrides: Partial<WeatherDay>[] = []): WeatherDay[] {
+  const base: WeatherDay = {
+    date: "2026-05-11", weather_code: 0,
+    temp_max: 10, temp_min: 2, precipitation: 0,
+  };
+  return overrides.map((o, i) => ({
+    ...base,
+    date: `2026-05-${String(11 + i).padStart(2, "0")}`,
+    ...o,
+  }));
+}
+
+function makePlantForFrost(overrides: Partial<Plant> = {}): Plant {
+  return {
+    ...MOCK_GARDEN.plants[0],
+    frost_tolerance_min_c: -2,
+    temperature_protected: false,
+    location: "Beet A",
+    ...overrides,
+  };
+}
+
+describe("computeFrostWarnings", () => {
+  it("returns empty array when no plants", () => {
+    const result = computeFrostWarnings([], makeForecast([{ temp_min: -5 }]), "de");
+    expect(result).toHaveLength(0);
+  });
+
+  it("returns empty array when forecast is empty", () => {
+    const result = computeFrostWarnings([makePlantForFrost()], [], "de");
+    expect(result).toHaveLength(0);
+  });
+
+  it("skips plant with temperature_protected: true", () => {
+    const plant = makePlantForFrost({ temperature_protected: true });
+    const result = computeFrostWarnings([plant], makeForecast([{ temp_min: -5 }]), "de");
+    expect(result).toHaveLength(0);
+  });
+
+  it("skips plant with frost_tolerance_min_c: null", () => {
+    const plant = makePlantForFrost({ frost_tolerance_min_c: null });
+    const result = computeFrostWarnings([plant], makeForecast([{ temp_min: -5 }]), "de");
+    expect(result).toHaveLength(0);
+  });
+
+  it("returns no warning when temp_min stays above limit", () => {
+    const plant = makePlantForFrost({ frost_tolerance_min_c: -5 });
+    const result = computeFrostWarnings([plant], makeForecast([{ temp_min: -4 }, { temp_min: -3 }]), "de");
+    expect(result).toHaveLength(0);
+  });
+
+  it("returns warning when temp_min falls below limit", () => {
+    const plant = makePlantForFrost({ frost_tolerance_min_c: -2 });
+    const result = computeFrostWarnings([plant], makeForecast([{ temp_min: -3 }]), "de");
+    expect(result).toHaveLength(1);
+    expect(result[0].message).toContain("Rote Rose");
+    expect(result[0].message).toContain("Beet A");
+    expect(result[0].sub).toContain("-3°C");
+    expect(result[0].sub).toContain("-2°C");
+  });
+
+  it("uses the first day the limit is breached", () => {
+    const plant = makePlantForFrost({ frost_tolerance_min_c: -2 });
+    const forecast = makeForecast([
+      { temp_min: 1 },    // day 1: fine
+      { temp_min: -3 },   // day 2: first breach
+      { temp_min: -5 },   // day 3: also breach
+    ]);
+    const result = computeFrostWarnings([plant], forecast, "de");
+    expect(result).toHaveLength(1);
+    // sub should mention day 2 date (12.05.) and NOT day 3 (13.05.)
+    expect(result[0].sub).toContain("12.05.");
+    expect(result[0].sub).not.toContain("13.05.");
+  });
+
+  it("omits location when plant.location is null", () => {
+    const plant = makePlantForFrost({ location: null });
+    const result = computeFrostWarnings([plant], makeForecast([{ temp_min: -5 }]), "de");
+    expect(result).toHaveLength(1);
+    expect(result[0].message).not.toContain("(");
+    expect(result[0].message).toContain("Rote Rose");
+  });
+
+  it("returns one warning per affected plant", () => {
+    const p1 = makePlantForFrost({ id: "p1", name_common: "Rose",  frost_tolerance_min_c: -2 });
+    const p2 = makePlantForFrost({ id: "p2", name_common: "Thuja", frost_tolerance_min_c: -10 });
+    const forecast = makeForecast([{ temp_min: -3 }]);  // -3 breaches -2 but not -10
+    const result = computeFrostWarnings([p1, p2], forecast, "de");
+    expect(result).toHaveLength(1);
+    expect(result[0].message).toContain("Rose");
+  });
+
+  it("uses English locale for EN language", () => {
+    const plant = makePlantForFrost({ frost_tolerance_min_c: -2 });
+    const result = computeFrostWarnings([plant], makeForecast([{ temp_min: -3 }]), "en");
+    expect(result[0].sub).toMatch(/Frost expected/);
+    expect(result[0].sub).toMatch(/limit/);
   });
 });
