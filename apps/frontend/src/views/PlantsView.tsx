@@ -474,30 +474,32 @@ function PlantRow({ plant, selected, onClick, t }: PlantRowProps) {
       {/* Thumbnail + Name (combined, like Calendar) */}
       <td style={{ padding: "10px 14px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <div
-            style={{
-              width:          "40px",
-              height:         "40px",
-              borderRadius:   "8px",
-              border:         "1.5px solid var(--border)",
-              fontSize:       "22px",
-              display:        "flex",
-              alignItems:     "center",
-              justifyContent: "center",
-              background:     "var(--green-mist)",
-              flexShrink:     0,
-              overflow:       "hidden",
-              position:       "relative",
-            }}
-          >
-            {thumbImg
-              ? <img src={thumbImg.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              : plant.icon ?? "🌿"
-            }
+          {/* Outer wrapper: overflow visible so the 🏠 badge can escape the clip */}
+          <div style={{ position: "relative", flexShrink: 0, width: "40px", height: "40px" }}>
+            {/* Inner: clips the image/emoji to rounded corners */}
+            <div
+              style={{
+                width:          "40px",
+                height:         "40px",
+                borderRadius:   "8px",
+                border:         "1.5px solid var(--border)",
+                fontSize:       "22px",
+                display:        "flex",
+                alignItems:     "center",
+                justifyContent: "center",
+                background:     "var(--green-mist)",
+                overflow:       "hidden",
+              }}
+            >
+              {thumbImg
+                ? <img src={thumbImg.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                : plant.icon ?? "🌿"
+              }
+            </div>
             {plant.temperature_protected && (
               <div
                 title={t("detail.protected_badge")}
-                style={{ position: "absolute", bottom: "-2px", left: "-2px", fontSize: "10px", lineHeight: 1, filter: "drop-shadow(0 1px 1px rgba(0,0,0,.4))", userSelect: "none" }}
+                style={{ position: "absolute", bottom: "-4px", left: "-4px", fontSize: "12px", lineHeight: 1, filter: "drop-shadow(0 1px 1px rgba(0,0,0,.4))", userSelect: "none" }}
               >🏠</div>
             )}
           </div>

@@ -470,32 +470,33 @@ function PlantRow({ plant, activeType, currentMonth, selected, onClick }: PlantR
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          {/* Thumbnail */}
-          <div
-            style={{
-              width:       "40px",
-              height:      "40px",
-              borderRadius:"8px",
-              background:  "var(--green-mist)",
-              border:      "1.5px solid var(--border)",
-              display:     "flex",
-              alignItems:  "center",
-              justifyContent: "center",
-              fontSize:    "22px",
-              flexShrink:  0,
-              overflow:    "hidden",
-              position:    "relative",
-            }}
-          >
-            {firstImg ? (
-              <img src={firstImg.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-            ) : (
-              plant.icon ?? "🌿"
-            )}
+          {/* Thumbnail — outer wrapper allows badge to overflow */}
+          <div style={{ position: "relative", flexShrink: 0, width: "40px", height: "40px" }}>
+            {/* Inner: clips image/emoji to rounded corners */}
+            <div
+              style={{
+                width:       "40px",
+                height:      "40px",
+                borderRadius:"8px",
+                background:  "var(--green-mist)",
+                border:      "1.5px solid var(--border)",
+                display:     "flex",
+                alignItems:  "center",
+                justifyContent: "center",
+                fontSize:    "22px",
+                overflow:    "hidden",
+              }}
+            >
+              {firstImg ? (
+                <img src={firstImg.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              ) : (
+                plant.icon ?? "🌿"
+              )}
+            </div>
             {plant.temperature_protected && (
               <div
                 title="Kälteschutz/Indoor"
-                style={{ position: "absolute", bottom: "-2px", left: "-2px", fontSize: "10px", lineHeight: 1, filter: "drop-shadow(0 1px 1px rgba(0,0,0,.4))", userSelect: "none" }}
+                style={{ position: "absolute", bottom: "-4px", left: "-4px", fontSize: "12px", lineHeight: 1, filter: "drop-shadow(0 1px 1px rgba(0,0,0,.4))", userSelect: "none" }}
               >🏠</div>
             )}
           </div>
