@@ -68,6 +68,7 @@ const FORECAST_BODY = {
     temperature_2m:  18.3,
     weather_code:    2,
     precipitation:   0.0,
+    windspeed_10m:   12.4,
   },
   daily: {
     time:                ["2026-05-11","2026-05-12","2026-05-13","2026-05-14","2026-05-15"],
@@ -158,6 +159,14 @@ describe("GET /api/weather — AC #1/#2/#3: successful response", () => {
     const res  = await app.request("/api/weather");
     const body = await res.json() as { current_precipitation: number };
     expect(body.current_precipitation).toBe(0.0);
+  });
+
+  it("response includes current_wind_kmh rounded to integer", async () => {
+    setCity("Berlin");
+    vi.stubGlobal("fetch", mockFetch(GEOCODING_HIT, FORECAST_BODY));
+    const res  = await app.request("/api/weather");
+    const body = await res.json() as { current_wind_kmh: number };
+    expect(body.current_wind_kmh).toBe(12);
   });
 
   it("forecast has 5 entries", async () => {

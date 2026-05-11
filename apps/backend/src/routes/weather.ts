@@ -41,6 +41,7 @@ interface ForecastResponse {
     temperature_2m:  number;
     weather_code:    number;
     precipitation:   number;
+    windspeed_10m:   number;
   };
   daily: {
     time:                string[];
@@ -84,7 +85,7 @@ weatherRoutes.get("/", async (c) => {
     const params = new URLSearchParams({
       latitude:         String(latitude),
       longitude:        String(longitude),
-      current:          "temperature_2m,weather_code,precipitation",
+      current:          "temperature_2m,weather_code,precipitation,windspeed_10m",
       daily:            "weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum",
       forecast_days:    "5",
       timezone:         "auto",
@@ -110,6 +111,7 @@ weatherRoutes.get("/", async (c) => {
       current_temp:          Math.round(forecast.current.temperature_2m * 10) / 10,
       current_weather_code:  forecast.current.weather_code,
       current_precipitation: Math.round(forecast.current.precipitation * 10) / 10,
+      current_wind_kmh:      Math.round(forecast.current.windspeed_10m),
       forecast:              days,
     };
 

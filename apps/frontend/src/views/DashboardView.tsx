@@ -368,11 +368,13 @@ function WeatherWidget() {
   return (
     <div
       data-testid="weather-widget"
-      style={{ padding: "14px 18px 12px", flexShrink: 0 }}
+      style={{ padding: "14px 18px 10px", flexShrink: 0 }}
     >
       {/* Current conditions row */}
       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
         <span style={{ fontSize: "26px" }} aria-hidden="true">{String(icon)}</span>
+
+        {/* Temp + description */}
         <div style={{ flex: 1, minWidth: 0 }}>
           {state.status === "loading" && (
             <div style={{ fontSize: "11px", color: "var(--text-light)" }}>
@@ -400,11 +402,23 @@ function WeatherWidget() {
                 {state.data.current_temp}°C
               </div>
               <div style={{ fontSize: "11px", color: "var(--text-light)", marginTop: "2px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                 {state.data.city} · {String(label)}
+                {state.data.city} · {String(label)}
               </div>
             </>
           )}
         </div>
+
+        {/* Precipitation + wind — right side, only when data available */}
+        {state.status === "ok" && (
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "2px", flexShrink: 0 }}>
+            <div style={{ fontSize: "10px", color: "var(--text-light)" }}>
+              💧 {state.data.current_precipitation} mm
+            </div>
+            <div style={{ fontSize: "10px", color: "var(--text-light)" }}>
+              💨 {state.data.current_wind_kmh} km/h
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 5-day forecast */}
@@ -416,28 +430,32 @@ function WeatherWidget() {
                 <div
                   key={day.date}
                   title={tw(`weather.weather_code.${dk}`)}
-                  style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", background: "var(--green-mist)", borderRadius: "7px", padding: "5px 2px" }}
+                  style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", background: "var(--green-mist)", borderRadius: "7px", padding: "6px 2px" }}
                 >
                   <div style={{ fontSize: "10px", fontWeight: 600, color: "var(--text-light)" }}>
                     {shortWeekday(day.date, i18n.language)}
                   </div>
-                  <span style={{ fontSize: "14px" }} aria-hidden="true">
+                  <span style={{ fontSize: "18px" }} aria-hidden="true">
                     {tw(`weather.weather_icon.${dk}`)}
                   </span>
-                  <div style={{ fontSize: "10px", color: "var(--text-dark)", fontWeight: 600 }}>
+                  <div style={{ fontSize: "11px", fontWeight: 500, color: "var(--text-mid)" }}>
                     {day.temp_max}°
                   </div>
                   <div style={{ fontSize: "10px", color: "var(--text-light)" }}>
                     {day.temp_min}°
                   </div>
+                  <div style={{ fontSize: "10px", color: "var(--text-light)" }}>
+                    {day.precipitation > 0 ? `${day.precipitation} mm` : "0 mm"}
+                  </div>
                 </div>
               );
             })
           : [1,2,3,4,5].map((i) => (
-              <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", background: "var(--green-mist)", borderRadius: "7px", padding: "5px 2px" }}>
+              <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", background: "var(--green-mist)", borderRadius: "7px", padding: "6px 2px" }}>
                 <div style={{ fontSize: "10px", fontWeight: 600, color: "var(--text-light)" }}>—</div>
-                <span style={{ fontSize: "14px" }}>—</span>
-                <div style={{ fontSize: "10px", color: "var(--text-light)" }}>—°</div>
+                <span style={{ fontSize: "18px" }}>—</span>
+                <div style={{ fontSize: "11px", color: "var(--text-light)" }}>—°</div>
+                <div style={{ fontSize: "10px", color: "var(--text-light)" }}>— mm</div>
               </div>
             ))
         }

@@ -29,6 +29,8 @@ export interface WeatherData {
   current_weather_code: number;
   /** Current precipitation in mm */
   current_precipitation: number;
+  /** Current wind speed in km/h */
+  current_wind_kmh:     number;
   /** 5-day forecast (today + 4 more days) */
   forecast:             WeatherDay[];
 }
