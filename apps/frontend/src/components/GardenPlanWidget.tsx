@@ -107,11 +107,18 @@ export function GardenPlanWidget({
 
   // Previous area size — used by handleResize to preserve viewport center.
   const prevAreaSize = useRef({ w: 0, h: 0 });
+  // Track the planUrl that was last initialised so initPlan only fires once per URL.
+  const initialisedUrl = useRef<string | null>(null);
 
   const initPlan = useCallback(() => {
     const img = imgRef.current;
     const plan = planRef.current;
     if (!img || !plan) return;
+    // Guard: only initialise once per planUrl to prevent zoom reset on re-renders
+    // that keep the same image (e.g. after invalidateGarden).
+    const url = img.src;
+    if (initialisedUrl.current === url) return;
+    initialisedUrl.current = url;
     const s    = stateRef.current;
     s.imgW     = img.naturalWidth  || img.width  || 800;
     s.imgH     = img.naturalHeight || img.height || 600;
@@ -199,6 +206,11 @@ export function GardenPlanWidget({
     if (animated)     { applyT(true);  return; }
     initPlan();
   }, [applyFitBoth, applyFitH, applyFitW, applyT, initPlan]);
+
+  // Reset initialisation guard when the plan image URL changes.
+  useEffect(() => {
+    initialisedUrl.current = null;
+  }, [planUrl]);
 
   // ── event listeners ──────────────────────────────────────────────────────────
 
