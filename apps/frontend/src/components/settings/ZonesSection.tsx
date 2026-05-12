@@ -31,7 +31,7 @@ export function ZonesSection({ form, onChange }: Props) {
         {form.irrigation_zones.map((zone, i) => (
           <ListEntry
             key={i}
-            value={zone}
+            value={t(`defaults.zones.${zone}`, { defaultValue: zone })}
             onChange={(val) => updateZone(i, val)}
             onDelete={() => deleteZone(i)}
             placeholder={t("zones_section.name_placeholder")}

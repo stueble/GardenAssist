@@ -355,7 +355,7 @@ export function PlantDetailPanel({ plant, onClose, onEdit, onDelete }: PlantDeta
             {[
               { label: t("detail.fact_origin"),    value: plant.origin_type   ? t(`origin_type.${plant.origin_type}` as any)   : "–" },
               { label: t("detail.fact_lifecycle"), value: plant.lifecycle     ? t(`lifecycle.${plant.lifecycle}` as any)         : "–" },
-              { label: t("detail.fact_watering"),  value: plant.watering_zone ?? "–" },
+              { label: t("detail.fact_watering"),  value: plant.watering_zone ? t(`defaults.zones.${plant.watering_zone}`, { defaultValue: plant.watering_zone, ns: "settings" }) : "–" },
               { label: t("detail.fact_sun"),       value: plant.sun_demand    ? t(`sun_demand.${plant.sun_demand}` as any)       : "–" },
               { label: t("detail.fact_water"),     value: plant.water_demand  ? t(`water_demand.${plant.water_demand}` as any)  : "–" },
               { label: t("detail.fact_soil"),      value: plant.soil_type     ? t(`soil_type.${plant.soil_type}` as any)         : "–" },
@@ -459,8 +459,8 @@ export function PlantDetailPanel({ plant, onClose, onEdit, onDelete }: PlantDeta
         {/* Weitere Infos — collapsible */}
         <CollapsibleSection label={t("detail.section_more")}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-            {factCell(t("detail.fact_type"),    plant.category ?? "–")}
-            {factCell(t("detail.fact_location"), plant.location ?? "–")}
+            {factCell(t("detail.fact_type"),     plant.category ? t(`defaults.categories.${plant.category}`, { defaultValue: plant.category, ns: "settings" }) : "–")}
+            {factCell(t("detail.fact_location"), plant.location  ? t(`defaults.zones.${plant.location}`,    { defaultValue: plant.location,  ns: "settings" }) : "–")}
             {factCell(t("detail.fact_bloom"),    bloom)}
             {factCell(t("detail.fact_color"),    bloomColor)}
           </div>

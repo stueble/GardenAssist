@@ -308,10 +308,10 @@ function PresetEntry({
         data-testid="preset-swatch"
       />
 
-      {/* Name input */}
+      {/* Name input — value is translated for display; user edits overwrite the key */}
       <input
         type="text"
-        value={preset.name}
+        value={t(`defaults.color_presets.${preset.name}`, { defaultValue: preset.name, ns: "settings" })}
         onChange={(e) => onChangeName(e.target.value)}
         placeholder={t("color_presets_section.name_placeholder")}
         data-testid="preset-name-input"

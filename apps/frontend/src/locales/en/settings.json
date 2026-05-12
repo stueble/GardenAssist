@@ -120,6 +120,51 @@
     "uploading": "Uploading …",
     "removing": "Removing …"
   },
+  "defaults": {
+    "zones": {
+      "West Bed":  "West Bed",
+      "East Bed":  "East Bed",
+      "Lawn":      "Lawn",
+      "Terrace":   "Terrace",
+      "Driveway":  "Driveway"
+    },
+    "categories": {
+      "Shrub":      "Shrub",
+      "Tree":       "Tree",
+      "Perennial":  "Perennial",
+      "Flower":     "Flower",
+      "Conifer":    "Conifer",
+      "Fruit Tree": "Fruit Tree"
+    },
+    "color_presets": {
+      "Dark Red":           "Dark Red",
+      "Red":                "Red",
+      "Coral Red":          "Coral Red",
+      "Pink":               "Pink",
+      "Purple":             "Purple",
+      "Orange":             "Orange",
+      "Pale Pink":          "Pale Pink",
+      "White":              "White",
+      "Light Green":        "Light Green",
+      "Medium Green":       "Medium Green",
+      "Dark Green":         "Dark Green",
+      "Spring Green":       "Spring Green",
+      "Forest Green":       "Forest Green",
+      "Evergreen":          "Evergreen",
+      "Autumn Red":         "Autumn Red",
+      "Autumn Orange":      "Autumn Orange",
+      "Autumn Gold":        "Autumn Gold",
+      "Autumn Brown":       "Autumn Brown",
+      "Spring Pruning":     "Spring Pruning",
+      "Autumn Pruning":     "Autumn Pruning",
+      "Fertilize":          "Fertilize",
+      "Autumn Fertilizer":  "Autumn Fertilizer",
+      "Aerate":             "Aerate",
+      "Scarify":            "Scarify",
+      "Harvest":            "Harvest",
+      "Sow":                "Sow"
+    }
+  },
   "data": {
     "backup_group": "Export & import data",
     "export_backup": "💾 Export all data",

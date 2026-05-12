@@ -120,6 +120,51 @@
     "uploading": "Wird hochgeladen …",
     "removing": "Wird entfernt …"
   },
+  "defaults": {
+    "zones": {
+      "West Bed":  "Beet West",
+      "East Bed":  "Beet Ost",
+      "Lawn":      "Rasen",
+      "Terrace":   "Terrasse",
+      "Driveway":  "Einfahrt"
+    },
+    "categories": {
+      "Shrub":      "Strauch",
+      "Tree":       "Baum",
+      "Perennial":  "Staude",
+      "Flower":     "Blume",
+      "Conifer":    "Nadelbaum",
+      "Fruit Tree": "Obstbaum"
+    },
+    "color_presets": {
+      "Dark Red":           "Dunkelrot",
+      "Red":                "Rot",
+      "Coral Red":          "Korallrot",
+      "Pink":               "Pink",
+      "Purple":             "Lila",
+      "Orange":             "Orange",
+      "Pale Pink":          "Zartrosa",
+      "White":              "Weiß",
+      "Light Green":        "Hellgrün",
+      "Medium Green":       "Mittelgrün",
+      "Dark Green":         "Dunkelgrün",
+      "Spring Green":       "Frühjahrsgrün",
+      "Forest Green":       "Dunkelgrün",
+      "Evergreen":          "Immergrün",
+      "Autumn Red":         "Herbstrot",
+      "Autumn Orange":      "Herbstorange",
+      "Autumn Gold":        "Herbstgold",
+      "Autumn Brown":       "Herbstbraun",
+      "Spring Pruning":     "Frühlingsschnitt",
+      "Autumn Pruning":     "Herbstschnitt",
+      "Fertilize":          "Düngen",
+      "Autumn Fertilizer":  "Herbstdünger",
+      "Aerate":             "Lüften",
+      "Scarify":            "Vertikutieren",
+      "Harvest":            "Ernte",
+      "Sow":                "Aussähen"
+    }
+  },
   "data": {
     "backup_group": "Daten exportieren & importieren",
     "export_backup": "💾 Alle Daten exportieren",

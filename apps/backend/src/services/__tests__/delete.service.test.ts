@@ -177,10 +177,10 @@ describe("installDefaults()", () => {
 
     const presets = db.select().from(schema.colorPresets).all();
     expect(presets.length).toBeGreaterThan(0);
-    // Spot-check a known default preset
-    const rot = presets.find((p) => p.name === "Rot" && p.schedule_type === "bloom");
-    expect(rot).toBeDefined();
-    expect(rot?.color).toBe("#e74c3c");
+    // Spot-check a known default preset (English keys)
+    const red = presets.find((p) => p.name === "Red" && p.schedule_type === "bloom");
+    expect(red).toBeDefined();
+    expect(red?.color).toBe("#e74c3c");
   });
 
   it("replaces existing color presets in full", async () => {
@@ -226,10 +226,10 @@ describe("installDefaults()", () => {
     await installDefaults(db);
 
     const updatedSettings = getSettings(db);
-    expect(updatedSettings.irrigation_zones).toContain("Beet West");
-    expect(updatedSettings.irrigation_zones).toContain("Terrasse");
-    expect(updatedSettings.plant_categories).toContain("Strauch");
-    expect(updatedSettings.plant_categories).toContain("Obstbaum");
+    expect(updatedSettings.irrigation_zones).toContain("West Bed");
+    expect(updatedSettings.irrigation_zones).toContain("Terrace");
+    expect(updatedSettings.plant_categories).toContain("Shrub");
+    expect(updatedSettings.plant_categories).toContain("Fruit Tree");
   });
 
   it("does NOT delete existing plants", async () => {

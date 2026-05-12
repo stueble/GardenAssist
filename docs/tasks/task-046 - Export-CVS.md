@@ -1,15 +1,15 @@
 ---
 id: TASK-046
 title: Export CVS
-status: Ready
+status: Done
 assignee: []
 created_date: '2026-05-08 20:37'
-updated_date: '2026-05-11 16:57'
+updated_date: '2026-05-12 16:17'
 labels:
   - user story
 dependencies: []
 priority: low
-ordinal: 74000
+ordinal: 75000
 ---
 
 ## Description

@@ -30,7 +30,7 @@ export function CategoriesSection({ form, onChange }: Props) {
         {form.plant_categories.map((cat, i) => (
           <ListEntry
             key={i}
-            value={cat}
+            value={t(`defaults.categories.${cat}`, { defaultValue: cat })}
             onChange={(val) => updateCategory(i, val)}
             onDelete={() => deleteCategory(i)}
             placeholder={t("categories_section.name_placeholder")}

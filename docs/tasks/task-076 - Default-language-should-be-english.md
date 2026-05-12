@@ -1,13 +1,14 @@
 ---
 id: TASK-076
 title: Default language should be english
-status: Ready
+status: Done
 assignee: []
 created_date: '2026-05-11 22:52'
+updated_date: '2026-05-12 15:42'
 labels:
   - bug
 dependencies: []
-ordinal: 75000
+ordinal: 74000
 ---
 
 ## Definition of Done

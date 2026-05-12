@@ -1,12 +1,13 @@
 ---
 id: TASK-077
 title: Set meaningful default config
-status: Ready
+status: In Review
 assignee: []
 created_date: '2026-05-11 22:53'
+updated_date: '2026-05-12 16:17'
 labels: []
 dependencies: []
-ordinal: 76000
+ordinal: 36000
 ---
 
 ## Description

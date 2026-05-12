@@ -1,16 +1,16 @@
 ---
 id: TASK-079
 title: Importing backup does not work with docker
-status: Ready
+status: Done
 assignee: []
 created_date: '2026-05-11 22:57'
-updated_date: '2026-05-11 22:57'
+updated_date: '2026-05-12 15:42'
 labels:
   - docker
   - bug
 dependencies: []
 priority: high
-ordinal: 35000
+ordinal: 72000
 ---
 
 ## Definition of Done

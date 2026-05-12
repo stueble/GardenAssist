@@ -16,6 +16,7 @@ RUN pnpm install --frozen-lockfile --filter backend --node-linker=hoisted
 # Copy source
 COPY apps/backend ./apps/backend
 COPY docs/api ./docs/api
+COPY examples/plan ./examples/plan
 COPY tsconfig.base.json ./
 
 # Build
@@ -35,6 +36,8 @@ COPY --from=builder /app/apps/backend/drizzle ./drizzle
 # With --node-linker=hoisted, node_modules contains real files (no symlinks)
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/apps/backend/package.json ./package.json
+# Example garden plan — seed() copies this into the data volume on first start
+COPY --from=builder /app/examples/plan/example_garden.png ./examples/plan/example_garden.png
 
 # Create data directory for SQLite and static files
 RUN mkdir -p /data/static/attachments /data/static/garden

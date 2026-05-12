@@ -20,60 +20,13 @@ import { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import * as schema from "../db/schema.js";
 import type { Garden } from "@api/garden.js";
 import { getGarden } from "./garden.service.js";
+import {
+  DEFAULT_IRRIGATION_ZONES,
+  DEFAULT_PLANT_CATEGORIES,
+  DEFAULT_COLOR_PRESETS,
+} from "../db/seed.js";
 
 type Db = BetterSQLite3Database<typeof schema>;
-
-// ── Default seed values (mirrored from db/seed.ts) ───────────────────────────
-
-const DEFAULT_IRRIGATION_ZONES = JSON.stringify([
-  "Beet West",
-  "Beet Ost",
-  "Rasen",
-  "Terrasse",
-  "Einfahrt",
-]);
-
-const DEFAULT_PLANT_CATEGORIES = JSON.stringify([
-  "Strauch",
-  "Baum",
-  "Staude",
-  "Blume",
-  "Nadelbaum",
-  "Obstbaum",
-]);
-
-const DEFAULT_COLOR_PRESETS: Array<{
-  schedule_type: string;
-  name: string;
-  color: string;
-}> = [
-  { schedule_type: "bloom",         name: "Dunkelrot",        color: "#c0392b" },
-  { schedule_type: "bloom",         name: "Rot",              color: "#e74c3c" },
-  { schedule_type: "bloom",         name: "Korallrot",        color: "#ff6b9d" },
-  { schedule_type: "bloom",         name: "Pink",             color: "#e91e8c" },
-  { schedule_type: "bloom",         name: "Lila",             color: "#9b59b6" },
-  { schedule_type: "bloom",         name: "Orange",           color: "#f39c12" },
-  { schedule_type: "bloom",         name: "Zartrosa",         color: "#f8c8d0" },
-  { schedule_type: "bloom",         name: "Weiß",             color: "#ffffff" },
-  { schedule_type: "growth",        name: "Hellgrün",         color: "#a8d5a2" },
-  { schedule_type: "growth",        name: "Mittelgrün",       color: "#4a7c4a" },
-  { schedule_type: "growth",        name: "Dunkelgrün",       color: "#2e7d32" },
-  { schedule_type: "foliage",       name: "Frühjahrsgrün",    color: "#a8d5a2" },
-  { schedule_type: "foliage",       name: "Dunkelgrün",       color: "#1b5e20" },
-  { schedule_type: "foliage",       name: "Immergrün",        color: "#2d5a1b" },
-  { schedule_type: "foliage",       name: "Herbstrot",        color: "#c0392b" },
-  { schedule_type: "foliage",       name: "Herbstorange",     color: "#c0793a" },
-  { schedule_type: "foliage",       name: "Herbstgold",       color: "#f0c040" },
-  { schedule_type: "foliage",       name: "Herbstbraun",      color: "#8b7355" },
-  { schedule_type: "pruning",       name: "Frühlingsschnitt", color: "#27ae60" },
-  { schedule_type: "pruning",       name: "Herbstschnitt",    color: "#2ecc71" },
-  { schedule_type: "fertilization", name: "Düngen",           color: "#3498db" },
-  { schedule_type: "fertilization", name: "Herbstdünger",     color: "#2980b9" },
-  { schedule_type: "misc",          name: "Lüften",           color: "#e67e22" },
-  { schedule_type: "misc",          name: "Vertikutieren",    color: "#7f8c8d" },
-  { schedule_type: "misc",          name: "Ernte",            color: "#3498db" },
-  { schedule_type: "misc",          name: "Aussähen",         color: "#f1c40f" },
-];
 
 // ── Internal helpers ─────────────────────────────────────────────────────────
 
@@ -138,7 +91,7 @@ export async function deleteAllData(db: Db, dataDir: string): Promise<Garden> {
 
     // Re-create singletons with minimal defaults
     tx.insert(schema.garden).values({ id: "garden" }).run();
-    tx.insert(schema.settings).values({ id: "settings", language: "de" }).run();
+    tx.insert(schema.settings).values({ id: "settings", language: "en" }).run();
   });
 
   return getGarden(db);
@@ -179,7 +132,7 @@ export async function installDefaults(db: Db): Promise<Garden> {
     tx.delete(schema.settings).run();
     tx.insert(schema.settings).values({
       id:                       "settings",
-      language:                 "de",
+      language:                 "en",
       location_city:            null,
       location_zip:             null,
       irrigation_zones:         DEFAULT_IRRIGATION_ZONES,

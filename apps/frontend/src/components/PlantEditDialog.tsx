@@ -1115,7 +1115,7 @@ function GrunddatenFields({
               style={{ ...fieldSelectStyle, ...aiInputStyle("category", true) }}
             >
               <option value="">{t("edit.select_none")}</option>
-              {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+              {categories.map((c) => <option key={c} value={c}>{t(`defaults.categories.${c}`, { defaultValue: c, ns: "settings" })}</option>)}
             </select>
           </AiField>
         </div>
@@ -1202,7 +1202,7 @@ function GrunddatenFields({
               style={{ ...fieldSelectStyle, ...aiInputStyle("watering_zone", true) }}
             >
               <option value="">{t("edit.select_none")}</option>
-              {zones.map((z) => <option key={z} value={z}>{z}</option>)}
+              {zones.map((z) => <option key={z} value={z}>{t(`defaults.zones.${z}`, { defaultValue: z, ns: "settings" })}</option>)}
             </select>
           </AiField>
         </div>
