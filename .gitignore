@@ -12,6 +12,9 @@ dist/
 # set or is the same directory. These are never intentional in this repo.
 apps/frontend/src/**/*.js
 apps/frontend/src/**/*.d.ts
+# Exceptions: legitimate .d.ts source files that are not compile artefacts
+!apps/frontend/src/vite-env.d.ts
+!apps/frontend/src/i18n/types.d.ts
 apps/frontend/vite.config.js
 docs/api/*.js
 docs/api/*.d.ts
