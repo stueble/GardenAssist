@@ -7,7 +7,7 @@
  * - discard() resets local form to last saved state
  */
 
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import type { Settings } from "@api/settings";
 import { apiClient } from "@/api/client";
 
@@ -23,6 +23,7 @@ export interface UseSettingsResult {
   updateForm:  (patch: Partial<Settings>) => void;
   save:        () => Promise<void>;
   discard:     () => void;
+  onSaveRef:   React.MutableRefObject<((updated: Settings) => void) | null>;
 }
 
 const DEFAULT_SETTINGS: Settings = {
@@ -47,6 +48,9 @@ export function useSettings(): UseSettingsResult {
   const [loading, setLoading] = useState(true);
   const [status,  setStatus]  = useState<SettingsSaveStatus>("idle");
   const [error,   setError]   = useState(false);
+  // Callback invoked after a successful save — used to apply language without
+  // depending on React state timing or unstable useEffect deps.
+  const onSaveRef = useRef<((updated: Settings) => void) | null>(null);
 
   // Load on mount
   useEffect(() => {
@@ -83,6 +87,8 @@ export function useSettings(): UseSettingsResult {
       setSaved(updated);
       setForm(updated);
       setStatus("success");
+      // Notify consumer (e.g. SettingsView) with the confirmed server value
+      onSaveRef.current?.(updated);
       // Clear success indicator after 2s
       setTimeout(() => setStatus("idle"), 2000);
     } catch {
@@ -106,5 +112,6 @@ export function useSettings(): UseSettingsResult {
     updateForm,
     save,
     discard,
+    onSaveRef,
   };
 }

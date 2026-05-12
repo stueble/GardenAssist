@@ -25,7 +25,7 @@ interface SettingsViewProps {
 
 export function SettingsView({ garden, invalidateGarden }: SettingsViewProps) {
   const { t, i18n } = useTranslation("settings");
-  const { settings, form, dirty: settingsDirty, status, loading, error, updateForm, save: saveSettings, discard: discardSettings } = useSettings();
+  const { form, dirty: settingsDirty, status, loading, error, updateForm, save: saveSettings, discard: discardSettings, onSaveRef } = useSettings();
   const plan = useGardenPlan();
   const assistantSettings = useAssistantSettings();
 
@@ -38,6 +38,18 @@ export function SettingsView({ garden, invalidateGarden }: SettingsViewProps) {
 
   const dirty = settingsDirty || plan.dirty;
 
+  // Wire up language sync: when settings are saved, apply the confirmed
+  // language from the server response directly — no useEffect, no stale closure.
+  useEffect(() => {
+    onSaveRef.current = (updated) => {
+      if (updated.language && updated.language !== i18n.language) {
+        i18n.changeLanguage(updated.language);
+        localStorage.setItem("ga_language", updated.language);
+      }
+    };
+    return () => { onSaveRef.current = null; };
+  }, [onSaveRef, i18n]);
+
   async function save() {
     // Run plan save and settings save in parallel; both must succeed
     await Promise.all([
@@ -47,16 +59,6 @@ export function SettingsView({ garden, invalidateGarden }: SettingsViewProps) {
     // Notify App.tsx so DashboardView picks up the new plan_url
     if (plan.dirty) invalidateGarden();
   }
-
-  // Apply language to i18n whenever the saved (= DB) language changes.
-  // Using settings (= saved) rather than form ensures we only switch after
-  // a successful save, not while the user is still editing.
-  useEffect(() => {
-    if (settings?.language && settings.language !== i18n.language) {
-      i18n.changeLanguage(settings.language);
-      localStorage.setItem("ga_language", settings.language);
-    }
-  }, [settings?.language, i18n]);
 
   function discard() {
     plan.discard();
