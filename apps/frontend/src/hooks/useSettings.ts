@@ -26,7 +26,7 @@ export interface UseSettingsResult {
 }
 
 const DEFAULT_SETTINGS: Settings = {
-  language:                 "de",
+  language:                 "en",
   location_city:            null,
   location_zip:             null,
   irrigation_zones:         [],

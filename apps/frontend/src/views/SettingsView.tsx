@@ -44,6 +44,11 @@ export function SettingsView({ garden, invalidateGarden }: SettingsViewProps) {
       plan.dirty ? plan.save() : Promise.resolve(),
       saveSettings(),
     ]);
+    // Apply language change after successful save
+    if (form?.language && form.language !== i18n.language) {
+      i18n.changeLanguage(form.language);
+      localStorage.setItem("ga_language", form.language);
+    }
     // Notify App.tsx so DashboardView picks up the new plan_url
     if (plan.dirty) invalidateGarden();
   }
@@ -52,15 +57,6 @@ export function SettingsView({ garden, invalidateGarden }: SettingsViewProps) {
     plan.discard();
     discardSettings();
   }
-
-  // Apply language whenever form.language changes (initial load or user selection).
-  // The NavBar LanguageSwitcher has been removed, so there is no competing updater.
-  useEffect(() => {
-    if (form?.language && form.language !== i18n.language) {
-      i18n.changeLanguage(form.language);
-      localStorage.setItem("ga_language", form.language);
-    }
-  }, [form?.language, i18n]);
 
   async function handleExportBackup() {
     try {

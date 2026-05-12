@@ -131,12 +131,12 @@ describe("SettingsView — API integration", () => {
     expect(screen.queryByTestId("ai-toggle")).not.toBeInTheDocument();
   });
 
-  it("selecting a language in the dropdown updates form.language and switches i18n immediately", async () => {
+  it("selecting a language in the dropdown and saving switches i18n", async () => {
     await i18n.changeLanguage("de");
     renderSettings();
     await waitFor(() => expect(screen.queryByText(/werden geladen/i)).not.toBeInTheDocument());
 
-    // German subtitle visible
+    // German subtitle visible before any change
     expect(screen.getByText(/Gartenplan, Farben, Zonen/i)).toBeInTheDocument();
 
     // Open the language section (it starts closed)
@@ -147,10 +147,15 @@ describe("SettingsView — API integration", () => {
     const langSelect = screen.getByRole("combobox") as HTMLSelectElement;
     fireEvent.change(langSelect, { target: { value: "en" } });
 
-    // i18n and UI should update immediately (before save)
-    await waitFor(() =>
-      expect(screen.getByText(/Garden plan, colors, zones/i)).toBeInTheDocument()
-    );
+    // Language has NOT changed yet — save is required
+    expect(i18n.language).toBe("de");
+
+    // Save
+    fireEvent.click(screen.getByTestId("save-bar-save"));
+    await waitFor(() => expect(i18n.language).toBe("en"));
+
+    // UI should now show English labels
+    expect(screen.getByText(/Garden plan, colors, zones/i)).toBeInTheDocument();
 
     // Cleanup
     await i18n.changeLanguage("de");
