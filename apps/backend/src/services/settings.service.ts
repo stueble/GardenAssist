@@ -5,7 +5,8 @@
  * and managed as part of Settings in the API (always read/written as a list).
  */
 
-import { eq } from "drizzle-orm";
+
+
 import { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import * as schema from "../db/schema.js";
 import type { Settings }    from "@api/settings.js";
@@ -28,7 +29,7 @@ function mapSettings(
   colorPresets: ColorPreset[],
 ): Settings {
   return {
-    language:                 (row.language ?? "de") as Settings["language"],
+    language:                 (row.language ?? "en") as Settings["language"],
     location_city:            row.location_city ?? null,
     location_zip:             row.location_zip  ?? null,
     irrigation_zones:         JSON.parse(row.irrigation_zones ?? "[]") as string[],
@@ -83,9 +84,12 @@ export function getSettings(db: Db): Settings {
 // ── updateSettings ────────────────────────────────────────────────────────────
 
 export function updateSettings(db: Db, data: Settings): Settings {
-  // Update singleton settings row
-  db.update(schema.settings)
-    .set({
+  // UPSERT the singleton settings row.
+  // A plain UPDATE has no effect when the table is empty (e.g. fresh install
+  // without running db:seed), so we use INSERT … ON CONFLICT DO UPDATE instead.
+  db.insert(schema.settings)
+    .values({
+      id:                       "settings",
       language:                 data.language,
       location_city:            data.location_city,
       location_zip:             data.location_zip,
@@ -99,7 +103,23 @@ export function updateSettings(db: Db, data: Settings): Settings {
       ai_api_key:               data.ai_api_key,
       gardener_profile:         data.gardener_profile,
     })
-    .where(eq(schema.settings.id, "settings"))
+    .onConflictDoUpdate({
+      target: schema.settings.id,
+      set: {
+        language:                 data.language,
+        location_city:            data.location_city,
+        location_zip:             data.location_zip,
+        irrigation_zones:         JSON.stringify(data.irrigation_zones),
+        plant_categories:         JSON.stringify(data.plant_categories),
+        task_lookback_weeks:      data.task_lookback_weeks,
+        task_lookahead_weeks:     data.task_lookahead_weeks,
+        attachment_size_limit_mb: data.attachment_size_limit_mb,
+        ai_provider:              data.ai_provider,
+        ai_model:                 data.ai_model,
+        ai_api_key:               data.ai_api_key,
+        gardener_profile:         data.gardener_profile,
+      },
+    })
     .run();
 
   // Replace all color presets (delete + insert)
