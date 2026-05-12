@@ -71,6 +71,7 @@ interface JournalViewProps {
 
 export function JournalView({ garden, loading }: JournalViewProps) {
   const { t } = useTranslation("journal");
+  const { t: tc } = useTranslation("common");
   const assistantSettings = useAssistantSettings();
 
   // Local derived state — rebuilt whenever the shared garden prop updates.
@@ -199,7 +200,7 @@ export function JournalView({ garden, loading }: JournalViewProps) {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Suchen …"
+              placeholder={t("overview.search_placeholder")}
               data-testid="journal-search"
               style={{
                 width:        "100%",
@@ -246,7 +247,7 @@ export function JournalView({ garden, loading }: JournalViewProps) {
         {/* Timeline */}
         <div style={{ flex: 1, overflowY: "auto", padding: "24px 32px 24px 48px", position: "relative" }}>
           {loading ? (
-            <div style={{ color: "var(--text-light)", fontSize: "13px" }}>Wird geladen …</div>
+            <div style={{ color: "var(--text-light)", fontSize: "13px" }}>{t("overview.loading")}</div>
           ) : groups.length === 0 ? (
             /* AC #5 — empty state */
             <div
@@ -254,7 +255,7 @@ export function JournalView({ garden, loading }: JournalViewProps) {
               style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "60px 20px", color: "var(--text-light)", fontSize: "13px", textAlign: "center", gap: "8px" }}
             >
               <span style={{ fontSize: "36px" }}>📔</span>
-              <span>{search || activeType ? "Keine Einträge gefunden." : "Noch keine Einträge vorhanden."}</span>
+              <span>{search || activeType ? t("overview.no_results") : t("overview.no_entries")}</span>
             </div>
           ) : (
             groups.map(({ key, entries: monthEntries }) => (
@@ -510,7 +511,7 @@ function EntryCard({ entry, plant, attachmentMap, onEdit }: EntryCardProps) {
                 flexShrink: 0,
               }}
               className="hover:text-green-deep"
-              title="Bearbeiten"
+              title={t("overview.edit_title")}
             >
               ✏️
             </button>
@@ -618,6 +619,7 @@ type EntryForm = {
 const EntryPanel = forwardRef<EntryPanelHandle, EntryPanelProps>(
 function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }, ref) {
   const { t } = useTranslation("journal");
+  const { t: tc } = useTranslation("common");
   const isNew = entry === null;
 
   // For existing entries: if entry_type is "manual", default the button to "done"
@@ -694,7 +696,7 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }, ref) {
     schedule: Schedule,
     _plant: { name_common: string } | null,
   ): string {
-    return schedule.label ?? SCHEDULE_TYPE_LABEL_DE[schedule.schedule_type] ?? "Aufgabe";
+    return schedule.label ?? tc(`schedule_type.${schedule.schedule_type}`) ?? tc("schedule_type.misc");
   }
 
   // Handle schedule selection — auto-fill title suggestion
@@ -912,7 +914,7 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }, ref) {
                       data-testid="ai-revert-entry_type"
                       onClick={(e) => { e.stopPropagation(); revertAiField("entry_type"); }}
                       style={{ marginLeft: "auto", cursor: "pointer", fontSize: "13px", color: "#e07b00", lineHeight: 1 }}
-                      title="KI-Vorschlag zurücksetzen"
+                      title={t("overview.ai_revert_title")}
                     >×</span>
                   )}
                 </button>
@@ -953,7 +955,7 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }, ref) {
                 data-testid="ai-revert-plant_id"
                 onClick={() => revertAiField("plant_id")}
                 style={{ position: "absolute", right: "28px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#e07b00", fontSize: "13px", lineHeight: 1, padding: "2px" }}
-                title="KI-Vorschlag zurücksetzen"
+                title={t("overview.ai_revert_title")}
               >×</button>
             )}
           </div>
@@ -975,7 +977,7 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }, ref) {
                 const label = s.label ?? t(`entry_type.${s.schedule_type}` as any, s.schedule_type);
                 return (
                   <option key={s.id} value={s.id}>
-                    {icon} {label} (KW {s.start_week}–{s.end_week})
+                     {icon} {label} ({tc("week_abbr")}{s.start_week}–{s.end_week})
                   </option>
                 );
               })}
@@ -1003,7 +1005,7 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }, ref) {
                 data-testid="ai-revert-date"
                 onClick={() => revertAiField("date")}
                 style={{ position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#e07b00", fontSize: "13px", lineHeight: 1, padding: "2px" }}
-                title="KI-Vorschlag zurücksetzen"
+                title={t("overview.ai_revert_title")}
               >×</button>
             )}
           </div>
@@ -1030,7 +1032,7 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }, ref) {
                 data-testid="ai-revert-title"
                 onClick={() => revertAiField("title")}
                 style={{ position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#e07b00", fontSize: "13px", lineHeight: 1, padding: "2px" }}
-                title="KI-Vorschlag zurücksetzen"
+                title={t("overview.ai_revert_title")}
               >×</button>
             )}
           </div>
@@ -1060,7 +1062,7 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }, ref) {
                 data-testid="ai-revert-notes"
                 onClick={() => revertAiField("notes")}
                 style={{ position: "absolute", right: "8px", top: "8px", background: "none", border: "none", cursor: "pointer", color: "#e07b00", fontSize: "13px", lineHeight: 1, padding: "2px" }}
-                title="KI-Vorschlag zurücksetzen"
+                title={t("overview.ai_revert_title")}
               >×</button>
             )}
           </div>
@@ -1133,7 +1135,7 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }, ref) {
                     position: "absolute", bottom: "-2px", right: "-2px",
                     fontSize: "8px", fontWeight: 700, background: "var(--blue-mid)", color: "white",
                     padding: "1px 3px", borderRadius: "3px",
-                  }}>neu</span>
+                  }}>{t("attachment.new_badge")}</span>
                   <button
                     type="button"
                     onClick={() => {
@@ -1190,9 +1192,7 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }, ref) {
         >
           <span aria-hidden="true" style={{ fontSize: "13px" }}>✦</span>
           <span>
-            {aiSuggestionCount === 1
-              ? "1 Feld vom Assistenten vorgeschlagen — klicke × zum Verwerfen"
-              : `${aiSuggestionCount} Felder vom Assistenten vorgeschlagen — klicke × zum Verwerfen`}
+            {t("ai_suggestions_other" as any, { count: aiSuggestionCount })}
           </span>
         </div>
       )}

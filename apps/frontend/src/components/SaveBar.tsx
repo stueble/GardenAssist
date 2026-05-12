@@ -13,10 +13,10 @@ export function SaveBar({ dirty, status = "idle", onSave, onDiscard }: SaveBarPr
   const { t } = useTranslation("common");
 
   const hintText = () => {
-    if (status === "saving")  return "⏳ Wird gespeichert …";
-    if (status === "success") return "✅ Einstellungen gespeichert";
-    if (status === "error")   return "❌ Fehler beim Speichern";
-    return dirty ? "Ungespeicherte Änderungen vorhanden" : "Keine ungespeicherten Änderungen";
+    if (status === "saving")  return t("save_bar.saving");
+    if (status === "success") return t("save_bar.success");
+    if (status === "error")   return t("save_bar.error");
+    return dirty ? t("save_bar.dirty") : t("save_bar.clean");
   };
 
   const isBusy = status === "saving";
@@ -46,7 +46,7 @@ export function SaveBar({ dirty, status = "idle", onSave, onDiscard }: SaveBarPr
           )}
           data-testid="save-bar-discard"
         >
-          Verwerfen
+          {t("actions.discard")}
         </button>
         <button
           type="button"

@@ -125,7 +125,7 @@ export function SettingsView({ garden, invalidateGarden }: SettingsViewProps) {
   if (loading) {
     return (
       <div className="flex flex-1 items-center justify-center bg-cream">
-        <span className="text-[13px] text-text-light">Einstellungen werden geladen …</span>
+        <span className="text-[13px] text-text-light">{t("settings_view.loading", { ns: "common" })}</span>
       </div>
     );
   }
@@ -142,7 +142,7 @@ export function SettingsView({ garden, invalidateGarden }: SettingsViewProps) {
             {/* Backend error banner */}
             {error && (
               <div className="mb-4 px-4 py-3 rounded-lg bg-red-soft border-[1.5px] border-red-warn text-[13px] text-red-warn">
-                ⚠️ Backend nicht erreichbar — Änderungen können nicht gespeichert werden.
+                {t("settings_view.backend_error", { ns: "common" })}
               </div>
             )}
 

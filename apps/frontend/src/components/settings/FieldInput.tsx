@@ -2,6 +2,7 @@
  * Shared form field components matching the mockup's .field-* styles.
  */
 
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 interface FieldLabelProps {
@@ -71,6 +72,7 @@ interface ListEntryProps {
 }
 
 export function ListEntry({ value, onChange, onDelete, placeholder }: ListEntryProps) {
+  const { t } = useTranslation("settings");
   return (
     <div className="flex items-center gap-2 bg-green-mist border-[1.5px] border-border rounded-[8px] px-[10px] py-[7px]">
       <input
@@ -84,7 +86,7 @@ export function ListEntry({ value, onChange, onDelete, placeholder }: ListEntryP
         type="button"
         onClick={onDelete}
         className="text-text-light text-[14px] leading-none hover:text-red-warn transition-colors"
-        aria-label="Eintrag löschen"
+        aria-label={t("field_input.delete_aria")}
       >
         ✕
       </button>

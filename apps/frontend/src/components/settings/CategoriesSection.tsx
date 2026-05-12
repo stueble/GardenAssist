@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { ListEntry, AddRowButton, FieldHint } from "./FieldInput";
 import type { Settings } from "@api/settings";
 
@@ -7,6 +8,7 @@ interface Props {
 }
 
 export function CategoriesSection({ form, onChange }: Props) {
+  const { t } = useTranslation("settings");
   function updateCategory(index: number, value: string) {
     const cats = [...form.plant_categories];
     cats[index] = value;
@@ -31,7 +33,7 @@ export function CategoriesSection({ form, onChange }: Props) {
             value={cat}
             onChange={(val) => updateCategory(i, val)}
             onDelete={() => deleteCategory(i)}
-            placeholder="Kategoriename …"
+            placeholder={t("categories_section.name_placeholder")}
           />
         ))}
       </div>

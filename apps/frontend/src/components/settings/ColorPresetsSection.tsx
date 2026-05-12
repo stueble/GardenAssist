@@ -249,6 +249,7 @@ function PresetEntry({
   draggable, onDragStart, onDragOver, onDragEnd,
   onChangeName, onChangeColor, onDelete,
 }: PresetEntryProps) {
+  const { t } = useTranslation("settings");
   const colorInputRef = useRef<HTMLInputElement>(null);
 
   return (
@@ -274,7 +275,7 @@ function PresetEntry({
         draggable={draggable}
         onDragStart={onDragStart}
         onDragEnd={onDragEnd}
-        title="Verschieben"
+        title={t("color_presets_section.drag_handle")}
         data-testid="preset-drag-handle"
         style={{
           flexShrink:  0,
@@ -292,7 +293,7 @@ function PresetEntry({
       {/* Color swatch — clicking it opens the hidden color input */}
       <div
         onClick={() => colorInputRef.current?.click()}
-        title="Farbe ändern"
+        title={t("color_presets_section.change_color")}
         style={{
           width:        "28px",
           height:       "28px",
@@ -312,7 +313,7 @@ function PresetEntry({
         type="text"
         value={preset.name}
         onChange={(e) => onChangeName(e.target.value)}
-        placeholder="Name …"
+        placeholder={t("color_presets_section.name_placeholder")}
         data-testid="preset-name-input"
         style={{
           flex:         1,
@@ -352,7 +353,7 @@ function PresetEntry({
           flexShrink:  0,
         }}
         className="hover:text-red-warn"
-        aria-label="Preset löschen"
+        aria-label={t("color_presets_section.delete_aria")}
       >
         ✕
       </button>

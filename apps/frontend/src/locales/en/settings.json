@@ -84,6 +84,30 @@
       "misc":          "📋 Miscellaneous"
     }
   },
+  "garden_plan_section": {
+    "loading": "Loading garden plan …",
+    "not_saved": "(not saved)"
+  },
+  "location_section": {
+    "city_placeholder": "e.g. London",
+    "zip_placeholder": "e.g. SW1A 1AA",
+    "hint": "Used for weather warnings (frost, drought) and the weather widget on the dashboard."
+  },
+  "zones_section": {
+    "name_placeholder": "Zone name …"
+  },
+  "categories_section": {
+    "name_placeholder": "Category name …"
+  },
+  "color_presets_section": {
+    "drag_handle": "Drag to reorder",
+    "change_color": "Change color",
+    "name_placeholder": "Name …",
+    "delete_aria": "Delete preset"
+  },
+  "field_input": {
+    "delete_aria": "Delete entry"
+  },
   "garden_plan": {
     "dropzone_title": "Drag image here or click to upload",
     "dropzone_sub": "PNG, JPG or SVG · Recommended: min. 2000 px width",

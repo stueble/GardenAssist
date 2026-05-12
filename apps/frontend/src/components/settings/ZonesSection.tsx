@@ -34,7 +34,7 @@ export function ZonesSection({ form, onChange }: Props) {
             value={zone}
             onChange={(val) => updateZone(i, val)}
             onDelete={() => deleteZone(i)}
-            placeholder="Zonenname …"
+            placeholder={t("zones_section.name_placeholder")}
           />
         ))}
       </div>

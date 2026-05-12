@@ -22,7 +22,7 @@ import type { Schedule }         from "@api/schedule";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const MONTHS_DE = ["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"];
+// Month names are now loaded from i18n — see monthsShort in the component.
 
 const SCHEDULE_TYPES: Array<{ type: Schedule["schedule_type"]; icon: string; labelKey: string }> = [
   { type: "bloom",         icon: "🌸", labelKey: "bloom"         },
@@ -185,6 +185,9 @@ interface CalendarViewProps {
 
 export function CalendarView({ garden, loading }: CalendarViewProps) {
   const { t } = useTranslation("calendar");
+  const { t: tc } = useTranslation("common");
+  const { t: tp } = useTranslation("plants");
+  const monthsShort = tc("months_short", { returnObjects: true }) as string[];
   const assistantSettings = useAssistantSettings();
 
   const plants = garden?.plants ?? [];
@@ -253,7 +256,7 @@ export function CalendarView({ garden, loading }: CalendarViewProps) {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Pflanze suchen …"
+              placeholder={tp("overview.search_placeholder")}
               data-testid="calendar-search"
               style={{
                 width:        "100%",
@@ -303,7 +306,7 @@ export function CalendarView({ garden, loading }: CalendarViewProps) {
         {/* Gantt table */}
         {loading ? (
           <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-light)", fontSize: "13px" }}>
-            Wird geladen …
+            {tc("dashboard.loading")}
           </div>
         ) : (
           <div style={{ flex: 1, overflow: "auto" }}>
@@ -315,7 +318,7 @@ export function CalendarView({ garden, loading }: CalendarViewProps) {
               <thead>
                 <tr>
                   {/* Plant column header */}
-                  <th
+                   <th
                     style={{
                       width:       "220px",
                       minWidth:    "220px",
@@ -335,10 +338,10 @@ export function CalendarView({ garden, loading }: CalendarViewProps) {
                       borderRight: "2px solid var(--border)",
                     }}
                   >
-                    Pflanze
+                    {tp("table.col_name")}
                   </th>
                   {/* Month headers */}
-                  {MONTHS_DE.map((month, idx) => (
+                  {monthsShort.map((month, idx) => (
                     <th
                       key={month}
                       data-testid={`month-header-${idx}`}
@@ -369,7 +372,7 @@ export function CalendarView({ garden, loading }: CalendarViewProps) {
                 {sorted.length === 0 ? (
                   <tr>
                     <td colSpan={13} style={{ padding: "40px", textAlign: "center", color: "var(--text-light)", fontSize: "13px" }}>
-                      {search ? "Keine Pflanzen gefunden." : "Noch keine Pflanzen vorhanden."}
+                      {search ? tp("overview.no_results") : tp("overview.no_plants")}
                     </td>
                   </tr>
                 ) : (
@@ -434,6 +437,8 @@ interface PlantRowProps {
 }
 
 function PlantRow({ plant, activeType, currentMonth, selected, onClick }: PlantRowProps) {
+  const { t: tc } = useTranslation("common");
+  const monthsShort = tc("months_short", { returnObjects: true }) as string[];
   const bars = plant.schedules.filter((s) => s.schedule_type === activeType);
 
   // ── Lane assignment + geometry ──
@@ -495,7 +500,7 @@ function PlantRow({ plant, activeType, currentMonth, selected, onClick }: PlantR
             </div>
             {plant.temperature_protected && (
               <div
-                title="Kälteschutz/Indoor"
+                title={tc("garden_plan.cold_protection")}
                 style={{ position: "absolute", bottom: "-4px", left: "-4px", fontSize: "12px", lineHeight: 1, filter: "drop-shadow(0 1px 1px rgba(0,0,0,.4))", userSelect: "none" }}
               >🏠</div>
             )}
@@ -534,7 +539,7 @@ function PlantRow({ plant, activeType, currentMonth, selected, onClick }: PlantR
             pointerEvents:         "none",
           }}
         >
-          {MONTHS_DE.map((_, idx) => (
+          {monthsShort.map((_, idx) => (
             <div
               key={idx}
               style={{
@@ -588,8 +593,8 @@ function PlantRow({ plant, activeType, currentMonth, selected, onClick }: PlantR
               });
 
               // Build tooltip: label + month range
-              const startMonth = MONTHS_DE[weekToMonthIdx(s.start_week)];
-              const endMonth   = MONTHS_DE[weekToMonthIdx(
+              const startMonth = monthsShort[weekToMonthIdx(s.start_week)];
+              const endMonth   = monthsShort[weekToMonthIdx(
                 s.end_week >= s.start_week ? s.end_week : s.end_week,
               )];
               const tooltip = s.label

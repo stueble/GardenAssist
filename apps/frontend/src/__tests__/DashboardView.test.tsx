@@ -396,38 +396,51 @@ function makePlantForFrost(overrides: Partial<Plant> = {}): Plant {
   };
 }
 
+// Simple t() mock for computeFrostWarnings tests — returns DE or EN string based on language arg
+function makeFrostT(language: string) {
+  return (key: string, opts?: Record<string, unknown>) => {
+    if (key === "dashboard.frost_warning") {
+      if (language === "de") {
+        return `Mindesttemperatur unterschritten: ${opts?.weekday}, ${opts?.date} · ${opts?.plant} (min. ${opts?.min}°C, Vorhersage: ${opts?.forecast}°C)`;
+      }
+      return `Min. temperature exceeded: ${opts?.weekday}, ${opts?.date} · ${opts?.plant} (min. ${opts?.min}°C, forecast: ${opts?.forecast}°C)`;
+    }
+    return key;
+  };
+}
+
 describe("computeFrostWarnings", () => {
   it("returns empty array when no plants", () => {
-    const result = computeFrostWarnings([], makeForecast([{ temp_min: -5 }]), "de");
+    const result = computeFrostWarnings([], makeForecast([{ temp_min: -5 }]), "de", makeFrostT("de"));
     expect(result).toHaveLength(0);
   });
 
   it("returns empty array when forecast is empty", () => {
-    const result = computeFrostWarnings([makePlantForFrost()], [], "de");
+    const result = computeFrostWarnings([makePlantForFrost()], [], "de", makeFrostT("de"));
     expect(result).toHaveLength(0);
   });
 
   it("skips plant with temperature_protected: true", () => {
     const plant = makePlantForFrost({ temperature_protected: true });
-    const result = computeFrostWarnings([plant], makeForecast([{ temp_min: -5 }]), "de");
+    const result = computeFrostWarnings([plant], makeForecast([{ temp_min: -5 }]), "de", makeFrostT("de"));
     expect(result).toHaveLength(0);
   });
 
   it("skips plant with frost_tolerance_min_c: null", () => {
     const plant = makePlantForFrost({ frost_tolerance_min_c: null });
-    const result = computeFrostWarnings([plant], makeForecast([{ temp_min: -5 }]), "de");
+    const result = computeFrostWarnings([plant], makeForecast([{ temp_min: -5 }]), "de", makeFrostT("de"));
     expect(result).toHaveLength(0);
   });
 
   it("returns no warning when temp_min stays above limit", () => {
     const plant = makePlantForFrost({ frost_tolerance_min_c: -5 });
-    const result = computeFrostWarnings([plant], makeForecast([{ temp_min: -4 }, { temp_min: -3 }]), "de");
+    const result = computeFrostWarnings([plant], makeForecast([{ temp_min: -4 }, { temp_min: -3 }]), "de", makeFrostT("de"));
     expect(result).toHaveLength(0);
   });
 
   it("returns warning when temp_min falls below limit", () => {
     const plant = makePlantForFrost({ frost_tolerance_min_c: -2 });
-    const result = computeFrostWarnings([plant], makeForecast([{ temp_min: -3 }]), "de");
+    const result = computeFrostWarnings([plant], makeForecast([{ temp_min: -3 }]), "de", makeFrostT("de"));
     expect(result).toHaveLength(1);
     expect(result[0].message).toContain("Rote Rose");
     expect(result[0].message).toContain("Beet A");
@@ -442,7 +455,7 @@ describe("computeFrostWarnings", () => {
       { temp_min: -3 },   // day 2: first breach
       { temp_min: -5 },   // day 3: also breach
     ]);
-    const result = computeFrostWarnings([plant], forecast, "de");
+    const result = computeFrostWarnings([plant], forecast, "de", makeFrostT("de"));
     expect(result).toHaveLength(1);
     // sub should mention day 2 date (12.05.) and NOT day 3 (13.05.)
     expect(result[0].sub).toContain("12.05.");
@@ -451,7 +464,7 @@ describe("computeFrostWarnings", () => {
 
   it("omits location when plant.location is null", () => {
     const plant = makePlantForFrost({ location: null });
-    const result = computeFrostWarnings([plant], makeForecast([{ temp_min: -5 }]), "de");
+    const result = computeFrostWarnings([plant], makeForecast([{ temp_min: -5 }]), "de", makeFrostT("de"));
     expect(result).toHaveLength(1);
     expect(result[0].message).not.toContain("(");
     expect(result[0].message).toContain("Rote Rose");
@@ -461,27 +474,27 @@ describe("computeFrostWarnings", () => {
     const p1 = makePlantForFrost({ id: "p1", name_common: "Rose",  frost_tolerance_min_c: -2 });
     const p2 = makePlantForFrost({ id: "p2", name_common: "Thuja", frost_tolerance_min_c: -10 });
     const forecast = makeForecast([{ temp_min: -3 }]);  // -3 breaches -2 but not -10
-    const result = computeFrostWarnings([p1, p2], forecast, "de");
+    const result = computeFrostWarnings([p1, p2], forecast, "de", makeFrostT("de"));
     expect(result).toHaveLength(1);
     expect(result[0].message).toContain("Rose");
   });
 
   it("uses English locale for EN language", () => {
     const plant = makePlantForFrost({ frost_tolerance_min_c: -2 });
-    const result = computeFrostWarnings([plant], makeForecast([{ temp_min: -3 }]), "en");
+    const result = computeFrostWarnings([plant], makeForecast([{ temp_min: -3 }]), "en", makeFrostT("en"));
     expect(result[0].sub).toMatch(/Min\. temperature exceeded/);
-    expect(result[0].sub).toMatch(/limit/);
+    expect(result[0].sub).toMatch(/forecast/);
   });
 
   it("sub text uses 'Mindesttemperatur unterschritten' in German", () => {
     const plant = makePlantForFrost({ frost_tolerance_min_c: -2 });
-    const result = computeFrostWarnings([plant], makeForecast([{ temp_min: -3 }]), "de");
+    const result = computeFrostWarnings([plant], makeForecast([{ temp_min: -3 }]), "de", makeFrostT("de"));
     expect(result[0].sub).toContain("Mindesttemperatur unterschritten");
   });
 
   it("warning carries plantId for click-to-select", () => {
     const plant = makePlantForFrost({ id: "plant-xyz", frost_tolerance_min_c: -2 });
-    const result = computeFrostWarnings([plant], makeForecast([{ temp_min: -3 }]), "de");
+    const result = computeFrostWarnings([plant], makeForecast([{ temp_min: -3 }]), "de", makeFrostT("de"));
     expect(result[0].plantId).toBe("plant-xyz");
   });
 });

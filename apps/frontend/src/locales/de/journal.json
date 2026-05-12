@@ -53,5 +53,19 @@
     "delete_confirm_cancel": "Abbrechen",
     "delete_confirm_ok": "Löschen",
     "delete_error": "Fehler beim Löschen: {{error}}"
-  }
+  },
+  "overview": {
+    "search_placeholder": "Suchen …",
+    "loading": "Wird geladen …",
+    "no_results": "Keine Einträge gefunden.",
+    "no_entries": "Noch keine Einträge vorhanden.",
+    "edit_title": "Bearbeiten",
+    "ai_revert_title": "KI-Vorschlag zurücksetzen"
+  },
+  "ai_suggestions_one": "1 Feld vom Assistenten vorgeschlagen — klicke × zum Verwerfen",
+  "ai_suggestions_other": "{{count}} Felder vom Assistenten vorgeschlagen — klicke × zum Verwerfen",
+  "attachment": {
+    "new_badge": "neu"
+  },
+  "schedule_option": "({{abbr}}{{start}}–{{end}})"
 }

@@ -173,6 +173,27 @@
       "col_x":          "X %",
       "col_y":          "Y %"
     },
+    "ai_suggestions": {
+      "fields_one":     "{{count}} field suggested by assistant — click × to discard",
+      "fields_other":   "{{count}} fields suggested by assistant — click × to discard",
+      "schedules_one":  "{{count}} schedule suggested by assistant — click × to discard",
+      "schedules_other":"{{count}} schedules suggested by assistant — click × to discard",
+      "revert_title":   "Undo AI change",
+      "revert_aria":    "Undo AI change",
+      "row_suggested":  "Suggested by assistant",
+      "row_remove":     "Suggested for removal by assistant",
+      "auto_suggest":   "Auto-suggest",
+      "close_dialog":   "Close dialog",
+      "icon_change":    "Change icon",
+      "name_placeholder": "e.g. Red Rose",
+      "botanical_placeholder": "e.g. Rosa",
+      "description_placeholder": "Description of the plant …",
+      "location_placeholder": "e.g. West bed",
+      "care_notes_placeholder": "Care notes, special features …",
+      "drag_handle": "Drag to reorder",
+      "delete_position": "Delete position",
+      "delete_attachment": "Delete attachment"
+    },
     "schedule": {
       "section_bloom":       "Bloom periods",
       "section_growth":      "Growth",

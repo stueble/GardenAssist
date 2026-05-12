@@ -173,6 +173,27 @@
       "col_x":          "X %",
       "col_y":          "Y %"
     },
+    "ai_suggestions": {
+      "fields_one":     "{{count}} Feld vom Assistenten vorgeschlagen — klicke × zum Verwerfen",
+      "fields_other":   "{{count}} Felder vom Assistenten vorgeschlagen — klicke × zum Verwerfen",
+      "schedules_one":  "{{count}} Zeitplan vom Assistenten vorgeschlagen — klicke × zum Verwerfen",
+      "schedules_other":"{{count}} Zeitpläne vom Assistenten vorgeschlagen — klicke × zum Verwerfen",
+      "revert_title":   "KI-Änderung rückgängig machen",
+      "revert_aria":    "KI-Änderung rückgängig machen",
+      "row_suggested":  "Vom Assistenten vorgeschlagen",
+      "row_remove":     "Vom Assistenten zum Entfernen vorgeschlagen",
+      "auto_suggest":   "Auto-Vorschlag",
+      "close_dialog":   "Dialog schließen",
+      "icon_change":    "Icon ändern",
+      "name_placeholder": "z.B. Rote Rose",
+      "botanical_placeholder": "z.B. Rosa",
+      "description_placeholder": "Beschreibung der Pflanze …",
+      "location_placeholder": "z.B. Westbeet",
+      "care_notes_placeholder": "Pflegehinweise, Besonderheiten …",
+      "drag_handle": "Verschieben",
+      "delete_position": "Position löschen",
+      "delete_attachment": "Anhang löschen"
+    },
     "schedule": {
       "section_bloom":       "Blütezeiten",
       "section_growth":      "Wachstum",

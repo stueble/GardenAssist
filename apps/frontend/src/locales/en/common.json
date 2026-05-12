@@ -75,11 +75,86 @@
     "delete": "Delete",
     "edit": "Edit",
     "add": "Add",
-    "confirm": "Confirm"
+    "confirm": "Confirm",
+    "discard": "Discard"
   },
   "status": {
     "loading": "Loading…",
     "error": "Error",
     "empty": "No entries"
+  },
+  "save_bar": {
+    "saving": "⏳ Saving …",
+    "success": "✅ Settings saved",
+    "error": "❌ Error saving",
+    "dirty": "Unsaved changes",
+    "clean": "No unsaved changes"
+  },
+  "months_short": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+  "months_long": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+  "week_abbr": "W",
+  "schedule_type": {
+    "pruning": "Pruning",
+    "fertilization": "Fertilizing",
+    "misc": "Other",
+    "bloom": "Bloom",
+    "growth": "Growth",
+    "foliage": "Foliage"
+  },
+  "dashboard": {
+    "loading": "Loading …",
+    "warnings_title": "⚠️ Warnings",
+    "tasks_title": "Tasks",
+    "tasks_empty": "✅ No open tasks",
+    "overview_label": "Overview",
+    "month_no_tasks": "No tasks",
+    "task_done": "✓ Done",
+    "task_skip": "→ Skip",
+    "task_overdue_one": "Overdue by 1 week",
+    "task_overdue_other": "Overdue by {{count}} weeks",
+    "task_due_one": "Due in 1 week",
+    "task_due_other": "Due in {{count}} weeks",
+    "task_current": "Current (last week)",
+    "task_within_one": "Within 1 week",
+    "task_within_other": "Within {{count}} weeks",
+    "status_overdue": "Overdue",
+    "status_due": "Due",
+    "status_upcoming": "Upcoming",
+    "status_ok": "OK",
+    "frost_warning": "Temperature below minimum: {{weekday}}, {{date}} · {{plant}} (min. {{min}}°C, forecast: {{forecast}}°C)"
+  },
+  "garden_plan": {
+    "no_plan": "No garden plan uploaded",
+    "no_plan_hint": "Upload a garden plan in Settings",
+    "alt": "Garden plan",
+    "cold_protection": "Cold protection / Indoor",
+    "zoom_fit_height": "Fit to height",
+    "zoom_fit_width": "Fit to width",
+    "legend_overdue": "Overdue",
+    "legend_due": "Due",
+    "loading": "Loading …"
+  },
+  "ai": {
+    "panel_title": "🤖 Garden Assistant",
+    "panel_label": "Assistant",
+    "open_label": "Open assistant",
+    "close_label": "Collapse assistant",
+    "not_configured": "The AI assistant is not fully configured yet. Please enter provider, model and API key in",
+    "not_configured_link": "Settings → AI Assistant",
+    "not_configured_suffix": "",
+    "welcome": "Hello! How can I help you with your garden?",
+    "placeholder": "Question or instruction …",
+    "send_label": "Send",
+    "bot_label": "Assistant",
+    "user_label": "You",
+    "error": "The assistant could not be reached. Please try again.",
+    "garden_context": "🌿 Garden"
+  },
+  "settings_view": {
+    "loading": "Loading settings …",
+    "backend_error": "⚠️ Backend unreachable — changes cannot be saved."
+  },
+  "plants_view": {
+    "load_error": "⚠️ Plants could not be loaded."
   }
 }

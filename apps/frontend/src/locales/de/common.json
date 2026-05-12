@@ -75,11 +75,86 @@
     "delete": "Löschen",
     "edit": "Bearbeiten",
     "add": "Hinzufügen",
-    "confirm": "Bestätigen"
+    "confirm": "Bestätigen",
+    "discard": "Verwerfen"
   },
   "status": {
     "loading": "Wird geladen…",
     "error": "Fehler",
     "empty": "Keine Einträge"
+  },
+  "save_bar": {
+    "saving": "⏳ Wird gespeichert …",
+    "success": "✅ Einstellungen gespeichert",
+    "error": "❌ Fehler beim Speichern",
+    "dirty": "Ungespeicherte Änderungen vorhanden",
+    "clean": "Keine ungespeicherten Änderungen"
+  },
+  "months_short": ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"],
+  "months_long": ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"],
+  "week_abbr": "KW",
+  "schedule_type": {
+    "pruning": "Schneiden",
+    "fertilization": "Düngen",
+    "misc": "Sonstiges",
+    "bloom": "Blüte",
+    "growth": "Wachstum",
+    "foliage": "Blätter"
+  },
+  "dashboard": {
+    "loading": "Wird geladen …",
+    "warnings_title": "⚠️ Warnungen",
+    "tasks_title": "Aufgaben",
+    "tasks_empty": "✅ Keine offenen Aufgaben",
+    "overview_label": "Überblick",
+    "month_no_tasks": "Keine Aufgaben",
+    "task_done": "✓ Erledigt",
+    "task_skip": "→ Überspringen",
+    "task_overdue_one": "Überfällig seit 1 Woche",
+    "task_overdue_other": "Überfällig seit {{count}} Wochen",
+    "task_due_one": "Fällig in 1 Woche",
+    "task_due_other": "Fällig in {{count}} Wochen",
+    "task_current": "Aktuell (letzte Woche)",
+    "task_within_one": "Innerhalb 1 Woche",
+    "task_within_other": "Innerhalb {{count}} Wochen",
+    "status_overdue": "Überfällig",
+    "status_due": "Aktuell",
+    "status_upcoming": "Geplant",
+    "status_ok": "OK",
+    "frost_warning": "Mindesttemperatur unterschritten: {{weekday}}, {{date}} · {{plant}} (min. {{min}}°C, Vorhersage: {{forecast}}°C)"
+  },
+  "garden_plan": {
+    "no_plan": "Kein Gartenplan vorhanden",
+    "no_plan_hint": "Gartenplan unter Einstellungen hochladen",
+    "alt": "Gartenplan",
+    "cold_protection": "Kälteschutz/Indoor",
+    "zoom_fit_height": "Auf Höhe einpassen",
+    "zoom_fit_width": "Auf Breite einpassen",
+    "legend_overdue": "Überfällig",
+    "legend_due": "Aktuell",
+    "loading": "Wird geladen …"
+  },
+  "ai": {
+    "panel_title": "🤖 Garten-Assistent",
+    "panel_label": "Assistent",
+    "open_label": "Assistent öffnen",
+    "close_label": "Assistent einklappen",
+    "not_configured": "KI-Assistent ist noch nicht vollständig eingerichtet. Bitte trage in den",
+    "not_configured_link": "Einstellungen → KI-Assistent",
+    "not_configured_suffix": "Anbieter, Modell und API-Schlüssel ein.",
+    "welcome": "Hallo! Wie kann ich dir mit deinem Garten helfen?",
+    "placeholder": "Frage oder Anweisung …",
+    "send_label": "Senden",
+    "bot_label": "Assistent",
+    "user_label": "Du",
+    "error": "Der Assistent konnte nicht erreicht werden. Bitte erneut versuchen.",
+    "garden_context": "🌿 Garten"
+  },
+  "settings_view": {
+    "loading": "Einstellungen werden geladen …",
+    "backend_error": "⚠️ Backend nicht erreichbar — Änderungen können nicht gespeichert werden."
+  },
+  "plants_view": {
+    "load_error": "⚠️ Pflanzen konnten nicht geladen werden."
   }
 }

@@ -47,7 +47,7 @@ export function GardenPlanSection({ plan }: Props) {
   if (plan.loading) {
     return (
       <div className="text-[12px] text-text-light py-2">
-        Gartenplan wird geladen …
+        {t("garden_plan_section.loading")}
       </div>
     );
   }
@@ -136,6 +136,7 @@ function PlanPreview({
   previewUrl, displayName, isPending, saving, onRemove,
   uploadedOn, removeLabel,
 }: PlanPreviewProps) {
+  const { t } = useTranslation("settings");
   const ext = displayName.split(".").pop()?.toUpperCase() ?? "";
   const today = formatDate(new Date());
   // Track img load errors in React state to avoid direct DOM mutation bugs
@@ -197,7 +198,7 @@ function PlanPreview({
               className="text-text-light"
               style={{ fontSize: "11px", fontWeight: 400, marginLeft: "6px" }}
             >
-              (nicht gespeichert)
+              {t("garden_plan_section.not_saved")}
             </span>
           )}
         </div>

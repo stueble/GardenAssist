@@ -50,7 +50,7 @@ function weekToMonthIdx(week: number): number {
   return Math.min(11, Math.floor((week - 1) / 4.33));
 }
 
-const MONTHS_DE = ["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"];
+// Month arrays are now read from i18n — this constant is removed.
 
 /**
  * Build the sub-line text for a todo item.
@@ -58,24 +58,23 @@ const MONTHS_DE = ["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt",
  * - due:     "Jetzt fällig · Pflanzename"
  * - upcoming:"Demnächst · Pflanzename"
  */
-/** Returns the time/status part using task.status + schedule window for counts. */
-function relativeTaskSub(task: Task): string {
+/** Returns the time/status part using task.status + schedule window for counts.
+ *  t() is passed in from the component to keep this function pure. */
+function relativeTaskSub(task: Task, t: TFn): string {
   const cw = currentWeek();
   const { start_week, end_week } = task.schedule;
   if (task.status === "overdue") {
     const weeks = Math.max(1, cw - end_week);
-    return weeks === 1 ? "Überfällig seit 1 Woche" : `Überfällig seit ${weeks} Wochen`;
+    return t("dashboard.task_overdue_other", { count: weeks });
   }
   if (task.status === "upcoming") {
     const weeksUntil = start_week - cw;
-    if (weeksUntil <= 1) return "Fällig in 1 Woche";
-    return `Fällig in ${weeksUntil} Wochen`;
+    return t("dashboard.task_due_other", { count: Math.max(1, weeksUntil) });
   }
   // due: within window
   const weeksLeft = end_week - cw;
-  if (weeksLeft <= 0) return "Aktuell (letzte Woche)";
-  if (weeksLeft === 1) return "Innerhalb 1 Woche";
-  return `Innerhalb ${weeksLeft} Wochen`;
+  if (weeksLeft <= 0) return t("dashboard.task_current");
+  return t("dashboard.task_within_other", { count: weeksLeft });
 }
 
 /** Build a PlanPin from a plant position for the Dashboard. */
@@ -88,7 +87,7 @@ function plantToPin(plant: Plant, posIdx: number, selectedId: string | null): Pl
     ? `${SCHEDULE_ICON[task.schedule.schedule_type] ?? "📌"} ${task.schedule.label ?? ""} (${weekRangeLabel(task.schedule.start_week, task.schedule.end_week)})`
     : undefined;
 
-  const statusLabel = { overdue: "Überfällig", due: "Aktuell", upcoming: "Geplant", ok: "OK" }[status];
+  const statusLabel = status; // translated in useMemo below using tPlants("status.<status>")
 
   const firstPhoto = plant.attachments.find((a) => a.attachment_type === "image");
 
@@ -119,13 +118,16 @@ function plantToPin(plant: Plant, posIdx: number, selectedId: string | null): Pl
 /** Warning extended with an optional plant ID for click-to-select behaviour. */
 export type FrostWarning = Warning & { plantId?: string };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type TFn = (key: string, opts?: Record<string, unknown>) => string;
+
 export function computeFrostWarnings(
   plants: Plant[],
   forecast: import("@api/weather").WeatherDay[],
   language: string,
+  t: TFn,
 ): FrostWarning[] {
   const locale = language === "de" ? "de-DE" : "en-GB";
-  const isDE   = language === "de";
   const warnings: FrostWarning[] = [];
 
   for (const plant of plants) {
@@ -144,9 +146,13 @@ export function computeFrostWarnings(
       ? `${plant.name_common} (${plant.location})`
       : plant.name_common;
 
-    const sub = isDE
-      ? `Mindesttemperatur unterschritten: ${weekday}, ${dateStr} · ${firstDay.temp_min}°C (Limit: ${limit}°C)`
-      : `Min. temperature exceeded: ${weekday}, ${dateStr} · ${firstDay.temp_min}°C (limit: ${limit}°C)`;
+    const sub = t("dashboard.frost_warning", {
+      weekday,
+      date: dateStr,
+      plant: name,
+      min: limit,
+      forecast: firstDay.temp_min,
+    });
 
     warnings.push({ message: `❄️ ${name}`, sub, plantId: plant.id });
   }
@@ -164,6 +170,7 @@ interface DashboardViewProps {
 
 export function DashboardView({ garden, loading, invalidateGarden }: DashboardViewProps) {
   const { t, i18n }       = useTranslation("common");
+  const { t: tPlants }    = useTranslation("plants");
   const assistantSettings = useAssistantSettings();
 
   const [selected, setSelected] = useState<Plant | null>(null);
@@ -172,9 +179,9 @@ export function DashboardView({ garden, loading, invalidateGarden }: DashboardVi
   // Frost warnings — recomputed whenever garden plants or weather forecast changes
   const frostWarnings = useMemo(
     () => (garden && weather)
-      ? computeFrostWarnings(garden.plants, weather.forecast, i18n.language)
+      ? computeFrostWarnings(garden.plants, weather.forecast, i18n.language, t as TFn)
       : [],
-    [garden, weather, i18n.language],
+    [garden, weather, i18n.language, t],
   );
 
   // Keep selected in sync with garden updates (e.g. after save via GlobalPlantEditOverlay)
@@ -194,7 +201,12 @@ export function DashboardView({ garden, loading, invalidateGarden }: DashboardVi
   if (garden) {
     for (const plant of garden.plants) {
       for (let i = 0; i < plant.positions.length; i++) {
-        pins.push({ pin: plantToPin(plant, i, selected?.id ?? null), plant });
+        const pin = plantToPin(plant, i, selected?.id ?? null);
+        // Translate the status key into the display label
+        if (pin.tooltip?.status) {
+          pin.tooltip.status = tPlants(`status.${pin.tooltip.status}` as any);
+        }
+        pins.push({ pin, plant });
       }
     }
   }
@@ -586,6 +598,7 @@ function WarningsSection({
   warnings: FrostWarning[];
   onPlantSelect?: (plantId: string) => void;
 }) {
+  const { t } = useTranslation("common");
   return (
     <div data-testid="warnings-section">
       {/* Section label */}
@@ -594,7 +607,7 @@ function WarningsSection({
         textTransform: "uppercase", color: "var(--text-light)",
         padding: "8px 18px 4px",
       }}>
-        ⚠️ Warnungen
+        {t("dashboard.warnings_title")}
       </div>
 
       {warnings.map((w, i) => {
@@ -669,6 +682,7 @@ interface TodoListProps {
 }
 
 function TodoList({ garden, loading, onTaskResolved, onPlantSelect }: TodoListProps) {
+  const { t } = useTranslation("common");
   // Own stable copy of todos — only refreshed from garden when nothing is animating
   const [stableTodos, setStableTodos] = useState<TodoEntry[]>([]);
   // Keys currently animating out
@@ -685,23 +699,20 @@ function TodoList({ garden, loading, onTaskResolved, onPlantSelect }: TodoListPr
       const task = nextCareTask(plant);
       if (!task) continue;
       const key = `${plant.id}-${task.schedule.id}-${task.week}`;
-      const typeLabel: Record<string, string> = {
-        pruning: "Schneiden", fertilization: "Düngen", misc: "Aufgabe",
-      };
-      const taskName = task.schedule.label ?? typeLabel[task.schedule.schedule_type] ?? task.schedule.schedule_type;
+      const taskName = task.schedule.label ?? (t as TFn)(`schedule_type.${task.schedule.schedule_type}`) ?? task.schedule.schedule_type;
       result.push({
         key,
         plant,
         task,
         taskLabel: `${plant.name_common} — ${taskName}`,
-        taskSub:   relativeTaskSub(task),
+        taskSub:   relativeTaskSub(task, t as TFn),
         status:    status as "overdue" | "due" | "upcoming",
       });
     }
     const order = { overdue: 0, due: 1, upcoming: 2 };
     result.sort((a, b) => order[a.status] - order[b.status]);
     return result;
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (garden && removing.size === 0 && !blockUpdateRef.current) {
@@ -743,7 +754,7 @@ function TodoList({ garden, loading, onTaskResolved, onPlantSelect }: TodoListPr
   if (loading) {
     return (
       <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-light)", fontSize: "12px" }}>
-        Wird geladen …
+        {t("dashboard.loading")}
       </div>
     );
   }
@@ -753,20 +764,20 @@ function TodoList({ garden, loading, onTaskResolved, onPlantSelect }: TodoListPr
   if (stableTodos.length === 0 && !loading) {
     return (
       <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px", color: "var(--text-light)", fontSize: "12px", textAlign: "center" }}>
-        ✅ Keine offenen Aufgaben
+        {t("dashboard.tasks_empty")}
       </div>
     );
   }
 
   return (
     <div data-testid="todo-list" style={{ flex: 1, overflowY: "auto", padding: "10px 0" }}>
-      {/* Single "Aufgaben" heading */}
+      {/* Tasks heading */}
       <div style={{
         fontSize: "10px", fontWeight: 600, letterSpacing: "1px",
         textTransform: "uppercase", color: "var(--text-light)",
         padding: "8px 18px 4px",
       }}>
-        Aufgaben
+        {t("dashboard.tasks_title")}
       </div>
 
       {stableTodos.map((todo) => {
@@ -840,7 +851,7 @@ function TodoList({ garden, loading, onTaskResolved, onPlantSelect }: TodoListPr
                     }}
                     className="hover:bg-green-mid hover:text-white"
                   >
-                    ✓ Erledigt
+                     {t("dashboard.task_done")}
                   </button>
                   <button
                     type="button"
@@ -861,7 +872,7 @@ function TodoList({ garden, loading, onTaskResolved, onPlantSelect }: TodoListPr
                       transition:   "opacity .15s",
                     }}
                   >
-                    → Überspringen
+                    {t("dashboard.task_skip")}
                   </button>
                 </div>
               </div>
@@ -885,12 +896,10 @@ interface MonthBandProps {
   currentMonthIdx: number;
 }
 
-const MONTHS_FULL_DE = [
-  "Januar","Februar","März","April","Mai","Juni",
-  "Juli","August","September","Oktober","November","Dezember",
-];
-
 function MonthBand({ monthData, currentMonthIdx }: MonthBandProps) {
+  const { t } = useTranslation("common");
+  const monthsShort = t("months_short", { returnObjects: true }) as string[];
+  const monthsLong  = t("months_long",  { returnObjects: true }) as string[];
   return (
     <div
       data-testid="month-band"
@@ -922,10 +931,10 @@ function MonthBand({ monthData, currentMonthIdx }: MonthBandProps) {
         marginRight:     "4px",
         flexShrink:      0,
       }}>
-        Überblick
+        {t("dashboard.overview_label")}
       </div>
 
-      {MONTHS_DE.map((month, idx) => {
+      {monthsShort.map((month, idx) => {
         const md      = monthData[idx];
         const current = idx === currentMonthIdx;
         const groups  = [...md.groups.entries()];
@@ -954,7 +963,7 @@ function MonthBand({ monthData, currentMonthIdx }: MonthBandProps) {
           >
             {/* Tooltip (CSS :hover via sibling — use React state for reliability) */}
             <MonthTooltip
-              monthName={MONTHS_FULL_DE[idx]}
+              monthName={monthsLong[idx]}
               groups={groups}
             />
 
@@ -1009,6 +1018,7 @@ interface MonthTooltipProps {
 }
 
 function MonthTooltip({ monthName, groups }: MonthTooltipProps) {
+  const { t } = useTranslation("common");
   const [rect, setRect] = useState<DOMRect | null>(null);
   const triggerRef = useRef<HTMLDivElement>(null);
 
@@ -1077,7 +1087,7 @@ function MonthTooltip({ monthName, groups }: MonthTooltipProps) {
           {/* Groups */}
           {groups.length === 0 ? (
             <div style={{ fontSize: "11px", color: "rgba(255,255,255,.4)", fontStyle: "italic" }}>
-              Keine Aufgaben
+              {t("dashboard.month_no_tasks")}
             </div>
           ) : (
             groups.map(([type, grp]) => (
@@ -1092,7 +1102,7 @@ function MonthTooltip({ monthName, groups }: MonthTooltipProps) {
                   marginTop:     "8px",
                   marginBottom:  "3px",
                 }}>
-                  {grp.icon} {type === "pruning" ? "Schneiden" : type === "fertilization" ? "Düngen" : "Sonstiges"}
+                  {grp.icon} {(t as TFn)(`schedule_type.${type}`)}
                 </div>
                 {/* Plant entries — indented, dot in schedule color */}
                 {grp.plants.map((name) => (

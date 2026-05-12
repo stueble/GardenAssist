@@ -19,7 +19,7 @@ export function LocationSection({ form, onChange }: Props) {
           type="text"
           value={form.location_city ?? ""}
           onChange={(e) => onChange({ location_city: e.target.value || null })}
-          placeholder="z.B. München"
+          placeholder={t("location_section.city_placeholder")}
         />
       </div>
       <div>
@@ -29,12 +29,11 @@ export function LocationSection({ form, onChange }: Props) {
           type="text"
           value={form.location_zip ?? ""}
           onChange={(e) => onChange({ location_zip: e.target.value || null })}
-          placeholder="z.B. 80331"
+          placeholder={t("location_section.zip_placeholder")}
         />
       </div>
       <FieldHint>
-        Wird für Wetterwarnungen (Frost, Trockenheit) und den Wetter-Widget im Dashboard verwendet.
-        Wetterintegration ist für eine zukünftige Version geplant.
+        {t("location_section.hint")}
       </FieldHint>
     </div>
   );

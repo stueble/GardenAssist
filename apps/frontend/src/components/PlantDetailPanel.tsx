@@ -162,6 +162,7 @@ export interface PlantDetailPanelProps {
 
 export function PlantDetailPanel({ plant, onClose, onEdit, onDelete }: PlantDetailPanelProps) {
   const { t } = useTranslation("plants");
+  const { t: tc } = useTranslation("common");
 
   const [confirmOpen,  setConfirmOpen]  = useState(false);
   const [deleting,     setDeleting]     = useState(false);
@@ -220,7 +221,7 @@ export function PlantDetailPanel({ plant, onClose, onEdit, onDelete }: PlantDeta
           type="button"
           onClick={onClose}
           style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-light)", fontSize: "16px", padding: "2px", flexShrink: 0 }}
-          aria-label="Detailansicht schließen"
+          aria-label={tc("actions.cancel")}
           data-testid="detail-close"
         >
           ✕
@@ -268,8 +269,8 @@ export function PlantDetailPanel({ plant, onClose, onEdit, onDelete }: PlantDeta
             main:    t("detail.img_plant"),
             bloom:   t("detail.img_bloom"),
             leaf:    t("detail.img_leaf"),
-            problem: "Problem",
-            invoice: "Rechnung",
+            problem: t("edit.attachments.category_problem"),
+            invoice: t("edit.attachments.category_invoice"),
           };
           const fallbackEmoji: Record<string, string> = {
             main: plant.icon ?? "🌿", bloom: "🌸", leaf: "🍃",

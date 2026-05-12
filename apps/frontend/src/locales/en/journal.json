@@ -53,5 +53,19 @@
     "delete_confirm_cancel": "Cancel",
     "delete_confirm_ok": "Delete",
     "delete_error": "Error deleting entry: {{error}}"
-  }
+  },
+  "overview": {
+    "search_placeholder": "Search …",
+    "loading": "Loading …",
+    "no_results": "No entries found.",
+    "no_entries": "No entries yet.",
+    "edit_title": "Edit",
+    "ai_revert_title": "Revert AI suggestion"
+  },
+  "ai_suggestions_one": "1 field suggested by assistant — click × to discard",
+  "ai_suggestions_other": "{{count}} fields suggested by assistant — click × to discard",
+  "attachment": {
+    "new_badge": "new"
+  },
+  "schedule_option": "({{abbr}}{{start}}–{{end}})"
 }

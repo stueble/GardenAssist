@@ -328,6 +328,7 @@ function PlantEditDialog({
   onPendingChange,
 }: PlantEditDialogProps, ref) {
   const { t } = useTranslation("plants");
+  const { t: tc } = useTranslation("common");
 
   const [form,         setForm]         = useState<EditForm>(() => plantToForm(plant));
   const formRef = useRef<EditForm>(form);
@@ -639,7 +640,7 @@ function PlantEditDialog({
           onClick={handleClose}
           style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-light)", fontSize: "16px", lineHeight: 1, transition: "color .15s" }}
           className="hover:text-text-dark"
-          aria-label="Dialog schließen"
+          aria-label={t("edit.ai_suggestions.close_dialog")}
           data-testid="edit-close"
         >
           ✕
@@ -763,9 +764,9 @@ function PlantEditDialog({
               const scalarCount   = Object.keys(aiMarked).filter((k) => aiMarked[k as AiSuggestableField]).length;
               const scheduleCount = scheduleRows.filter((r) => r.aiAction !== undefined).length;
               const parts: string[] = [];
-              if (scalarCount > 0)   parts.push(`${scalarCount} Feld${scalarCount === 1 ? "" : "er"}`);
-              if (scheduleCount > 0) parts.push(`${scheduleCount} Zeitplan${scheduleCount === 1 ? "" : "pläne"}`);
-              return parts.join(", ") + " vom Assistenten vorgeschlagen — klicke × zum Verwerfen";
+              if (scalarCount > 0)   parts.push(t("edit.ai_suggestions.fields_other", { count: scalarCount }));
+              if (scheduleCount > 0) parts.push(t("edit.ai_suggestions.schedules_other", { count: scheduleCount }));
+              return parts.join(", ");
             })()}
           </span>
         </div>
@@ -875,6 +876,7 @@ function AiField({
   fieldKey, children, isSelect = false, selectRef,
   aiMarked, onRevertAiField,
 }: AiFieldProps) {
+  const { t } = useTranslation("plants");
   if (!aiMarked[fieldKey]) return <>{children}</>;
 
   function handleRevert() {
@@ -903,8 +905,8 @@ function AiField({
         type="button"
         onClick={handleRevert}
         data-testid={`ai-revert-${fieldKey}`}
-        title={isSelect ? "KI-Änderung verwerfen und Auswahl öffnen" : "KI-Änderung rückgängig"}
-        aria-label="KI-Änderung rückgängig machen"
+        title={t("edit.ai_suggestions.revert_title")}
+        aria-label={t("edit.ai_suggestions.revert_aria")}
         style={{
           position:     "absolute",
           right:        isSelect ? "6px" : "4px",
@@ -1000,7 +1002,7 @@ function GrunddatenFields({
               transition: "border-color .15s",
             }}
             className="hover:border-green-mid"
-            aria-label="Icon ändern"
+            aria-label={t("edit.ai_suggestions.icon_change")}
           >
             {form.icon || "🌿"}
           </button>
@@ -1014,7 +1016,7 @@ function GrunddatenFields({
                 onClick={() => { setIconManual(false); patch("icon", autoIcon(form.category)); }}
                 style={{ fontSize: "10px", color: "var(--text-light)", background: "none", border: "none", cursor: "pointer", padding: 0, marginTop: "2px", textDecoration: "underline" }}
               >
-                Auto-Vorschlag
+                {t("edit.ai_suggestions.auto_suggest")}
               </button>
             )}
           </div>
@@ -1060,7 +1062,7 @@ function GrunddatenFields({
               type="text"
               value={form.name_common}
               onChange={(e) => patch("name_common", e.target.value)}
-              placeholder="z.B. Rote Rose"
+              placeholder={t("edit.ai_suggestions.name_placeholder")}
               data-testid="field-name"
               style={{
                 ...fieldInputStyle,
@@ -1078,7 +1080,7 @@ function GrunddatenFields({
               type="text"
               value={form.name_botanical}
               onChange={(e) => patch("name_botanical", e.target.value)}
-              placeholder="z.B. Rosa"
+              placeholder={t("edit.ai_suggestions.botanical_placeholder")}
               data-testid="field-botanical"
               style={{ ...fieldInputStyle, ...aiInputStyle("name_botanical") }}
             />
@@ -1092,7 +1094,7 @@ function GrunddatenFields({
           <textarea
             value={form.description}
             onChange={(e) => patch("description", e.target.value)}
-            placeholder="Beschreibung der Pflanze …"
+            placeholder={t("edit.ai_suggestions.description_placeholder")}
             rows={3}
             data-testid="field-description"
             style={{ ...fieldTextareaStyle, ...aiInputStyle("description") }}
@@ -1183,7 +1185,7 @@ function GrunddatenFields({
               type="text"
               value={form.location}
               onChange={(e) => patch("location", e.target.value)}
-              placeholder="z.B. Westbeet"
+              placeholder={t("edit.ai_suggestions.location_placeholder")}
               data-testid="field-location"
               style={{ ...fieldInputStyle, ...aiInputStyle("location") }}
             />
@@ -1331,7 +1333,7 @@ function GrunddatenFields({
           <textarea
             value={form.care_notes}
             onChange={(e) => patch("care_notes", e.target.value)}
-            placeholder="Pflegehinweise, Besonderheiten …"
+            placeholder={t("edit.ai_suggestions.care_notes_placeholder")}
             rows={3}
             data-testid="field-care-notes"
             style={{ ...fieldTextareaStyle, ...aiInputStyle("care_notes") }}
@@ -1467,7 +1469,7 @@ function PositionenSection({ positions, pickMode, onPickModeChange, onPositionsC
                   padding: 0, flexShrink: 0,
                 }}
                 className="hover:text-red-warn"
-                aria-label="Position löschen"
+                aria-label={t("edit.ai_suggestions.delete_position")}
               >
                 ✕
               </button>
@@ -1671,7 +1673,7 @@ function BilderSection({ rows, onRowsChange, maxSizeMb, t }: BilderSectionProps)
                     lineHeight: 1,
                     userSelect: "none",
                   }}
-                  title="Verschieben"
+                  title={t("edit.ai_suggestions.drag_handle")}
                 >
                   ⠿
                 </span>
@@ -1726,7 +1728,7 @@ function BilderSection({ rows, onRowsChange, maxSizeMb, t }: BilderSectionProps)
                     padding: 0, flexShrink: 0,
                   }}
                   className="hover:text-red-warn"
-                  aria-label="Anhang löschen"
+                  aria-label={t("edit.ai_suggestions.delete_attachment")}
                 >
                   ✕
                 </button>
@@ -1933,6 +1935,7 @@ interface ScheduleEntryRowProps {
 }
 
 function ScheduleEntryRow({ row, hasColor, presets, onChange, onDelete, t }: ScheduleEntryRowProps) {
+  const { t: tc } = useTranslation("common");
   const [popupOpen, setPopupOpen] = useState(false);
   const colorWrapRef = useRef<HTMLDivElement>(null);
 
@@ -1978,7 +1981,7 @@ function ScheduleEntryRow({ row, hasColor, presets, onChange, onDelete, t }: Sch
         {isAi && (
           <span
             aria-hidden="true"
-            title={isRemoved ? "Vom Assistenten zum Entfernen vorgeschlagen" : "Vom Assistenten vorgeschlagen"}
+            title={isRemoved ? t("edit.ai_suggestions.row_remove") : t("edit.ai_suggestions.row_suggested")}
             style={{ fontSize: "11px", color: "#e07b00", flexShrink: 0 }}
           >
             ✦
@@ -2061,7 +2064,7 @@ function ScheduleEntryRow({ row, hasColor, presets, onChange, onDelete, t }: Sch
           type="button"
           data-testid="schedule-entry-delete"
           onClick={onDelete}
-          title={isAi ? "KI-Änderung rückgängig" : "Eintrag löschen"}
+          title={isAi ? t("edit.ai_suggestions.revert_title") : tc("actions.delete")}
           style={{
             background: "none", border: "none", cursor: "pointer",
             color:      isAi ? "#e07b00" : "var(--text-light)",
@@ -2069,7 +2072,7 @@ function ScheduleEntryRow({ row, hasColor, presets, onChange, onDelete, t }: Sch
             flexShrink: 0, padding: 0,
           }}
           className={isAi ? "" : "hover:text-red-warn"}
-          aria-label={isAi ? "KI-Änderung rückgängig machen" : "Eintrag löschen"}
+          aria-label={isAi ? t("edit.ai_suggestions.revert_aria") : tc("actions.delete")}
         >
           ✕
         </button>

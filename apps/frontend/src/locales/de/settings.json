@@ -84,6 +84,30 @@
       "misc":          "📋 Sonstiges"
     }
   },
+  "garden_plan_section": {
+    "loading": "Gartenplan wird geladen …",
+    "not_saved": "(nicht gespeichert)"
+  },
+  "location_section": {
+    "city_placeholder": "z.B. München",
+    "zip_placeholder": "z.B. 80331",
+    "hint": "Wird für Wetterwarnungen (Frost, Trockenheit) und den Wetter-Widget im Dashboard verwendet."
+  },
+  "zones_section": {
+    "name_placeholder": "Zonenname …"
+  },
+  "categories_section": {
+    "name_placeholder": "Kategoriename …"
+  },
+  "color_presets_section": {
+    "drag_handle": "Verschieben",
+    "change_color": "Farbe ändern",
+    "name_placeholder": "Name …",
+    "delete_aria": "Preset löschen"
+  },
+  "field_input": {
+    "delete_aria": "Eintrag löschen"
+  },
   "garden_plan": {
     "dropzone_title": "Bild hierher ziehen oder klicken",
     "dropzone_sub": "PNG, JPG oder SVG · Empfohlen: min. 2000 px Breite",

@@ -13,6 +13,7 @@
  */
 
 import { useEffect, useRef, useState, useCallback, type MouseEvent as ReactMouseEvent } from "react";
+import { useTranslation } from "react-i18next";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -55,6 +56,7 @@ export function GardenPlanWidget({
   onPinClick,
   legend = false,
 }: GardenPlanWidgetProps) {
+  const { t } = useTranslation("common");
   const areaRef = useRef<HTMLDivElement>(null);
   const planRef = useRef<HTMLDivElement>(null);
   const imgRef  = useRef<HTMLImageElement>(null);
@@ -412,7 +414,7 @@ export function GardenPlanWidget({
           <img
             ref={imgRef}
             src={planUrl}
-            alt="Gartenplan"
+            alt={t("garden_plan.alt")}
             data-testid="garden-plan-img"
             onLoad={initPlan}
             style={{ display: "block", width: "100%", height: "100%", pointerEvents: "none" }}
@@ -503,7 +505,7 @@ export function GardenPlanWidget({
                   {/* Cold-protection badge: 🏠 bottom-left */}
                   {pin.protected && (
                     <div
-                      title="Kälteschutz/Indoor"
+                      title={t("garden_plan.cold_protection")}
                       style={{
                         position:   "absolute",
                         bottom:     "-4px",
@@ -558,8 +560,8 @@ export function GardenPlanWidget({
           }}
         >
           <span style={{ fontSize: "36px" }}>🗺️</span>
-          <span>Kein Gartenplan vorhanden</span>
-          <span style={{ fontSize: "11px" }}>Gartenplan unter Einstellungen hochladen</span>
+          <span>{t("garden_plan.no_plan")}</span>
+          <span style={{ fontSize: "11px" }}>{t("garden_plan.no_plan_hint")}</span>
         </div>
       )}
 
@@ -577,8 +579,8 @@ export function GardenPlanWidget({
         }}
       >
         {[
-          { id: "fit-h", label: "↕", active: modeFitH, title: "Auf Höhe einpassen",   handler: handleFitH },
-          { id: "fit-w", label: "↔", active: modeFitW, title: "Auf Breite einpassen",  handler: handleFitW },
+          { id: "fit-h", label: "↕", active: modeFitH, title: t("garden_plan.zoom_fit_height"), handler: handleFitH },
+          { id: "fit-w", label: "↔", active: modeFitW, title: t("garden_plan.zoom_fit_width"),  handler: handleFitW },
         ].map(({ id, label, active, title, handler }) => (
           <button
             key={id}
@@ -634,8 +636,8 @@ export function GardenPlanWidget({
           }}
         >
           {[
-            { color: "var(--red-warn)",    label: "Überfällig" },
-            { color: "var(--yellow-warn)", label: "Aktuell" },
+            { color: "var(--red-warn)",    label: t("garden_plan.legend_overdue") },
+            { color: "var(--yellow-warn)", label: t("garden_plan.legend_due") },
           ].map(({ color, label }) => (
             <div key={label} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
               <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: color, flexShrink: 0 }} />

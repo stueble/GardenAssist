@@ -149,7 +149,7 @@ function dispatchToolCall(
  */
 export function AiPanel({ assistantContext }: AiPanelProps) {
   const { open, setOpen }         = useAiPanelState();
-  const { i18n }                  = useTranslation();
+  const { t, i18n }               = useTranslation("common");
   const [configured, setConfigured] = useState<boolean | null>(null);
   const [input,      setInput]      = useState("");
   const [messages,   setMessages]   = useState<ChatMessage[]>([]);
@@ -186,7 +186,7 @@ export function AiPanel({ assistantContext }: AiPanelProps) {
       ? `${plant.icon ?? "🌿"} ${plant.name_common}${plant.location ? ` · ${plant.location}` : ""}`
       : assistantContext?.view
         ? `📋 ${assistantContext.view}`
-        : "🌿 Garten";
+        : t("ai.garden_context");
 
     // The full content (sent to the model as an assistant message) includes the
     // plant_id so the model uses the correct ID in subsequent tool calls.
@@ -255,11 +255,7 @@ export function AiPanel({ assistantContext }: AiPanelProps) {
       const finalContent = [displayText, feedback].filter(Boolean).join("\n\n");
       setMessages((prev) => [...prev, { role: "assistant", content: finalContent || res.content }]);
     } catch {
-      setError(
-        i18n.language?.startsWith("en")
-          ? "Could not reach the AI assistant. Please try again."
-          : "Der Assistent konnte nicht erreicht werden. Bitte erneut versuchen.",
-      );
+      setError(t("ai.error"));
     } finally {
       setLoading(false);
     }
@@ -291,7 +287,7 @@ export function AiPanel({ assistantContext }: AiPanelProps) {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        aria-label={open ? "Assistent einklappen" : "Assistent öffnen"}
+        aria-label={open ? t("ai.close_label") : t("ai.open_label")}
         aria-expanded={open}
         data-testid="ai-toggle"
         style={{
@@ -324,7 +320,7 @@ export function AiPanel({ assistantContext }: AiPanelProps) {
             letterSpacing:   ".8px",
           }}
         >
-          Assistent
+          {t("ai.panel_label")}
         </span>
       </button>
 
@@ -368,14 +364,14 @@ export function AiPanel({ assistantContext }: AiPanelProps) {
               gap:        "8px",
             }}
           >
-            🤖 Garten-Assistent
+            {t("ai.panel_title")}
           </span>
           {/* Close: › chevron (doc-011 § 5.5) */}
           <button
             type="button"
             onClick={() => setOpen(false)}
-            title="Assistent einklappen"
-            aria-label="Assistent einklappen"
+            title={t("ai.close_label")}
+            aria-label={t("ai.close_label")}
             data-testid="ai-panel-close"
             style={{
               background:   "none",
@@ -415,17 +411,16 @@ export function AiPanel({ assistantContext }: AiPanelProps) {
           {/* Not configured hint */}
           {configured === false && (
             <BotMessage>
-              KI-Assistent ist noch nicht vollständig eingerichtet.{" "}
-              Bitte stelle sicher, dass unter{" "}
-              <strong>Einstellungen → KI-Assistent</strong>{" "}
-              ein Anbieter (z.&nbsp;B. Anthropic) und ein API-Schlüssel hinterlegt sind.
+              {t("ai.not_configured")}{" "}
+              <strong>{t("ai.not_configured_link")}</strong>
+              {t("ai.not_configured_suffix") ? ` ${t("ai.not_configured_suffix")}` : ""}
             </BotMessage>
           )}
 
           {/* Conversation history */}
           {configured === true && messages.length === 0 && (
             <BotMessage>
-              Hallo! Wie kann ich dir mit deinem Garten helfen?
+              {t("ai.welcome")}
             </BotMessage>
           )}
 
@@ -485,8 +480,8 @@ export function AiPanel({ assistantContext }: AiPanelProps) {
               e.target.style.height = `${e.target.scrollHeight}px`;
             }}
             onKeyDown={handleKeyDown}
-            placeholder="Frage oder Anweisung …"
-            aria-label="Nachricht an Assistenten"
+            placeholder={t("ai.placeholder")}
+            aria-label={t("ai.placeholder")}
             disabled={!configured || loading}
             data-testid="ai-input"
             style={{
@@ -509,7 +504,7 @@ export function AiPanel({ assistantContext }: AiPanelProps) {
           />
           <button
             type="button"
-            aria-label="Senden"
+            aria-label={t("ai.send_label")}
             disabled={!canSend}
             onClick={() => { void sendMessage(); }}
             data-testid="ai-send"
@@ -552,6 +547,7 @@ interface BotMessageProps {
 }
 
 function BotMessage({ content, children }: BotMessageProps) {
+  const { t } = useTranslation("common");
   const bubbleStyle: React.CSSProperties = {
     alignSelf:    "flex-start",
     background:   "white",
@@ -577,7 +573,7 @@ function BotMessage({ content, children }: BotMessageProps) {
           padding:       "0 4px",
         }}
       >
-        Assistent
+        {t("ai.bot_label")}
       </span>
       {content !== undefined ? (
         <div style={{ ...bubbleStyle }} data-testid="bot-message-markdown">
@@ -701,6 +697,7 @@ const markdownComponents: React.ComponentProps<typeof ReactMarkdown>["components
 // ── UserMessage ───────────────────────────────────────────────────────────────
 
 function UserMessage({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation("common");
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "3px" }}>
       <span
@@ -713,7 +710,7 @@ function UserMessage({ children }: { children: React.ReactNode }) {
           padding:       "0 4px",
         }}
       >
-        Du
+        {t("ai.user_label")}
       </span>
       <span
         style={{

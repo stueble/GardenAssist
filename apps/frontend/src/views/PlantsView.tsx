@@ -50,6 +50,7 @@ interface PlantsViewProps {
 
 export function PlantsView({ garden, loading }: PlantsViewProps) {
   const { t } = useTranslation("plants");
+  const { t: tc } = useTranslation("common");
   const assistantSettings = useAssistantSettings();
 
   // Derive plants from the shared garden prop.
@@ -261,7 +262,7 @@ export function PlantsView({ garden, loading }: PlantsViewProps) {
         {/* Error banner */}
         {error && (
           <div className="mx-5 mt-4 px-4 py-3 rounded-lg bg-red-soft border-[1.5px] border-red-warn text-[13px] text-red-warn">
-            ⚠️ Pflanzen konnten nicht geladen werden.
+            {tc("plants_view.load_error")}
           </div>
         )}
 
