@@ -1192,7 +1192,8 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }, ref) {
         >
           <span aria-hidden="true" style={{ fontSize: "13px" }}>✦</span>
           <span>
-            {t("ai_suggestions_other" as any, { count: aiSuggestionCount })}
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+            {(t as any)(`ai_suggestions_${aiSuggestionCount === 1 ? "one" : "other"}`, { count: aiSuggestionCount })}
           </span>
         </div>
       )}
