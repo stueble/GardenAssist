@@ -20,8 +20,8 @@ import { useAssistantSettings } from "@/hooks/useAssistantSettings";
 import { setAssistantContext } from "@/hooks/useAssistantContext";
 import { GardenPlanWidget, type PlanPin } from "@/components/GardenPlanWidget";
 import { PlantDetailPanel } from "@/components/PlantDetailPanel";
-import { apiClient, getWeather } from "@/api/client";
-import type { WeatherData }  from "@api/weather";
+import { apiClient, getWeather, getSoilMoisture } from "@/api/client";
+import type { WeatherData, SoilMoistureData, SoilMoistureZone } from "@api/weather";
 import { getPlantEditHandler } from "@/hooks/usePlantEditContext";
 import type { Plant } from "@api/plant";
 import type { Garden, Warning } from "@api/garden";
@@ -314,7 +314,10 @@ export function DashboardView({ garden, loading, invalidateGarden }: DashboardVi
         }}
       >
         {/* Weather widget */}
-        <WeatherWidget onWeatherLoaded={setWeather} />
+        <WeatherWidget
+          onWeatherLoaded={setWeather}
+          zones={assistantSettings?.irrigation_zones ?? []}
+        />
 
         <div style={{ height: "1px", background: "var(--border)", flexShrink: 0 }} />
 
@@ -462,7 +465,10 @@ function shortWeekday(isoDate: string, locale: string): string {
   return d.toLocaleDateString(locale === "de" ? "de-DE" : "en-GB", { weekday: "short" });
 }
 
-function WeatherWidget({ onWeatherLoaded }: { onWeatherLoaded: (data: WeatherData | null) => void }) {
+function WeatherWidget({ onWeatherLoaded, zones }: {
+  onWeatherLoaded: (data: WeatherData | null) => void;
+  zones: string[];
+}) {
   const { t, i18n } = useTranslation("common");
   // Subscribe to singleton — starts with cached value (no flash on re-mount)
   const [state, setState] = useState<WeatherState>(_weatherState);
@@ -585,6 +591,208 @@ function WeatherWidget({ onWeatherLoaded }: { onWeatherLoaded: (data: WeatherDat
             ))
         }
       </div>
+
+      {/* Soil moisture sparklines — below forecast strip (AC #1, #5) */}
+      {zones.length > 0 && (
+        <>
+          <div style={{ height: "1px", background: "var(--border)", margin: "10px 0 0" }} />
+          <SoilMoistureSection zones={zones} />
+        </>
+      )}
+    </div>
+  );
+}
+
+// ── SoilMoisture — module-level singleton cache ───────────────────────────────
+// Same pattern as WeatherWidget: survives navigation, polls once per hour.
+
+const SOIL_POLL_MS = 60 * 60 * 1000;
+
+type SoilState =
+  | { status: "loading" }
+  | { status: "no_location" }
+  | { status: "error" }
+  | { status: "ok"; data: SoilMoistureData };
+
+let _soilState: SoilState              = { status: "loading" };
+let _soilInterval: ReturnType<typeof setInterval> | null = null;
+let _soilFetching  = false;
+const _soilListeners = new Set<(s: SoilState) => void>();
+
+function setSoilState(s: SoilState) {
+  _soilState = s;
+  _soilListeners.forEach((fn) => fn(s));
+}
+
+/** Reset singleton for testing — do not call in production code. */
+export function resetSoilState() {
+  _soilState = { status: "loading" };
+  if (_soilInterval !== null) { clearInterval(_soilInterval); _soilInterval = null; }
+  _soilFetching = false;
+  _soilListeners.clear();
+}
+
+/** Directly inject soil state for testing — bypasses polling. */
+export function setSoilStateForTesting(s: SoilState) {
+  setSoilState(s);
+}
+
+function startSoilPolling() {
+  if (_soilInterval !== null) return;
+
+  function fetchSoil() {
+    if (_soilFetching) return;
+    _soilFetching = true;
+    getSoilMoisture()
+      .then((data) => {
+        _soilFetching = false;
+        setSoilState(data === null ? { status: "no_location" } : { status: "ok", data });
+      })
+      .catch(() => {
+        _soilFetching = false;
+        setSoilState({ status: "error" });
+      });
+  }
+
+  if (_soilState.status === "loading") fetchSoil();
+  _soilInterval = setInterval(fetchSoil, SOIL_POLL_MS);
+}
+
+// ── Sparkline helper ──────────────────────────────────────────────────────────
+
+/** Build SVG polyline points string from 14 moisture % values (0–100). */
+function sparklinePoints(history: SoilMoistureZone["history"]): string {
+  if (history.length === 0) return "";
+  const W = 56, H = 20, PAD = 2;
+  const xStep = (W - PAD * 2) / Math.max(history.length - 1, 1);
+  return history
+    .map((d, i) => {
+      const x = PAD + i * xStep;
+      const y = PAD + (H - PAD * 2) * (1 - d.moisture / 100);
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(" ");
+}
+
+const MOISTURE_COLOR: Record<string, string> = {
+  dry: "var(--red-warn)",
+  ok:  "var(--green-mid)",
+  wet: "var(--blue-mid)",
+};
+
+// ── SoilMoistureSection ───────────────────────────────────────────────────────
+
+function SoilMoistureSection({ zones }: { zones: string[] }) {
+  const { t } = useTranslation("common");
+  const [state, setState] = useState<SoilState>(_soilState);
+
+  useEffect(() => {
+    _soilListeners.add(setState);
+    startSoilPolling();
+    return () => { _soilListeners.delete(setState); };
+  }, []);
+
+  // Hidden when no zones configured (AC #5)
+  if (zones.length === 0) return null;
+  // Not rendered until at least one fetch has resolved
+  if (state.status === "loading" || state.status === "no_location" || state.status === "error") return null;
+
+  const zoneData = zones
+    .map((z) => state.data.zones.find((d) => d.zone === z))
+    .filter((d): d is SoilMoistureZone => d !== undefined);
+
+  if (zoneData.length === 0) return null;
+
+  return (
+    <div data-testid="soil-moisture-section">
+      {/* Section header */}
+      <div style={{
+        padding:       "8px 18px 4px",
+        fontSize:      "10px",
+        fontWeight:    600,
+        letterSpacing: "1px",
+        textTransform: "uppercase",
+        color:         "var(--text-light)",
+      }}>
+        {t("weather.soil_moisture_title")}
+      </div>
+
+      {/* One row per zone */}
+      {zoneData.map((zone) => {
+        const color  = MOISTURE_COLOR[zone.status] ?? MOISTURE_COLOR.ok;
+        const points = sparklinePoints(zone.history);
+        return (
+          <div
+            key={zone.zone}
+            data-testid={`soil-zone-${zone.zone}`}
+            title={t(`weather.soil_moisture_${zone.status}` as any)}
+            style={{
+              display:    "flex",
+              alignItems: "center",
+              gap:        "8px",
+              padding:    "4px 18px",
+            }}
+          >
+            {/* Status dot (AC #4) */}
+            <div
+              data-testid={`soil-dot-${zone.zone}`}
+              style={{
+                width:        "8px",
+                height:       "8px",
+                borderRadius: "50%",
+                background:   color,
+                flexShrink:   0,
+              }}
+            />
+
+            {/* Zone name */}
+            <div style={{
+              fontSize:     "12px",
+              color:        "var(--text-dark)",
+              flex:         "1 1 0",
+              minWidth:     0,
+              overflow:     "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace:   "nowrap",
+              fontFamily:   "var(--font-body)",
+            }}>
+              {zone.zone}
+            </div>
+
+            {/* 14-day sparkline (AC #3) */}
+            <svg
+              data-testid={`soil-sparkline-${zone.zone}`}
+              width="56"
+              height="20"
+              viewBox="0 0 56 20"
+              aria-hidden="true"
+              style={{ flexShrink: 0 }}
+            >
+              <polyline
+                points={points}
+                fill="none"
+                stroke={color}
+                strokeWidth="1.5"
+                strokeLinejoin="round"
+                strokeLinecap="round"
+              />
+            </svg>
+
+            {/* Current % (AC #2) */}
+            <div style={{
+              fontSize:   "11px",
+              fontWeight: 600,
+              color,
+              flexShrink: 0,
+              minWidth:   "34px",
+              textAlign:  "right",
+              fontFamily: "var(--font-body)",
+            }}>
+              {zone.current.toFixed(0)}{t("weather.soil_moisture_unit")}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

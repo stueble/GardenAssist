@@ -4,8 +4,8 @@ import type { Plant }        from "@api/plant";
 import type { JournalEntry } from "@api/journal-entry";
 import type { Attachment }   from "@api/attachment";
 import type { Settings }     from "@api/settings";
-import type { WeatherData }  from "@api/weather";
-export type { WeatherData };
+import type { WeatherData, SoilMoistureData } from "@api/weather";
+export type { WeatherData, SoilMoistureData };
 
 const BASE = "/api";
 
@@ -151,6 +151,20 @@ export async function getWeather(): Promise<WeatherData | null> {
     throw new Error(`Weather API error ${res.status}`);
   }
   return res.json() as Promise<WeatherData>;
+}
+
+/**
+ * Returns the 14-day FAO-56 soil moisture balance for all configured irrigation zones.
+ * Returns null when no location is configured (204).
+ * Throws on 422 (city not found) or 502 (upstream error).
+ */
+export async function getSoilMoisture(): Promise<SoilMoistureData | null> {
+  const res = await fetch("/api/soil-moisture");
+  if (res.status === 204) return null;
+  if (!res.ok) {
+    throw new Error(`Soil moisture API error ${res.status}`);
+  }
+  return res.json() as Promise<SoilMoistureData>;
 }
 
 // ── AI chat (outside Api interface — not part of the typed contract yet) ──────

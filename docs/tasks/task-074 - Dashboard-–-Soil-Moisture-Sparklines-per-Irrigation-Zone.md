@@ -1,9 +1,11 @@
 ---
 id: TASK-074
 title: Dashboard – Soil Moisture Sparklines per Irrigation Zone
-status: Ready
-assignee: []
+status: In Progress
+assignee:
+  - '@agent'
 created_date: '2026-05-11 16:25'
+updated_date: '2026-05-12 22:50'
 labels:
   - frontend
   - weather
@@ -29,6 +31,18 @@ Add a soil moisture section to the Weather Widget in the dashboard left column. 
 - [ ] #5 Section is hidden when no irrigation zones are configured in settings
 - [ ] #6 Component covered by unit tests
 <!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. getSoilMoisture() API-Client-Funktion hinzufügen
+2. Singleton-State-Pattern für soil-moisture im WeatherWidget
+3. SoilMoistureSection-Komponente: eine Zeile pro Zone mit Status-Dot, Name, SVG-Sparkline, Prozentwert
+4. WeatherWidget: zones-Prop + settings-Zugriff, Section bedingt rendern
+5. i18n-Schlüssel für de/en
+6. Unit-Tests
+7. Commit
+<!-- SECTION:PLAN:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->

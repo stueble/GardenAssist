@@ -1,18 +1,18 @@
 ---
 id: TASK-073
 title: Weather Service – Soil Moisture & Water Balance Calculation
-status: In Review
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-11 16:09'
-updated_date: '2026-05-12 22:33'
+updated_date: '2026-05-12 22:50'
 labels:
   - backend
   - weather
   - enhancement
 dependencies: []
 priority: low
-ordinal: 70000
+ordinal: 78000
 ---
 
 ## Description

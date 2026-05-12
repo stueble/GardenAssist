@@ -7,6 +7,11 @@
     "no_location_hint": "Set your location in Settings",
     "go_to_settings": "Go to Settings",
     "precipitation": "{{mm}} mm",
+    "soil_moisture_title": "Soil Moisture",
+    "soil_moisture_dry":   "Dry",
+    "soil_moisture_ok":    "Optimal",
+    "soil_moisture_wet":   "Wet",
+    "soil_moisture_unit":  "%",
     "weather_code": {
       "0":  "Sunny",
       "1":  "Mainly clear",

@@ -9,15 +9,16 @@
  * AC #7  Legend shown
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { I18nextProvider } from "react-i18next";
 import i18n from "../i18n/index";
-import { DashboardView, computeFrostWarnings } from "../views/DashboardView";
+import { DashboardView, computeFrostWarnings, resetSoilState, setSoilStateForTesting } from "../views/DashboardView";
 import { resetAiPanelState } from "../hooks/useAiPanelState";
 import type { Plant } from "@api/plant";
 import type { Garden } from "@api/garden";
-import type { WeatherDay } from "@api/weather";
+import type { WeatherDay, SoilMoistureData } from "@api/weather";
+import { apiClient } from "../api/client";
 
 // JSDOM stub for ResizeObserver
 if (!("ResizeObserver" in window)) {
@@ -65,7 +66,8 @@ const MOCK_PLANT_NO_POS: Plant = {
 };
 
 vi.mock("../api/client", () => ({
-  getWeather: vi.fn().mockResolvedValue(null),
+  getWeather:       vi.fn().mockResolvedValue(null),
+  getSoilMoisture:  vi.fn().mockResolvedValue(null),
   apiClient: {
     getGarden: vi.fn().mockResolvedValue({
       plan_url:    "/static/garden/plan.png",
@@ -496,5 +498,136 @@ describe("computeFrostWarnings", () => {
     const plant = makePlantForFrost({ id: "plant-xyz", frost_tolerance_min_c: -2 });
     const result = computeFrostWarnings([plant], makeForecast([{ temp_min: -3 }]), "de", makeFrostT("de"));
     expect(result[0].plantId).toBe("plant-xyz");
+  });
+});
+
+// ── SoilMoistureSection tests (TASK-074) ─────────────────────────────────────
+
+/** Build a 14-entry moisture history. */
+function makeMoistureHistory(value = 50) {
+  return Array.from({ length: 14 }, (_, i) => ({
+    date:     `2026-05-${String(i + 1).padStart(2, "0")}`,
+    moisture: value,
+  }));
+}
+
+function makeSoilData(zones: Array<{ zone: string; status: "dry" | "ok" | "wet"; current?: number }>): SoilMoistureData {
+  return {
+    zones: zones.map(({ zone, status, current = 50 }) => ({
+      zone,
+      history:        makeMoistureHistory(current),
+      current,
+      status,
+      field_capacity: 0.30,
+    })),
+  };
+}
+
+/**
+ * Render DashboardView with configured irrigation zones, then directly
+ * inject the soil state (bypassing polling) so tests don't depend on
+ * async fetch timing.
+ */
+function renderWithSoilMoisture(soilData: SoilMoistureData | null, irrigationZones: string[] = ["Hochbeet", "Terrasse"]) {
+  (apiClient.getSettings as ReturnType<typeof vi.fn>).mockResolvedValue({
+    language: "de", location_city: "Berlin", location_zip: null,
+    irrigation_zones: irrigationZones, plant_categories: [], color_presets: [],
+    task_lookback_weeks: 2, task_lookahead_weeks: 4,
+    attachment_size_limit_mb: 10,
+    ai_provider: null, ai_model: null, ai_api_key: null,
+  });
+
+  const result = render(
+    <I18nextProvider i18n={i18n}>
+      <DashboardView
+        garden={MOCK_GARDEN}
+        loading={false}
+        invalidateGarden={() => {}}
+      />
+    </I18nextProvider>
+  );
+
+  // Directly inject soil state — bypasses async polling so tests are deterministic
+  if (soilData !== null) {
+    setSoilStateForTesting({ status: "ok", data: soilData });
+  } else {
+    setSoilStateForTesting({ status: "no_location" });
+  }
+
+  return result;
+}
+
+describe("SoilMoistureSection — AC #5: hidden when no zones configured", () => {
+  afterEach(() => { vi.clearAllMocks(); resetAiPanelState(); resetSoilState(); });
+
+  it("does not render soil-moisture-section when irrigation_zones is empty", async () => {
+    renderWithSoilMoisture(null, []);
+    // Give effects time to run — section must never appear
+    await waitFor(() => {
+      expect(screen.queryByTestId("soil-moisture-section")).not.toBeInTheDocument();
+    });
+  });
+});
+
+describe("SoilMoistureSection — AC #1/#2/#3/#4: renders zones with sparklines and status dots", () => {
+  afterEach(() => { vi.clearAllMocks(); resetAiPanelState(); resetSoilState(); });
+
+  it("renders one row per irrigation zone (AC #1)", async () => {
+    renderWithSoilMoisture(makeSoilData([
+      { zone: "Hochbeet", status: "ok" },
+      { zone: "Terrasse", status: "dry" },
+    ]));
+    await waitFor(() => {
+      expect(screen.getByTestId("soil-zone-Hochbeet")).toBeInTheDocument();
+      expect(screen.getByTestId("soil-zone-Terrasse")).toBeInTheDocument();
+    });
+  });
+
+  it("renders sparkline as SVG polyline for each zone (AC #3)", async () => {
+    renderWithSoilMoisture(makeSoilData([
+      { zone: "Hochbeet", status: "ok" },
+    ]));
+    await waitFor(() => {
+      const sparkline = screen.getByTestId("soil-sparkline-Hochbeet");
+      expect(sparkline.tagName.toLowerCase()).toBe("svg");
+      const polyline = sparkline.querySelector("polyline");
+      expect(polyline).not.toBeNull();
+      expect(polyline!.getAttribute("points")).toBeTruthy();
+    });
+  });
+
+  it("status dot is present for each zone (AC #2/#4)", async () => {
+    renderWithSoilMoisture(makeSoilData([
+      { zone: "Hochbeet", status: "ok" },
+    ]));
+    await waitFor(() => {
+      expect(screen.getByTestId("soil-dot-Hochbeet")).toBeInTheDocument();
+    });
+  });
+
+  it("section is hidden when soil moisture returns null (no location)", async () => {
+    renderWithSoilMoisture(null);
+    // With zones configured but no data yet, section is not shown
+    await waitFor(() => {
+      expect(screen.queryByTestId("soil-moisture-section")).not.toBeInTheDocument();
+    });
+  });
+
+  it("section heading shows i18n title", async () => {
+    renderWithSoilMoisture(makeSoilData([
+      { zone: "Hochbeet", status: "ok" },
+    ]));
+    await waitFor(() => {
+      expect(screen.getByTestId("soil-moisture-section")).toHaveTextContent("Bodenfeuchtigkeit");
+    });
+  });
+
+  it("current moisture percentage is displayed (AC #2)", async () => {
+    renderWithSoilMoisture(makeSoilData([
+      { zone: "Hochbeet", status: "ok", current: 67 },
+    ]));
+    await waitFor(() => {
+      expect(screen.getByTestId("soil-zone-Hochbeet")).toHaveTextContent("67%");
+    });
   });
 });
