@@ -25,7 +25,7 @@ interface SettingsViewProps {
 
 export function SettingsView({ garden, invalidateGarden }: SettingsViewProps) {
   const { t, i18n } = useTranslation("settings");
-  const { form, dirty: settingsDirty, status, loading, error, updateForm, save: saveSettings, discard: discardSettings } = useSettings();
+  const { settings, form, dirty: settingsDirty, status, loading, error, updateForm, save: saveSettings, discard: discardSettings } = useSettings();
   const plan = useGardenPlan();
   const assistantSettings = useAssistantSettings();
 
@@ -44,14 +44,19 @@ export function SettingsView({ garden, invalidateGarden }: SettingsViewProps) {
       plan.dirty ? plan.save() : Promise.resolve(),
       saveSettings(),
     ]);
-    // Apply language change after successful save
-    if (form?.language && form.language !== i18n.language) {
-      i18n.changeLanguage(form.language);
-      localStorage.setItem("ga_language", form.language);
-    }
     // Notify App.tsx so DashboardView picks up the new plan_url
     if (plan.dirty) invalidateGarden();
   }
+
+  // Apply language to i18n whenever the saved (= DB) language changes.
+  // Using settings (= saved) rather than form ensures we only switch after
+  // a successful save, not while the user is still editing.
+  useEffect(() => {
+    if (settings?.language && settings.language !== i18n.language) {
+      i18n.changeLanguage(settings.language);
+      localStorage.setItem("ga_language", settings.language);
+    }
+  }, [settings?.language, i18n]);
 
   function discard() {
     plan.discard();

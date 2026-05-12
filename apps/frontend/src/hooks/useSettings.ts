@@ -53,10 +53,6 @@ export function useSettings(): UseSettingsResult {
     let cancelled = false;
     apiClient.getSettings().then((s) => {
       if (!cancelled) {
-        // Both saved and form start from the DB value.
-        // The language dropdown shows the DB-stored language.
-        // Changing it marks the form dirty; saving writes it to DB and
-        // then SettingsView applies it to i18n/localStorage.
         setSaved(s);
         setForm(s);
         setLoading(false);
