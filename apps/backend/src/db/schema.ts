@@ -123,7 +123,7 @@ export const garden = sqliteTable("garden", {
 
 export const settings = sqliteTable("settings", {
   id:                       text("id").primaryKey().default("settings"),
-  language:                 text("language").notNull().default("de"),            // Enum: de, en
+  language:                 text("language").notNull().default("en"),            // Enum: de, en
   location_city:            text("location_city"),
   location_zip:             text("location_zip"),
   irrigation_zones:         text("irrigation_zones").default(sql`'[]'`),       // JSON array

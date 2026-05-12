@@ -219,7 +219,7 @@ async function seed() {
     .insert(settings)
     .values({
       id:                       "settings",
-      language:                 "de",
+      language:                 "en",
       location_city:            null,
       location_zip:             null,
       irrigation_zones:         DEFAULT_IRRIGATION_ZONES,
