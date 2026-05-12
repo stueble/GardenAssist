@@ -60,7 +60,16 @@ interface ForecastDailyResponse {
     time:                       string[];
     precipitation_sum:          (number | null)[];
     et0_fao_evapotranspiration: (number | null)[];
-    soil_moisture_3_to_9cm:     (number | null)[];
+  };
+}
+
+// soil_moisture_3_to_9cm is only available as an hourly variable in the
+// Forecast API — not as a daily variable. We fetch it separately and
+// compute the daily mean for use as the T-14 baseline.
+interface ForecastHourlyResponse {
+  hourly: {
+    time:                   string[];   // ISO datetime strings "2026-05-01T00:00"
+    soil_moisture_3_to_9cm: (number | null)[];
   };
 }
 
@@ -173,22 +182,43 @@ export async function fetchSoilMoisture(db: Db, lat: number, lon: number): Promi
   }
   const archiveData = await archiveRes.json() as ArchiveResponse;
 
-  // ── Fetch Open-Meteo Forecast (T-2 to T, plus baseline soil moisture) ─────
+  // ── Fetch Open-Meteo Forecast daily (T-2 to T) and hourly soil moisture ─────
+  // Two parallel requests:
+  //   1. Daily precip + ET0 for the recent days not yet in the archive
+  //   2. Hourly soil_moisture_3_to_9cm for T-14 (baseline) — daily not available
 
-  const forecastParams = new URLSearchParams({
+  const forecastDailyParams = new URLSearchParams({
     latitude:      String(lat),
     longitude:     String(lon),
-    daily:         "precipitation_sum,et0_fao_evapotranspiration,soil_moisture_3_to_9cm",
-    past_days:     "14",   // gives us T-14 through today
+    daily:         "precipitation_sum,et0_fao_evapotranspiration",
+    past_days:     "3",
     forecast_days: "1",
     timezone:      "UTC",
   });
 
-  const forecastRes = await fetch(`${FORECAST_URL}?${forecastParams}`);
-  if (!forecastRes.ok) {
-    throw new Error(`Forecast API error: ${forecastRes.status}`);
+  const forecastHourlyParams = new URLSearchParams({
+    latitude:      String(lat),
+    longitude:     String(lon),
+    hourly:        "soil_moisture_3_to_9cm",
+    past_days:     "14",
+    forecast_days: "0",
+    timezone:      "UTC",
+  });
+
+  const [forecastDailyRes, forecastHourlyRes] = await Promise.all([
+    fetch(`${FORECAST_URL}?${forecastDailyParams}`),
+    fetch(`${FORECAST_URL}?${forecastHourlyParams}`),
+  ]);
+
+  if (!forecastDailyRes.ok) {
+    throw new Error(`Forecast API error: ${forecastDailyRes.status}`);
   }
-  const forecastData = await forecastRes.json() as ForecastDailyResponse;
+  if (!forecastHourlyRes.ok) {
+    throw new Error(`Forecast API error: ${forecastHourlyRes.status}`);
+  }
+
+  const forecastDailyData  = await forecastDailyRes.json()  as ForecastDailyResponse;
+  const forecastHourlyData = await forecastHourlyRes.json() as ForecastHourlyResponse;
 
   // ── Build unified daily arrays indexed by date string ─────────────────────
 
@@ -202,21 +232,22 @@ export async function fetchSoilMoisture(db: Db, lat: number, lon: number): Promi
     et0ByDate.set(date,    archiveData.daily.et0_fao_evapotranspiration[i] ?? 0);
   }
 
-  // Forecast data fills T-2, T-1, T (overwrites archive if overlap)
-  for (let i = 0; i < forecastData.daily.time.length; i++) {
-    const date = forecastData.daily.time[i];
-    // Only fill the gap (T-2 onwards); archive is more reliable for earlier days
+  // Forecast daily fills T-2, T-1, T (overwrites archive if overlap)
+  for (let i = 0; i < forecastDailyData.daily.time.length; i++) {
+    const date = forecastDailyData.daily.time[i];
     if (date >= toIsoDate(t2)) {
-      precipByDate.set(date, forecastData.daily.precipitation_sum[i] ?? 0);
-      et0ByDate.set(date,    forecastData.daily.et0_fao_evapotranspiration[i] ?? 0);
+      precipByDate.set(date, forecastDailyData.daily.precipitation_sum[i] ?? 0);
+      et0ByDate.set(date,    forecastDailyData.daily.et0_fao_evapotranspiration[i] ?? 0);
     }
   }
 
-  // Baseline soil moisture: first value in the forecast past_days window (T-14)
+  // Baseline soil moisture: mean of hourly values on the T-14 date
   const baselineSoilMoisture: number = (() => {
-    const idx = forecastData.daily.time.indexOf(startDate);
-    if (idx === -1) return 0.20; // fallback if date not in response
-    return forecastData.daily.soil_moisture_3_to_9cm[idx] ?? 0.20;
+    const hourlyTimes  = forecastHourlyData.hourly.time;
+    const hourlyValues = forecastHourlyData.hourly.soil_moisture_3_to_9cm;
+    const dayValues    = hourlyValues.filter((_, i) => hourlyTimes[i]?.startsWith(startDate) && hourlyValues[i] !== null) as number[];
+    if (dayValues.length === 0) return 0.20;
+    return dayValues.reduce((a, b) => a + b, 0) / dayValues.length;
   })();
 
   // ── Build ordered 14-day date list (T-14 … T) ────────────────────────────

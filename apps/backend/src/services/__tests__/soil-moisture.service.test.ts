@@ -70,34 +70,70 @@ function makeArchiveBody(precip: number[] = Array(12).fill(2), et0: number[] = A
   };
 }
 
-/** Forecast response covers T-14 to T (15 days) for past_days=14. */
-function makeForecastBody(
-  soilMoisture0 = 0.20,
-  precip: number[] = Array(15).fill(2),
-  et0: number[] = Array(15).fill(1),
+/** Forecast daily response covers T-2 to T (3 days) for past_days=3. */
+function makeForecastDailyBody(
+  precip: number[] = Array(4).fill(2),
+  et0: number[]    = Array(4).fill(1),
 ) {
   return {
     daily: {
-      time:                       DATES,
-      precipitation_sum:          precip,
-      et0_fao_evapotranspiration: et0,
-      soil_moisture_3_to_9cm:     [soilMoisture0, ...Array(14).fill(0.20)],
+      time:                       DATES.slice(12),  // T-2, T-1, T (+ maybe T+1)
+      precipitation_sum:          precip.slice(0, DATES.slice(12).length),
+      et0_fao_evapotranspiration: et0.slice(0,    DATES.slice(12).length),
+    },
+  };
+}
+
+/** Forecast hourly response: 24 values per day × 15 days for soil moisture baseline. */
+function makeForecastHourlyBody(soilMoisture0 = 0.20) {
+  const times:  string[] = [];
+  const values: number[] = [];
+  for (let d = 0; d < 15; d++) {
+    for (let h = 0; h < 24; h++) {
+      times.push(`${DATES[d]}T${String(h).padStart(2, "0")}:00`);
+      values.push(soilMoisture0);
+    }
+  }
+  return {
+    hourly: {
+      time:                   times,
+      soil_moisture_3_to_9cm: values,
     },
   };
 }
 
 /**
  * Mock global fetch so that:
- *   - First call  (Archive API)  → returns archiveBody
- *   - Second call (Forecast API) → returns forecastBody
+ *   - Call 1 (Archive API)         → archiveBody
+ *   - Call 2 (Forecast daily API)  → forecastDailyBody
+ *   - Call 3 (Forecast hourly API) → forecastHourlyBody
+ *
+ * Promise.all in the service means calls 2+3 may arrive in any order,
+ * but fetch() is called sequentially in the URLSearchParams order;
+ * we map by call index for determinism.
  */
-function mockFetch(archiveBody: unknown, forecastBody: unknown, archiveOk = true, forecastOk = true) {
+function mockFetch(
+  archiveBody: unknown,
+  forecastDailyBody: unknown,
+  forecastHourlyBody: unknown = makeForecastHourlyBody(),
+  archiveOk = true,
+  forecastOk = true,
+) {
   let callCount = 0;
   return vi.fn().mockImplementation(() => {
     callCount++;
-    const isArchive = callCount === 1;
-    const ok   = isArchive ? archiveOk : forecastOk;
-    const body = isArchive ? archiveBody : forecastBody;
+    let ok:   boolean;
+    let body: unknown;
+    if (callCount === 1) {
+      ok   = archiveOk;
+      body = archiveBody;
+    } else if (callCount === 2) {
+      ok   = forecastOk;
+      body = forecastDailyBody;
+    } else {
+      ok   = forecastOk;
+      body = forecastHourlyBody;
+    }
     return Promise.resolve({
       ok,
       status: ok ? 200 : 500,
@@ -210,7 +246,7 @@ describe("fetchSoilMoisture()", () => {
 
   it("returns one zone entry per configured irrigation zone", async () => {
     const db = createTestDb();
-    vi.stubGlobal("fetch", mockFetch(makeArchiveBody(), makeForecastBody()));
+    vi.stubGlobal("fetch", mockFetch(makeArchiveBody(), makeForecastDailyBody()));
     const result = await fetchSoilMoisture(db, 52.52, 13.41);
     expect(result.zones).toHaveLength(2);
     expect(result.zones.map((z) => z.zone)).toEqual(["Hochbeet", "Terrasse"]);
@@ -218,7 +254,7 @@ describe("fetchSoilMoisture()", () => {
 
   it("history has exactly 14 entries per zone (AC #2)", async () => {
     const db = createTestDb();
-    vi.stubGlobal("fetch", mockFetch(makeArchiveBody(), makeForecastBody()));
+    vi.stubGlobal("fetch", mockFetch(makeArchiveBody(), makeForecastDailyBody()));
     const result = await fetchSoilMoisture(db, 52.52, 13.41);
     for (const zone of result.zones) {
       expect(zone.history).toHaveLength(14);
@@ -227,7 +263,7 @@ describe("fetchSoilMoisture()", () => {
 
   it("history dates are ISO date strings in ascending order", async () => {
     const db = createTestDb();
-    vi.stubGlobal("fetch", mockFetch(makeArchiveBody(), makeForecastBody()));
+    vi.stubGlobal("fetch", mockFetch(makeArchiveBody(), makeForecastDailyBody()));
     const result = await fetchSoilMoisture(db, 52.52, 13.41);
     const { history } = result.zones[0];
     for (let i = 1; i < history.length; i++) {
@@ -237,7 +273,7 @@ describe("fetchSoilMoisture()", () => {
 
   it("current equals last history entry moisture", async () => {
     const db = createTestDb();
-    vi.stubGlobal("fetch", mockFetch(makeArchiveBody(), makeForecastBody()));
+    vi.stubGlobal("fetch", mockFetch(makeArchiveBody(), makeForecastDailyBody()));
     const result = await fetchSoilMoisture(db, 52.52, 13.41);
     for (const zone of result.zones) {
       expect(zone.current).toBe(zone.history[zone.history.length - 1].moisture);
@@ -246,7 +282,7 @@ describe("fetchSoilMoisture()", () => {
 
   it("field_capacity is exposed on each zone (AC #5)", async () => {
     const db = createTestDb();
-    vi.stubGlobal("fetch", mockFetch(makeArchiveBody(), makeForecastBody()));
+    vi.stubGlobal("fetch", mockFetch(makeArchiveBody(), makeForecastDailyBody()));
     const result = await fetchSoilMoisture(db, 52.52, 13.41);
     for (const zone of result.zones) {
       expect(typeof zone.field_capacity).toBe("number");
@@ -256,7 +292,7 @@ describe("fetchSoilMoisture()", () => {
 
   it("status is one of dry / ok / wet (AC #5)", async () => {
     const db = createTestDb();
-    vi.stubGlobal("fetch", mockFetch(makeArchiveBody(), makeForecastBody()));
+    vi.stubGlobal("fetch", mockFetch(makeArchiveBody(), makeForecastDailyBody()));
     const result = await fetchSoilMoisture(db, 52.52, 13.41);
     for (const zone of result.zones) {
       expect(["dry", "ok", "wet"]).toContain(zone.status);
@@ -265,10 +301,10 @@ describe("fetchSoilMoisture()", () => {
 
   it("moisture is clamped to 0 when ET0 >> precipitation (AC #4)", async () => {
     const db = createTestDb();
-    // Very high ET0, zero precip → moisture should hit 0 and stay there
-    const archive  = makeArchiveBody(Array(12).fill(0), Array(12).fill(10));
-    const forecast = makeForecastBody(0.01, Array(15).fill(0), Array(15).fill(10));
-    vi.stubGlobal("fetch", mockFetch(archive, forecast));
+    const archive        = makeArchiveBody(Array(12).fill(0), Array(12).fill(10));
+    const forecastDaily  = makeForecastDailyBody(Array(4).fill(0), Array(4).fill(10));
+    const forecastHourly = makeForecastHourlyBody(0.01);
+    vi.stubGlobal("fetch", mockFetch(archive, forecastDaily, forecastHourly));
     const result = await fetchSoilMoisture(db, 52.52, 13.41);
     for (const zone of result.zones) {
       expect(zone.current).toBe(0);
@@ -278,10 +314,10 @@ describe("fetchSoilMoisture()", () => {
 
   it("moisture is clamped to 100% when precipitation >> ET0 (AC #4)", async () => {
     const db = createTestDb();
-    // Very high precip → moisture should hit field capacity (100%)
-    const archive  = makeArchiveBody(Array(12).fill(100), Array(12).fill(0));
-    const forecast = makeForecastBody(0.30, Array(15).fill(100), Array(15).fill(0));
-    vi.stubGlobal("fetch", mockFetch(archive, forecast));
+    const archive        = makeArchiveBody(Array(12).fill(100), Array(12).fill(0));
+    const forecastDaily  = makeForecastDailyBody(Array(4).fill(100), Array(4).fill(0));
+    const forecastHourly = makeForecastHourlyBody(0.30);
+    vi.stubGlobal("fetch", mockFetch(archive, forecastDaily, forecastHourly));
     const result = await fetchSoilMoisture(db, 52.52, 13.41);
     for (const zone of result.zones) {
       expect(zone.current).toBe(100);
@@ -292,9 +328,9 @@ describe("fetchSoilMoisture()", () => {
   it("irrigation journal entries increase moisture for the matching zone (AC #3)", async () => {
     const db = createTestDb();
 
-    // Baseline 0.20 m³/m³, precip = ET0 = 0 → without irrigation stays at 0.20
-    const archive  = makeArchiveBody(Array(12).fill(0), Array(12).fill(0));
-    const forecast = makeForecastBody(0.20, Array(15).fill(0), Array(15).fill(0));
+    const archive        = makeArchiveBody(Array(12).fill(0), Array(12).fill(0));
+    const forecastDaily  = makeForecastDailyBody(Array(4).fill(0), Array(4).fill(0));
+    const forecastHourly = makeForecastHourlyBody(0.20);
 
     // Insert an irrigation entry for "Hochbeet" 7 days ago: 30 mm
     const today = new Date();
@@ -304,41 +340,37 @@ describe("fetchSoilMoisture()", () => {
     const irrigDate = sevenDaysAgo.toISOString().slice(0, 10);
 
     db.insert(schema.journalEntries).values({
-      id:         "irr-001",
-      plant_id:   null,
+      id:          "irr-001",
+      plant_id:    null,
       schedule_id: null,
-      week:       null,
-      entry_type: "irrigation",
-      date:       irrigDate,
-      title:      "Hochbeet",  // zone name
-      notes:      "30",        // 30 mm
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      week:        null,
+      entry_type:  "irrigation",
+      date:        irrigDate,
+      title:       "Hochbeet",
+      notes:       "30",
+      created_at:  new Date().toISOString(),
+      updated_at:  new Date().toISOString(),
     }).run();
 
-    vi.stubGlobal("fetch", mockFetch(archive, forecast));
+    vi.stubGlobal("fetch", mockFetch(archive, forecastDaily, forecastHourly));
     const result = await fetchSoilMoisture(db, 52.52, 13.41);
 
-    const hochbeet  = result.zones.find((z) => z.zone === "Hochbeet")!;
-    const terrasse  = result.zones.find((z) => z.zone === "Terrasse")!;
+    const hochbeet = result.zones.find((z) => z.zone === "Hochbeet")!;
+    const terrasse = result.zones.find((z) => z.zone === "Terrasse")!;
 
-    // Hochbeet gets +30mm = +0.03 m³/m³ on that day; Terrasse does not
-    // Both start at 0.20, fc = 0.30 → baseline % = 0.20/0.30*100 ≈ 66.7
-    // After irrigation: (0.20+0.03)/0.30*100 = 76.7 → wet
-    // Without irrigation: 0.20/0.30*100 = 66.7 → ok
     expect(hochbeet.current).toBeGreaterThan(terrasse.current);
     expect(terrasse.status).toBe("ok");
   });
 
   it("throws when Archive API returns non-ok status", async () => {
     const db = createTestDb();
-    vi.stubGlobal("fetch", mockFetch(null, null, false, true));
+    vi.stubGlobal("fetch", mockFetch(null, null, undefined, false, true));
     await expect(fetchSoilMoisture(db, 52.52, 13.41)).rejects.toThrow("Archive API error");
   });
 
   it("throws when Forecast API returns non-ok status", async () => {
     const db = createTestDb();
-    vi.stubGlobal("fetch", mockFetch(makeArchiveBody(), null, true, false));
+    vi.stubGlobal("fetch", mockFetch(makeArchiveBody(), null, undefined, true, false));
     await expect(fetchSoilMoisture(db, 52.52, 13.41)).rejects.toThrow("Forecast API error");
   });
 });
