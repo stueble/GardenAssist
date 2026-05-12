@@ -39,8 +39,8 @@
     "entry_type": "Type",
     "photos":                        "Photos",
     "photos_add":                    "＋ Add photo",
-    "irrigation_zone":               "Irrigation zone",
-    "irrigation_zone_placeholder":   "Select zone …",
+    "irrigation_zones":              "Irrigation zones",
+    "irrigation_zones_empty":        "No zones configured. Please add them in Settings first.",
     "irrigation_amount":             "Amount (mm)",
     "irrigation_amount_placeholder": "e.g. 15"
   },
@@ -51,7 +51,8 @@
     "cancel": "✕ Cancel",
     "saving": "…",
     "save_error": "Failed to save. Please try again.",
-    "manual_hint": "No schedule selected — will be saved as a manual entry."
+    "manual_hint": "No schedule selected — will be saved as a manual entry.",
+    "irrigation_zone_required": "Please select at least one irrigation zone."
   },
   "actions": {
     "delete": "Delete entry",

@@ -631,8 +631,12 @@ function EntryPanel({ entry, plants, irrigationZones, onClose, onSaved, onDelete
       ? entry.entry_type
       : "done";
 
-  // Irrigation-specific state: zone name (title) and mm amount (notes)
-  const initIrrigationZone   = entry?.entry_type === "irrigation" ? (entry.title ?? "") : "";
+  // Irrigation-specific state:
+  // - new entry: Set of selected zones (multiple allowed)
+  // - edit entry: single zone from title (not multi-selectable in edit mode)
+  const initIrrigationZones  = entry?.entry_type === "irrigation" && entry.title
+    ? new Set([entry.title])
+    : new Set<string>();
   const initIrrigationAmount = entry?.entry_type === "irrigation" ? (entry.notes ?? "") : "";
 
   const [entryType,         setEntryType]         = useState<JournalEntryType>(initType);
@@ -641,7 +645,7 @@ function EntryPanel({ entry, plants, irrigationZones, onClose, onSaved, onDelete
   const [date,              setDate]              = useState(entry?.date ?? new Date().toISOString().slice(0, 10));
   const [title,             setTitle]             = useState(entry?.title ?? "");
   const [notes,             setNotes]             = useState(entry?.notes ?? "");
-  const [irrigationZone,   setIrrigationZone]    = useState<string>(initIrrigationZone);
+  const [selectedZones,    setSelectedZones]      = useState<Set<string>>(initIrrigationZones);
   const [irrigationAmount, setIrrigationAmount]  = useState<string>(initIrrigationAmount);
 
   // AI suggestion markers
@@ -775,42 +779,66 @@ function EntryPanel({ entry, plants, irrigationZones, onClose, onSaved, onDelete
     setSaving(true);
     setError(null);
     try {
-      // 1. Create or update the journal entry
-      const basePayload = {
-        plant_id:       plantId || null,
-        schedule_id:    scheduleId || null,
-        week:           null,
-        entry_type:     effectiveType,
-        date,
-        title:          effectiveType === "irrigation"
-          ? (irrigationZone.trim() || null)
-          : (title.trim() || null),
-        notes:          effectiveType === "irrigation"
-          ? (irrigationAmount.trim() || null)
-          : (notes.trim() || null),
-        attachment_ids: existingAttIds,
-      };
-
-      const saved = isNew
-        ? await apiClient.createJournalEntry(basePayload)
-        : await apiClient.updateJournalEntry(entry!.id, basePayload);
-
-      // 2. Upload local files and collect new attachment ids
-      if (localFiles.length > 0) {
-        const uploaded = await Promise.all(
-          localFiles.map((lf) =>
-            apiClient.uploadAttachment("journal_entry", saved.id, {
-              file:       lf.file,
-              category:   null,
-              updated_at: "",
+      if (effectiveType === "irrigation" && isNew) {
+        // Create one entry per selected zone
+        const zonesToCreate = [...selectedZones];
+        if (zonesToCreate.length === 0) {
+          setError(t("panel.irrigation_zone_required"));
+          setSaving(false);
+          return;
+        }
+        await Promise.all(
+          zonesToCreate.map((zone) =>
+            apiClient.createJournalEntry({
+              plant_id:       null,
+              schedule_id:    null,
+              week:           null,
+              entry_type:     "irrigation",
+              date,
+              title:          zone,
+              notes:          irrigationAmount.trim() || null,
+              attachment_ids: [],
             })
           )
         );
-        const allAttIds = [...existingAttIds, ...uploaded.map((a) => a.id)];
-        await apiClient.updateJournalEntry(saved.id, {
-          ...basePayload,
-          attachment_ids: allAttIds,
-        });
+      } else {
+        // 1. Create or update a single journal entry
+        const basePayload = {
+          plant_id:       effectiveType === "irrigation" ? null : (plantId || null),
+          schedule_id:    scheduleId || null,
+          week:           null,
+          entry_type:     effectiveType,
+          date,
+          title:          effectiveType === "irrigation"
+            ? ([...selectedZones][0]?.trim() || null)
+            : (title.trim() || null),
+          notes:          effectiveType === "irrigation"
+            ? (irrigationAmount.trim() || null)
+            : (notes.trim() || null),
+          attachment_ids: existingAttIds,
+        };
+
+        const saved = isNew
+          ? await apiClient.createJournalEntry(basePayload)
+          : await apiClient.updateJournalEntry(entry!.id, basePayload);
+
+        // 2. Upload local files and collect new attachment ids
+        if (localFiles.length > 0) {
+          const uploaded = await Promise.all(
+            localFiles.map((lf) =>
+              apiClient.uploadAttachment("journal_entry", saved.id, {
+                file:       lf.file,
+                category:   null,
+                updated_at: "",
+              })
+            )
+          );
+          const allAttIds = [...existingAttIds, ...uploaded.map((a) => a.id)];
+          await apiClient.updateJournalEntry(saved.id, {
+            ...basePayload,
+            attachment_ids: allAttIds,
+          });
+        }
       }
 
       onSaved();
@@ -944,8 +972,8 @@ function EntryPanel({ entry, plants, irrigationZones, onClose, onSaved, onDelete
           )}
         </div>
 
-        {/* Plant picker */}
-        <div>
+        {/* Plant picker — hidden for irrigation entries */}
+        {entryType !== "irrigation" && <div>
           <div style={labelStyle}>{t("fields.plant")}</div>
           <div style={{ position: "relative" }}>
             {aiMarked.plant_id && (
@@ -974,7 +1002,7 @@ function EntryPanel({ entry, plants, irrigationZones, onClose, onSaved, onDelete
               >×</button>
             )}
           </div>
-        </div>
+        </div>}
 
         {/* Schedule picker — shown when a plant is selected and has care schedules (AC #1) */}
         {selectedPlant && availableSchedules.length > 0 && (
@@ -1029,20 +1057,56 @@ function EntryPanel({ entry, plants, irrigationZones, onClose, onSaved, onDelete
         {/* Irrigation-specific fields: Zone + Amount (replaces Title + Notes) */}
         {entryType === "irrigation" ? (
           <>
-            {/* Irrigation zone selector */}
+            {/* Irrigation zone selector — checkboxes for multi-zone support */}
             <div>
-              <div style={labelStyle}>{t("fields.irrigation_zone")}</div>
-              <select
-                value={irrigationZone}
-                onChange={(e) => setIrrigationZone(e.target.value)}
-                data-testid="panel-irrigation-zone"
-                style={{ ...fieldStyle, cursor: "pointer" }}
-              >
-                <option value="">{t("fields.irrigation_zone_placeholder")}</option>
-                {irrigationZones.map((z) => (
-                  <option key={z} value={z}>{z}</option>
-                ))}
-              </select>
+              <div style={labelStyle}>{t("fields.irrigation_zones")}</div>
+              {irrigationZones.length === 0 ? (
+                <div style={{ fontSize: "12px", color: "var(--text-light)", padding: "6px 0" }}>
+                  {t("fields.irrigation_zones_empty")}
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  {irrigationZones.map((z) => {
+                    const checked = selectedZones.has(z);
+                    return (
+                      <label
+                        key={z}
+                        data-testid={`panel-irrigation-zone-${z}`}
+                        style={{
+                          display:      "flex",
+                          alignItems:   "center",
+                          gap:          "8px",
+                          cursor:       isNew ? "pointer" : "default",
+                          padding:      "6px 10px",
+                          borderRadius: "8px",
+                          border:       checked ? "1.5px solid #1a6fa8" : "1.5px solid var(--border)",
+                          background:   checked ? "#e8f4fc" : "none",
+                          fontSize:     "13px",
+                          color:        checked ? "#1a6fa8" : "var(--text-dark)",
+                          transition:   "all .15s",
+                          fontFamily:   "var(--font-body)",
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          disabled={!isNew}
+                          onChange={() => {
+                            if (!isNew) return;
+                            setSelectedZones((prev) => {
+                              const next = new Set(prev);
+                              if (next.has(z)) next.delete(z); else next.add(z);
+                              return next;
+                            });
+                          }}
+                          style={{ accentColor: "#1a6fa8", width: "14px", height: "14px" }}
+                        />
+                        {z}
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {/* Irrigation amount in mm */}

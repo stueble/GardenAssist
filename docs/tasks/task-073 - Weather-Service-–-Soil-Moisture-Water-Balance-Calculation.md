@@ -1,11 +1,11 @@
 ---
 id: TASK-073
 title: Weather Service – Soil Moisture & Water Balance Calculation
-status: In Progress
+status: In Review
 assignee:
   - '@agent'
 created_date: '2026-05-11 16:09'
-updated_date: '2026-05-12 22:25'
+updated_date: '2026-05-12 22:33'
 labels:
   - backend
   - weather
@@ -23,12 +23,12 @@ Implement a weather service that calculates current soil moisture by combining O
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Fetch soil_moisture_3_to_9cm from Open-Meteo as baseline value 14 days ago
-- [ ] #2 Fetch daily precipitation_sum and et0_fao_evapotranspiration for the last 14 days (Archive + Forecast APIs combined)
-- [ ] #3 Read irrigation journal entries for the last 14 days from the garden journal
-- [ ] #4 Run daily water balance loop: moisture[t] = moisture[t-1] + precipitation[t] - et0[t] + irrigation[t], clamped to [0, field_capacity]
-- [ ] #5 Expose current soil moisture (m³/m³) and a status enum (dry / ok / wet) via a typed service interface
-- [ ] #6 Service covered by unit tests with mocked Open-Meteo responses and journal entries
+- [x] #1 Fetch soil_moisture_3_to_9cm from Open-Meteo as baseline value 14 days ago
+- [x] #2 Fetch daily precipitation_sum and et0_fao_evapotranspiration for the last 14 days (Archive + Forecast APIs combined)
+- [x] #3 Read irrigation journal entries for the last 14 days from the garden journal
+- [x] #4 Run daily water balance loop: moisture[t] = moisture[t-1] + precipitation[t] - et0[t] + irrigation[t], clamped to [0, field_capacity]
+- [x] #5 Expose current soil moisture (m³/m³) and a status enum (dry / ok / wet) via a typed service interface
+- [x] #6 Service covered by unit tests with mocked Open-Meteo responses and journal entries
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -47,6 +47,12 @@ Implement a weather service that calculates current soil moisture by combining O
 11. Frontend JournalView: irrigation Typ + dedizierte Felder
 12. Locale-Dateien: irrigation-Schlüssel
 <!-- SECTION:PLAN:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Implemented FAO-56 daily water balance service per irrigation zone. New 'irrigation' journal entry type stores zone (title) and mm amount (notes). Shared geocoding helper extracted from weather route. GET /api/soil-moisture returns 14-day moisture history and dry/ok/wet status per zone. Field capacity derived from modal plant soil_type per zone (ADR-012). 23 backend unit tests pass. JournalView extended with irrigation filter chip, panel type button, and dedicated zone/amount fields. All 1154 tests pass, no type errors.
+<!-- SECTION:FINAL_SUMMARY:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->

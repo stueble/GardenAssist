@@ -39,8 +39,8 @@
     "entry_type": "Typ",
     "photos":                        "Fotos",
     "photos_add":                    "＋ Foto hinzufügen",
-    "irrigation_zone":               "Bewässerungszone",
-    "irrigation_zone_placeholder":   "Zone wählen …",
+    "irrigation_zones":              "Bewässerungszonen",
+    "irrigation_zones_empty":        "Keine Zonen konfiguriert. Bitte zuerst in den Einstellungen anlegen.",
     "irrigation_amount":             "Menge (mm)",
     "irrigation_amount_placeholder": "z. B. 15"
   },
@@ -51,7 +51,8 @@
     "cancel": "✕ Abbrechen",
     "saving": "…",
     "save_error": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
-    "manual_hint": "Kein Zeitplan ausgewählt — wird als manueller Eintrag gespeichert."
+    "manual_hint": "Kein Zeitplan ausgewählt — wird als manueller Eintrag gespeichert.",
+    "irrigation_zone_required": "Bitte mindestens eine Bewässerungszone auswählen."
   },
   "actions": {
     "delete": "Eintrag löschen",
