@@ -133,8 +133,8 @@ export async function installDefaults(db: Db): Promise<Garden> {
     tx.insert(schema.settings).values({
       id:                       "settings",
       language:                 "en",
-      location_city:            null,
-      location_zip:             null,
+      location_city:            "Cologne",
+      location_zip:             "50667",
       irrigation_zones:         DEFAULT_IRRIGATION_ZONES,
       plant_categories:         DEFAULT_PLANT_CATEGORIES,
       task_lookback_weeks:      8,

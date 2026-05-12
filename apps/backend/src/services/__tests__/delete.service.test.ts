@@ -205,7 +205,8 @@ describe("installDefaults()", () => {
     await installDefaults(db);
 
     const updatedSettings = getSettings(db);
-    expect(updatedSettings.location_city).toBeNull();
+    expect(updatedSettings.location_city).toBe("Cologne");
+    expect(updatedSettings.location_zip).toBe("50667");
     expect(updatedSettings.task_lookback_weeks).toBe(8);
     expect(updatedSettings.task_lookahead_weeks).toBe(4);
   });
