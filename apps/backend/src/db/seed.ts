@@ -132,7 +132,7 @@ const DEFAULT_PLANTS: Array<{
   description: string | null;
   care_notes: string | null;
   purchase_date: string | null;
-  position: { x: number; y: number };
+  position: Array<{ x: number; y: number }>;
   schedules: Array<{
     id: string;
     schedule_type: string;
@@ -154,7 +154,7 @@ const DEFAULT_PLANTS: Array<{
     frost_tolerance_min_c: -15,
     temperature_protected: false,
     purchase_date:         "2022-03-15",
-    position:              { x: 22, y: 68 },
+    position:              [{ x: 7.2, y: 84.8 }],
     description:           "Classic garden rose with lush blooms from May to September. Prefers sunny, sheltered spots with nutrient-rich, slightly acidic soil. Hardy and long-lived with proper care.",
     care_notes:            "Deadhead after flowering. No nitrogen after August. Winter protection recommended from November.",
     schedules: [
@@ -176,7 +176,7 @@ const DEFAULT_PLANTS: Array<{
     frost_tolerance_min_c: -10,
     temperature_protected: false,
     purchase_date:         "2020-04-10",
-    position:              { x: 72, y: 28 },
+    position:              [{ x: 72, y: 28 }],
     description:           "Evergreen ornamental shrub with spectacular spring blooms in purple and pink. Requires acidic, humus-rich soil without lime. Ideal as a specimen plant or in groups in partial shade.",
     care_notes:            "Lime-free substrate is essential. Use rhododendron fertilizer. No pruning required.",
     schedules: [
@@ -196,7 +196,7 @@ const DEFAULT_PLANTS: Array<{
     frost_tolerance_min_c: -20,
     temperature_protected: false,
     purchase_date:         "2016-05-01",
-    position:              { x: 48, y: 45 },
+    position:              [{ x: 10.6, y: 47.7 }],
     description:           "Large-leafed evergreen tree with impressive white blooms in April and May. Grows slowly but becomes a magnificent specimen over the years. Lime-free, moist soil is important.",
     care_notes:            "No pruning required. Spring bloomer — do not fertilize before last frost.",
     schedules: [
@@ -216,7 +216,7 @@ const DEFAULT_PLANTS: Array<{
     frost_tolerance_min_c: -25,
     temperature_protected: false,
     purchase_date:         "2012-03-20",
-    position:              { x: 78, y: 72 },
+    position:              [{ x: 19.5, y: 87.2 }, { x: 66.6, y: 91.1 }],
     description:           "Reliable Elstar variety with sweet-tart fruits, ready to harvest from September. The tree is robust, self-fertile and tolerates frost to -25°C. Regular pruning promotes fruit quality and vitality.",
     care_notes:            "Prune during dormancy. Thin fruits in June for best results. Variety: Elstar.",
     schedules: [
@@ -238,7 +238,7 @@ const DEFAULT_PLANTS: Array<{
     frost_tolerance_min_c: -30,
     temperature_protected: false,
     purchase_date:         "2017-10-05",
-    position:              { x: 35, y: 18 },
+    position:              [{ x: 35, y: 18 }],
     description:           "Popular evergreen conifer for hedges and privacy screening. Grows evenly and densely, tolerates regular pruning very well. Extremely frost-hardy and low-maintenance.",
     care_notes:            "Prune twice a year. Avoid cutting back too hard — brown patches do not regenerate.",
     schedules: [
@@ -357,12 +357,14 @@ export async function seed(
         updated_at:              NOW,
       }).run();
 
-      dbInstance.insert(plantPositions).values({
-        id:        crypto.randomUUID(),
-        plant_id:  plant.id,
-        x_percent: plant.position.x,
-        y_percent: plant.position.y,
-      }).run();
+      for (const pos of plant.position) {
+        dbInstance.insert(plantPositions).values({
+          id:        crypto.randomUUID(),
+          plant_id:  plant.id,
+          x_percent: pos.x,
+          y_percent: pos.y,
+        }).run();
+      }
 
       for (const sched of plant.schedules) {
         dbInstance.insert(schedules).values({
