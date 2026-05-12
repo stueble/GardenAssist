@@ -20,6 +20,7 @@ import { fileURLToPath } from "url";
 import { db as defaultDb } from "./index.js";
 import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import type * as schema from "./schema.js";
+import { attachments } from "./schema.js";
 import { garden, settings, colorPresets, plants, schedules } from "./schema.js";
 
 // ── Default values — English keys, translated in the frontend via i18n ────────
@@ -90,10 +91,28 @@ export const DEFAULT_COLOR_PRESETS: DefaultColorPreset[] = [
   { schedule_type: "misc",          name: "Sow",               color: "#f1c40f" },
 ];
 
-// Path to the bundled example garden plan image (relative to this file at build time).
-// In Docker the file is copied to /app/examples/plan/example_garden.png.
-const __dirname = fileURLToPath(new URL(".", import.meta.url));
-const EXAMPLE_PLAN_SRC = path.resolve(__dirname, "../../../../examples/plan/example_garden.png");
+// ── Example plant image assignments ──────────────────────────────────────────
+// Maps each seed plant id to one or two image filenames from examples/plants/.
+// Images are copied to DATA_DIR/static/attachments/plant/<plant_id>/ and
+// registered in the attachments table with category "main".
+
+const PLANT_EXAMPLE_IMAGES: Record<string, string[]> = {
+  "plant-seed-001": ["ralphs_fotos-tulips-4322635_1920.jpg",    "phtorxp-flowers-7768218_1920.jpg"],
+  "plant-seed-002": ["bru-no-hyacinth-2202861_1920.jpg"],
+  "plant-seed-003": ["ignartonosbg-flower-8384360_1920.jpg",    "as_photography-daisies-7357753_1920.jpg"],
+  "plant-seed-004": ["heungsoon-flowers-4141645_1920.jpg"],
+  "plant-seed-005": ["hans-lavenders-1117274_1920.jpg",          "anniespratt-succulent-1031033_1920.jpg"],
+};
+
+// ── Example asset paths ────────────────────────────────────────────────────────
+// Base directory for bundled example assets.
+// Set via EXAMPLES_DIR env var (Dockerfile sets it to /app/examples).
+// Falls back to a path relative to the repo root for local dev (tsx runs from src/).
+const EXAMPLES_DIR = process.env.EXAMPLES_DIR
+  ?? path.resolve(fileURLToPath(new URL(".", import.meta.url)), "../../../../examples");
+
+const EXAMPLE_PLAN_SRC   = path.join(EXAMPLES_DIR, "plan",   "example_garden.png");
+const EXAMPLE_PLANTS_DIR = path.join(EXAMPLES_DIR, "plants");
 
 // ── Default plants ────────────────────────────────────────────────────────────
 
@@ -346,6 +365,45 @@ export async function seed(
         }).run();
       }
     }
+    // ── Plant images ────────────────────────────────────────────────────────
+    // Copy example images and register them as attachments.
+    // Only attempted when the examples/plants directory exists (Docker + dev).
+    if (fs.existsSync(EXAMPLE_PLANTS_DIR)) {
+      const now = new Date().toISOString();
+      for (const [plantId, imageFiles] of Object.entries(PLANT_EXAMPLE_IMAGES)) {
+        const destDir = path.join(dataDir, "static", "attachments", "plant", plantId);
+        fs.mkdirSync(destDir, { recursive: true });
+
+        imageFiles.forEach((filename, sortIndex) => {
+          const src = path.join(EXAMPLE_PLANTS_DIR, filename);
+          if (!fs.existsSync(src)) return;
+
+          const ext  = path.extname(filename).slice(1);   // "jpg"
+          const id   = crypto.randomUUID();
+          const dest = path.join(destDir, `${id}.${ext}`);
+          const url  = `/static/attachments/plant/${plantId}/${id}.${ext}`;
+
+          try {
+            fs.copyFileSync(src, dest);
+            dbInstance.insert(attachments).values({
+              id,
+              owner_type:      "plant",
+              owner_id:        plantId,
+              attachment_type: "image",
+              category:        sortIndex === 0 ? "main" : null,
+              sort_order:      sortIndex,
+              url,
+              created_at:      now,
+              updated_at:      now,
+            }).run();
+          } catch (err) {
+            console.warn(`Could not install example image ${filename}:`, err);
+          }
+        });
+      }
+      console.log("Example plant images installed.");
+    }
+
     console.log(`Inserted ${DEFAULT_PLANTS.length} sample plants.`);
   } else {
     console.log(`Plants already exist (${existingPlants.length} rows) — skipped.`);
