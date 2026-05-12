@@ -4,6 +4,7 @@
     "jsx": "react-jsx",
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "rootDir": "../..",
+    "noEmit": true,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "paths": {
