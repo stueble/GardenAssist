@@ -1,18 +1,18 @@
 ---
 id: TASK-080
 title: Auto-run seed on server startup
-status: In Review
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-12 15:41'
-updated_date: '2026-05-12 15:45'
+updated_date: '2026-05-12 16:56'
 labels:
   - backend
   - seed
   - onboarding
 dependencies: []
 priority: medium
-ordinal: 35000
+ordinal: 76000
 ---
 
 ## Description
