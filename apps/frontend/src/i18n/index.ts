@@ -39,11 +39,11 @@ i18n
       },
     },
     defaultNS:   "common",
-    fallbackLng: "de",
+    fallbackLng: "en",
     supportedLngs: ["de", "en"],
     detection: {
-      // Look for language in localStorage first, then browser
-      order: ["localStorage", "navigator"],
+      // Look for language in localStorage only — default is English when not set
+      order: ["localStorage"],
       lookupLocalStorage: "ga_language",
       caches: ["localStorage"],
     },
