@@ -6,6 +6,10 @@
  * - done: automatically created when the user marks a task as completed
  * - skipped: automatically created when the user marks a task as skipped;
  *   prevents the task from reappearing for the same week
+ * - irrigation: records a manual watering event for a specific irrigation zone.
+ *   title holds the zone name (must match one of Settings.irrigation_zones).
+ *   notes holds the applied water amount as a numeric string in millimetres,
+ *   e.g. "15" for 15 mm. Used by the FAO-56 water balance calculation (TASK-073).
  *
  * UI labels are not part of this spec — generate locale strings from
  * the enum values and their descriptions above.
@@ -16,6 +20,7 @@ export const JournalEntryType = {
   Problem:     "problem",
   Done:        "done",
   Skipped:     "skipped",
+  Irrigation:  "irrigation",
 } as const;
 export type JournalEntryType = typeof JournalEntryType[keyof typeof JournalEntryType];
 

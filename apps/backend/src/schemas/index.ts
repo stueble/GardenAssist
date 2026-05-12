@@ -70,7 +70,7 @@ export const JournalEntryInputSchema = z.object({
   plant_id:       z.string().nullable(),
   schedule_id:    z.string().nullable(),
   week:           isoWeek.nullable(),
-  entry_type:     z.enum(["manual", "observation", "problem", "done", "skipped"]),
+  entry_type:     z.enum(["manual", "observation", "problem", "done", "skipped", "irrigation"]),
   date:           isoDate,
   title:          z.string().nullable(),
   notes:          z.string().nullable(),

@@ -1,9 +1,11 @@
 ---
 id: TASK-073
 title: Weather Service – Soil Moisture & Water Balance Calculation
-status: Ready
-assignee: []
+status: In Progress
+assignee:
+  - '@agent'
 created_date: '2026-05-11 16:09'
+updated_date: '2026-05-12 22:25'
 labels:
   - backend
   - weather
@@ -28,6 +30,23 @@ Implement a weather service that calculates current soil moisture by combining O
 - [ ] #5 Expose current soil moisture (m³/m³) and a status enum (dry / ok / wet) via a typed service interface
 - [ ] #6 Service covered by unit tests with mocked Open-Meteo responses and journal entries
 <!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. ADR-010 erstellen: Field Capacity Ableitung aus Pflanzen-soil_type
+2. docs/api/journal-entry.ts: Irrigation-Typ hinzufügen
+3. docs/api/weather.ts: SoilMoistureData-Typen hinzufügen
+4. Backend schemas: irrigation zu Zod-Enum
+5. utils/geocoding.ts: shared helper aus weather.ts auslagern
+6. routes/weather.ts: auf shared geocoding umstellen
+7. services/soil-moisture.service.ts: FAO-56 Water Balance Service
+8. routes/soil-moisture.ts: GET /api/soil-moisture
+9. index.ts: Route mounten
+10. Unit Tests für soil-moisture.service
+11. Frontend JournalView: irrigation Typ + dedizierte Felder
+12. Locale-Dateien: irrigation-Schlüssel
+<!-- SECTION:PLAN:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->

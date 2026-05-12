@@ -34,3 +34,45 @@ export interface WeatherData {
   /** 5-day forecast (today + 4 more days) */
   forecast:             WeatherDay[];
 }
+
+// ── Soil Moisture (TASK-073) ──────────────────────────────────────────────────
+
+/** Moisture status derived from the FAO-56 water balance relative to field capacity. */
+export type SoilMoistureStatus = "dry" | "ok" | "wet";
+
+/** Soil moisture for a single day in the 14-day history. */
+export interface SoilMoistureDay {
+  /** ISO date string, e.g. "2026-05-01" */
+  date:     string;
+  /**
+   * Volumetric water content expressed as a percentage of field capacity,
+   * rounded to one decimal place. Range: 0–100.
+   */
+  moisture: number;
+}
+
+/** Soil moisture result for a single irrigation zone. */
+export interface SoilMoistureZone {
+  /** Zone name, matches one of Settings.irrigation_zones */
+  zone:           string;
+  /** 14-day daily moisture history (oldest first) */
+  history:        SoilMoistureDay[];
+  /**
+   * Current moisture as a percentage of field capacity (0–100).
+   * Equals history[history.length - 1].moisture.
+   */
+  current:        number;
+  /** Derived status: dry (<35 %), ok (35–75 %), wet (>75 %) */
+  status:         SoilMoistureStatus;
+  /**
+   * Field capacity in m³/m³ used for this zone.
+   * Derived from the modal soil_type of plants assigned to the zone
+   * (see ADR-012). Included for informational / debugging purposes.
+   */
+  field_capacity: number;
+}
+
+/** Response body for GET /api/soil-moisture (HTTP 200). */
+export interface SoilMoistureData {
+  zones: SoilMoistureZone[];
+}

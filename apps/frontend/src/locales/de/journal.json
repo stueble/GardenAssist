@@ -6,21 +6,24 @@
     "observation": "Beobachtung",
     "problem":     "Problem",
     "done":        "Erledigt",
-    "skipped":     "Übersprungen"
+    "skipped":     "Übersprungen",
+    "irrigation":  "Bewässerung"
   },
   "entry_type_badge": {
     "manual":      "📝 Manuell",
     "observation": "👁 Beobachtung",
     "problem":     "⚠️ Problem",
     "done":        "✅ Erledigt",
-    "skipped":     "⏭ Übersprungen"
+    "skipped":     "⏭ Übersprungen",
+    "irrigation":  "💧 Bewässerung"
   },
   "filter": {
     "all":         "Alle",
     "done":        "✅ Erledigt",
     "skipped":     "⏭ Übersprungen",
     "observation": "👁 Beobachtung",
-    "problem":     "⚠️ Problem"
+    "problem":     "⚠️ Problem",
+    "irrigation":  "💧 Bewässerung"
   },
   "fields": {
     "date": "Datum",
@@ -34,8 +37,12 @@
     "schedule_none": "— Kein Zeitplan —",
     "schedule_none_manual": "— Kein Zeitplan, manueller Eintrag —",
     "entry_type": "Typ",
-    "photos": "Fotos",
-    "photos_add": "＋ Foto hinzufügen"
+    "photos":                        "Fotos",
+    "photos_add":                    "＋ Foto hinzufügen",
+    "irrigation_zone":               "Bewässerungszone",
+    "irrigation_zone_placeholder":   "Zone wählen …",
+    "irrigation_amount":             "Menge (mm)",
+    "irrigation_amount_placeholder": "z. B. 15"
   },
   "panel": {
     "new": "Neuer Eintrag",

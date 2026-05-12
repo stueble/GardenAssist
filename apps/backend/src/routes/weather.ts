@@ -16,25 +16,16 @@
 import { Hono } from "hono";
 import { db } from "../db/index.js";
 import { getSettings } from "../services/settings.service.js";
+import { geocodeCity } from "../utils/geocoding.js";
 import type { WeatherData, WeatherDay } from "@api/weather.js";
 
 export const weatherRoutes = new Hono();
 
 // ── Open-Meteo API URLs ───────────────────────────────────────────────────────
 
-const GEOCODING_URL = "https://geocoding-api.open-meteo.com/v1/search";
 const FORECAST_URL  = "https://api.open-meteo.com/v1/forecast";
 
 // ── Types for Open-Meteo responses ────────────────────────────────────────────
-
-interface GeocodingResult {
-  results?: Array<{
-    name:      string;
-    latitude:  number;
-    longitude: number;
-    country?:  string;
-  }>;
-}
 
 interface ForecastResponse {
   current: {
@@ -65,21 +56,14 @@ weatherRoutes.get("/", async (c) => {
 
   try {
     // AC #2 — geocode city name to lat/lon
-    const geoRes = await fetch(
-      `${GEOCODING_URL}?name=${encodeURIComponent(city)}&count=1&language=de&format=json`,
-    );
-    if (!geoRes.ok) {
-      throw new Error(`Geocoding API error: ${geoRes.status}`);
-    }
-
-    const geoData = await geoRes.json() as GeocodingResult;
+    const coords = await geocodeCity(city);
 
     // AC #5 — city not found
-    if (!geoData.results || geoData.results.length === 0) {
+    if (!coords) {
       return c.json({ error: `City not found: ${city}` }, 422);
     }
 
-    const { latitude, longitude } = geoData.results[0];
+    const { lat: latitude, lon: longitude } = coords;
 
     // AC #3 — fetch current + 5-day forecast
     const params = new URLSearchParams({

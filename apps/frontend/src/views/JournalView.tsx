@@ -30,9 +30,10 @@ const TYPE_COLOR: Record<string, { border: string; bg: string; text: string; bad
    manual:      { border: "#4a78c0", bg: "#eef3fb", text: "#4a78c0", badge: "📝" },
    observation: { border: "#4a78c0", bg: "#eef3fb", text: "#4a78c0", badge: "👁" },
    problem:     { border: "#c0392b", bg: "#fdf0ee", text: "#c0392b", badge: "⚠️" },
+   irrigation:  { border: "#1a6fa8", bg: "#e8f4fc", text: "#1a6fa8", badge: "💧" },
 };
 
-const FILTER_CHIP_TYPES: JournalEntryType[] = ["done", "skipped", "observation", "problem"];
+const FILTER_CHIP_TYPES: JournalEntryType[] = ["done", "skipped", "observation", "problem", "irrigation"];
 
 /** Care schedule types that generate tasks — only these appear in the schedule picker. */
 const CARE_SCHEDULE_TYPES = new Set(["pruning", "fertilization", "misc"]);
@@ -324,6 +325,7 @@ export function JournalView({ garden, loading }: JournalViewProps) {
             ref={entryPanelRef}
             entry={panelEntry}
             plants={plants}
+            irrigationZones={assistantSettings?.irrigation_zones ?? []}
             onClose={() => setPanelEntry(undefined)}
             onSaved={() => {
               setPanelEntry(undefined);
@@ -586,7 +588,7 @@ function EntryCard({ entry, plant, attachmentMap, onEdit }: EntryCardProps) {
 // ── EntryPanel ────────────────────────────────────────────────────────────────
 
 /** Panel entry type buttons — manual is implicit (no schedule selected) */
-const PANEL_TYPE_VALUES: JournalEntryType[] = ["done", "skipped", "observation", "problem"];
+const PANEL_TYPE_VALUES: JournalEntryType[] = ["done", "skipped", "observation", "problem", "irrigation", "manual"];
 
 const SCHEDULE_TYPE_LABEL_DE: Record<string, string> = {
   pruning:       "Schneiden",
@@ -595,11 +597,12 @@ const SCHEDULE_TYPE_LABEL_DE: Record<string, string> = {
 };
 
 interface EntryPanelProps {
-  entry:     JournalEntry | null;   // null = new entry
-  plants:    Plant[];
-  onClose:   () => void;
-  onSaved:   () => void;
-  onDeleted: () => void;
+  entry:            JournalEntry | null;   // null = new entry
+  plants:           Plant[];
+  irrigationZones:  string[];
+  onClose:          () => void;
+  onSaved:          () => void;
+  onDeleted:        () => void;
 }
 
 /** Public handle exposed to JournalView via forwardRef / useImperativeHandle */
@@ -617,24 +620,29 @@ type EntryForm = {
 };
 
 const EntryPanel = forwardRef<EntryPanelHandle, EntryPanelProps>(
-function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }, ref) {
+function EntryPanel({ entry, plants, irrigationZones, onClose, onSaved, onDeleted }, ref) {
   const { t } = useTranslation("journal");
   const { t: tc } = useTranslation("common");
   const isNew = entry === null;
 
   // For existing entries: if entry_type is "manual", default the button to "done"
-  // (manual is now implicit — no button needed)
   const initType: JournalEntryType =
     (entry?.entry_type && entry.entry_type !== "manual")
       ? entry.entry_type
       : "done";
 
-  const [entryType,  setEntryType]  = useState<JournalEntryType>(initType);
-  const [plantId,    setPlantId]    = useState<string>(entry?.plant_id ?? "");
-  const [scheduleId, setScheduleId] = useState<string>(entry?.schedule_id ?? "");
-  const [date,       setDate]       = useState(entry?.date ?? new Date().toISOString().slice(0, 10));
-  const [title,      setTitle]      = useState(entry?.title ?? "");
-  const [notes,      setNotes]      = useState(entry?.notes ?? "");
+  // Irrigation-specific state: zone name (title) and mm amount (notes)
+  const initIrrigationZone   = entry?.entry_type === "irrigation" ? (entry.title ?? "") : "";
+  const initIrrigationAmount = entry?.entry_type === "irrigation" ? (entry.notes ?? "") : "";
+
+  const [entryType,         setEntryType]         = useState<JournalEntryType>(initType);
+  const [plantId,           setPlantId]           = useState<string>(entry?.plant_id ?? "");
+  const [scheduleId,        setScheduleId]        = useState<string>(entry?.schedule_id ?? "");
+  const [date,              setDate]              = useState(entry?.date ?? new Date().toISOString().slice(0, 10));
+  const [title,             setTitle]             = useState(entry?.title ?? "");
+  const [notes,             setNotes]             = useState(entry?.notes ?? "");
+  const [irrigationZone,   setIrrigationZone]    = useState<string>(initIrrigationZone);
+  const [irrigationAmount, setIrrigationAmount]  = useState<string>(initIrrigationAmount);
 
   // AI suggestion markers
   const [aiMarked, setAiMarked] = useState<Partial<Record<keyof EntryForm, true>>>({});
@@ -716,12 +724,15 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }, ref) {
   }
 
   // When schedule is selected, restrict type to done/skipped;
-  // when no schedule and type is done/skipped, use "manual" as effective type
+  // when no schedule and type is done/skipped, use "manual" as effective type;
+  // irrigation always stays as "irrigation" regardless of schedule state.
   const hasSchedule = scheduleId !== "";
-  const effectiveType: JournalEntryType = hasSchedule
-    ? (entryType === "skipped" ? "skipped" : "done")
-    : (entryType === "done" || entryType === "skipped") ? "manual"
-    : entryType;
+  const effectiveType: JournalEntryType = entryType === "irrigation"
+    ? "irrigation"
+    : hasSchedule
+      ? (entryType === "skipped" ? "skipped" : "done")
+      : (entryType === "done" || entryType === "skipped") ? "manual"
+      : entryType;
   const [saving,        setSaving]        = useState(false);
   const [error,         setError]         = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -771,8 +782,12 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }, ref) {
         week:           null,
         entry_type:     effectiveType,
         date,
-        title:          title.trim() || null,
-        notes:          notes.trim() || null,
+        title:          effectiveType === "irrigation"
+          ? (irrigationZone.trim() || null)
+          : (title.trim() || null),
+        notes:          effectiveType === "irrigation"
+          ? (irrigationAmount.trim() || null)
+          : (notes.trim() || null),
         attachment_ids: existingAttIds,
       };
 
@@ -1011,62 +1026,100 @@ function EntryPanel({ entry, plants, onClose, onSaved, onDeleted }, ref) {
           </div>
         </div>
 
-        {/* Title */}
-        <div>
-          <div style={labelStyle}>{t("fields.title")}</div>
-          <div style={{ position: "relative" }}>
-            {aiMarked.title && (
-              <span aria-hidden="true" style={{ position: "absolute", left: "9px", top: "50%", transform: "translateY(-50%)", fontSize: "11px", color: "#e07b00", zIndex: 1, pointerEvents: "none" }}>✦</span>
-            )}
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => { setAiMarked((p) => { const n={...p}; delete n.title; return n; }); setTitle(e.target.value); }}
-              placeholder={t("fields.title_placeholder")}
-              data-testid="panel-title"
-              style={aiMarked.title ? aiFieldStyle : fieldStyle}
-            />
-            {aiMarked.title && (
-              <button
-                type="button"
-                data-testid="ai-revert-title"
-                onClick={() => revertAiField("title")}
-                style={{ position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#e07b00", fontSize: "13px", lineHeight: 1, padding: "2px" }}
-                title={t("overview.ai_revert_title")}
-              >×</button>
-            )}
-          </div>
-        </div>
+        {/* Irrigation-specific fields: Zone + Amount (replaces Title + Notes) */}
+        {entryType === "irrigation" ? (
+          <>
+            {/* Irrigation zone selector */}
+            <div>
+              <div style={labelStyle}>{t("fields.irrigation_zone")}</div>
+              <select
+                value={irrigationZone}
+                onChange={(e) => setIrrigationZone(e.target.value)}
+                data-testid="panel-irrigation-zone"
+                style={{ ...fieldStyle, cursor: "pointer" }}
+              >
+                <option value="">{t("fields.irrigation_zone_placeholder")}</option>
+                {irrigationZones.map((z) => (
+                  <option key={z} value={z}>{z}</option>
+                ))}
+              </select>
+            </div>
 
-        {/* Notes */}
-        <div>
-          <div style={labelStyle}>{t("fields.notes")}</div>
-          <div style={{ position: "relative" }}>
-            {aiMarked.notes && (
-              <span aria-hidden="true" style={{ position: "absolute", left: "9px", top: "10px", fontSize: "11px", color: "#e07b00", zIndex: 1, pointerEvents: "none" }}>✦</span>
-            )}
-            <textarea
-              value={notes}
-              onChange={(e) => { setAiMarked((p) => { const n={...p}; delete n.notes; return n; }); setNotes(e.target.value); }}
-              placeholder={t("fields.notes_placeholder")}
-              rows={4}
-              data-testid="panel-notes"
-              style={{
-                ...(aiMarked.notes ? aiFieldStyle : fieldStyle),
-                resize: "vertical", minHeight: "90px", lineHeight: "1.5",
-              }}
-            />
-            {aiMarked.notes && (
-              <button
-                type="button"
-                data-testid="ai-revert-notes"
-                onClick={() => revertAiField("notes")}
-                style={{ position: "absolute", right: "8px", top: "8px", background: "none", border: "none", cursor: "pointer", color: "#e07b00", fontSize: "13px", lineHeight: 1, padding: "2px" }}
-                title={t("overview.ai_revert_title")}
-              >×</button>
-            )}
-          </div>
-        </div>
+            {/* Irrigation amount in mm */}
+            <div>
+              <div style={labelStyle}>{t("fields.irrigation_amount")}</div>
+              <input
+                type="number"
+                min="0"
+                step="0.1"
+                value={irrigationAmount}
+                onChange={(e) => setIrrigationAmount(e.target.value)}
+                placeholder={t("fields.irrigation_amount_placeholder")}
+                data-testid="panel-irrigation-amount"
+                style={fieldStyle}
+              />
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Title */}
+            <div>
+              <div style={labelStyle}>{t("fields.title")}</div>
+              <div style={{ position: "relative" }}>
+                {aiMarked.title && (
+                  <span aria-hidden="true" style={{ position: "absolute", left: "9px", top: "50%", transform: "translateY(-50%)", fontSize: "11px", color: "#e07b00", zIndex: 1, pointerEvents: "none" }}>✦</span>
+                )}
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => { setAiMarked((p) => { const n={...p}; delete n.title; return n; }); setTitle(e.target.value); }}
+                  placeholder={t("fields.title_placeholder")}
+                  data-testid="panel-title"
+                  style={aiMarked.title ? aiFieldStyle : fieldStyle}
+                />
+                {aiMarked.title && (
+                  <button
+                    type="button"
+                    data-testid="ai-revert-title"
+                    onClick={() => revertAiField("title")}
+                    style={{ position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#e07b00", fontSize: "13px", lineHeight: 1, padding: "2px" }}
+                    title={t("overview.ai_revert_title")}
+                  >×</button>
+                )}
+              </div>
+            </div>
+
+            {/* Notes */}
+            <div>
+              <div style={labelStyle}>{t("fields.notes")}</div>
+              <div style={{ position: "relative" }}>
+                {aiMarked.notes && (
+                  <span aria-hidden="true" style={{ position: "absolute", left: "9px", top: "10px", fontSize: "11px", color: "#e07b00", zIndex: 1, pointerEvents: "none" }}>✦</span>
+                )}
+                <textarea
+                  value={notes}
+                  onChange={(e) => { setAiMarked((p) => { const n={...p}; delete n.notes; return n; }); setNotes(e.target.value); }}
+                  placeholder={t("fields.notes_placeholder")}
+                  rows={4}
+                  data-testid="panel-notes"
+                  style={{
+                    ...(aiMarked.notes ? aiFieldStyle : fieldStyle),
+                    resize: "vertical", minHeight: "90px", lineHeight: "1.5",
+                  }}
+                />
+                {aiMarked.notes && (
+                  <button
+                    type="button"
+                    data-testid="ai-revert-notes"
+                    onClick={() => revertAiField("notes")}
+                    style={{ position: "absolute", right: "8px", top: "8px", background: "none", border: "none", cursor: "pointer", color: "#e07b00", fontSize: "13px", lineHeight: 1, padding: "2px" }}
+                    title={t("overview.ai_revert_title")}
+                  >×</button>
+                )}
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Photo upload */}
         <div>

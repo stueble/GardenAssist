@@ -6,21 +6,24 @@
     "observation": "Observation",
     "problem":     "Problem",
     "done":        "Done",
-    "skipped":     "Skipped"
+    "skipped":     "Skipped",
+    "irrigation":  "Irrigation"
   },
   "entry_type_badge": {
     "manual":      "📝 Manual",
     "observation": "👁 Observation",
     "problem":     "⚠️ Problem",
     "done":        "✅ Done",
-    "skipped":     "⏭ Skipped"
+    "skipped":     "⏭ Skipped",
+    "irrigation":  "💧 Irrigation"
   },
   "filter": {
     "all":         "All",
     "done":        "✅ Done",
     "skipped":     "⏭ Skipped",
     "observation": "👁 Observation",
-    "problem":     "⚠️ Problem"
+    "problem":     "⚠️ Problem",
+    "irrigation":  "💧 Irrigation"
   },
   "fields": {
     "date": "Date",
@@ -34,8 +37,12 @@
     "schedule_none": "— No schedule —",
     "schedule_none_manual": "— No schedule, manual entry —",
     "entry_type": "Type",
-    "photos": "Photos",
-    "photos_add": "＋ Add photo"
+    "photos":                        "Photos",
+    "photos_add":                    "＋ Add photo",
+    "irrigation_zone":               "Irrigation zone",
+    "irrigation_zone_placeholder":   "Select zone …",
+    "irrigation_amount":             "Amount (mm)",
+    "irrigation_amount_placeholder": "e.g. 15"
   },
   "panel": {
     "new": "New entry",
