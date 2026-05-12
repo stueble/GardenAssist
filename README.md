@@ -35,6 +35,53 @@ A central overview combining urgent hints and warnings, open and upcoming tasks,
 
 ---
 
+## Screenshots
+
+<table>
+  <tr>
+    <td align="center" width="33%">
+      <a href="examples/screenshots/Dashboard view.png">
+        <img src="examples/screenshots/Dashboard view.png" width="100%" alt="Dashboard" />
+      </a>
+      <br /><sub><b>Dashboard</b> — weather widget, open tasks with done/skip actions, interactive garden plan with plant markers, and the monthly task band.</sub>
+    </td>
+    <td align="center" width="33%">
+      <a href="examples/screenshots/Dashboard view and with opened assistent.png">
+        <img src="examples/screenshots/Dashboard view and with opened assistent.png" width="100%" alt="Dashboard with AI Assistant" />
+      </a>
+      <br /><sub><b>AI Assistant</b> — the assistant panel opens alongside any view. Here it answers a question about fertilizing the apple tree, citing the plant's own schedule.</sub>
+    </td>
+    <td align="center" width="33%">
+      <a href="examples/screenshots/Plants overview and plant details.png">
+        <img src="examples/screenshots/Plants overview and plant details.png" width="100%" alt="Plants overview and detail panel" />
+      </a>
+      <br /><sub><b>Plant list &amp; detail</b> — sortable table with bloom, health, and task columns; clicking a row opens the detail panel with photos, facts, care notes, and schedule history.</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="33%">
+      <a href="examples/screenshots/Calendar view.png">
+        <img src="examples/screenshots/Calendar view.png" width="100%" alt="Calendar view" />
+      </a>
+      <br /><sub><b>Garden calendar</b> — Gantt-style view with plants as rows and months as columns. Filter by activity type (bloom, growth, foliage, fertilization, pruning, misc).</sub>
+    </td>
+    <td align="center" width="33%">
+      <a href="examples/screenshots/Journal view.png">
+        <img src="examples/screenshots/Journal view.png" width="100%" alt="Journal view" />
+      </a>
+      <br /><sub><b>Garden journal</b> — chronological log of completed tasks, skipped items, observations, and problems. Filterable by entry type.</sub>
+    </td>
+    <td align="center" width="33%">
+      <a href="examples/screenshots/Assistant prefilling new plant.png">
+        <img src="examples/screenshots/Assistant prefilling new plant.png" width="100%" alt="Assistant prefilling a new plant form" />
+      </a>
+      <br /><sub><b>AI-assisted plant entry</b> — asking the assistant to add a yellow rose automatically opens the plant form pre-filled with name, description, category, care notes, and bloom schedules.</sub>
+    </td>
+  </tr>
+</table>
+
+---
+
 ## Planned Integrations *(future)*
 
 - **Moisture** calculation based on whether information and irrigation information
