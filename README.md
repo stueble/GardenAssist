@@ -75,7 +75,7 @@ A central overview combining urgent hints and warnings, open and upcoming tasks,
       <a href="examples/screenshots/Assistant prefilling new plant.png">
         <img src="examples/screenshots/Assistant prefilling new plant.png" width="100%" alt="Assistant prefilling a new plant form" />
       </a>
-      <br /><sub><b>AI-assisted plant entry</b> — asking the assistant to add a yellow rose automatically opens the plant form pre-filled with name, description, category, care notes, and bloom schedules.</sub>
+      <br /><sub><b>AI-assisted plant entry</b> — asking the assistant to add a yellow rose automatically opens the plant form pre-filled with name, description, category, care notes, and bloom schedules. Information provided by the assistant is always marked orange and can individually deselected or overwritten. The user always needs to save to accept changes suggested by the assistant. Journal entries can also be added, modified, or deleted using the assistant.</sub>
     </td>
   </tr>
 </table>
