@@ -246,6 +246,7 @@ export function SettingsView({ garden, invalidateGarden }: SettingsViewProps) {
               title={t("sections.language")}
               subtitle={t("section_subtitles.language")}
               defaultOpen={false}
+              testId="language-section"
             >
               {form && <LanguageSection form={form} onChange={updateForm} />}
             </SettingsSection>

@@ -6,6 +6,7 @@ interface SettingsSectionProps {
   title:       string;
   subtitle?:   string;
   defaultOpen?: boolean;
+  testId?:     string;
   children:    React.ReactNode;
 }
 
@@ -14,6 +15,7 @@ export function SettingsSection({
   title,
   subtitle,
   defaultOpen = false,
+  testId,
   children,
 }: SettingsSectionProps) {
   const [open, setOpen] = useState(defaultOpen);
@@ -31,6 +33,7 @@ export function SettingsSection({
         onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setOpen((o) => !o)}
         className="flex items-center gap-3 px-5 py-[14px] cursor-pointer select-none transition-colors hover:bg-green-mist"
         aria-expanded={open}
+        data-testid={testId ? `${testId}-toggle` : undefined}
       >
         {/* Icon — mockup: font-size 20px */}
         <span aria-hidden="true" style={{ fontSize: "20px", flexShrink: 0 }}>{icon}</span>
