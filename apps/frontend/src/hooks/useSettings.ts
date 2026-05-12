@@ -53,8 +53,13 @@ export function useSettings(): UseSettingsResult {
     let cancelled = false;
     apiClient.getSettings().then((s) => {
       if (!cancelled) {
-        setSaved(s);
-        setForm(s);
+        // Prefer the localStorage language (set by i18n) over the DB value.
+        // This ensures form.language reflects the currently active language,
+        // so the dirty state is correct even when DB and localStorage diverge.
+        const activeLanguage = (localStorage.getItem("ga_language") ?? s.language) as Settings["language"];
+        const effective = { ...s, language: activeLanguage };
+        setSaved(effective);
+        setForm(effective);
         setLoading(false);
       }
     }).catch(() => {

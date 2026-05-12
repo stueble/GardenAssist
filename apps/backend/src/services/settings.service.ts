@@ -61,7 +61,7 @@ export function getSettings(db: Db): Settings {
   if (!row) {
     // Singleton not yet seeded — return defaults
     return {
-      language:                 "de",
+      language:                 "en",
       location_city:            null,
       location_zip:             null,
       irrigation_zones:         [],

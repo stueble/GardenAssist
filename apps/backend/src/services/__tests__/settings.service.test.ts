@@ -60,7 +60,7 @@ describe("getSettings()", () => {
   it("returns fallback defaults when settings row is missing", () => {
     db.delete(schema.settings).run();
     const s = getSettings(db as any);
-    expect(s.language).toBe("de");
+    expect(s.language).toBe("en");
     expect(s.task_lookback_weeks).toBe(8);
   });
 });
