@@ -94,10 +94,14 @@
     "hint": "Wird für Wetterwarnungen (Frost, Trockenheit) und den Wetter-Widget im Dashboard verwendet."
   },
   "zones_section": {
-    "name_placeholder": "Zonenname …"
+    "name_placeholder": "Zonenname …",
+    "add_btn": "＋ Zone hinzufügen",
+    "hint": "Zonennamen erscheinen im Pflanzendialog als Dropdown. Reihenfolge und Bezeichnung sind frei wählbar."
   },
   "categories_section": {
-    "name_placeholder": "Kategoriename …"
+    "name_placeholder": "Kategoriename …",
+    "add_btn": "＋ Kategorie hinzufügen",
+    "hint": "Diese Kategorien erscheinen im Pflanzendialog als Dropdown-Auswahl."
   },
   "color_presets_section": {
     "drag_handle": "Verschieben",

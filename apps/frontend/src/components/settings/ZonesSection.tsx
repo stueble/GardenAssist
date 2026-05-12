@@ -38,10 +38,8 @@ export function ZonesSection({ form, onChange }: Props) {
           />
         ))}
       </div>
-      <AddRowButton onClick={addZone}>＋ Zone hinzufügen</AddRowButton>
-      <FieldHint>
-        Zonennamen erscheinen im Pflanzendialog als Dropdown. Reihenfolge und Bezeichnung sind frei wählbar.
-      </FieldHint>
+      <AddRowButton onClick={addZone}>{t("zones_section.add_btn")}</AddRowButton>
+      <FieldHint>{t("zones_section.hint")}</FieldHint>
     </div>
   );
 }

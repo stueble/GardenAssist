@@ -94,10 +94,14 @@
     "hint": "Used for weather warnings (frost, drought) and the weather widget on the dashboard."
   },
   "zones_section": {
-    "name_placeholder": "Zone name …"
+    "name_placeholder": "Zone name …",
+    "add_btn": "＋ Add zone",
+    "hint": "Zone names appear as a dropdown in the plant dialog. Order and names are freely configurable."
   },
   "categories_section": {
-    "name_placeholder": "Category name …"
+    "name_placeholder": "Category name …",
+    "add_btn": "＋ Add category",
+    "hint": "These categories appear as a dropdown in the plant dialog."
   },
   "color_presets_section": {
     "drag_handle": "Drag to reorder",

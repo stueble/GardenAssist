@@ -37,10 +37,8 @@ export function CategoriesSection({ form, onChange }: Props) {
           />
         ))}
       </div>
-      <AddRowButton onClick={addCategory}>＋ Kategorie hinzufügen</AddRowButton>
-      <FieldHint>
-        Diese Kategorien erscheinen im Pflanzendialog als Dropdown-Auswahl.
-      </FieldHint>
+      <AddRowButton onClick={addCategory}>{t("categories_section.add_btn")}</AddRowButton>
+      <FieldHint>{t("categories_section.hint")}</FieldHint>
     </div>
   );
 }
