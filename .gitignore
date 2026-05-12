@@ -7,6 +7,15 @@ dist/
 .env
 .env.local
 
+# TypeScript compile artefacts inside source trees.
+# tsc sometimes emits .js/.d.ts next to .ts/.tsx sources when outDir is not
+# set or is the same directory. These are never intentional in this repo.
+apps/frontend/src/**/*.js
+apps/frontend/src/**/*.d.ts
+apps/frontend/vite.config.js
+docs/api/*.js
+docs/api/*.d.ts
+
 # Runtime data (SQLite DB and uploaded files — not committed)
 apps/backend/gardenassist.db
 apps/backend/gardenassist.db-wal
