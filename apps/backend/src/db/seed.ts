@@ -14,7 +14,9 @@
  * Run with: pnpm --filter backend db:seed
  */
 
-import { db } from "./index.js";
+import { db as defaultDb } from "./index.js";
+import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
+import type * as schema from "./schema.js";
 import { garden, settings, colorPresets, plants, schedules } from "./schema.js";
 
 // ── Default values from the UI mockup ────────────────────────────────────────
@@ -206,16 +208,28 @@ const DEFAULT_PLANTS: Array<{
 
 // ── Seed ──────────────────────────────────────────────────────────────────────
 
-async function seed() {
+type AnyDb = BetterSQLite3Database<typeof schema>;
+
+/**
+ * Idempotent seed function.
+ *
+ * Accepts an optional `dbInstance` so tests can pass an in-memory database.
+ * When called without arguments it uses the shared production database.
+ *
+ * Safe to call on every server startup:
+ * - Singleton rows (garden, settings) use INSERT OR IGNORE
+ * - Color presets and plants are only inserted when their tables are empty
+ */
+export async function seed(dbInstance: AnyDb = defaultDb): Promise<void> {
   // Garden singleton
-  await db
+  await dbInstance
     .insert(garden)
     .values({ id: "garden", plan_url: null, plan_name: null })
     .onConflictDoNothing();
 
   // Settings singleton — only inserted when not yet present.
   // Existing user data is never overwritten.
-  await db
+  await dbInstance
     .insert(settings)
     .values({
       id:                       "settings",
@@ -235,10 +249,10 @@ async function seed() {
 
   // Color presets — only insert when table is empty.
   // This preserves any presets the user has already configured.
-  const existingPresets = db.select().from(colorPresets).all();
+  const existingPresets = dbInstance.select().from(colorPresets).all();
   if (existingPresets.length === 0) {
     DEFAULT_COLOR_PRESETS.forEach((preset, index) => {
-      db.insert(colorPresets).values({
+      dbInstance.insert(colorPresets).values({
         id:            crypto.randomUUID(),
         schedule_type: preset.schedule_type,
         name:          preset.name,
@@ -252,10 +266,10 @@ async function seed() {
   }
 
   // Sample plants — only insert when plants table is empty
-  const existingPlants = db.select().from(plants).all();
+  const existingPlants = dbInstance.select().from(plants).all();
   if (existingPlants.length === 0) {
     for (const plant of DEFAULT_PLANTS) {
-      db.insert(plants).values({
+      dbInstance.insert(plants).values({
         id:                      plant.id,
         name_common:             plant.name_common,
         name_botanical:          plant.name_botanical,
@@ -274,7 +288,7 @@ async function seed() {
       }).run();
 
       for (const sched of plant.schedules) {
-        db.insert(schedules).values({
+        dbInstance.insert(schedules).values({
           id:            sched.id,
           plant_id:      plant.id,
           schedule_type: sched.schedule_type,
@@ -295,7 +309,18 @@ async function seed() {
   console.log("Seed complete.");
 }
 
-seed().catch((err) => {
-  console.error("Seed failed:", err);
-  process.exit(1);
-});
+// ── CLI entrypoint ────────────────────────────────────────────────────────────
+// Only runs when executed directly via `pnpm db:seed` (tsx src/db/seed.ts).
+// Importing this module from server.ts does NOT trigger the CLI block.
+
+const isMain =
+  typeof process !== "undefined" &&
+  process.argv[1] !== undefined &&
+  new URL(import.meta.url).pathname === process.argv[1];
+
+if (isMain) {
+  seed().catch((err) => {
+    console.error("Seed failed:", err);
+    process.exit(1);
+  });
+}
