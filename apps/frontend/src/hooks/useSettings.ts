@@ -53,13 +53,16 @@ export function useSettings(): UseSettingsResult {
     let cancelled = false;
     apiClient.getSettings().then((s) => {
       if (!cancelled) {
-        // Prefer the localStorage language (set by i18n) over the DB value.
-        // This ensures form.language reflects the currently active language,
-        // so the dirty state is correct even when DB and localStorage diverge.
+        // form.language uses the active localStorage value so the dropdown shows
+        // the currently active language. saved.language uses the real DB value
+        // so dirty detection works correctly: selecting the other language enables
+        // Save, re-selecting the active language disables it again.
         const activeLanguage = (localStorage.getItem("ga_language") ?? s.language) as Settings["language"];
-        const effective = { ...s, language: activeLanguage };
-        setSaved(effective);
-        setForm(effective);
+        // saved reflects the true DB state; form reflects what the user currently
+        // sees (active language). This way selecting the active language in the
+        // dropdown marks it as dirty (DB is out of sync) and Save writes it to DB.
+        setSaved(s);
+        setForm({ ...s, language: activeLanguage });
         setLoading(false);
       }
     }).catch(() => {
@@ -97,7 +100,11 @@ export function useSettings(): UseSettingsResult {
   }, [form]);
 
   const discard = useCallback(() => {
-    setForm(saved);
+    if (!saved) return;
+    // Restore form to saved state, but keep the active language so the dropdown
+    // reflects what the user currently sees (not the stale DB value).
+    const activeLanguage = (localStorage.getItem("ga_language") ?? saved.language) as Settings["language"];
+    setForm({ ...saved, language: activeLanguage });
     setStatus("idle");
   }, [saved]);
 
