@@ -10,8 +10,14 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import {
+  Menu, MessageCircle, Search, ChevronDown,
+  MapPin, Send, Check, Sprout, Calendar,
+  Notebook, Map,
+} from "lucide-react";
 import type { Garden } from "@api/garden";
 import type { Plant } from "@api/plant";
 import type { Task } from "@api/task";
@@ -152,7 +158,7 @@ function TopBar({
         onClick={onMenuClick}
         style={topBtnStyle}
       >
-        <span style={{ fontSize: "19px", lineHeight: 1 }}>☰</span>
+        <Menu size={20} strokeWidth={1.5} />
       </button>
 
       {/* Title */}
@@ -177,7 +183,7 @@ function TopBar({
           position:   "relative",
         }}
       >
-        <span style={{ fontSize: "19px", lineHeight: 1 }}>💬</span>
+        <MessageCircle size={20} strokeWidth={1.5} />
         {!chatOpen && (
           <span style={{
             position:     "absolute",
@@ -225,7 +231,7 @@ function SearchBar() {
           padding:      "6px 12px",
         }}
       >
-        <span style={{ fontSize: "13px", color: "#4a5e4a" }}>🔍</span>
+        <Search size={13} strokeWidth={1.5} color="#4a5e4a" />
         <span style={{ fontSize: "12px", color: "#8a9e8a" }}>
           {t("mobile.search_placeholder")}
         </span>
@@ -341,13 +347,12 @@ function WeatherWidgetMobile({ zones }: { zones: string[] }) {
         {/* Chevron */}
         <span style={{
           color:      "#8a9e8a",
-          fontSize:   "14px",
           flexShrink: 0,
           transition: "transform .2s",
           transform:  expanded ? "rotate(180deg)" : "none",
-          display:    "inline-block",
+          display:    "flex",
         }}>
-          ▾
+          <ChevronDown size={14} strokeWidth={1.5} />
         </span>
       </button>
 
@@ -546,7 +551,7 @@ function TaskRow({
           transition:     "all .15s",
         }}
       >
-        {checked ? "✓" : ""}
+        {checked ? <Check size={10} strokeWidth={2.5} /> : null}
       </button>
 
       {/* Body */}
@@ -562,7 +567,7 @@ function TaskRow({
           {/* Location */}
           {todo.plant.location && (
             <span style={{ fontSize: "9px", color: "#8a9e8a", display: "flex", alignItems: "center", gap: "2px" }}>
-              📍 {todo.plant.location}
+              <MapPin size={10} strokeWidth={1.5} />{todo.plant.location}
             </span>
           )}
           {/* Bloom color pill */}
@@ -671,7 +676,7 @@ function ChatPanel({
         gap:          "6px",
         flexShrink:   0,
       }}>
-        <span style={{ fontSize: "15px", color: "#4a7c4a" }}>💬</span>
+        <MessageCircle size={15} strokeWidth={1.5} color="#4a7c4a" />
         <div style={{ fontSize: "12px", fontWeight: 500, color: "#1e2e1e", flex: 1 }}>
           {t("mobile.assistant_title")}
         </div>
@@ -778,7 +783,7 @@ function ChatPanel({
             opacity:        sending ? 0.6 : 1,
           }}
         >
-          <span style={{ fontSize: "13px", color: "#fff" }}>➤</span>
+          <Send size={14} strokeWidth={1.5} color="#fff" />
         </button>
       </div>
     </div>
@@ -786,13 +791,13 @@ function ChatPanel({
 }
 
 // BottomNav — AC #11
-const NAV_TABS = [
-  { key: "tasks",    icon: "✓",   path: "/" },
-  { key: "plants",   icon: "🌱",  path: "/plants" },
-  { key: "calendar", icon: "🗓",  path: "/calendar" },
-  { key: "journal",  icon: "📔",  path: "/journal" },
-  { key: "plan",     icon: "🗺",  path: "/plan" },
-] as const;
+const NAV_TABS: { key: string; icon: ReactNode; path: string }[] = [
+  { key: "tasks",    icon: <Check       size={20} strokeWidth={1.5} />, path: "/" },
+  { key: "plants",   icon: <Sprout      size={20} strokeWidth={1.5} />, path: "/plants" },
+  { key: "calendar", icon: <Calendar    size={20} strokeWidth={1.5} />, path: "/calendar" },
+  { key: "journal",  icon: <Notebook    size={20} strokeWidth={1.5} />, path: "/journal" },
+  { key: "plan",     icon: <Map         size={20} strokeWidth={1.5} />, path: "/plan" },
+];
 
 function BottomNav({ activePath }: { activePath: string }) {
   const { t } = useTranslation("common");
@@ -829,9 +834,12 @@ function BottomNav({ activePath }: { activePath: string }) {
               border:         "none",
             }}
           >
-            <span style={{ fontSize: "19px", color: isActive ? "#fff" : "#c8dfc0" }}>{icon}</span>
+            <span style={{ color: isActive ? "#fff" : "#c8dfc0", display: "flex" }}>
+              {icon}
+            </span>
             <span style={{ fontSize: "8px", color: isActive ? "#fff" : "#c8dfc0", letterSpacing: ".2px" }}>
-              {t(`mobile.tab_${key}`)}
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              {t(`mobile.tab_${key}` as any)}
             </span>
           </button>
         );
