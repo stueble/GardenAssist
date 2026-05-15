@@ -826,20 +826,30 @@ function BottomNav({ activePath }: { activePath: string }) {
               display:        "flex",
               flexDirection:  "column",
               alignItems:     "center",
-              gap:            "2px",
               padding:        "3px 0",
               cursor:         "pointer",
-              borderRadius:   "8px",
-              background:     isActive ? "rgba(255,255,255,.1)" : "none",
+              background:     "none",
               border:         "none",
             }}
           >
-            <span style={{ color: isActive ? "#fff" : "#c8dfc0", display: "flex" }}>
-              {icon}
-            </span>
-            <span style={{ fontSize: "8px", color: isActive ? "#fff" : "#c8dfc0", letterSpacing: ".2px" }}>
-              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-              {t(`mobile.tab_${key}` as any)}
+            {/* Inner: highlight area — fixed width so dark-green edges stay visible */}
+            <span style={{
+              display:        "flex",
+              flexDirection:  "column",
+              alignItems:     "center",
+              gap:            "2px",
+              padding:        "4px 10px",
+              borderRadius:   "8px",
+              background:     isActive ? "rgba(255,255,255,.15)" : "none",
+              minWidth:       "44px",
+            }}>
+              <span style={{ color: isActive ? "#fff" : "#c8dfc0", display: "flex" }}>
+                {icon}
+              </span>
+              <span style={{ fontSize: "8px", color: isActive ? "#fff" : "#c8dfc0", letterSpacing: ".2px", whiteSpace: "nowrap" }}>
+                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                {t(`mobile.tab_${key}` as any)}
+              </span>
             </span>
           </button>
         );
