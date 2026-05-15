@@ -190,6 +190,10 @@
     "moisture_title": "Soil moisture · 14 days",
     "assistant_title": "Garden Assistant",
     "assistant_close": "✕",
-    "assistant_placeholder": "Question or instruction …"
+    "assistant_placeholder": "Question or instruction …",
+    "calendar": "Calendar",
+    "calendar_no_entry": "No entry for this category",
+    "calendar_range": "{{from}} (W{{w1}}) – {{to}} (W{{w2}})",
+    "calendar_range_same": "{{month}} (W{{w1}}–W{{w2}})"
   }
 }

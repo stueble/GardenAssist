@@ -190,6 +190,10 @@
     "moisture_title": "Bodenfeuchtigkeit · 14 Tage",
     "assistant_title": "Garten-Assistent",
     "assistant_close": "✕",
-    "assistant_placeholder": "Frage oder Anweisung …"
+    "assistant_placeholder": "Frage oder Anweisung …",
+    "calendar": "Kalender",
+    "calendar_no_entry": "Kein Eintrag für diese Kategorie",
+    "calendar_range": "{{from}} (W{{w1}}) – {{to}} (W{{w2}})",
+    "calendar_range_same": "{{month}} (W{{w1}}–W{{w2}})"
   }
 }
