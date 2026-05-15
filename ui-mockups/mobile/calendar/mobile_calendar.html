@@ -1,0 +1,201 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  .wrap{display:flex;justify-content:center;padding:1.5rem 0 2rem;font-family:'DM Sans',sans-serif;}
+  .phone{width:340px;background:#f8f4ee;border-radius:36px;border:8px solid #1e2e1e;overflow:hidden;box-shadow:0 16px 48px rgba(0,0,0,.2);display:flex;flex-direction:column;height:620px;position:relative;}
+  .notch{width:100px;height:22px;background:#1e2e1e;border-radius:0 0 14px 14px;margin:0 auto;flex-shrink:0;}
+  .topbar{background:#2d4a2d;display:flex;align-items:center;padding:0 10px;height:44px;gap:4px;flex-shrink:0;}
+  .tb-btn{width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:8px;color:#c8dfc0;font-size:19px;flex-shrink:0;}
+  .tb-title{font-family:'Playfair Display',serif;font-size:16px;color:#fff;font-weight:600;flex:1;}
+  .tb-chat{background:rgba(255,255,255,.15);border-radius:8px;position:relative;}
+  .tb-chat.open{background:rgba(255,255,255,.28);}
+  .tb-badge{position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;background:#7aab6a;border:1.5px solid #2d4a2d;}
+  .view-area{padding:7px 12px;flex-shrink:0;}
+  .chips{display:flex;gap:5px;overflow-x:auto;}
+  .chips::-webkit-scrollbar{display:none;}
+  .chip{font-size:10px;padding:3px 10px;border-radius:20px;border:1px solid #c8dfc0;color:#4a5e4a;cursor:pointer;background:#eef4eb;white-space:nowrap;flex-shrink:0;transition:all .15s;}
+  .chip.active{background:#2d4a2d;color:#fff;border-color:#2d4a2d;}
+  .sep{height:1px;background:#dde8d8;flex-shrink:0;}
+  .chart-area{flex:1;overflow-y:auto;overflow-x:hidden;min-height:0;background:#fff;}
+  .hdr-row{display:flex;align-items:flex-end;padding:5px 8px 0;position:sticky;top:0;background:#fff;z-index:5;border-bottom:1px solid #dde8d8;}
+  .name-col{width:72px;flex-shrink:0;}
+  .months-track{flex:1;display:flex;}
+  .month-group{flex:1;display:flex;flex-direction:column;align-items:center;border-left:1px solid #eef4eb;padding-bottom:4px;}
+  .month-group:first-child{border-left:none;}
+  .month-group.cur .month-lbl{color:#2d4a2d;font-weight:700;}
+  .month-lbl{font-size:8px;color:#8a9e8a;letter-spacing:.3px;margin-bottom:2px;}
+  .week-dots{display:flex;gap:1px;}
+  .wd{width:4px;height:4px;border-radius:50%;background:#eef4eb;}
+  .wd.cur{background:#4a7c4a;}
+  .plant-row{display:flex;align-items:center;padding:5px 8px;border-bottom:1px solid #f0f4ee;cursor:pointer;transition:background .12s;}
+  .plant-row:hover{background:#f8f4ee;}
+  .plant-row.sel{background:#eef4eb;}
+  .plant-info{width:72px;flex-shrink:0;}
+  .p-name{font-size:10px;font-weight:500;color:#1e2e1e;line-height:1.2;}
+  .p-bot{font-size:8px;color:#8a9e8a;}
+  .bar-track{flex:1;display:flex;align-items:center;height:20px;position:relative;}
+  .cur-line{position:absolute;top:0;bottom:0;width:1.5px;background:#4a7c4a;opacity:.5;pointer-events:none;}
+  .week-segs{display:flex;width:100%;height:10px;gap:1px;}
+  .ws{flex:1;height:10px;border-radius:1px;background:#f0f4ee;}
+  .tip{margin:0 8px 8px;padding:8px 10px;background:#eef4eb;border-radius:8px;border:1px solid #c8dfc0;display:none;font-size:10px;}
+  .tip.open{display:block;}
+  .tip-name{font-weight:500;color:#1e2e1e;margin-bottom:3px;}
+  .tip-row{display:flex;align-items:center;gap:5px;color:#4a5e4a;}
+  .tip-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;border:1px solid rgba(0,0,0,.1);}
+  .chat-panel{flex-shrink:0;height:0;overflow:hidden;transition:height .25s ease;background:#fff;border-top:2px solid #2d4a2d;display:flex;flex-direction:column;}
+  .chat-panel.open{height:200px;}
+  .chat-hdr{padding:8px 12px 7px;border-bottom:1px solid #dde8d8;display:flex;align-items:center;gap:6px;flex-shrink:0;}
+  .chat-hdr-ttl{font-size:12px;font-weight:500;color:#1e2e1e;flex:1;}
+  .chat-cls{font-size:9px;color:#8a9e8a;cursor:pointer;padding:2px 7px;border:1px solid #dde8d8;border-radius:20px;}
+  .chat-msgs{flex:1;overflow-y:auto;padding:8px 12px;display:flex;flex-direction:column;gap:5px;min-height:0;}
+  .msg{max-width:86%;font-size:10px;line-height:1.45;padding:6px 9px;border-radius:10px;}
+  .msg.bot{background:#eef4eb;color:#1e2e1e;align-self:flex-start;border-radius:4px 10px 10px 10px;}
+  .msg.user{background:#2d4a2d;color:#fff;align-self:flex-end;border-radius:10px 4px 10px 10px;}
+  .chat-inp-row{padding:7px 10px;border-top:1px solid #dde8d8;display:flex;gap:6px;align-items:center;flex-shrink:0;}
+  .chat-inp{flex:1;font-size:11px;padding:5px 10px;border:1.5px solid #dde8d8;border-radius:20px;outline:none;font-family:'DM Sans',sans-serif;}
+  .chat-inp:focus{border-color:#4a7c4a;}
+  .chat-snd{width:28px;height:28px;border-radius:50%;background:#4a7c4a;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .chat-snd i{font-size:13px;color:#fff;}
+  .bnav{background:#2d4a2d;display:flex;align-items:center;padding:6px 0 10px;flex-shrink:0;}
+  .btab{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:3px 0;cursor:pointer;border-radius:8px;}
+  .btab i{font-size:19px;color:#c8dfc0;}
+  .btab span{font-size:8px;color:#c8dfc0;letter-spacing:.2px;}
+  .btab.active i,.btab.active span{color:#fff;}
+  .btab.active{background:rgba(255,255,255,.1);}
+</style>
+
+<div class="wrap"><div class="phone">
+  <div class="notch"></div>
+  <div class="topbar">
+    <div class="tb-btn"><i class="ti ti-menu-2" aria-hidden="true"></i></div>
+    <div class="tb-title">Kalender</div>
+    <div class="tb-btn tb-chat" id="chatBtn" onclick="toggleChat()">
+      <i class="ti ti-message-circle" aria-hidden="true"></i>
+      <div class="tb-badge" id="badge"></div>
+    </div>
+  </div>
+
+  <div class="view-area">
+    <div class="chips">
+      <div class="chip active" onclick="setView('bloom',this)">🌸 Blüte</div>
+      <div class="chip" onclick="setView('fertilize',this)">💧 Düngen</div>
+      <div class="chip" onclick="setView('pruning',this)">✂️ Schnitt</div>
+      <div class="chip" onclick="setView('misc',this)">· Sonstiges</div>
+      <div class="chip" onclick="setView('foliage',this)">🍂 Blätter</div>
+      <div class="chip" onclick="setView('growth',this)">🌱 Wachstum</div>
+    </div>
+  </div>
+  <div class="sep"></div>
+
+  <div class="chart-area">
+    <div class="hdr-row">
+      <div class="name-col"></div>
+      <div class="months-track" id="monthTrack"></div>
+    </div>
+    <div id="plantRows"></div>
+    <div class="tip" id="tip"></div>
+  </div>
+
+  <div class="chat-panel" id="chatPanel">
+    <div class="chat-hdr">
+      <i class="ti ti-message-circle" style="font-size:15px;color:#4a7c4a;" aria-hidden="true"></i>
+      <div class="chat-hdr-ttl">Garten-Assistent</div>
+      <div class="chat-cls" onclick="toggleChat()">✕</div>
+    </div>
+    <div class="chat-msgs" id="msgs">
+      <div class="msg bot">Die Pfingstrose blüht nur 5 Wochen — ergänzt gut mit Lavendel ab Juni.</div>
+    </div>
+    <div class="chat-inp-row">
+      <input class="chat-inp" id="inp" placeholder="Frage oder Anweisung …" onkeydown="if(event.key==='Enter')send()">
+      <button class="chat-snd" onclick="send()"><i class="ti ti-send" aria-hidden="true"></i></button>
+    </div>
+  </div>
+
+  <div class="bnav">
+    <div class="btab"><i class="ti ti-check" aria-hidden="true"></i><span>Aufgaben</span></div>
+    <div class="btab"><i class="ti ti-plant" aria-hidden="true"></i><span>Pflanzen</span></div>
+    <div class="btab active"><i class="ti ti-calendar" aria-hidden="true"></i><span>Kalender</span></div>
+    <div class="btab"><i class="ti ti-notebook" aria-hidden="true"></i><span>Tagebuch</span></div>
+    <div class="btab"><i class="ti ti-map" aria-hidden="true"></i><span>Plan</span></div>
+  </div>
+</div></div>
+
+<script>
+const MONTHS=['J','F','M','A','M','J','J','A','S','O','N','D'];
+const FULL=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+const NOW_M=4,NOW_W=1;
+
+function weeks(ranges){const a=new Array(48).fill(false);for(const[s,e]of ranges)for(let i=s;i<=e;i++)a[i]=true;return a;}
+
+const plants=[
+  {name:'Rose',bot:'Rosa',bloom:{color:'#e84393',active:weeks([[16,34]])},foliage:{color:'#2e7d32',active:weeks([[13,41]])},growth:{color:'#66bb6a',active:weeks([[14,21]])},pruning:{color:'#27ae60',active:weeks([[4,6],[35,37]])},fertilize:{color:'#2980b9',active:weeks([[16,18],[28,30]])},misc:{color:'#7f8c8d',active:weeks([])}},
+  {name:'Lavendel',bot:'Lavandula',bloom:{color:'#9c27b0',active:weeks([[22,33]])},foliage:{color:'#78909c',active:weeks([[0,47]])},growth:{color:'#66bb6a',active:weeks([[15,19]])},pruning:{color:'#27ae60',active:weeks([[34,36]])},fertilize:{color:'#2980b9',active:weeks([[14,15]])},misc:{color:'#7f8c8d',active:weeks([])}},
+  {name:'Hortensie',bot:'Hydrangea',bloom:{color:'#64b5f6',active:weeks([[26,37]])},foliage:{color:'#388e3c',active:weeks([[17,41]])},growth:{color:'#81c784',active:weeks([[17,23]])},pruning:{color:'#27ae60',active:weeks([[6,8]])},fertilize:{color:'#2980b9',active:weeks([[17,19]])},misc:{color:'#7f8c8d',active:weeks([[0,3]])}},
+  {name:'Tulpe',bot:'Tulipa',bloom:{color:'#f44336',active:weeks([[13,17]])},foliage:{color:'#66bb6a',active:weeks([[10,19]])},growth:{color:'#a5d6a7',active:weeks([[10,15]])},pruning:{color:'#27ae60',active:weeks([[18,19]])},fertilize:{color:'#2980b9',active:weeks([[10,11]])},misc:{color:'#7f8c8d',active:weeks([])}},
+  {name:'Fächerahorn',bot:'Acer',bloom:{color:null,active:weeks([])},foliage:{color:'#ef6c00',active:weeks([[13,43]]),colorFn:w=>w<20?'#66bb6a':w<36?'#388e3c':w<40?'#ef6c00':'#e53935'},growth:{color:'#a5d6a7',active:weeks([[14,18]])},pruning:{color:'#27ae60',active:weeks([[1,3]])},fertilize:{color:'#2980b9',active:weeks([[14,15]])},misc:{color:'#7f8c8d',active:weeks([])}},
+  {name:'Forsythie',bot:'Forsythia',bloom:{color:'#fdd835',active:weeks([[9,14]])},foliage:{color:'#43a047',active:weeks([[15,39]])},growth:{color:'#81c784',active:weeks([[14,19]])},pruning:{color:'#27ae60',active:weeks([[15,16]])},fertilize:{color:'#2980b9',active:weeks([[15,16]])},misc:{color:'#7f8c8d',active:weeks([])}},
+  {name:'Pfingstrose',bot:'Paeonia',bloom:{color:'#f48fb1',active:weeks([[17,21]])},foliage:{color:'#388e3c',active:weeks([[14,38]])},growth:{color:'#66bb6a',active:weeks([[13,18]])},pruning:{color:'#27ae60',active:weeks([[38,40]])},fertilize:{color:'#2980b9',active:weeks([[13,14]])},misc:{color:'#7f8c8d',active:weeks([])}},
+  {name:'Dahlie',bot:'Dahlia',bloom:{color:'#ff7043',active:weeks([[27,38]])},foliage:{color:'#2e7d32',active:weeks([[23,39]])},growth:{color:'#81c784',active:weeks([[19,27]])},pruning:{color:'#27ae60',active:weeks([[39,41]])},fertilize:{color:'#2980b9',active:weeks([[23,25],[31,33]])},misc:{color:'#7f8c8d',active:weeks([])}},
+];
+
+let view='bloom',sel=null;
+
+function setView(v,el){view=v;sel=null;document.querySelectorAll('.chip').forEach(t=>t.classList.remove('active'));el.classList.add('active');document.getElementById('tip').classList.remove('open');render();}
+
+function buildHeader(){
+  document.getElementById('monthTrack').innerHTML=MONTHS.map((m,i)=>{
+    const dots=[0,1,2,3].map(w=>`<div class="wd${(i===NOW_M&&w===NOW_W)?' cur':''}"></div>`).join('');
+    return`<div class="month-group${i===NOW_M?' cur':''}"><div class="month-lbl">${m}</div><div class="week-dots">${dots}</div></div>`;
+  }).join('');
+}
+
+function getCol(p,v,wi){const d=p[v];if(!d||!d.active[wi])return null;if(d.colorFn)return d.colorFn(wi);return d.color;}
+
+function render(){
+  buildHeader();
+  const curPct=((NOW_M*4+NOW_W+0.5)/48*100).toFixed(2);
+  document.getElementById('plantRows').innerHTML=plants.map((p,pi)=>{
+    const d=p[view],hasAny=d&&d.active.some(Boolean);
+    const segs=Array.from({length:48},(_,i)=>{
+      const col=getCol(p,view,i);if(!col)return`<div class="ws"></div>`;
+      const prev=i>0&&d.active[i-1],next=i<47&&d.active[i+1];
+      let r='1px';
+      if(!prev&&!next)r='4px';else if(!prev)r='4px 1px 1px 4px';else if(!next)r='1px 4px 4px 1px';
+      return`<div class="ws" style="background:${col};border-radius:${r};"></div>`;
+    }).join('');
+    return`<div class="plant-row${sel===pi?' sel':''}" id="pr-${pi}" onclick="selectPlant(${pi})" style="opacity:${hasAny?1:0.4}">
+      <div class="plant-info"><div class="p-name">${p.name}</div><div class="p-bot">${p.bot}</div></div>
+      <div class="bar-track">
+        <div class="cur-line" style="left:${curPct}%"></div>
+        <div class="week-segs">${segs}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function selectPlant(pi){
+  if(sel!==null)document.getElementById('pr-'+sel)?.classList.remove('sel');
+  sel=sel===pi?null:pi;
+  if(sel===null){document.getElementById('tip').classList.remove('open');render();return;}
+  const p=plants[pi],d=p[view];
+  const vl={bloom:'Blüte',foliage:'Blätter',growth:'Wachstum',pruning:'Schnitt',fertilize:'Düngen',misc:'Sonstiges'}[view];
+  let first=-1,last=-1;
+  d&&d.active.forEach((on,i)=>{if(on){if(first<0)first=i;last=i;}});
+  let range=`Kein ${vl}-Eintrag`;
+  if(first>=0){const mF=Math.floor(first/4),mL=Math.floor(last/4),wF=(first%4)+1,wL=(last%4)+1;range=mF===mL?`${FULL[mF]}, W${wF}–W${wL}`:`${FULL[mF]} (W${wF}) – ${FULL[mL]} (W${wL})`;}
+  const col=d?.colorFn?d.colorFn(first>=0?first:0):d?.color;
+  const tip=document.getElementById('tip');
+  tip.innerHTML=`<div class="tip-name">${p.name} <span style="color:#8a9e8a;font-weight:400;font-size:9px">${p.bot}</span></div>
+    <div class="tip-row">${col?`<div class="tip-dot" style="background:${col}"></div>`:''}
+    <span>${vl}: ${range}</span></div>`;
+  tip.classList.add('open');
+  render();document.getElementById('pr-'+pi)?.classList.add('sel');
+}
+
+let chatOpen=false;
+function toggleChat(){chatOpen=!chatOpen;document.getElementById('chatPanel').classList.toggle('open',chatOpen);document.getElementById('chatBtn').classList.toggle('open',chatOpen);document.getElementById('badge').style.display=chatOpen?'none':'block';if(chatOpen)setTimeout(()=>document.getElementById('inp').focus(),250);}
+function send(){const inp=document.getElementById('inp'),txt=inp.value.trim();if(!txt)return;const msgs=document.getElementById('msgs');msgs.innerHTML+=`<div class="msg user">${txt}</div>`;inp.value='';msgs.scrollTop=msgs.scrollHeight;setTimeout(()=>{msgs.innerHTML+=`<div class="msg bot">Gute Frage!</div>`;msgs.scrollTop=msgs.scrollHeight;},600);}
+
+render();
+</script>

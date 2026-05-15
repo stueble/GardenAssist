@@ -1,0 +1,275 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  .wrap{display:flex;justify-content:center;padding:1.5rem 0 2rem;font-family:'DM Sans',sans-serif;}
+  .phone{width:340px;background:#f8f4ee;border-radius:36px;border:8px solid #1e2e1e;overflow:hidden;box-shadow:0 16px 48px rgba(0,0,0,.2);display:flex;flex-direction:column;height:620px;position:relative;}
+  .notch{width:100px;height:22px;background:#1e2e1e;border-radius:0 0 14px 14px;margin:0 auto;flex-shrink:0;}
+  .topbar{background:#2d4a2d;display:flex;align-items:center;padding:0 10px;height:44px;gap:4px;flex-shrink:0;}
+  .tb-btn{width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:8px;color:#c8dfc0;font-size:19px;flex-shrink:0;transition:background .15s;}
+  .tb-btn:hover{background:rgba(255,255,255,.12);}
+  .tb-title{font-family:'Playfair Display',serif;font-size:16px;color:#fff;font-weight:600;flex:1;}
+  .tb-chat{background:rgba(255,255,255,.15);border-radius:8px;position:relative;}
+  .tb-chat.open{background:rgba(255,255,255,.28);}
+  .tb-badge{position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;background:#7aab6a;border:1.5px solid #2d4a2d;}
+  .tb-add{background:rgba(255,255,255,.15);border-radius:8px;}
+
+  .search-area{padding:6px 12px 7px;flex-shrink:0;}
+  .search-pill{
+    display:flex;align-items:center;gap:5px;
+    background:#dde8d8;
+    border-radius:20px;
+    padding:2px 10px;
+    margin-bottom:7px;
+  }
+  .search-pill i{font-size:13px;color:#4a5e4a;flex-shrink:0;}
+  .search-pill input{
+    border:none !important;
+    outline:none !important;
+    box-shadow:none !important;
+    -webkit-appearance:none;
+    appearance:none;
+    background:transparent !important;
+    font-size:11px;
+    color:#1e2e1e;
+    font-family:'DM Sans',sans-serif;
+    flex:1;
+    min-width:0;
+    padding:3px 0;
+  }
+  .search-pill input::placeholder{color:#8a9e8a;}
+
+  .chips{display:flex;gap:5px;overflow-x:auto;}
+  .chips::-webkit-scrollbar{display:none;}
+  .chip{font-size:9px;padding:3px 9px;border-radius:20px;border:1px solid #c8dfc0;color:#4a5e4a;cursor:pointer;white-space:nowrap;background:#eef4eb;flex-shrink:0;transition:all .15s;}
+  .chip.active{background:#2d4a2d;color:#fff;border-color:#2d4a2d;}
+  .sep{height:1px;background:#dde8d8;flex-shrink:0;}
+
+  .scroll{flex:1;overflow-y:auto;min-height:0;}
+  .month-group{padding:0 12px;}
+  .month-heading{font-family:'Playfair Display',serif;font-size:13px;font-weight:600;color:#1e2e1e;padding:10px 0 6px;border-bottom:1px solid #dde8d8;}
+  .timeline{padding-left:16px;position:relative;}
+  .tl-line{position:absolute;left:7px;top:0;bottom:0;width:2px;background:#dde8d8;}
+  .entry{position:relative;padding:8px 0 4px 14px;cursor:pointer;}
+  .entry-dot{position:absolute;left:-9px;top:14px;width:10px;height:10px;border-radius:50%;border:2px solid #f8f4ee;z-index:1;}
+  .entry-card{background:#fff;border-radius:10px;border:1px solid #dde8d8;overflow:hidden;transition:border-color .15s;}
+  .entry-card:hover{border-color:#7aab6a;}
+  .entry-card.expanded{border-color:#4a7c4a;}
+  .entry-head{padding:8px 10px;display:flex;align-items:flex-start;gap:7px;}
+  .type-badge{font-size:8px;padding:2px 6px;border-radius:20px;font-weight:500;flex-shrink:0;margin-top:1px;}
+  .badge-done{background:#eef4eb;color:#2d4a2d;}
+  .badge-obs{background:#e8f0fb;color:#185fa5;}
+  .badge-prob{background:#fdf0ee;color:#c0392b;}
+  .badge-cost{background:#fef9ee;color:#d4850a;}
+  .badge-water{background:#e1f5ee;color:#0f6e56;}
+  .entry-info{flex:1;min-width:0;}
+  .entry-title{font-size:11px;font-weight:500;color:#1e2e1e;line-height:1.3;}
+  .entry-meta{display:flex;align-items:center;gap:5px;margin-top:2px;flex-wrap:wrap;}
+  .entry-plant{font-size:9px;color:#4a5e4a;background:#eef4eb;border-radius:20px;padding:1px 6px;}
+  .entry-date{font-size:9px;color:#8a9e8a;}
+  .entry-chev{font-size:12px;color:#8a9e8a;flex-shrink:0;transition:transform .2s;margin-top:2px;}
+  .entry-chev.open{transform:rotate(180deg);}
+  .entry-body{display:none;padding:0 10px 10px;border-top:1px solid #eef4eb;}
+  .entry-body.open{display:block;}
+  .entry-text{font-size:10px;color:#4a5e4a;line-height:1.5;margin:8px 0;}
+  .photo-row{display:flex;gap:5px;}
+  .photo-slot{width:56px;height:56px;border-radius:8px;background:#eef4eb;display:flex;align-items:center;justify-content:center;font-size:20px;border:1px solid #dde8d8;}
+  .entry-cost{font-size:10px;color:#d4850a;font-weight:500;margin-top:6px;}
+  .water-detail{font-size:10px;color:#0f6e56;margin-top:4px;display:flex;gap:6px;flex-wrap:wrap;}
+  .water-detail span{background:#e1f5ee;padding:2px 7px;border-radius:20px;}
+
+  .new-sheet{flex-shrink:0;height:0;overflow:hidden;transition:height .25s ease;background:#fff;border-top:2px solid #8b6f47;display:flex;flex-direction:column;}
+  .new-sheet.open{height:220px;}
+  .new-hdr{padding:8px 12px 7px;border-bottom:1px solid #dde8d8;display:flex;align-items:center;gap:6px;flex-shrink:0;}
+  .new-hdr-title{font-size:12px;font-weight:500;color:#1e2e1e;flex:1;}
+  .new-close{font-size:9px;color:#8a9e8a;cursor:pointer;padding:2px 7px;border:1px solid #dde8d8;border-radius:20px;}
+  .new-body{flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:8px;min-height:0;}
+  .type-select{display:flex;gap:5px;flex-wrap:wrap;}
+  .type-opt{font-size:10px;padding:4px 9px;border-radius:20px;border:1px solid #dde8d8;cursor:pointer;color:#4a5e4a;background:#fff;transition:all .15s;}
+  .type-opt.sel{background:#2d4a2d;color:#fff;border-color:#2d4a2d;}
+  .new-input{width:100%;font-size:11px;padding:7px 10px;border:1.5px solid #dde8d8;border-radius:8px;outline:none;font-family:'DM Sans',sans-serif;color:#1e2e1e;}
+  .new-input:focus{border-color:#4a7c4a;}
+  .new-footer{padding:7px 12px;border-top:1px solid #dde8d8;display:flex;gap:6px;justify-content:flex-end;flex-shrink:0;}
+  .btn-save{font-size:10px;padding:5px 14px;background:#2d4a2d;color:#fff;border:none;border-radius:20px;cursor:pointer;}
+  .btn-cancel{font-size:10px;padding:5px 14px;background:#fff;color:#8a9e8a;border:1px solid #dde8d8;border-radius:20px;cursor:pointer;}
+
+  .chat-panel{flex-shrink:0;height:0;overflow:hidden;transition:height .25s ease;background:#fff;border-top:2px solid #2d4a2d;display:flex;flex-direction:column;}
+  .chat-panel.open{height:200px;}
+  .chat-hdr{padding:8px 12px 7px;border-bottom:1px solid #dde8d8;display:flex;align-items:center;gap:6px;flex-shrink:0;}
+  .chat-hdr-title{font-size:12px;font-weight:500;color:#1e2e1e;flex:1;}
+  .chat-close{font-size:9px;color:#8a9e8a;cursor:pointer;padding:2px 7px;border:1px solid #dde8d8;border-radius:20px;}
+  .chat-msgs{flex:1;overflow-y:auto;padding:8px 12px;display:flex;flex-direction:column;gap:5px;min-height:0;}
+  .msg{max-width:86%;font-size:10px;line-height:1.45;padding:6px 9px;border-radius:10px;}
+  .msg.bot{background:#eef4eb;color:#1e2e1e;align-self:flex-start;border-radius:4px 10px 10px 10px;}
+  .msg.user{background:#2d4a2d;color:#fff;align-self:flex-end;border-radius:10px 4px 10px 10px;}
+  .chat-inp-row{padding:7px 10px;border-top:1px solid #dde8d8;display:flex;gap:6px;align-items:center;flex-shrink:0;}
+  .chat-inp{flex:1;font-size:11px;padding:5px 10px;border:1.5px solid #dde8d8;border-radius:20px;outline:none;font-family:'DM Sans',sans-serif;}
+  .chat-inp:focus{border-color:#4a7c4a;}
+  .chat-snd{width:28px;height:28px;border-radius:50%;background:#4a7c4a;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .chat-snd i{font-size:13px;color:#fff;}
+
+  .bnav{background:#2d4a2d;display:flex;align-items:center;padding:6px 0 10px;flex-shrink:0;}
+  .btab{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:3px 0;cursor:pointer;border-radius:8px;}
+  .btab i{font-size:19px;color:#c8dfc0;}
+  .btab span{font-size:8px;color:#c8dfc0;letter-spacing:.2px;}
+  .btab.active i,.btab.active span{color:#fff;}
+  .btab.active{background:rgba(255,255,255,.1);}
+</style>
+
+<div class="wrap"><div class="phone">
+  <div class="notch"></div>
+  <div class="topbar">
+    <div class="tb-btn"><i class="ti ti-menu-2" aria-hidden="true"></i></div>
+    <div class="tb-title">Tagebuch</div>
+    <div class="tb-btn tb-add" id="addBtn" onclick="toggleNew()">
+      <i class="ti ti-plus" id="addIco" aria-hidden="true"></i>
+    </div>
+    <div class="tb-btn tb-chat" id="chatBtn" onclick="toggleChat()">
+      <i class="ti ti-message-circle" aria-hidden="true"></i>
+      <div class="tb-badge" id="badge"></div>
+    </div>
+  </div>
+
+  <div class="search-area">
+    <div class="search-pill">
+      <i class="ti ti-search" aria-hidden="true"></i>
+      <input type="text" placeholder="Einträge durchsuchen …">
+    </div>
+    <div class="chips">
+      <div class="chip" onclick="toggleChip(this)">✅ Erledigt</div>
+      <div class="chip" onclick="toggleChip(this)">👁 Beobachtung</div>
+      <div class="chip" onclick="toggleChip(this)">⚠️ Problem</div>
+      <div class="chip" onclick="toggleChip(this)">💧 Bewässerung</div>
+      <div class="chip" onclick="toggleChip(this)">💰 Ausgabe</div>
+    </div>
+  </div>
+  <div class="sep"></div>
+
+  <div class="scroll">
+    <div class="month-group">
+      <div class="month-heading">Mai 2026</div>
+      <div class="timeline">
+        <div class="tl-line"></div>
+        <div class="entry" onclick="toggleEntry('e1')">
+          <div class="entry-dot" style="background:#27ae60;"></div>
+          <div class="entry-card" id="e1">
+            <div class="entry-head">
+              <span class="type-badge badge-done">✅ Erledigt</span>
+              <div class="entry-info"><div class="entry-title">Rosen Frühjahrsschnitt</div><div class="entry-meta"><span class="entry-plant">🌹 Rose</span><span class="entry-date">14. Mai</span></div></div>
+              <i class="ti ti-chevron-down entry-chev" id="chev-e1" aria-hidden="true"></i>
+            </div>
+            <div class="entry-body" id="body-e1">
+              <div class="entry-text">Frühjahrsschnitt durchgeführt. Alle alten Triebe auf 3 Augen zurückgeschnitten.</div>
+              <div class="photo-row"><div class="photo-slot">🌹</div><div class="photo-slot">✂️</div><div class="photo-slot" style="border-style:dashed;color:#8a9e8a;font-size:22px;">+</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="entry" onclick="toggleEntry('e2')">
+          <div class="entry-dot" style="background:#1d9e75;"></div>
+          <div class="entry-card" id="e2">
+            <div class="entry-head">
+              <span class="type-badge badge-water">💧 Bewässerung</span>
+              <div class="entry-info"><div class="entry-title">Zone 2 manuell bewässert</div><div class="entry-meta"><span class="entry-plant">🌿 Gemüsebeet</span><span class="entry-date">12. Mai</span></div></div>
+              <i class="ti ti-chevron-down entry-chev" id="chev-e2" aria-hidden="true"></i>
+            </div>
+            <div class="entry-body" id="body-e2">
+              <div class="entry-text">Boden war sehr trocken (28 %). Ca. 20 Minuten bewässert.</div>
+              <div class="water-detail"><span>⏱ 20 min</span><span>📍 Zone 2</span><span>💧 ~18 L</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="entry" onclick="toggleEntry('e3')">
+          <div class="entry-dot" style="background:#c0392b;"></div>
+          <div class="entry-card" id="e3">
+            <div class="entry-head">
+              <span class="type-badge badge-prob">⚠️ Problem</span>
+              <div class="entry-info"><div class="entry-title">Blattläuse an Hortensie</div><div class="entry-meta"><span class="entry-plant">💙 Hortensie</span><span class="entry-date">10. Mai</span></div></div>
+              <i class="ti ti-chevron-down entry-chev" id="chev-e3" aria-hidden="true"></i>
+            </div>
+            <div class="entry-body" id="body-e3">
+              <div class="entry-text">Starker Blattlausbefall. Behandlung mit Neemöl-Lösung angesetzt.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="month-group">
+      <div class="month-heading">April 2026</div>
+      <div class="timeline">
+        <div class="tl-line"></div>
+        <div class="entry" onclick="toggleEntry('e4')">
+          <div class="entry-dot" style="background:#d4850a;"></div>
+          <div class="entry-card" id="e4">
+            <div class="entry-head">
+              <span class="type-badge badge-cost">💰 Ausgabe</span>
+              <div class="entry-info"><div class="entry-title">Dünger &amp; Mulch</div><div class="entry-meta"><span class="entry-plant">🌿 Garten</span><span class="entry-date">28. Apr</span></div></div>
+              <i class="ti ti-chevron-down entry-chev" id="chev-e4" aria-hidden="true"></i>
+            </div>
+            <div class="entry-body" id="body-e4">
+              <div class="entry-text">10 kg Rosendünger, 2 Sack Rindenmulch (60 L).</div>
+              <div class="entry-cost">💰 38,50 €</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="height:10px;"></div>
+  </div>
+
+  <div class="new-sheet" id="newSheet">
+    <div class="new-hdr">
+      <i class="ti ti-pencil" style="font-size:15px;color:#8b6f47;" aria-hidden="true"></i>
+      <div class="new-hdr-title">Neuer Eintrag</div>
+      <div class="new-close" onclick="toggleNew()">✕</div>
+    </div>
+    <div class="new-body">
+      <div class="type-select">
+        <div class="type-opt sel" onclick="selType(this)">✅ Erledigt</div>
+        <div class="type-opt" onclick="selType(this)">👁 Beobachtung</div>
+        <div class="type-opt" onclick="selType(this)">⚠️ Problem</div>
+        <div class="type-opt" onclick="selType(this)">💧 Bewässerung</div>
+        <div class="type-opt" onclick="selType(this)">💰 Ausgabe</div>
+      </div>
+      <input class="new-input" placeholder="Titel …">
+      <input class="new-input" placeholder="Pflanze wählen …">
+      <textarea class="new-input" rows="2" placeholder="Notizen …" style="resize:none;"></textarea>
+    </div>
+    <div class="new-footer">
+      <button class="btn-cancel" onclick="toggleNew()">Abbrechen</button>
+      <button class="btn-save">✓ Speichern</button>
+    </div>
+  </div>
+
+  <div class="chat-panel" id="chatPanel">
+    <div class="chat-hdr">
+      <i class="ti ti-message-circle" style="font-size:15px;color:#4a7c4a;" aria-hidden="true"></i>
+      <div class="chat-hdr-title">Garten-Assistent</div>
+      <div class="chat-close" onclick="toggleChat()">✕</div>
+    </div>
+    <div class="chat-msgs" id="msgs">
+      <div class="msg bot">Zone 2 wurde zuletzt am 12. Mai bewässert — soll ich eine Erinnerung setzen?</div>
+    </div>
+    <div class="chat-inp-row">
+      <input class="chat-inp" id="inp" placeholder="Frage oder Anweisung …" onkeydown="if(event.key==='Enter')send()">
+      <button class="chat-snd" onclick="send()"><i class="ti ti-send" aria-hidden="true"></i></button>
+    </div>
+  </div>
+
+  <div class="bnav">
+    <div class="btab"><i class="ti ti-check" aria-hidden="true"></i><span>Aufgaben</span></div>
+    <div class="btab"><i class="ti ti-plant" aria-hidden="true"></i><span>Pflanzen</span></div>
+    <div class="btab"><i class="ti ti-calendar" aria-hidden="true"></i><span>Kalender</span></div>
+    <div class="btab active"><i class="ti ti-notebook" aria-hidden="true"></i><span>Tagebuch</span></div>
+    <div class="btab"><i class="ti ti-map" aria-hidden="true"></i><span>Plan</span></div>
+  </div>
+</div></div>
+
+<script>
+function toggleEntry(id){const body=document.getElementById('body-'+id),chev=document.getElementById('chev-'+id),card=document.getElementById(id);const o=body.classList.toggle('open');card.classList.toggle('expanded',o);chev.classList.toggle('open',o);}
+function toggleChip(el){el.classList.toggle('active');}
+function selType(el){document.querySelectorAll('.type-opt').forEach(t=>t.classList.remove('sel'));el.classList.add('sel');}
+let newOpen=false,chatOpen=false;
+function toggleNew(){if(chatOpen)toggleChat();newOpen=!newOpen;document.getElementById('newSheet').classList.toggle('open',newOpen);document.getElementById('addIco').className=newOpen?'ti ti-x':'ti ti-plus';document.getElementById('addBtn').style.background=newOpen?'rgba(255,255,255,.28)':'rgba(255,255,255,.15)';}
+function toggleChat(){if(newOpen)toggleNew();chatOpen=!chatOpen;document.getElementById('chatPanel').classList.toggle('open',chatOpen);document.getElementById('chatBtn').classList.toggle('open',chatOpen);document.getElementById('badge').style.display=chatOpen?'none':'block';if(chatOpen)setTimeout(()=>document.getElementById('inp').focus(),250);}
+function send(){const inp=document.getElementById('inp'),txt=inp.value.trim();if(!txt)return;const msgs=document.getElementById('msgs');msgs.innerHTML+=`<div class="msg user">${txt}</div>`;inp.value='';msgs.scrollTop=msgs.scrollHeight;setTimeout(()=>{msgs.innerHTML+=`<div class="msg bot">Erledigt!</div>`;msgs.scrollTop=msgs.scrollHeight;},600);}
+</script>

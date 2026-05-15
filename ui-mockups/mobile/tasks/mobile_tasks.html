@@ -1,0 +1,344 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  .wrap{display:flex;justify-content:center;padding:1.5rem 0 2rem;font-family:'DM Sans',sans-serif;}
+  .phone{width:340px;background:#f8f4ee;border-radius:36px;border:8px solid #1e2e1e;overflow:hidden;box-shadow:0 16px 48px rgba(0,0,0,.2);display:flex;flex-direction:column;height:620px;position:relative;}
+  .notch{width:100px;height:22px;background:#1e2e1e;border-radius:0 0 14px 14px;margin:0 auto;flex-shrink:0;}
+  .topbar{background:#2d4a2d;display:flex;align-items:center;padding:0 10px;height:44px;gap:4px;flex-shrink:0;}
+  .tb-btn{width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:8px;color:#c8dfc0;font-size:19px;flex-shrink:0;}
+  .tb-title{font-family:'Playfair Display',serif;font-size:16px;color:#fff;font-weight:600;flex:1;}
+  .tb-chat{background:rgba(255,255,255,.15);border-radius:8px;position:relative;}
+  .tb-badge{position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;background:#7aab6a;border:1.5px solid #2d4a2d;}
+  .tb-add{background:rgba(255,255,255,.15);border-radius:8px;}
+
+  .scroll{flex:1;overflow-y:auto;min-height:0;}
+  .weather{background:#fff;margin:8px 10px 0;border-radius:12px;border:1px solid #dde8d8;overflow:hidden;}
+  .weather-top{padding:10px 12px;display:flex;align-items:center;gap:10px;cursor:pointer;}
+  .weather-left{display:flex;align-items:center;gap:8px;flex:1;}
+  .w-icon{font-size:22px;}
+  .w-info{flex:1;}
+  .w-temp{font-size:13px;font-weight:500;color:#1e2e1e;}
+  .w-desc{font-size:10px;color:#8a9e8a;}
+  .w-pills{display:flex;flex-direction:column;gap:3px;align-items:flex-end;}
+  .w-pill{font-size:9px;border-radius:20px;padding:2px 7px;font-weight:500;white-space:nowrap;}
+  .pill-frost{background:#fdf0ee;color:#c0392b;border:1px solid #f5c6c2;}
+  .pill-moist{background:#e8f0fb;color:#185fa5;border:1px solid #b5d4f4;}
+  .w-chev{color:#8a9e8a;font-size:14px;transition:transform .2s;flex-shrink:0;}
+  .w-chev.open{transform:rotate(180deg);}
+  .w-expanded{display:none;border-top:1px solid #eef4eb;}
+  .w-expanded.open{display:block;}
+
+  /* forecast — icon + hi/lo on one line */
+  .forecast{display:flex;padding:8px 10px;gap:3px;border-bottom:1px solid #eef4eb;}
+  .fc{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:5px 2px;border-radius:8px;}
+  .fc.today{background:#eef4eb;}
+  .fc-lbl{font-size:8px;color:#8a9e8a;font-weight:500;}
+  .fc-ico{font-size:13px;line-height:1;}
+  .fc-range{font-size:9px;white-space:nowrap;}
+  .fc-range .hi{font-weight:500;color:#1e2e1e;}
+  .fc-range .sep{color:#c8dfc0;margin:0 1px;}
+  .fc-range .lo{color:#8a9e8a;}
+  .fc-range .frost{color:#c0392b;font-weight:500;}
+
+  .moist-sec{padding:10px 12px 12px;}
+  .moist-ttl{font-size:9px;font-weight:600;letter-spacing:.7px;text-transform:uppercase;color:#8a9e8a;margin-bottom:8px;}
+  .zone-block{margin-bottom:10px;}
+  .zone-block:last-child{margin-bottom:0;}
+  .zone-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
+  .zone-name{font-size:10px;font-weight:500;color:#1e2e1e;}
+  .zone-meta{display:flex;align-items:center;gap:6px;}
+  .zone-pct{font-size:10px;font-weight:500;}
+  .zone-warn{font-size:9px;color:#c0392b;background:#fdf0ee;border-radius:20px;padding:1px 6px;}
+
+  .frost-banner{margin:6px 10px 0;background:#fdf0ee;border:1px solid #f5c6c2;border-radius:10px;padding:7px 10px;display:flex;gap:7px;align-items:flex-start;}
+  .frost-txt{font-size:10px;color:#c0392b;line-height:1.4;}
+  .frost-txt strong{font-weight:500;}
+
+  .sec-head{padding:10px 12px 4px;display:flex;align-items:center;gap:6px;}
+  .sec-lbl{font-size:9px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;}
+  .sec-cnt{font-size:9px;color:#8a9e8a;}
+  .lbl-ov{color:#c0392b;}.lbl-due{color:#d4850a;}.lbl-up{color:#4a78c0;}
+
+  .task{background:#fff;margin:0 10px 4px;border-radius:10px;border:1px solid #dde8d8;padding:8px 10px;display:flex;gap:8px;align-items:flex-start;}
+  .task.done{opacity:.4;}
+  .chk{width:18px;height:18px;border-radius:50%;border:2px solid #dde8d8;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;font-size:10px;}
+  .chk.ov{border-color:#c0392b;}.chk.due{border-color:#d4850a;}.chk.up{border-color:#4a78c0;}
+  .chk.checked{background:#4a7c4a;border-color:#4a7c4a;color:#fff;}
+  .task-body{flex:1;min-width:0;}
+  .task-ttl{font-size:11px;font-weight:500;color:#1e2e1e;line-height:1.3;}
+  .task-meta{display:flex;gap:4px;margin-top:3px;flex-wrap:wrap;align-items:center;}
+
+  /* plant tag with location */
+  .tag-plant{font-size:9px;color:#4a5e4a;background:#eef4eb;border-radius:20px;padding:1px 6px;}
+  .tag-loc{font-size:9px;color:#8a9e8a;display:flex;align-items:center;gap:2px;}
+  .tag-loc i{font-size:10px;}
+
+  /* bloom color pill */
+  .tag-bloom{font-size:9px;border-radius:20px;padding:1px 7px;font-weight:500;border:1px solid rgba(0,0,0,.08);}
+
+  .tag-date{font-size:9px;color:#8a9e8a;}
+  .tag-date.ov{color:#c0392b;}.tag-date.due{color:#d4850a;}
+  .skip{font-size:9px;color:#8a9e8a;padding:1px 6px;border:1px solid #dde8d8;border-radius:20px;background:#fff;cursor:pointer;flex-shrink:0;margin-top:1px;}
+
+  .chat-panel{flex-shrink:0;height:0;overflow:hidden;transition:height .25s ease;background:#fff;border-top:2px solid #2d4a2d;display:flex;flex-direction:column;}
+  .chat-panel.open{height:210px;}
+  .chat-hdr{padding:8px 12px 7px;border-bottom:1px solid #dde8d8;display:flex;align-items:center;gap:6px;flex-shrink:0;}
+  .chat-hdr-ttl{font-size:12px;font-weight:500;color:#1e2e1e;flex:1;}
+  .chat-cls{font-size:9px;color:#8a9e8a;cursor:pointer;padding:2px 7px;border:1px solid #dde8d8;border-radius:20px;}
+  .chat-msgs{flex:1;overflow-y:auto;padding:8px 12px;display:flex;flex-direction:column;gap:5px;min-height:0;}
+  .msg{max-width:86%;font-size:10px;line-height:1.45;padding:6px 9px;border-radius:10px;}
+  .msg.bot{background:#eef4eb;color:#1e2e1e;align-self:flex-start;border-radius:4px 10px 10px 10px;}
+  .msg.user{background:#2d4a2d;color:#fff;align-self:flex-end;border-radius:10px 4px 10px 10px;}
+  .chat-inp-row{padding:7px 10px;border-top:1px solid #dde8d8;display:flex;gap:6px;align-items:center;flex-shrink:0;}
+  .chat-inp{flex:1;font-size:11px;padding:5px 10px;border:1.5px solid #dde8d8;border-radius:20px;outline:none;font-family:'DM Sans',sans-serif;}
+  .chat-inp:focus{border-color:#4a7c4a;}
+  .chat-snd{width:28px;height:28px;border-radius:50%;background:#4a7c4a;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .chat-snd i{font-size:13px;color:#fff;}
+
+  .bnav{background:#2d4a2d;display:flex;align-items:center;padding:6px 0 10px;flex-shrink:0;}
+  .btab{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:3px 0;cursor:pointer;border-radius:8px;}
+  .btab i{font-size:19px;color:#c8dfc0;}
+  .btab span{font-size:8px;color:#c8dfc0;letter-spacing:.2px;}
+  .btab.active i,.btab.active span{color:#fff;}
+  .btab.active{background:rgba(255,255,255,.1);}
+</style>
+
+<div class="wrap"><div class="phone">
+  <div class="notch"></div>
+  <div class="topbar">
+    <div class="tb-btn"><i class="ti ti-menu-2" aria-hidden="true"></i></div>
+    <div class="tb-title">Aufgaben</div>
+    <div class="tb-btn tb-add"><i class="ti ti-plus" aria-hidden="true"></i></div>
+    <div class="tb-btn tb-chat" id="chatBtn" onclick="toggleChat()">
+      <i class="ti ti-message-circle" aria-hidden="true"></i>
+      <div class="tb-badge" id="badge"></div>
+    </div>
+  </div>
+
+  <div class="scroll">
+    <div class="weather">
+      <div class="weather-top" onclick="toggleWeather()">
+        <div class="weather-left">
+          <div class="w-icon">⛅</div>
+          <div class="w-info"><div class="w-temp">14 °C · München</div><div class="w-desc">Bedeckt · morgen Regen</div></div>
+        </div>
+        <div class="w-pills">
+          <div class="w-pill pill-frost">❄ Do. −2°C</div>
+          <div class="w-pill pill-moist">💧 Zone 2 trocken</div>
+        </div>
+        <i class="ti ti-chevron-down w-chev" id="wchev" aria-hidden="true"></i>
+      </div>
+      <div class="w-expanded" id="wexp">
+        <!-- 5-day forecast: icon + hi/lo in one line -->
+        <div class="forecast">
+          <div class="fc today">
+            <div class="fc-lbl">Heute</div>
+            <div class="fc-ico">⛅</div>
+            <div class="fc-range"><span class="hi">14°</span><span class="sep">/</span><span class="lo">8°</span></div>
+          </div>
+          <div class="fc">
+            <div class="fc-lbl">Mi</div>
+            <div class="fc-ico">🌧</div>
+            <div class="fc-range"><span class="hi">11°</span><span class="sep">/</span><span class="lo">6°</span></div>
+          </div>
+          <div class="fc">
+            <div class="fc-lbl">Do</div>
+            <div class="fc-ico">🌨</div>
+            <div class="fc-range"><span class="hi">4°</span><span class="sep">/</span><span class="frost">−2°</span></div>
+          </div>
+          <div class="fc">
+            <div class="fc-lbl">Fr</div>
+            <div class="fc-ico">⛅</div>
+            <div class="fc-range"><span class="hi">9°</span><span class="sep">/</span><span class="lo">3°</span></div>
+          </div>
+          <div class="fc">
+            <div class="fc-lbl">Sa</div>
+            <div class="fc-ico">☀️</div>
+            <div class="fc-range"><span class="hi">16°</span><span class="sep">/</span><span class="lo">7°</span></div>
+          </div>
+        </div>
+        <div class="moist-sec">
+          <div class="moist-ttl">Bodenfeuchtigkeit · 14 Tage</div>
+          <div id="zoneGraphs"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="frost-banner">
+      <span style="font-size:14px;flex-shrink:0;">⚠️</span>
+      <div class="frost-txt"><strong>Frost Donnerstag</strong> · Hortensie (min. 0 °C, −2 °C erwartet) — Kälteschutz empfohlen.</div>
+    </div>
+
+    <div class="sec-head"><span class="sec-lbl lbl-ov">Überfällig</span><span class="sec-cnt">2</span></div>
+
+    <div class="task" id="t1">
+      <div class="chk ov" onclick="chk('t1',this)"></div>
+      <div class="task-body">
+        <div class="task-ttl">Rosen schneiden</div>
+        <div class="task-meta">
+          <span class="tag-plant">🌹 Rose</span>
+          <span class="tag-loc"><i class="ti ti-map-pin" aria-hidden="true"></i>Südbeete</span>
+          <span class="tag-bloom" style="background:#f8bbd0;color:#880e4f;">Karminrot</span>
+          <span class="tag-date ov">Überfällig seit 2 Wo.</span>
+        </div>
+      </div>
+      <button class="skip" onclick="event.stopPropagation()">→ Skip</button>
+    </div>
+
+    <div class="task" id="t2">
+      <div class="chk ov" onclick="chk('t2',this)"></div>
+      <div class="task-body">
+        <div class="task-ttl">Lavendel düngen</div>
+        <div class="task-meta">
+          <span class="tag-plant">💜 Lavendel</span>
+          <span class="tag-loc"><i class="ti ti-map-pin" aria-hidden="true"></i>Terrassenkante</span>
+          <span class="tag-bloom" style="background:#e1bee7;color:#4a148c;">Violett</span>
+          <span class="tag-date ov">Überfällig seit 1 Wo.</span>
+        </div>
+      </div>
+      <button class="skip" onclick="event.stopPropagation()">→ Skip</button>
+    </div>
+
+    <div class="sec-head"><span class="sec-lbl lbl-due">Diese Woche</span><span class="sec-cnt">3</span></div>
+
+    <div class="task" id="t3">
+      <div class="chk due" onclick="chk('t3',this)"></div>
+      <div class="task-body">
+        <div class="task-ttl">Tomaten gießen</div>
+        <div class="task-meta">
+          <span class="tag-plant">🍅 Tomate</span>
+          <span class="tag-loc"><i class="ti ti-map-pin" aria-hidden="true"></i>Hochbeet Nord</span>
+          <span class="tag-bloom" style="background:#ffccbc;color:#bf360c;">Rot</span>
+          <span class="tag-date due">Fällig heute</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="task" id="t4">
+      <div class="chk due" onclick="chk('t4',this)"></div>
+      <div class="task-body">
+        <div class="task-ttl">Hecke schneiden</div>
+        <div class="task-meta">
+          <span class="tag-plant">🌿 Buchs</span>
+          <span class="tag-loc"><i class="ti ti-map-pin" aria-hidden="true"></i>Grundstücksgrenze</span>
+          <span class="tag-date due">In 3 Tagen</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="task" id="t5">
+      <div class="chk due" onclick="chk('t5',this)"></div>
+      <div class="task-body">
+        <div class="task-ttl">Hortensie schützen</div>
+        <div class="task-meta">
+          <span class="tag-plant">💙 Hortensie</span>
+          <span class="tag-loc"><i class="ti ti-map-pin" aria-hidden="true"></i>Nordwand</span>
+          <span class="tag-bloom" style="background:#bbdefb;color:#0d47a1;">Hellblau</span>
+          <span class="tag-date due">In 2 Tagen</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec-head"><span class="sec-lbl lbl-up">Demnächst</span><span class="sec-cnt">2</span></div>
+
+    <div class="task" id="t6">
+      <div class="chk up" onclick="chk('t6',this)"></div>
+      <div class="task-body">
+        <div class="task-ttl">Dahlien einpflanzen</div>
+        <div class="task-meta">
+          <span class="tag-plant">🌸 Dahlie</span>
+          <span class="tag-loc"><i class="ti ti-map-pin" aria-hidden="true"></i>Südbeete</span>
+          <span class="tag-bloom" style="background:#ffccbc;color:#bf360c;">Orange</span>
+          <span class="tag-date">In 2 Wochen</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="task" id="t7">
+      <div class="chk up" onclick="chk('t7',this)"></div>
+      <div class="task-body">
+        <div class="task-ttl">Rosen nachdüngen</div>
+        <div class="task-meta">
+          <span class="tag-plant">🌹 Rose</span>
+          <span class="tag-loc"><i class="ti ti-map-pin" aria-hidden="true"></i>Südbeete</span>
+          <span class="tag-bloom" style="background:#f8bbd0;color:#880e4f;">Karminrot</span>
+          <span class="tag-date">In 3 Wochen</span>
+        </div>
+      </div>
+    </div>
+    <div style="height:8px;"></div>
+  </div>
+
+  <div class="chat-panel" id="chatPanel">
+    <div class="chat-hdr">
+      <i class="ti ti-message-circle" style="font-size:15px;color:#4a7c4a;" aria-hidden="true"></i>
+      <div class="chat-hdr-ttl">Garten-Assistent</div>
+      <div class="chat-cls" onclick="toggleChat()">✕</div>
+    </div>
+    <div class="chat-msgs" id="msgs">
+      <div class="msg bot">Zone 2 ist seit 5 Tagen unter 35 % — Gießen empfohlen.</div>
+    </div>
+    <div class="chat-inp-row">
+      <input class="chat-inp" id="inp" placeholder="Frage oder Anweisung …" onkeydown="if(event.key==='Enter')send()">
+      <button class="chat-snd" onclick="send()"><i class="ti ti-send" aria-hidden="true"></i></button>
+    </div>
+  </div>
+
+  <div class="bnav">
+    <div class="btab active"><i class="ti ti-check" aria-hidden="true"></i><span>Aufgaben</span></div>
+    <div class="btab"><i class="ti ti-plant" aria-hidden="true"></i><span>Pflanzen</span></div>
+    <div class="btab"><i class="ti ti-calendar" aria-hidden="true"></i><span>Kalender</span></div>
+    <div class="btab"><i class="ti ti-notebook" aria-hidden="true"></i><span>Tagebuch</span></div>
+    <div class="btab"><i class="ti ti-map" aria-hidden="true"></i><span>Plan</span></div>
+  </div>
+</div></div>
+
+<script>
+const zones = [
+  { name:'Zone 1', data:[74,72,70,75,78,76,73,71,72,74,73,72,71,72], threshold:40 },
+  { name:'Zone 2', data:[68,65,60,55,50,62,58,52,45,38,32,30,28,28], threshold:35 },
+  { name:'Zone 3', data:[55,57,60,62,65,63,61,62,60,61,62,61,60,61], threshold:40 },
+];
+
+function sparkline(data, warn, threshold) {
+  const W=268,H=36,pad=3,min=0,max=100;
+  const xs=data.map((_,i)=>pad+(i/(data.length-1))*(W-pad*2));
+  const ys=data.map(v=>H-pad-((v-min)/(max-min))*(H-pad*2));
+  const ty=H-pad-((threshold-min)/(max-min))*(H-pad*2);
+  const areaPath=`M${xs[0]},${ys[0]}`+xs.slice(1).map((x,i)=>`L${x},${ys[i+1]}`).join('')+` L${xs[xs.length-1]},${H-pad} L${xs[0]},${H-pad} Z`;
+  const linePath=`M${xs[0]},${ys[0]}`+xs.slice(1).map((x,i)=>`L${x},${ys[i+1]}`).join('');
+  const lc=warn?'#d4850a':'#4a7c4a', fc=warn?'rgba(212,133,10,.12)':'rgba(74,124,74,.12)';
+  const lx=xs[xs.length-1],ly=ys[ys.length-1];
+  const labels=[0,6,13].map(i=>`<text x="${xs[i]}" y="${H+9}" font-size="7" fill="#8a9e8a" text-anchor="middle">${i===13?'heute':'-'+(13-i)+'d'}</text>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H+12}" width="100%" height="48" xmlns="http://www.w3.org/2000/svg">
+    <line x1="${pad}" y1="${ty}" x2="${W-pad}" y2="${ty}" stroke="${warn?'#f5c6c2':'#c8dfc0'}" stroke-width="1" stroke-dasharray="3,2"/>
+    <path d="${areaPath}" fill="${fc}"/>
+    <path d="${linePath}" fill="none" stroke="${lc}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="${lx}" cy="${ly}" r="3" fill="${lc}"/>
+    ${labels}
+  </svg>`;
+}
+
+function renderZones() {
+  document.getElementById('zoneGraphs').innerHTML = zones.map(z => {
+    const cur=z.data[z.data.length-1], warn=cur<z.threshold;
+    return `<div class="zone-block">
+      <div class="zone-header">
+        <div class="zone-name">${z.name}</div>
+        <div class="zone-meta">
+          <div class="zone-pct" style="color:${warn?'#d4850a':'#4a7c4a'}">${cur} %</div>
+          ${warn?`<div class="zone-warn">⚠ trocken</div>`:''}
+        </div>
+      </div>
+      ${sparkline(z.data,warn,z.threshold)}
+    </div>`;
+  }).join('');
+}
+
+let wOpen=false,chatOpen=false;
+function toggleWeather(){wOpen=!wOpen;document.getElementById('wexp').classList.toggle('open',wOpen);document.getElementById('wchev').classList.toggle('open',wOpen);if(wOpen)renderZones();}
+function toggleChat(){chatOpen=!chatOpen;document.getElementById('chatPanel').classList.toggle('open',chatOpen);document.getElementById('chatBtn').classList.toggle('open',chatOpen);document.getElementById('badge').style.display=chatOpen?'none':'block';if(chatOpen)setTimeout(()=>document.getElementById('inp').focus(),250);}
+function chk(id,el){const c=document.getElementById(id),d=c.classList.toggle('done');el.classList.toggle('checked',d);el.textContent=d?'✓':'';}
+function send(){const inp=document.getElementById('inp'),txt=inp.value.trim();if(!txt)return;const msgs=document.getElementById('msgs');msgs.innerHTML+=`<div class="msg user">${txt}</div>`;inp.value='';msgs.scrollTop=msgs.scrollHeight;setTimeout(()=>{msgs.innerHTML+=`<div class="msg bot">Erledigt!</div>`;msgs.scrollTop=msgs.scrollHeight;},600);}
+</script>

@@ -661,14 +661,14 @@ function startSoilPolling() {
 // ── Sparkline helper ──────────────────────────────────────────────────────────
 
 /** Build SVG polyline points string from 14 moisture % values (0–100). */
-function sparklinePoints(history: SoilMoistureZone["history"]): string {
+function sparklinePoints(history: SoilMoistureZone["history"], w: number, h: number): string {
   if (history.length === 0) return "";
-  const W = 56, H = 20, PAD = 2;
-  const xStep = (W - PAD * 2) / Math.max(history.length - 1, 1);
+  const PAD = 2;
+  const xStep = (w - PAD * 2) / Math.max(history.length - 1, 1);
   return history
     .map((d, i) => {
       const x = PAD + i * xStep;
-      const y = PAD + (H - PAD * 2) * (1 - d.moisture / 100);
+      const y = PAD + (h - PAD * 2) * (1 - d.moisture / 100);
       return `${x.toFixed(1)},${y.toFixed(1)}`;
     })
     .join(" ");
@@ -705,9 +705,9 @@ function SoilMoistureSection({ zones }: { zones: string[] }) {
 
   return (
     <div data-testid="soil-moisture-section">
-      {/* Section header */}
+      {/* Section header — no horizontal padding, parent container provides 18px */}
       <div style={{
-        padding:       "8px 18px 4px",
+        padding:       "8px 0 4px",
         fontSize:      "10px",
         fontWeight:    600,
         letterSpacing: "1px",
@@ -717,10 +717,13 @@ function SoilMoistureSection({ zones }: { zones: string[] }) {
         {t("weather.soil_moisture_title")}
       </div>
 
-      {/* One row per zone */}
+      {/* One row per zone — layout: [name auto] [sparkline flex] [% auto], flush to parent 18px padding */}
       {zoneData.map((zone) => {
         const color  = MOISTURE_COLOR[zone.status] ?? MOISTURE_COLOR.ok;
-        const points = sparklinePoints(zone.history);
+        // Sparkline dimensions: height fixed, width driven by flex (we use a tall viewBox)
+        const SH = 28;
+        const SW = 150; // nominal; SVG will stretch via width="100%"
+        const points = sparklinePoints(zone.history, SW, SH);
         return (
           <div
             key={zone.zone}
@@ -729,64 +732,57 @@ function SoilMoistureSection({ zones }: { zones: string[] }) {
             style={{
               display:    "flex",
               alignItems: "center",
-              gap:        "8px",
-              padding:    "4px 18px",
+              padding:    "3px 0",
+              gap:        0,
             }}
           >
-            {/* Status dot (AC #4) */}
+            {/* Zone name — full text, no truncation, flush left */}
             <div
               data-testid={`soil-dot-${zone.zone}`}
               style={{
-                width:        "8px",
-                height:       "8px",
-                borderRadius: "50%",
-                background:   color,
+                fontSize:     "11.5px",
+                fontWeight:   500,
+                color:        "var(--text-dark)",
                 flexShrink:   0,
+                whiteSpace:   "nowrap",
+                fontFamily:   "var(--font-body)",
+                paddingRight: "6px",
               }}
-            />
-
-            {/* Zone name */}
-            <div style={{
-              fontSize:     "12px",
-              color:        "var(--text-dark)",
-              flex:         "1 1 0",
-              minWidth:     0,
-              overflow:     "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace:   "nowrap",
-              fontFamily:   "var(--font-body)",
-            }}>
+            >
               {zone.zone}
             </div>
 
-            {/* 14-day sparkline (AC #3) */}
+            {/* 14-day sparkline — fills remaining space (AC #3) */}
             <svg
               data-testid={`soil-sparkline-${zone.zone}`}
-              width="56"
-              height="20"
-              viewBox="0 0 56 20"
+              width="100%"
+              height={SH}
+              viewBox={`0 0 ${SW} ${SH}`}
+              preserveAspectRatio="none"
               aria-hidden="true"
-              style={{ flexShrink: 0 }}
+              style={{ flex: "1 1 0", minWidth: 0, display: "block" }}
             >
               <polyline
                 points={points}
                 fill="none"
                 stroke={color}
-                strokeWidth="1.5"
+                strokeWidth="2"
                 strokeLinejoin="round"
                 strokeLinecap="round"
+                vectorEffect="non-scaling-stroke"
               />
             </svg>
 
-            {/* Current % (AC #2) */}
+            {/* Current % — auto width, flush right (AC #2) */}
             <div style={{
-              fontSize:   "11px",
-              fontWeight: 600,
+              fontSize:    "11.5px",
+              fontWeight:  700,
               color,
-              flexShrink: 0,
-              minWidth:   "34px",
-              textAlign:  "right",
-              fontFamily: "var(--font-body)",
+              flexShrink:  0,
+              whiteSpace:  "nowrap",
+              textAlign:   "right",
+              fontFamily:  "var(--font-body)",
+              paddingLeft: "6px",
             }}>
               {zone.current.toFixed(0)}{t("weather.soil_moisture_unit")}
             </div>

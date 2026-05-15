@@ -44,6 +44,7 @@ export default defineConfig({
   },
   server: {
     port: 3110,
+    host: true, // listen on 0.0.0.0 so LAN devices can reach the dev server
     proxy: {
       "/api":    "http://localhost:3000",
       "/static": "http://localhost:3000",
