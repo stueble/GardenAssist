@@ -378,10 +378,10 @@ function WeatherWidgetMobile({ zones }: { zones: string[] }) {
                       background:     idx === 0 ? "#eef4eb" : "none",
                     }}
                   >
-                    <div style={{ fontSize: "9px", color: "#8a9e8a", fontWeight: 500 }}>
+                    <div style={{ fontSize: "10px", color: "#8a9e8a", fontWeight: 500 }}>
                       {idx === 0 ? (i18n.language === "de" ? "Heute" : "Today") : wd}
                     </div>
-                    <span style={{ fontSize: "14px", lineHeight: 1 }}>{tw(`weather.weather_icon.${dk}`)}</span>
+                    <span style={{ fontSize: "15px", lineHeight: 1 }}>{tw(`weather.weather_icon.${dk}`)}</span>
                     <div style={{ fontSize: "10px", whiteSpace: "nowrap" }}>
                       <span style={{ fontWeight: 500, color: "#1e2e1e" }}>{day.temp_max}°</span>
                       <span style={{ color: "#c8dfc0", margin: "0 1px" }}>/</span>

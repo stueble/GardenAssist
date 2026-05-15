@@ -222,11 +222,10 @@ function MonthHeader() {
               }}
             >
               <div style={{
-                fontSize: "9px",
-                color:         isCurrent ? "#2d4a2d" : "#8a9e8a",
-                fontWeight:    isCurrent ? 700 : 400,
-                letterSpacing: ".3px",
-                marginBottom:  "2px",
+                fontSize:   "11px",
+                color:      isCurrent ? "#2d4a2d" : "#8a9e8a",
+                fontWeight: isCurrent ? 700 : 600,
+                marginBottom: "2px",
               }}>
                 {m[0]}
               </div>
@@ -318,11 +317,11 @@ function PlantRow({
     >
       {/* Plant name column — 100px */}
       <div style={{ width: "100px", flexShrink: 0, paddingTop: "2px" }}>
-        <div style={{ fontSize: "11px", fontWeight: 500, color: "#1e2e1e", lineHeight: 1.2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={plant.name_common}>
+        <div style={{ fontSize: "12px", fontWeight: 500, color: "#1e2e1e", lineHeight: 1.2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={plant.name_common}>
           {plant.name_common}
         </div>
         {plant.location && (
-          <div style={{ fontSize: "9px", color: "#8a9e8a", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>
+          <div style={{ fontSize: "10px", color: "#8a9e8a", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>
             {plant.location}
           </div>
         )}

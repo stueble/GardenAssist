@@ -96,7 +96,7 @@ export function BottomNav({ activePath }: { activePath: string }) {
               <span style={{ color: isActive ? "#fff" : "#c8dfc0", display: "flex" }}>
                 {icon}
               </span>
-              <span style={{ fontSize: "9px", color: isActive ? "#fff" : "#c8dfc0", letterSpacing: ".2px", whiteSpace: "nowrap" }}>
+              <span style={{ fontSize: "10px", color: isActive ? "#fff" : "#c8dfc0", letterSpacing: ".2px", whiteSpace: "nowrap" }}>
                 {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                 {t(`mobile.tab_${key}` as any)}
               </span>
