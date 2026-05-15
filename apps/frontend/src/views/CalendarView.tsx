@@ -19,10 +19,21 @@ import { getPlantEditHandler }   from "@/hooks/usePlantEditContext";
 import type { Plant }            from "@api/plant";
 import type { Garden }           from "@api/garden";
 import type { Schedule }         from "@api/schedule";
+import {
+  TOTAL_WEEKS,
+  currentISOWeek,
+  weekToMonthIdx,
+  schedulesOverlap,
+  assignLanes,
+  computeLaneGeometry,
+  LABEL_MIN_BAR_HEIGHT,
+} from "@/lib/calendarUtils";
+
+// Re-export for callers that used the old CalendarView exports
+export { schedulesOverlap, assignLanes, computeLaneGeometry };
+export type { LaneResult, LaneGeometry } from "@/lib/calendarUtils";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-
-// Month names are now loaded from i18n — see monthsShort in the component.
 
 const SCHEDULE_TYPES: Array<{ type: Schedule["schedule_type"]; icon: string; labelKey: string }> = [
   { type: "bloom",         icon: "🌸", labelKey: "bloom"         },
@@ -33,8 +44,6 @@ const SCHEDULE_TYPES: Array<{ type: Schedule["schedule_type"]; icon: string; lab
   { type: "misc",          icon: "📋", labelKey: "misc"          },
 ];
 
-const TOTAL_WEEKS = 52;
-
 /** Week number (1-based) → left-offset % within the 12-month band */
 function weekToPercent(week: number): number {
   return ((week - 1) / TOTAL_WEEKS) * 100;
@@ -42,137 +51,15 @@ function weekToPercent(week: number): number {
 
 /** Duration in weeks → width % */
 function durationToPercent(startWeek: number, endWeek: number): number {
-  // Handle year-wrap (end < start)
   const dur = endWeek >= startWeek
     ? endWeek - startWeek + 1
     : (TOTAL_WEEKS - startWeek + 1) + endWeek;
   return (dur / TOTAL_WEEKS) * 100;
 }
 
-/** Current ISO week number */
+/** Current ISO week number (delegates to shared util) */
 function currentWeekNumber(): number {
-  const now  = new Date();
-  const jan4 = new Date(now.getFullYear(), 0, 4);
-  const diff = now.getTime() - jan4.getTime();
-  return Math.ceil((diff / 86400000 + jan4.getDay() + 1) / 7);
-}
-
-/** Week number → month index (0-based, approximate) */
-function weekToMonthIdx(week: number): number {
-  return Math.min(11, Math.floor((week - 1) / (TOTAL_WEEKS / 12)));
-}
-
-// ── Lane assignment ────────────────────────────────────────────────────────────
-
-/**
- * Returns true when two schedules overlap in time.
- * Wrapping schedules (end_week < start_week) are normalised to two intervals
- * [start..52] and [1..end] for comparison.
- */
-export function schedulesOverlap(
-  a: { start_week: number; end_week: number },
-  b: { start_week: number; end_week: number },
-): boolean {
-  // Expand each schedule into at most two [lo, hi] intervals (week-inclusive).
-  const intervalsA = toIntervals(a.start_week, a.end_week);
-  const intervalsB = toIntervals(b.start_week, b.end_week);
-
-  for (const [aLo, aHi] of intervalsA) {
-    for (const [bLo, bHi] of intervalsB) {
-      if (aLo <= bHi && bLo <= aHi) return true;
-    }
-  }
-  return false;
-}
-
-function toIntervals(start: number, end: number): Array<[number, number]> {
-  if (end >= start) return [[start, end]];
-  // Wrapping: split at year boundary
-  return [[start, TOTAL_WEEKS], [1, end]];
-}
-
-export interface LaneResult {
-  /** Maps schedule id → zero-based lane index */
-  laneMap:    Map<string, number>;
-  totalLanes: number;
-}
-
-/**
- * Assign each schedule a lane so that no two schedules in the same lane
- * overlap. Uses a greedy first-fit algorithm after sorting by start_week.
- * Wrapping schedules (end_week < start_week) are handled via schedulesOverlap.
- */
-export function assignLanes(
-  schedules: Array<{ id: string; start_week: number; end_week: number }>,
-): LaneResult {
-  if (schedules.length === 0) return { laneMap: new Map(), totalLanes: 0 };
-
-  // Sort by start_week; wrapping schedules (end < start) sort by effective start
-  const sorted = [...schedules].sort((a, b) => a.start_week - b.start_week);
-
-  // lanes[i] = array of schedules already assigned to lane i
-  const lanes: Array<typeof sorted> = [];
-  const laneMap = new Map<string, number>();
-
-  for (const sched of sorted) {
-    let assigned = false;
-    for (let i = 0; i < lanes.length; i++) {
-      const conflicts = lanes[i].some((existing) => schedulesOverlap(sched, existing));
-      if (!conflicts) {
-        lanes[i].push(sched);
-        laneMap.set(sched.id, i);
-        assigned = true;
-        break;
-      }
-    }
-    if (!assigned) {
-      laneMap.set(sched.id, lanes.length);
-      lanes.push([sched]);
-    }
-  }
-
-  return { laneMap, totalLanes: lanes.length };
-}
-
-// ── Lane geometry ──────────────────────────────────────────────────────────────
-
-const BASE_ROW_HEIGHT = 60;
-const BASE_BAR_HEIGHT = 28;
-const BAR_GAP         = 2;
-const ROW_PADDING     = 8;   // top and bottom padding inside the bars div
-const MIN_BAR_HEIGHT  = 8;
-const LABEL_MIN_BAR_HEIGHT = 18;
-
-export interface LaneGeometry {
-  barHeight:  number;
-  rowHeight:  number;
-  /** Returns the absolute `top` (px) for a given lane index */
-  topForLane: (lane: number) => number;
-}
-
-export function computeLaneGeometry(totalLanes: number): LaneGeometry {
-  if (totalLanes <= 1) {
-    return {
-      barHeight:  BASE_BAR_HEIGHT,
-      rowHeight:  BASE_ROW_HEIGHT,
-      topForLane: () => ROW_PADDING + (BASE_BAR_HEIGHT / 2),   // unused; top = "50%" path
-    };
-  }
-
-  const usableHeight = BASE_ROW_HEIGHT - 2 * ROW_PADDING;
-  const barHeight = Math.max(
-    MIN_BAR_HEIGHT,
-    Math.floor((usableHeight - (totalLanes - 1) * BAR_GAP) / totalLanes),
-  );
-
-  // Grow row height if bars would overflow
-  const needed = 2 * ROW_PADDING + totalLanes * barHeight + (totalLanes - 1) * BAR_GAP;
-  const rowHeight = Math.max(BASE_ROW_HEIGHT, needed);
-
-  const topForLane = (lane: number) =>
-    ROW_PADDING + lane * (barHeight + BAR_GAP);
-
-  return { barHeight, rowHeight, topForLane };
+  return currentISOWeek();
 }
 
 // ── Main component ─────────────────────────────────────────────────────────────

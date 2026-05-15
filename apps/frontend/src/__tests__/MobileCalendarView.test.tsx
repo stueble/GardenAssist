@@ -264,11 +264,14 @@ describe("MobileCalendarView", () => {
     it("tooltip switches when clicking a different row", async () => {
       renderView();
       const rows = screen.getAllByTestId("mobile-calendar-plant-row");
-      fireEvent.click(rows[0]); // Rose
+      // Find rows by name content — order may change due to sorting
+      const roseRow     = rows.find((r) => r.textContent?.includes("Rose"))!;
+      const lavendelRow = rows.find((r) => r.textContent?.includes("Lavendel"))!;
+      fireEvent.click(roseRow);
       await waitFor(() => {
         expect(screen.getByTestId("mobile-calendar-tooltip").textContent).toContain("Rose");
       });
-      fireEvent.click(rows[2]); // Lavendel
+      fireEvent.click(lavendelRow);
       await waitFor(() => {
         expect(screen.getByTestId("mobile-calendar-tooltip").textContent).toContain("Lavendel");
       });

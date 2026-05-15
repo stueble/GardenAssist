@@ -3,7 +3,12 @@
  *
  * Mobile Gantt chart: 12 months × 4 segments = 48 segments per plant row.
  * Read-only — no + button. Filter chips select the schedule category.
- * Multiple schedules of the same type render as stacked rows in the bar track.
+ *
+ * Improvements over initial version:
+ * - Plants with schedules for the active category shown first (AC #7)
+ * - Chart background is cream (#f8f4ee) so white bloom colors are visible
+ * - Non-overlapping schedules share a lane (same row) — uses assignLanes()
+ * - Shared logic (overlap detection, lane assignment, segment model) from calendarUtils
  *
  * Reuses MobileParts for BottomNav, LeftDrawer, ChatPanel.
  */
@@ -14,28 +19,22 @@ import { Menu, MessageCircle } from "lucide-react";
 import type { Garden } from "@api/garden";
 import type { Plant } from "@api/plant";
 import type { Schedule } from "@api/schedule";
+import {
+  currentISOWeek,
+  weekToSeg,
+  TOTAL_SEGS,
+  segBorderRadius,
+  buildMobileLanes,
+  buildSegmentArray,
+  type MobileLane,
+} from "@/lib/calendarUtils";
 import { topBtnStyle, BottomNav, LeftDrawer, ChatPanel } from "@/components/mobile/MobileParts";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const TOTAL_WEEKS = 52;
-const TOTAL_SEGS  = 48;  // 12 months × 4
-
-/** Convert ISO week (1–52) to segment index (0–47). */
-function weekToSeg(week: number): number {
-  return Math.min(TOTAL_SEGS - 1, Math.floor((week - 1) / TOTAL_WEEKS * TOTAL_SEGS));
-}
-
-/** Current ISO week (1–52). */
-function currentISOWeek(): number {
-  const now  = new Date();
-  const jan4 = new Date(now.getFullYear(), 0, 4);
-  return Math.ceil((now.getTime() - jan4.getTime()) / 86400000 / 7 + jan4.getDay() / 7);
-}
-
-const currentSeg   = weekToSeg(currentISOWeek());
-const currentMonth = Math.floor(currentSeg / 4);   // 0-based
-const currentWeekInMonth = currentSeg % 4;          // 0-based
+const currentSeg        = weekToSeg(currentISOWeek());
+const currentMonthIdx   = Math.floor(currentSeg / 4);   // 0-based
+const currentWeekInMonth = currentSeg % 4;               // 0-based
 
 type FilterKey = Schedule["schedule_type"];
 
@@ -57,34 +56,9 @@ export function _resetCalendarFilterForTest(): void {
   _calendarFilter = "bloom";
 }
 
-// ── Segment helpers ───────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
-/** Build a boolean active-array (0–47) from a schedule's week range. */
-function buildSegments(s: Schedule): boolean[] {
-  const segs = new Array<boolean>(TOTAL_SEGS).fill(false);
-  const start = weekToSeg(s.start_week);
-  const end   = weekToSeg(s.end_week);
-  if (end >= start) {
-    for (let i = start; i <= end; i++) segs[i] = true;
-  } else {
-    // Year-wrap
-    for (let i = start; i < TOTAL_SEGS; i++) segs[i] = true;
-    for (let i = 0; i <= end; i++) segs[i] = true;
-  }
-  return segs;
-}
-
-/** Border-radius for a segment based on neighbours in the same row. */
-function segRadius(active: boolean[], i: number): string {
-  const prev = i > 0 && active[i - 1];
-  const next = i < TOTAL_SEGS - 1 && active[i + 1];
-  if (!prev && !next) return "4px";
-  if (!prev && next)  return "4px 1px 1px 4px";
-  if (prev && !next)  return "1px 4px 4px 1px";
-  return "1px";
-}
-
-/** Format date range for tooltip. */
+/** Format a merged segment array as a readable date range for the tooltip. */
 function formatRange(
   segs: boolean[],
   monthsShort: string[],
@@ -181,11 +155,11 @@ function FilterChips({
       <div
         data-testid="mobile-calendar-chips"
         style={{
-          display:          "flex",
-          gap:              "5px",
-          overflowX:        "auto",
-          scrollbarWidth:   "none",
-          msOverflowStyle:  "none",
+          display:         "flex",
+          gap:             "5px",
+          overflowX:       "auto",
+          scrollbarWidth:  "none",
+          msOverflowStyle: "none",
         } as React.CSSProperties}
       >
         {FILTER_CHIPS.map(({ key, icon }) => (
@@ -227,40 +201,36 @@ function MonthHeader() {
       padding:      "5px 8px 0",
       position:     "sticky",
       top:          0,
-      background:   "#fff",
+      background:   "#f8f4ee",
       zIndex:       5,
       borderBottom: "1px solid #dde8d8",
     }}>
-      {/* Name column spacer */}
       <div style={{ width: "72px", flexShrink: 0 }} />
-
-      {/* 12 month groups */}
       <div style={{ flex: 1, display: "flex" }}>
         {monthsShort.map((m, mi) => {
-          const isCurrent = mi === currentMonth;
+          const isCurrent = mi === currentMonthIdx;
           return (
             <div
               key={mi}
               data-testid={`mobile-calendar-month-${mi}`}
               style={{
-                flex:           1,
-                display:        "flex",
-                flexDirection:  "column",
-                alignItems:     "center",
-                borderLeft:     mi > 0 ? "1px solid #eef4eb" : "none",
-                paddingBottom:  "4px",
+                flex:          1,
+                display:       "flex",
+                flexDirection: "column",
+                alignItems:    "center",
+                borderLeft:    mi > 0 ? "1px solid #eef4eb" : "none",
+                paddingBottom: "4px",
               }}
             >
               <div style={{
-                fontSize:    "8px",
-                color:       isCurrent ? "#2d4a2d" : "#8a9e8a",
-                fontWeight:  isCurrent ? 700 : 400,
+                fontSize:      "8px",
+                color:         isCurrent ? "#2d4a2d" : "#8a9e8a",
+                fontWeight:    isCurrent ? 700 : 400,
                 letterSpacing: ".3px",
-                marginBottom: "2px",
+                marginBottom:  "2px",
               }}>
                 {m[0]}
               </div>
-              {/* 4 week-dots per month */}
               <div style={{ display: "flex", gap: "1px" }}>
                 {[0, 1, 2, 3].map((wi) => (
                   <div
@@ -282,19 +252,19 @@ function MonthHeader() {
   );
 }
 
-// Single schedule bar row (10px high, 48 segments)
-function ScheduleBarRow({ schedule }: { schedule: Schedule }) {
-  const segs = buildSegments(schedule);
+// Single lane bar row — renders one lane's merged segment array
+function LaneBarRow({ lane }: { lane: MobileLane }) {
+  const { segments, color } = lane;
   return (
     <div style={{ display: "flex", width: "100%", height: "10px", gap: "1px" }}>
-      {segs.map((active, i) => (
+      {segments.map((active, i) => (
         <div
           key={i}
           style={{
             flex:         1,
             height:       "10px",
-            borderRadius: active ? segRadius(segs, i) : "1px",
-            background:   active ? (schedule.color ?? "#4a7c4a") : "#f0f4ee",
+            borderRadius: active ? segBorderRadius(segments, i) : "1px",
+            background:   active ? color : "#f8f4ee",
           }}
         />
       ))}
@@ -317,7 +287,9 @@ function PlantRow({
   const matchingSchedules = plant.schedules.filter((s) => s.schedule_type === filterKey);
   const hasData = matchingSchedules.length > 0;
 
-  // Current-week line percentage
+  // Build lanes: non-overlapping schedules share a lane (same row)
+  const lanes = buildMobileLanes(matchingSchedules);
+
   const curLinePct = ((currentSeg + 0.5) / TOTAL_SEGS * 100).toFixed(2) + "%";
 
   return (
@@ -326,17 +298,17 @@ function PlantRow({
       onClick={onSelect}
       style={{
         display:     "flex",
-        alignItems:  "center",
+        alignItems:  "flex-start",
         padding:     "5px 8px",
-        borderBottom:"1px solid #f0f4ee",
+        borderBottom:"1px solid #e8eee4",
         cursor:      "pointer",
-        background:  selected ? "#eef4eb" : undefined,
+        background:  selected ? "#eef4eb" : "#f8f4ee",
         opacity:     hasData ? 1 : 0.4,
         transition:  "background .12s",
       }}
     >
       {/* Plant name column — 72px */}
-      <div style={{ width: "72px", flexShrink: 0 }}>
+      <div style={{ width: "72px", flexShrink: 0, paddingTop: "2px" }}>
         <div style={{ fontSize: "10px", fontWeight: 500, color: "#1e2e1e", lineHeight: 1.2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {plant.name_common}
         </div>
@@ -347,9 +319,9 @@ function PlantRow({
         )}
       </div>
 
-      {/* Bar track */}
+      {/* Bar track — one row per lane, current-week line spans all */}
       <div style={{ flex: 1, position: "relative", display: "flex", flexDirection: "column", gap: "1px" }}>
-        {/* Current-week line spanning all schedule rows */}
+        {/* Current-week indicator line */}
         <div style={{
           position:      "absolute",
           top:           0,
@@ -362,16 +334,16 @@ function PlantRow({
           zIndex:        1,
         }} />
 
-        {/* Schedule bar rows — one per matching schedule */}
-        {hasData ? (
-          matchingSchedules.map((s) => (
-            <ScheduleBarRow key={s.id} schedule={s} />
+        {/* Lane rows — non-overlapping schedules share a lane */}
+        {lanes.length > 0 ? (
+          lanes.map((lane, i) => (
+            <LaneBarRow key={i} lane={lane} />
           ))
         ) : (
-          // Show one empty row so the row height is consistent
+          // Empty row for visual consistency
           <div style={{ display: "flex", width: "100%", height: "10px", gap: "1px" }}>
             {Array.from({ length: TOTAL_SEGS }, (_, i) => (
-              <div key={i} style={{ flex: 1, height: "10px", borderRadius: "1px", background: "#f0f4ee" }} />
+              <div key={i} style={{ flex: 1, height: "10px", borderRadius: "1px", background: "#f8f4ee" }} />
             ))}
           </div>
         )}
@@ -429,8 +401,11 @@ function Tooltip({
         <div style={{ color: "#4a5e4a" }}>{t("mobile.calendar_no_entry")}</div>
       ) : (
         schedules.map((s, idx) => {
-          const segs  = buildSegments(s);
-          const range = formatRange(segs, monthsShort, monthsLong, t as (k: string, opts?: Record<string, unknown>) => string);
+          const segs  = buildSegmentArray(s);
+          const range = formatRange(
+            segs, monthsShort, monthsLong,
+            t as (k: string, opts?: Record<string, unknown>) => string,
+          );
           return (
             <div key={idx} style={{ display: "flex", alignItems: "center", gap: "5px", color: "#4a5e4a", marginTop: idx > 0 ? "3px" : 0 }}>
               {s.color && (
@@ -462,10 +437,10 @@ export interface MobileCalendarViewProps {
 export function MobileCalendarView({ garden, loading }: MobileCalendarViewProps) {
   const { t } = useTranslation("common");
 
-  const [filterKey,   setFilterKey]   = useState<FilterKey>(_calendarFilter);
-  const [selectedId,  setSelectedId]  = useState<string | null>(null);
-  const [chatOpen,    setChatOpen]    = useState(false);
-  const [drawerOpen,  setDrawerOpen]  = useState(false);
+  const [filterKey,  setFilterKey]  = useState<FilterKey>(_calendarFilter);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [chatOpen,   setChatOpen]   = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   function handleFilterChange(k: FilterKey) {
     _calendarFilter = k;
@@ -477,7 +452,17 @@ export function MobileCalendarView({ garden, loading }: MobileCalendarViewProps)
     setSelectedId((prev) => prev === plantId ? null : plantId);
   }
 
-  const plants = garden?.plants ?? [];
+  const allPlants = garden?.plants ?? [];
+
+  // Sort: plants with schedules for the active category first, then alphabetical (AC #7)
+  const plants = [...allPlants].sort((a, b) => {
+    const aHas = a.schedules.some((s) => s.schedule_type === filterKey);
+    const bHas = b.schedules.some((s) => s.schedule_type === filterKey);
+    if (aHas && !bHas) return -1;
+    if (!aHas && bHas) return 1;
+    return a.name_common.localeCompare(b.name_common);
+  });
+
   const selectedPlant = plants.find((p) => p.id === selectedId) ?? null;
 
   return (
@@ -500,13 +485,12 @@ export function MobileCalendarView({ garden, loading }: MobileCalendarViewProps)
 
       <FilterChips active={filterKey} onChange={handleFilterChange} />
 
-      {/* Divider */}
       <div style={{ height: "1px", background: "#dde8d8", flexShrink: 0 }} />
 
-      {/* Chart area — scrollable */}
+      {/* Chart area */}
       <div
         data-testid="mobile-calendar-chart"
-        style={{ flex: 1, overflowY: "auto", overflowX: "hidden", minHeight: 0, background: "#fff" }}
+        style={{ flex: 1, overflowY: "auto", overflowX: "hidden", minHeight: 0, background: "#f8f4ee" }}
       >
         <MonthHeader />
 
@@ -526,7 +510,6 @@ export function MobileCalendarView({ garden, loading }: MobileCalendarViewProps)
           />
         ))}
 
-        {/* Inline tooltip — below plant rows, AC #8 */}
         {selectedPlant && (
           <Tooltip
             plant={selectedPlant}
@@ -538,7 +521,6 @@ export function MobileCalendarView({ garden, loading }: MobileCalendarViewProps)
         <div style={{ height: "8px" }} />
       </div>
 
-      {/* In-flow chat panel — AC #10 */}
       <ChatPanel open={chatOpen} onClose={() => setChatOpen(false)} />
 
       <BottomNav activePath="/calendar" />
