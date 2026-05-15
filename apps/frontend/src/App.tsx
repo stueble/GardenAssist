@@ -30,7 +30,17 @@ export function App() {
   // add dedicated mobile views for those screens.
   if (isMobile) {
     return (
-      <div style={{ height: "100dvh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <div style={{
+        height:          "100dvh",
+        display:         "flex",
+        flexDirection:   "column",
+        overflow:        "hidden",
+        paddingTop:      "env(safe-area-inset-top)",
+        paddingBottom:   "env(safe-area-inset-bottom)",
+        paddingLeft:     "env(safe-area-inset-left)",
+        paddingRight:    "env(safe-area-inset-right)",
+        boxSizing:       "border-box",
+      }}>
         <Routes>
           <Route path="/"         element={<MobileTaskView {...sharedGardenProps} />} />
           <Route path="/plants"   element={<MobilePlantsView {...sharedGardenProps} />} />

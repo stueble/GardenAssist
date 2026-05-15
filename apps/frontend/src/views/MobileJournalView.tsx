@@ -127,7 +127,7 @@ function TopBar({
         <Menu size={20} strokeWidth={1.5} />
       </button>
 
-      <div style={{ fontFamily: "var(--font-display)", fontSize: "16px", color: "#fff", fontWeight: 600, flex: 1 }}>
+      <div style={{ fontFamily: "var(--font-display)", fontSize: "18px", color: "#fff", fontWeight: 600, flex: 1 }}>
         {t("mobile.journal")}
       </div>
 
@@ -211,7 +211,7 @@ function SearchArea({
             outline:     "none",
             boxShadow:   "none",
             background:  "transparent",
-            fontSize:    "11px",
+            fontSize: "12px",
             color:       "#1e2e1e",
             fontFamily:  "var(--font-body)",
             flex:        1,
@@ -239,7 +239,7 @@ function SearchArea({
               data-testid={`mobile-journal-chip-${type}`}
               onClick={() => onFilterChange(isActive ? null : type)}
               style={{
-                fontSize:     "9px",
+                fontSize: "10px",
                 padding:      "3px 9px",
                 borderRadius: "20px",
                 border:       `1px solid ${isActive ? "#2d4a2d" : "#c8dfc0"}`,
@@ -337,7 +337,7 @@ function EntryCard({
         }}>
           {/* Type icon badge — icon only, label shown in filter chips above */}
           <span style={{
-            fontSize:     "12px",
+            fontSize: "13px",
             padding:      "1px 5px",
             borderRadius: "8px",
             flexShrink:   0,
@@ -349,7 +349,7 @@ function EntryCard({
 
           {/* Title — takes remaining space, truncates */}
           <span style={{
-            fontSize:     "11px",
+            fontSize: "12px",
             fontWeight:   500,
             color:        "var(--text-dark, #1e2e1e)",
             flex:         1,
@@ -363,7 +363,7 @@ function EntryCard({
 
           {/* Plant pill */}
           <span style={{
-            fontSize:     "9px",
+            fontSize: "10px",
             color:        "var(--text-light, #4a5e4a)",
             background:   "var(--green-mist, #eef4eb)",
             borderRadius: "10px",
@@ -380,7 +380,7 @@ function EntryCard({
           {/* Location pill — only when present */}
           {plantLocation && (
             <span style={{
-              fontSize:     "9px",
+              fontSize: "10px",
               color:        "var(--text-light, #6a7e6a)",
               background:   "#f0f4f0",
               borderRadius: "10px",
@@ -397,7 +397,7 @@ function EntryCard({
 
           {/* Date */}
           <span style={{
-            fontSize:   "9px",
+            fontSize: "10px",
             color:      "var(--text-light, #8a9e8a)",
             flexShrink: 0,
             whiteSpace: "nowrap",
@@ -426,14 +426,14 @@ function EntryCard({
           >
             {/* Notes */}
             {entry.notes && (
-              <div style={{ fontSize: "10px", color: "#4a5e4a", lineHeight: 1.5, margin: "8px 0" }}>
+              <div style={{ fontSize: "11px", color: "#4a5e4a", lineHeight: 1.5, margin: "8px 0" }}>
                 {entry.notes}
               </div>
             )}
 
             {/* Irrigation detail — zone (title) + mm (notes already shown above) — AC #7 */}
             {entry.entry_type === "irrigation" && entry.title && (
-              <div style={{ fontSize: "10px", color: "#0f6e56", marginTop: "4px" }}>
+              <div style={{ fontSize: "11px", color: "#0f6e56", marginTop: "4px" }}>
                 📍 {entry.title}{entry.notes ? ` · ${entry.notes} mm` : ""}
               </div>
             )}
@@ -468,7 +468,7 @@ function EntryCard({
                   display:      "flex",
                   alignItems:   "center",
                   gap:          "4px",
-                  fontSize:     "10px",
+                  fontSize: "11px",
                   padding:      "4px 10px",
                   borderRadius: "20px",
                   border:       "1px solid #dde8d8",
@@ -515,7 +515,7 @@ function MonthGroup({
     <div style={{ padding: "0 12px" }}>
       <div style={{
         fontFamily:   "var(--font-display)",
-        fontSize:     "13px",
+        fontSize: "14px",
         fontWeight:   600,
         color:        "#1e2e1e",
         padding:      "10px 0 6px",
@@ -554,7 +554,7 @@ function MonthGroup({
 // New-entry sheet — AC #9
 const fieldStyle: React.CSSProperties = {
   width:        "100%",
-  fontSize:     "11px",
+  fontSize: "12px",
   padding:      "7px 10px",
   border:       "1.5px solid #dde8d8",
   borderRadius: "8px",
@@ -566,7 +566,7 @@ const fieldStyle: React.CSSProperties = {
 
 const photoPickerBtnStyle: React.CSSProperties = {
   display: "flex", alignItems: "center", gap: "5px",
-  fontSize: "10px", padding: "5px 10px", borderRadius: "20px",
+  fontSize: "11px", padding: "5px 10px", borderRadius: "20px",
   border: "1px dashed #8a9e8a", background: "#fff",
   color: "#4a5e4a", cursor: "pointer", fontFamily: "var(--font-body)",
 };
@@ -757,8 +757,8 @@ function NewEntrySheet({
         gap:          "6px",
         flexShrink:   0,
       }}>
-        <span style={{ fontSize: "15px", color: "#8b6f47" }}>✏️</span>
-        <div style={{ fontSize: "12px", fontWeight: 500, color: "#1e2e1e", flex: 1 }}>
+        <span style={{ fontSize: "17px", color: "#8b6f47" }}>✏️</span>
+        <div style={{ fontSize: "13px", fontWeight: 500, color: "#1e2e1e", flex: 1 }}>
           {t("mobile.journal_new_entry")}
         </div>
         <button
@@ -783,7 +783,7 @@ function NewEntrySheet({
               data-testid={`mobile-journal-type-${type}`}
               onClick={() => setEntryType(type)}
               style={{
-                fontSize:     "10px",
+                fontSize: "11px",
                 padding:      "4px 9px",
                 borderRadius: "20px",
                 border:       `1px solid ${entryType === type ? "#2d4a2d" : "#dde8d8"}`,
@@ -818,7 +818,7 @@ function NewEntrySheet({
 
             {/* Irrigation zones — 2-per-row grid */}
             {irrigationZones.length === 0 ? (
-              <div style={{ fontSize: "11px", color: "#8a9e8a" }}>
+              <div style={{ fontSize: "12px", color: "#8a9e8a" }}>
                 {tj("fields.irrigation_zones_empty")}
               </div>
             ) : (
@@ -838,7 +838,7 @@ function NewEntrySheet({
                         borderRadius: "8px",
                         border:       `1.5px solid ${checked ? "#1d9e75" : "#dde8d8"}`,
                         background:   checked ? "#e1f5ee" : "#fff",
-                        fontSize:     "11px",
+                        fontSize: "12px",
                         color:        checked ? "#0f6e56" : "#1e2e1e",
                         transition:   "all .15s",
                         fontFamily:   "var(--font-body)",
@@ -946,7 +946,7 @@ function NewEntrySheet({
                     width: "52px", height: "52px", borderRadius: "8px",
                     background: "#eef4eb", border: "1.5px dashed #1d9e75",
                     overflow: "hidden", display: "flex", alignItems: "center",
-                    justifyContent: "center", fontSize: "18px",
+                    justifyContent: "center", fontSize: "20px",
                   }}>
                     {lf.previewUrl
                       ? <img src={lf.previewUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -1017,7 +1017,7 @@ function NewEntrySheet({
       }}>
         <button
           onClick={onClose}
-          style={{ fontSize: "10px", padding: "5px 14px", background: "#fff", color: "#8a9e8a", border: "1px solid #dde8d8", borderRadius: "20px", cursor: "pointer" }}
+          style={{ fontSize: "11px", padding: "5px 14px", background: "#fff", color: "#8a9e8a", border: "1px solid #dde8d8", borderRadius: "20px", cursor: "pointer" }}
         >
           {t("mobile.journal_cancel")}
         </button>
@@ -1025,7 +1025,7 @@ function NewEntrySheet({
           data-testid="mobile-journal-save-btn"
           onClick={() => void handleSave()}
           disabled={saving}
-          style={{ fontSize: "10px", padding: "5px 14px", background: "#2d4a2d", color: "#fff", border: "none", borderRadius: "20px", cursor: saving ? "default" : "pointer", opacity: saving ? 0.7 : 1 }}
+          style={{ fontSize: "11px", padding: "5px 14px", background: "#2d4a2d", color: "#fff", border: "none", borderRadius: "20px", cursor: saving ? "default" : "pointer", opacity: saving ? 0.7 : 1 }}
         >
           {t("mobile.journal_save")}
         </button>
@@ -1185,8 +1185,8 @@ function EditEntrySheet({
           gap:          "6px",
           flexShrink:   0,
         }}>
-          <span style={{ fontSize: "15px", color: "#8b6f47" }}>✏️</span>
-          <div style={{ fontSize: "12px", fontWeight: 500, color: "#1e2e1e", flex: 1 }}>
+          <span style={{ fontSize: "17px", color: "#8b6f47" }}>✏️</span>
+          <div style={{ fontSize: "13px", fontWeight: 500, color: "#1e2e1e", flex: 1 }}>
             {t("mobile.journal_edit")}
           </div>
           <button
@@ -1224,7 +1224,7 @@ function EditEntrySheet({
                         key={z}
                         style={{
                           display: "flex", alignItems: "center", gap: "6px", cursor: "pointer",
-                          padding: "5px 8px", borderRadius: "8px", fontSize: "11px",
+                          padding: "5px 8px", borderRadius: "8px", fontSize: "12px",
                           border:      `1.5px solid ${checked ? "#1d9e75" : "#dde8d8"}`,
                           background:  checked ? "#e1f5ee" : "#fff",
                           color:       checked ? "#0f6e56" : "#1e2e1e",
@@ -1391,13 +1391,13 @@ function EditEntrySheet({
           gap:          "6px",
         }}>
           {deleteError && (
-            <div style={{ fontSize: "10px", color: "#c0392b", textAlign: "center" }}>{deleteError}</div>
+            <div style={{ fontSize: "11px", color: "#c0392b", textAlign: "center" }}>{deleteError}</div>
           )}
           {confirmDelete ? (
             <div style={{ display: "flex", gap: "6px" }}>
               <button
                 onClick={() => setConfirmDelete(false)}
-                style={{ flex: 1, fontSize: "10px", padding: "7px", borderRadius: "8px", border: "1px solid #dde8d8", background: "#fff", color: "#4a5e4a", cursor: "pointer" }}
+                style={{ flex: 1, fontSize: "11px", padding: "7px", borderRadius: "8px", border: "1px solid #dde8d8", background: "#fff", color: "#4a5e4a", cursor: "pointer" }}
               >
                 {t("mobile.journal_cancel")}
               </button>
@@ -1405,7 +1405,7 @@ function EditEntrySheet({
                 data-testid="mobile-journal-edit-delete-ok"
                 onClick={() => void handleDelete()}
                 disabled={saving}
-                style={{ flex: 1, fontSize: "10px", padding: "7px", borderRadius: "8px", border: "none", background: "#c0392b", color: "#fff", cursor: saving ? "default" : "pointer", opacity: saving ? 0.7 : 1, fontWeight: 500 }}
+                style={{ flex: 1, fontSize: "11px", padding: "7px", borderRadius: "8px", border: "none", background: "#c0392b", color: "#fff", cursor: saving ? "default" : "pointer", opacity: saving ? 0.7 : 1, fontWeight: 500 }}
               >
                 {saving ? "…" : t("mobile.journal_delete_confirm")}
               </button>
@@ -1416,7 +1416,7 @@ function EditEntrySheet({
               <button
                 data-testid="mobile-journal-edit-delete-btn"
                 onClick={() => { setDeleteError(null); setConfirmDelete(true); }}
-                style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "10px", padding: "5px 0", background: "none", border: "none", color: "#c0392b", cursor: "pointer", fontFamily: "var(--font-body)" }}
+                style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "11px", padding: "5px 0", background: "none", border: "none", color: "#c0392b", cursor: "pointer", fontFamily: "var(--font-body)" }}
               >
                 <Trash2 size={11} strokeWidth={1.5} />
                 {t("mobile.journal_delete")}
@@ -1427,7 +1427,7 @@ function EditEntrySheet({
                 data-testid="mobile-journal-edit-save-btn"
                 onClick={() => void handleSave()}
                 disabled={saving}
-                style={{ fontSize: "10px", padding: "5px 16px", background: "#2d4a2d", color: "#fff", border: "none", borderRadius: "20px", cursor: saving ? "default" : "pointer", opacity: saving ? 0.7 : 1 }}
+                style={{ fontSize: "11px", padding: "5px 16px", background: "#2d4a2d", color: "#fff", border: "none", borderRadius: "20px", cursor: saving ? "default" : "pointer", opacity: saving ? 0.7 : 1 }}
               >
                 {t("mobile.journal_save")}
               </button>
@@ -1557,13 +1557,13 @@ export function MobileJournalView({ garden, loading, invalidateGarden }: MobileJ
         style={{ flex: 1, overflowY: "auto", minHeight: 0 }}
       >
         {loading && (
-          <div style={{ padding: "20px", textAlign: "center", fontSize: "12px", color: "#8a9e8a" }}>
+          <div style={{ padding: "20px", textAlign: "center", fontSize: "13px", color: "#8a9e8a" }}>
             {t("status.loading")}
           </div>
         )}
 
         {!loading && monthGroups.size === 0 && (
-          <div style={{ padding: "20px", textAlign: "center", fontSize: "12px", color: "#8a9e8a" }}>
+          <div style={{ padding: "20px", textAlign: "center", fontSize: "13px", color: "#8a9e8a" }}>
             {t("mobile.journal_empty")}
           </div>
         )}

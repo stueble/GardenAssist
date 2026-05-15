@@ -15,7 +15,7 @@
 
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Menu, MessageCircle, MapPin } from "lucide-react";
+import { Menu, MessageCircle } from "lucide-react";
 import type { Garden } from "@api/garden";
 import type { Plant } from "@api/plant";
 import type { Schedule } from "@api/schedule";
@@ -110,7 +110,7 @@ function TopBar({
         <Menu size={20} strokeWidth={1.5} />
       </button>
 
-      <div style={{ fontFamily: "var(--font-display)", fontSize: "16px", color: "#fff", fontWeight: 600, flex: 1 }}>
+      <div style={{ fontFamily: "var(--font-display)", fontSize: "18px", color: "#fff", fontWeight: 600, flex: 1 }}>
         {t("mobile.calendar")}
       </div>
 
@@ -167,7 +167,7 @@ function FilterChips({
             data-testid={`mobile-calendar-chip-${key}`}
             onClick={() => onChange(key)}
             style={{
-              fontSize:     "10px",
+              fontSize: "11px",
               padding:      "3px 10px",
               borderRadius: "20px",
               border:       `1px solid ${active === key ? "#2d4a2d" : "#c8dfc0"}`,
@@ -222,7 +222,7 @@ function MonthHeader() {
               }}
             >
               <div style={{
-                fontSize:      "8px",
+                fontSize: "9px",
                 color:         isCurrent ? "#2d4a2d" : "#8a9e8a",
                 fontWeight:    isCurrent ? 700 : 400,
                 letterSpacing: ".3px",
@@ -318,13 +318,12 @@ function PlantRow({
     >
       {/* Plant name column — 100px */}
       <div style={{ width: "100px", flexShrink: 0, paddingTop: "2px" }}>
-        <div style={{ fontSize: "10px", fontWeight: 500, color: "#1e2e1e", lineHeight: 1.2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={plant.name_common}>
+        <div style={{ fontSize: "11px", fontWeight: 500, color: "#1e2e1e", lineHeight: 1.2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={plant.name_common}>
           {plant.name_common}
         </div>
         {plant.location && (
-          <div style={{ fontSize: "8px", color: "#8a9e8a", display: "flex", alignItems: "center", gap: "2px", overflow: "hidden", whiteSpace: "nowrap" }}>
-            <MapPin size={7} strokeWidth={1.5} style={{ flexShrink: 0 }} />
-            <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{plant.location}</span>
+          <div style={{ fontSize: "9px", color: "#8a9e8a", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>
+            {plant.location}
           </div>
         )}
       </div>
@@ -387,21 +386,21 @@ function Tooltip({
         background:   "#eef4eb",
         borderRadius: "8px",
         border:       "1px solid #c8dfc0",
-        fontSize:     "10px",
+        fontSize: "11px",
       }}
     >
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "3px" }}>
         <div>
           <span style={{ fontWeight: 500, color: "#1e2e1e" }}>{plant.name_common}</span>
           {plant.name_botanical && (
-            <span style={{ color: "#8a9e8a", fontWeight: 400, fontSize: "9px", marginLeft: "4px" }}>
+            <span style={{ color: "#8a9e8a", fontWeight: 400, fontSize: "10px", marginLeft: "4px" }}>
               {plant.name_botanical}
             </span>
           )}
         </div>
         <button
           onClick={onClose}
-          style={{ background: "none", border: "none", cursor: "pointer", fontSize: "10px", color: "#8a9e8a", lineHeight: 1, padding: "0 0 0 8px", flexShrink: 0 }}
+          style={{ background: "none", border: "none", cursor: "pointer", fontSize: "11px", color: "#8a9e8a", lineHeight: 1, padding: "0 0 0 8px", flexShrink: 0 }}
         >
           ✕
         </button>
@@ -505,7 +504,7 @@ export function MobileCalendarView({ garden, loading }: MobileCalendarViewProps)
         <MonthHeader />
 
         {loading && (
-          <div style={{ padding: "20px", textAlign: "center", fontSize: "12px", color: "#8a9e8a" }}>
+          <div style={{ padding: "20px", textAlign: "center", fontSize: "13px", color: "#8a9e8a" }}>
             {t("status.loading")}
           </div>
         )}

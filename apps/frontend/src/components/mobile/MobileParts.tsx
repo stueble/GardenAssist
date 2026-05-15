@@ -96,7 +96,7 @@ export function BottomNav({ activePath }: { activePath: string }) {
               <span style={{ color: isActive ? "#fff" : "#c8dfc0", display: "flex" }}>
                 {icon}
               </span>
-              <span style={{ fontSize: "8px", color: isActive ? "#fff" : "#c8dfc0", letterSpacing: ".2px", whiteSpace: "nowrap" }}>
+              <span style={{ fontSize: "9px", color: isActive ? "#fff" : "#c8dfc0", letterSpacing: ".2px", whiteSpace: "nowrap" }}>
                 {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                 {t(`mobile.tab_${key}` as any)}
               </span>
@@ -153,7 +153,7 @@ export function LeftDrawer({
         }}
       >
         <div style={{ background: "#2d4a2d", padding: "16px 16px 12px", flexShrink: 0 }}>
-          <div style={{ fontFamily: "var(--font-display)", fontSize: "18px", color: "#c8dfc0", fontWeight: 600 }}>
+          <div style={{ fontFamily: "var(--font-display)", fontSize: "20px", color: "#c8dfc0", fontWeight: 600 }}>
             🌿 GardenAssist
           </div>
         </div>
@@ -188,12 +188,12 @@ function DrawerItem({ icon, label, onClick }: { icon: string; label: string; onC
         background: "none",
         border:     "none",
         cursor:     "pointer",
-        fontSize:   "14px",
+        fontSize: "15px",
         color:      "#1e2e1e",
         textAlign:  "left",
       }}
     >
-      <span style={{ fontSize: "18px" }}>{icon}</span>
+      <span style={{ fontSize: "20px" }}>{icon}</span>
       {label}
     </button>
   );
@@ -262,14 +262,14 @@ export function ChatPanel({
         flexShrink:   0,
       }}>
         <MessageCircle size={15} strokeWidth={1.5} color="#4a7c4a" />
-        <div style={{ fontSize: "12px", fontWeight: 500, color: "#1e2e1e", flex: 1 }}>
+        <div style={{ fontSize: "13px", fontWeight: 500, color: "#1e2e1e", flex: 1 }}>
           {t("mobile.assistant_title")}
         </div>
         <button
           data-testid="mobile-chat-close"
           onClick={onClose}
           style={{
-            fontSize:     "9px",
+            fontSize: "10px",
             color:        "#8a9e8a",
             padding:      "2px 7px",
             border:       "1px solid #dde8d8",
@@ -299,7 +299,7 @@ export function ChatPanel({
           msg.role === "assistant" ? (
             <div key={i} style={{
               maxWidth:    "86%",
-              fontSize:    "10px",
+              fontSize: "11px",
               lineHeight:  1.45,
               padding:     "6px 9px",
               borderRadius:"4px 10px 10px 10px",
@@ -312,7 +312,7 @@ export function ChatPanel({
           ) : (
             <div key={i} style={{
               maxWidth:    "86%",
-              fontSize:    "10px",
+              fontSize: "11px",
               lineHeight:  1.45,
               padding:     "6px 9px",
               borderRadius:"10px 4px 10px 10px",
@@ -343,7 +343,7 @@ export function ChatPanel({
           placeholder={t("mobile.assistant_placeholder")}
           style={{
             flex:         1,
-            fontSize:     "11px",
+            fontSize: "12px",
             padding:      "5px 10px",
             border:       "1.5px solid #dde8d8",
             borderRadius: "20px",

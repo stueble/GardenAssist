@@ -15,7 +15,7 @@
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Menu, MessageCircle, Search, MapPin, Plus,
+  Menu, MessageCircle, Search, Plus,
   List, LayoutGrid,
 } from "lucide-react";
 import type { Garden } from "@api/garden";
@@ -102,7 +102,7 @@ function TopBar({
       {/* Title */}
       <div style={{
         fontFamily: "var(--font-display)",
-        fontSize:   "16px",
+        fontSize: "18px",
         color:      "#fff",
         fontWeight: 600,
         flex:       1,
@@ -238,7 +238,7 @@ function SearchBar({
             outline:     "none",
             boxShadow:   "none",
             background:  "transparent",
-            fontSize:    "11px",
+            fontSize: "12px",
             color:       "#1e2e1e",
             fontFamily:  "var(--font-body)",
             flex:        1,
@@ -281,7 +281,7 @@ function StatusBadge({ status, label }: { status: PlantStatus; label: string }) 
     <span
       data-testid={`mobile-plant-badge-${status}`}
       style={{
-        fontSize:     "8px",
+        fontSize: "9px",
         padding:      "2px 6px",
         borderRadius: "20px",
         fontWeight:   500,
@@ -317,17 +317,17 @@ function PlantListItem({ plant, statusLabel }: { plant: Plant; statusLabel: stri
 
       {/* Main info */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: "11px", fontWeight: 500, color: "#1e2e1e", lineHeight: 1.3 }}>
+        <div style={{ fontSize: "12px", fontWeight: 500, color: "#1e2e1e", lineHeight: 1.3 }}>
           {plant.name_common}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "3px", flexWrap: "wrap" }}>
           {plant.location && (
-            <span style={{ fontSize: "9px", color: "#4a5e4a", display: "flex", alignItems: "center", gap: "2px" }}>
-              <MapPin size={10} strokeWidth={1.5} />{plant.location}
+            <span style={{ fontSize: "10px", color: "#4a5e4a" }}>
+              {plant.location}
             </span>
           )}
           {plant.watering_zone && (
-            <span style={{ fontSize: "9px", color: "#4a78c0", background: "#e8f0fb", borderRadius: "20px", padding: "1px 5px" }}>
+            <span style={{ fontSize: "10px", color: "#4a78c0", background: "#e8f0fb", borderRadius: "20px", padding: "1px 5px" }}>
               {plant.watering_zone}
             </span>
           )}
@@ -338,7 +338,7 @@ function PlantListItem({ plant, statusLabel }: { plant: Plant; statusLabel: stri
       <div style={{ flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "3px", paddingTop: "1px" }}>
         <StatusBadge status={status} label={statusLabel} />
         {careTask && (
-          <span style={{ fontSize: "8px", color: "#8a9e8a", maxWidth: "80px", textAlign: "right", lineHeight: 1.3 }}>
+          <span style={{ fontSize: "9px", color: "#8a9e8a", maxWidth: "80px", textAlign: "right", lineHeight: 1.3 }}>
             {careTask.schedule.label ?? careTask.schedule.schedule_type}
           </span>
         )}
@@ -383,23 +383,23 @@ function PlantCard({ plant }: { plant: Plant }) {
 
       {/* Body */}
       <div style={{ padding: "7px 8px 8px" }}>
-        <div style={{ fontSize: "11px", fontWeight: 500, color: "#1e2e1e", lineHeight: 1.3 }}>
+        <div style={{ fontSize: "12px", fontWeight: 500, color: "#1e2e1e", lineHeight: 1.3 }}>
           {plant.name_common}
         </div>
         {plant.name_botanical && (
-          <div style={{ fontSize: "8px", color: "#8a9e8a", fontStyle: "italic", marginBottom: "4px" }}>
+          <div style={{ fontSize: "9px", color: "#8a9e8a", fontStyle: "italic", marginBottom: "4px" }}>
             {plant.name_botanical}
           </div>
         )}
         {plant.location && (
-          <div style={{ fontSize: "9px", color: "#4a5e4a", display: "flex", alignItems: "center", gap: "2px", marginBottom: "5px" }}>
-            <MapPin size={10} strokeWidth={1.5} />{plant.location}
+          <div style={{ fontSize: "10px", color: "#4a5e4a", marginBottom: "5px" }}>
+            {plant.location}
           </div>
         )}
         {/* Footer: watering zone pill + status dot */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           {plant.watering_zone
-            ? <span style={{ fontSize: "8px", color: "#4a78c0", background: "#e8f0fb", borderRadius: "20px", padding: "1px 5px" }}>
+            ? <span style={{ fontSize: "9px", color: "#4a78c0", background: "#e8f0fb", borderRadius: "20px", padding: "1px 5px" }}>
                 {plant.watering_zone}
               </span>
             : <span />
@@ -487,13 +487,13 @@ export function MobilePlantsView({ garden, loading }: MobilePlantsViewProps) {
       {/* Scrollable plant list / grid */}
       <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
         {loading && (
-          <div style={{ padding: "20px", textAlign: "center", fontSize: "12px", color: "#8a9e8a" }}>
+          <div style={{ padding: "20px", textAlign: "center", fontSize: "13px", color: "#8a9e8a" }}>
             {t("status.loading")}
           </div>
         )}
 
         {!loading && filtered.length === 0 && (
-          <div style={{ padding: "20px", textAlign: "center", fontSize: "12px", color: "#8a9e8a" }}>
+          <div style={{ padding: "20px", textAlign: "center", fontSize: "13px", color: "#8a9e8a" }}>
             {t("mobile.plants_empty")}
           </div>
         )}

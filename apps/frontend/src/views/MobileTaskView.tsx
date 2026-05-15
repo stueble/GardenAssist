@@ -13,7 +13,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Menu, MessageCircle, Search, ChevronDown,
-  MapPin, Check, Plus,
+  Check, Plus,
 } from "lucide-react";
 import type { Garden } from "@api/garden";
 import type { Plant } from "@api/plant";
@@ -161,7 +161,7 @@ function TopBar({
       {/* Title */}
       <div style={{
         fontFamily: "var(--font-display)",
-        fontSize:   "16px",
+        fontSize: "18px",
         color:      "#fff",
         fontWeight: 600,
         flex:       1,
@@ -226,7 +226,7 @@ function SearchBar() {
         }}
       >
         <Search size={13} strokeWidth={1.5} color="#4a5e4a" />
-        <span style={{ fontSize: "12px", color: "#8a9e8a" }}>
+        <span style={{ fontSize: "13px", color: "#8a9e8a" }}>
           {t("mobile.search_placeholder")}
         </span>
       </div>
@@ -311,13 +311,13 @@ function WeatherWidgetMobile({ zones }: { zones: string[] }) {
           <div style={{ flex: 1, minWidth: 0 }}>
             {weatherState.status === "ok" ? (
               <>
-                <div style={{ fontSize: "13px", fontWeight: 500, color: "#1e2e1e" }}>
+                <div style={{ fontSize: "14px", fontWeight: 500, color: "#1e2e1e" }}>
                   {weatherState.data.current_temp}°C · {weatherState.data.city}
                 </div>
-                <div style={{ fontSize: "10px", color: "#8a9e8a" }}>{String(label)}</div>
+                <div style={{ fontSize: "11px", color: "#8a9e8a" }}>{String(label)}</div>
               </>
             ) : (
-              <div style={{ fontSize: "11px", color: "#8a9e8a" }}>
+              <div style={{ fontSize: "12px", color: "#8a9e8a" }}>
                 {weatherState.status === "loading" ? t("weather.loading") : t("weather.no_location")}
               </div>
             )}
@@ -327,12 +327,12 @@ function WeatherWidgetMobile({ zones }: { zones: string[] }) {
         {/* Warning pills */}
         <div style={{ display: "flex", flexDirection: "column", gap: "3px", alignItems: "flex-end", flexShrink: 0 }}>
           {hasFrost && (
-            <span style={{ fontSize: "9px", borderRadius: "20px", padding: "2px 7px", fontWeight: 500, whiteSpace: "nowrap", background: "#fdf0ee", color: "#c0392b", border: "1px solid #f5c6c2" }}>
+            <span style={{ fontSize: "10px", borderRadius: "20px", padding: "2px 7px", fontWeight: 500, whiteSpace: "nowrap", background: "#fdf0ee", color: "#c0392b", border: "1px solid #f5c6c2" }}>
               {frostLabel}
             </span>
           )}
           {moistureWarnings.length > 0 && (
-            <span style={{ fontSize: "9px", borderRadius: "20px", padding: "2px 7px", fontWeight: 500, whiteSpace: "nowrap", background: "#e8f0fb", color: "#185fa5", border: "1px solid #b5d4f4" }}>
+            <span style={{ fontSize: "10px", borderRadius: "20px", padding: "2px 7px", fontWeight: 500, whiteSpace: "nowrap", background: "#e8f0fb", color: "#185fa5", border: "1px solid #b5d4f4" }}>
               {t("mobile.moisture_pill")}
             </span>
           )}
@@ -378,11 +378,11 @@ function WeatherWidgetMobile({ zones }: { zones: string[] }) {
                       background:     idx === 0 ? "#eef4eb" : "none",
                     }}
                   >
-                    <div style={{ fontSize: "8px", color: "#8a9e8a", fontWeight: 500 }}>
+                    <div style={{ fontSize: "9px", color: "#8a9e8a", fontWeight: 500 }}>
                       {idx === 0 ? (i18n.language === "de" ? "Heute" : "Today") : wd}
                     </div>
-                    <span style={{ fontSize: "13px", lineHeight: 1 }}>{tw(`weather.weather_icon.${dk}`)}</span>
-                    <div style={{ fontSize: "9px", whiteSpace: "nowrap" }}>
+                    <span style={{ fontSize: "14px", lineHeight: 1 }}>{tw(`weather.weather_icon.${dk}`)}</span>
+                    <div style={{ fontSize: "10px", whiteSpace: "nowrap" }}>
                       <span style={{ fontWeight: 500, color: "#1e2e1e" }}>{day.temp_max}°</span>
                       <span style={{ color: "#c8dfc0", margin: "0 1px" }}>/</span>
                       <span style={{ color: isFrost ? "#c0392b" : "#8a9e8a", fontWeight: isFrost ? 500 : 400 }}>
@@ -398,7 +398,7 @@ function WeatherWidgetMobile({ zones }: { zones: string[] }) {
           {/* Soil moisture sparklines */}
           {zones.length > 0 && soilState.status === "ok" && (
             <div style={{ padding: "10px 12px 12px" }}>
-              <div style={{ fontSize: "9px", fontWeight: 600, letterSpacing: ".7px", textTransform: "uppercase", color: "#8a9e8a", marginBottom: "8px" }}>
+              <div style={{ fontSize: "10px", fontWeight: 600, letterSpacing: ".7px", textTransform: "uppercase", color: "#8a9e8a", marginBottom: "8px" }}>
                 {t("mobile.moisture_title")}
               </div>
               {soilState.data.zones
@@ -409,13 +409,13 @@ function WeatherWidgetMobile({ zones }: { zones: string[] }) {
                   return (
                     <div key={z.zone} style={{ marginBottom: "10px" }}>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
-                        <div style={{ fontSize: "10px", fontWeight: 500, color: "#1e2e1e" }}>{z.zone}</div>
+                        <div style={{ fontSize: "11px", fontWeight: 500, color: "#1e2e1e" }}>{z.zone}</div>
                         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                          <span style={{ fontSize: "10px", fontWeight: 500, color: warn ? "#d4850a" : "#4a7c4a" }}>
+                          <span style={{ fontSize: "11px", fontWeight: 500, color: warn ? "#d4850a" : "#4a7c4a" }}>
                             {z.current} %
                           </span>
                           {warn && (
-                            <span style={{ fontSize: "9px", color: "#c0392b", background: "#fdf0ee", borderRadius: "20px", padding: "1px 6px" }}>
+                            <span style={{ fontSize: "10px", color: "#c0392b", background: "#fdf0ee", borderRadius: "20px", padding: "1px 6px" }}>
                               ⚠ trocken
                             </span>
                           )}
@@ -451,8 +451,8 @@ function FrostBanner({ warnings }: { warnings: FrostWarning[] }) {
         alignItems:   "flex-start",
       }}
     >
-      <span style={{ fontSize: "14px", flexShrink: 0 }}>⚠️</span>
-      <div style={{ fontSize: "10px", color: "#c0392b", lineHeight: 1.4 }}>
+      <span style={{ fontSize: "15px", flexShrink: 0 }}>⚠️</span>
+      <div style={{ fontSize: "11px", color: "#c0392b", lineHeight: 1.4 }}>
         {warnings.map((w, i) => (
           <div key={i}><strong style={{ fontWeight: 500 }}>{w.message}</strong>{w.sub ? ` · ${w.sub}` : ""}</div>
         ))}
@@ -473,10 +473,10 @@ function SectionHeader({
 }) {
   return (
     <div style={{ padding: "10px 12px 4px", display: "flex", alignItems: "center", gap: "6px" }}>
-      <span style={{ fontSize: "9px", fontWeight: 600, letterSpacing: ".8px", textTransform: "uppercase", color }}>
+      <span style={{ fontSize: "10px", fontWeight: 600, letterSpacing: ".8px", textTransform: "uppercase", color }}>
         {label}
       </span>
-      <span style={{ fontSize: "9px", color: "#8a9e8a" }}>{count}</span>
+      <span style={{ fontSize: "10px", color: "#8a9e8a" }}>{count}</span>
     </div>
   );
 }
@@ -541,7 +541,7 @@ function TaskRow({
           cursor:         "pointer",
           flexShrink:     0,
           marginTop:      "1px",
-          fontSize:       "10px",
+          fontSize: "11px",
           transition:     "all .15s",
         }}
       >
@@ -550,24 +550,24 @@ function TaskRow({
 
       {/* Body */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: "11px", fontWeight: 500, color: "#1e2e1e", lineHeight: 1.3 }}>
+        <div style={{ fontSize: "12px", fontWeight: 500, color: "#1e2e1e", lineHeight: 1.3 }}>
           {todo.taskLabel}
         </div>
         <div style={{ display: "flex", gap: "4px", marginTop: "3px", flexWrap: "wrap", alignItems: "center" }}>
           {/* Plant tag */}
-          <span style={{ fontSize: "9px", color: "#4a5e4a", background: "#eef4eb", borderRadius: "20px", padding: "1px 6px" }}>
+          <span style={{ fontSize: "10px", color: "#4a5e4a", background: "#eef4eb", borderRadius: "20px", padding: "1px 6px" }}>
             {todo.plant.icon ?? "🌿"} {todo.plant.name_common}
           </span>
           {/* Location */}
           {todo.plant.location && (
-            <span style={{ fontSize: "9px", color: "#8a9e8a", display: "flex", alignItems: "center", gap: "2px" }}>
-              <MapPin size={10} strokeWidth={1.5} />{todo.plant.location}
+            <span style={{ fontSize: "10px", color: "#8a9e8a" }}>
+              {todo.plant.location}
             </span>
           )}
           {/* Bloom color pill */}
           {bloomColor && bloomName && (
             <span style={{
-              fontSize:    "9px",
+              fontSize: "10px",
               borderRadius:"20px",
               padding:     "1px 7px",
               fontWeight:  500,
@@ -579,7 +579,7 @@ function TaskRow({
             </span>
           )}
           {/* Relative date */}
-          <span style={{ fontSize: "9px", color: dateColor }}>
+          <span style={{ fontSize: "10px", color: dateColor }}>
             {todo.taskDate}
           </span>
         </div>
@@ -591,7 +591,7 @@ function TaskRow({
           data-testid="mobile-task-skip"
           onClick={(e) => { e.stopPropagation(); onSkip(todo); }}
           style={{
-            fontSize:     "9px",
+            fontSize: "10px",
             color:        "#8a9e8a",
             padding:      "1px 6px",
             border:       "1px solid #dde8d8",
@@ -716,7 +716,7 @@ export function MobileTaskView({ garden, loading, invalidateGarden }: MobileTask
         <FrostBanner warnings={frostWarnings} />
 
         {loading && (
-          <div style={{ padding: "20px", textAlign: "center", fontSize: "12px", color: "#8a9e8a" }}>
+          <div style={{ padding: "20px", textAlign: "center", fontSize: "13px", color: "#8a9e8a" }}>
             {t("dashboard.loading")}
           </div>
         )}
@@ -778,7 +778,7 @@ export function MobileTaskView({ garden, loading, invalidateGarden }: MobileTask
             )}
 
             {todos.length === 0 && (
-              <div style={{ padding: "20px", textAlign: "center", fontSize: "12px", color: "#8a9e8a" }}>
+              <div style={{ padding: "20px", textAlign: "center", fontSize: "13px", color: "#8a9e8a" }}>
                 {t("dashboard.tasks_empty")}
               </div>
             )}

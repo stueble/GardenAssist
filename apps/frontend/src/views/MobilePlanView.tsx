@@ -80,7 +80,7 @@ function TopBar({
         <Menu size={20} strokeWidth={1.5} />
       </button>
 
-      <div style={{ fontFamily: "var(--font-display)", fontSize: "16px", color: "#fff", fontWeight: 600, flex: 1 }}>
+      <div style={{ fontFamily: "var(--font-display)", fontSize: "18px", color: "#fff", fontWeight: 600, flex: 1 }}>
         {t("mobile.plan")}
       </div>
 
