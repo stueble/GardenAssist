@@ -209,6 +209,7 @@
     "journal_title_placeholder": "Titel …",
     "journal_plant_placeholder": "Pflanze wählen …",
     "journal_notes_placeholder": "Notizen …",
-    "journal_empty": "Keine Einträge vorhanden."
+    "journal_empty": "Keine Einträge vorhanden.",
+    "plan": "Gartenplan"
   }
 }
