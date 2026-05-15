@@ -1,16 +1,16 @@
 ---
 id: TASK-084
 title: Mobile – Plants Overview
-status: In Review
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-15 15:46'
-updated_date: '2026-05-15 17:10'
+updated_date: '2026-05-15 18:09'
 labels: []
 dependencies: []
 references:
   - ui-mockups/mobile/plants/mobile_plants.html
-ordinal: 82000
+ordinal: 81000
 ---
 
 ## Description

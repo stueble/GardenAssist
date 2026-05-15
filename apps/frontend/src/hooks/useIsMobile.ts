@@ -10,12 +10,17 @@ import { useState, useEffect } from "react";
 
 const MOBILE_QUERY = "(max-width: 768px)";
 
+// Set to `true` to force the mobile layout in any browser window size.
+// Useful for desktop testing without resizing. Do not commit as `true`.
+const FORCE_MOBILE = false;
+
 export function useIsMobile(): boolean {
   const [isMobile, setIsMobile] = useState<boolean>(
-    () => window.matchMedia(MOBILE_QUERY).matches,
+    () => FORCE_MOBILE || window.matchMedia(MOBILE_QUERY).matches,
   );
 
   useEffect(() => {
+    if (FORCE_MOBILE) return;
     const mq = window.matchMedia(MOBILE_QUERY);
     const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
     mq.addEventListener("change", handler);

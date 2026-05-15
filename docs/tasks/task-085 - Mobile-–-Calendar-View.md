@@ -1,16 +1,16 @@
 ---
 id: TASK-085
 title: Mobile – Calendar View
-status: In Review
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-15 15:47'
-updated_date: '2026-05-15 17:25'
+updated_date: '2026-05-15 18:09'
 labels: []
 dependencies: []
 references:
   - ui-mockups/mobile/calndar/mobile_calendar.html
-ordinal: 83000
+ordinal: 82000
 ---
 
 ## Description

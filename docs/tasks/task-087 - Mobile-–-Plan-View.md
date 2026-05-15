@@ -1,14 +1,14 @@
 ---
 id: TASK-087
 title: Mobile – Plan View
-status: In Review
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-15 21:46'
-updated_date: '2026-05-15 21:50'
+updated_date: '2026-05-15 21:55'
 labels: []
 dependencies: []
-ordinal: 85000
+ordinal: 84000
 ---
 
 ## Description

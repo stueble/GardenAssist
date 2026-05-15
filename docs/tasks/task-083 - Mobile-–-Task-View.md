@@ -1,16 +1,16 @@
 ---
 id: TASK-083
 title: Mobile – Task View
-status: In Review
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-15 15:45'
-updated_date: '2026-05-15 16:30'
+updated_date: '2026-05-15 16:47'
 labels: []
 dependencies: []
 references:
   - ui-mockups/mobile/tasks/mobile_tasks.html
-ordinal: 81000
+ordinal: 80000
 ---
 
 ## Description

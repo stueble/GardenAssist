@@ -1,0 +1,217 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  .wrap{display:flex;justify-content:center;padding:1.5rem 0 2rem;font-family:'DM Sans',sans-serif;}
+  .phone{width:340px;background:#1e2e1e;border-radius:36px;border:8px solid #1e2e1e;overflow:hidden;box-shadow:0 16px 48px rgba(0,0,0,.2);display:flex;flex-direction:column;height:620px;position:relative;}
+  .notch{width:100px;height:22px;background:#1e2e1e;border-radius:0 0 14px 14px;margin:0 auto;flex-shrink:0;position:relative;z-index:10;}
+  .topbar{background:#2d4a2d;display:flex;align-items:center;padding:0 10px;height:44px;gap:4px;flex-shrink:0;position:relative;z-index:10;}
+  .tb-btn{width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:8px;color:#c8dfc0;font-size:19px;flex-shrink:0;transition:background .15s;}
+  .tb-btn:hover{background:rgba(255,255,255,.12);}
+  .tb-title{font-family:'Playfair Display',serif;font-size:16px;color:#fff;font-weight:600;flex:1;}
+  .tb-chat{background:rgba(255,255,255,.15);border-radius:8px;position:relative;}
+  .tb-chat.open{background:rgba(255,255,255,.28);}
+  .tb-badge{position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;background:#7aab6a;border:1.5px solid #2d4a2d;}
+  .tb-add{background:rgba(255,255,255,.15);border-radius:8px;margin-left:6px;}
+
+  .plan-area{flex:1;position:relative;overflow:hidden;background:#e8e0d0;min-height:0;}
+  .plan-canvas{position:absolute;inset:0;cursor:grab;user-select:none;}
+  .plan-canvas:active{cursor:grabbing;}
+
+  .pin-tooltip{position:absolute;background:#1e2e1e;color:#fff;font-size:10px;padding:4px 9px;border-radius:20px;white-space:nowrap;pointer-events:none;transform:translate(-50%,-100%);margin-top:-8px;display:none;z-index:20;}
+  .pin-tooltip::after{content:'';position:absolute;left:50%;bottom:-5px;transform:translateX(-50%);border:5px solid transparent;border-top-color:#1e2e1e;border-bottom:none;}
+
+  .zoom-btns{position:absolute;bottom:10px;right:10px;display:flex;flex-direction:column;gap:5px;z-index:15;}
+  .zoom-btn{width:36px;height:36px;background:rgba(30,46,30,.85);border:1px solid rgba(200,223,192,.3);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#c8dfc0;font-size:16px;backdrop-filter:blur(4px);transition:background .15s;}
+  .zoom-btn:hover{background:rgba(30,46,30,1);}
+
+  /* legend — only 2 items */
+  .legend{position:absolute;top:10px;left:10px;background:rgba(30,46,30,.8);border-radius:8px;padding:6px 8px;z-index:15;display:flex;flex-direction:column;gap:4px;backdrop-filter:blur(4px);}
+  .legend-item{display:flex;align-items:center;gap:5px;font-size:9px;color:#c8dfc0;}
+  .legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+
+  .chat-panel{flex-shrink:0;height:0;overflow:hidden;transition:height .25s ease;background:#fff;border-top:2px solid #2d4a2d;display:flex;flex-direction:column;}
+  .chat-panel.open{height:200px;}
+  .chat-hdr{padding:8px 12px 7px;border-bottom:1px solid #dde8d8;display:flex;align-items:center;gap:6px;flex-shrink:0;}
+  .chat-hdr-ttl{font-size:12px;font-weight:500;color:#1e2e1e;flex:1;}
+  .chat-cls{font-size:9px;color:#8a9e8a;cursor:pointer;padding:2px 7px;border:1px solid #dde8d8;border-radius:20px;}
+  .chat-msgs{flex:1;overflow-y:auto;padding:8px 12px;display:flex;flex-direction:column;gap:5px;min-height:0;}
+  .msg{max-width:86%;font-size:10px;line-height:1.45;padding:6px 9px;border-radius:10px;}
+  .msg.bot{background:#eef4eb;color:#1e2e1e;align-self:flex-start;border-radius:4px 10px 10px 10px;}
+  .msg.user{background:#2d4a2d;color:#fff;align-self:flex-end;border-radius:10px 4px 10px 10px;}
+  .chat-inp-row{padding:7px 10px;border-top:1px solid #dde8d8;display:flex;gap:6px;align-items:center;flex-shrink:0;}
+  .chat-inp{flex:1;font-size:11px;padding:5px 10px;border:1.5px solid #dde8d8;border-radius:20px;outline:none;font-family:'DM Sans',sans-serif;}
+  .chat-inp:focus{border-color:#4a7c4a;}
+  .chat-snd{width:28px;height:28px;border-radius:50%;background:#4a7c4a;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .chat-snd i{font-size:13px;color:#fff;}
+
+  .bnav{background:#2d4a2d;display:flex;align-items:center;padding:6px 0 10px;flex-shrink:0;position:relative;z-index:10;}
+  .btab{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:3px 0;cursor:pointer;border-radius:8px;}
+  .btab i{font-size:19px;color:#c8dfc0;}
+  .btab span{font-size:8px;color:#c8dfc0;letter-spacing:.2px;}
+  .btab.active i,.btab.active span{color:#fff;}
+  .btab.active{background:rgba(255,255,255,.1);}
+</style>
+
+<div class="wrap"><div class="phone">
+  <div class="notch"></div>
+
+  <div class="topbar">
+    <div class="tb-btn"><i class="ti ti-menu-2" aria-hidden="true"></i></div>
+    <div class="tb-title">Gartenplan</div>
+    <div class="tb-btn tb-add"><i class="ti ti-plus" aria-hidden="true"></i></div>
+    <div class="tb-btn tb-chat" id="chatBtn" onclick="toggleChat()">
+      <i class="ti ti-message-circle" aria-hidden="true"></i>
+      <div class="tb-badge" id="badge"></div>
+    </div>
+  </div>
+
+  <div class="plan-area" id="planArea">
+    <div class="plan-canvas" id="planCanvas">
+      <svg id="planSvg" style="position:absolute;top:0;left:0;" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#c0392b"></div>Überfällig</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#d4850a"></div>Aktuell</div>
+    </div>
+
+    <div class="pin-tooltip" id="pinTooltip"></div>
+
+    <div class="zoom-btns">
+      <div class="zoom-btn" onclick="fitWidth()" title="Auf Breite einpassen">
+        <i class="ti ti-arrows-horizontal" aria-hidden="true"></i>
+      </div>
+      <div class="zoom-btn" onclick="fitHeight()" title="Auf Höhe einpassen">
+        <i class="ti ti-arrows-vertical" aria-hidden="true"></i>
+      </div>
+    </div>
+  </div>
+
+  <div class="chat-panel" id="chatPanel">
+    <div class="chat-hdr">
+      <i class="ti ti-message-circle" style="font-size:15px;color:#4a7c4a;" aria-hidden="true"></i>
+      <div class="chat-hdr-ttl">Garten-Assistent</div>
+      <div class="chat-cls" onclick="toggleChat()">✕</div>
+    </div>
+    <div class="chat-msgs" id="msgs">
+      <div class="msg bot">Rose und Lavendel in den Südbeeten haben überfällige Aufgaben — direkt antippen für Details.</div>
+    </div>
+    <div class="chat-inp-row">
+      <input class="chat-inp" id="inp" placeholder="Frage oder Anweisung …" onkeydown="if(event.key==='Enter')send()">
+      <button class="chat-snd" onclick="send()"><i class="ti ti-send" aria-hidden="true"></i></button>
+    </div>
+  </div>
+
+  <div class="bnav">
+    <div class="btab"><i class="ti ti-check" aria-hidden="true"></i><span>Aufgaben</span></div>
+    <div class="btab"><i class="ti ti-plant" aria-hidden="true"></i><span>Pflanzen</span></div>
+    <div class="btab"><i class="ti ti-calendar" aria-hidden="true"></i><span>Kalender</span></div>
+    <div class="btab"><i class="ti ti-notebook" aria-hidden="true"></i><span>Tagebuch</span></div>
+    <div class="btab active"><i class="ti ti-map" aria-hidden="true"></i><span>Plan</span></div>
+  </div>
+</div></div>
+
+<script>
+const PLAN_W=600, PLAN_H=480;
+
+const areas=[
+  {x:20,y:20,w:560,h:440,fill:'#d4c9a8',stroke:'#b5a882',label:null},
+  {x:40,y:40,w:240,h:180,fill:'#b8d4a0',stroke:'#8ab878',label:'Südbeete'},
+  {x:40,y:240,w:110,h:120,fill:'#c8dba8',stroke:'#9ab880',label:'Hochbeet Nord'},
+  {x:160,y:240,w:120,h:120,fill:'#c8dba8',stroke:'#9ab880',label:'Hochbeet Süd'},
+  {x:300,y:40,w:140,h:120,fill:'#d8e8c0',stroke:'#a8c890',label:'Vordergarten'},
+  {x:300,y:180,w:140,h:80,fill:'#c0d8a8',stroke:'#90b878',label:'Einfahrt'},
+  {x:460,y:40,w:100,h:200,fill:'#b0c898',stroke:'#80a868',label:'Nordwand'},
+  {x:40,y:380,w:240,h:60,fill:'#d0c8a0',stroke:'#a89870',label:'Terrassenkante'},
+  {x:300,y:280,w:260,h:160,fill:'#c8c0a0',stroke:'#a09878',label:'Terrasse Mitte'},
+  {x:40,y:220,w:520,h:20,fill:'#e8e0c8',stroke:'#c8c0a8',label:null},
+];
+
+// simplified: only overdue (red) and due/aktuell (amber); rest no dot
+const pins=[
+  {x:120,y:130,name:'Rose',        emoji:'🌹',status:'overdue'},
+  {x:190,y:130,name:'Pfingstrose', emoji:'🌸',status:'due'},
+  {x:80, y:370,name:'Lavendel',    emoji:'💜',status:'overdue'},
+  {x:220,y:370,name:'Dahlie',      emoji:'🌺',status:null},
+  {x:80, y:290,name:'Hortensie',   emoji:'💙',status:'due'},
+  {x:190,y:290,name:'Tulpe',       emoji:'🌷',status:null},
+  {x:365,y:100,name:'Forsythie',   emoji:'🌼',status:null},
+  {x:510,y:140,name:'Schneeglöck.',emoji:'❄️',status:null},
+  {x:420,y:360,name:'Fächerahorn', emoji:'🍁',status:null},
+];
+
+const statusColor={overdue:'#c0392b',due:'#d4850a'};
+
+let tx=0,ty=0,scale=1,dragging=false,startX=0,startY=0,startTx=0,startTy=0,activePinIdx=null;
+
+function buildSvg(){
+  const svg=document.getElementById('planSvg');
+  svg.setAttribute('width',PLAN_W);svg.setAttribute('height',PLAN_H);
+  svg.setAttribute('viewBox',`0 0 ${PLAN_W} ${PLAN_H}`);
+  let html='';
+  areas.forEach(a=>{
+    html+=`<rect x="${a.x}" y="${a.y}" width="${a.w}" height="${a.h}" rx="4" fill="${a.fill}" stroke="${a.stroke}" stroke-width="1.5"/>`;
+    if(a.label)html+=`<text x="${a.x+a.w/2}" y="${a.y+a.h/2+4}" text-anchor="middle" font-size="9" fill="#5a6a4a" font-family="DM Sans,sans-serif" opacity="0.7">${a.label}</text>`;
+  });
+  pins.forEach((p,i)=>{
+    const col=p.status?statusColor[p.status]:'rgba(30,46,30,0.55)';
+    const stroke=p.status?'#fff':'rgba(255,255,255,0.6)';
+    html+=`<g class="pin" data-idx="${i}" style="cursor:pointer">
+      <circle cx="${p.x}" cy="${p.y}" r="${p.status?12:10}" fill="${col}" stroke="${stroke}" stroke-width="2" opacity="${p.status?0.95:0.7}"/>
+      <text x="${p.x}" y="${p.y+5}" text-anchor="middle" font-size="${p.status?12:10}">${p.emoji}</text>
+    </g>`;
+  });
+  svg.innerHTML=html;
+  svg.querySelectorAll('.pin').forEach(el=>{
+    el.addEventListener('click',e=>{e.stopPropagation();showTooltip(parseInt(el.dataset.idx));});
+  });
+  svg.addEventListener('click',()=>hideTooltip());
+}
+
+function applyTransform(){
+  const svg=document.getElementById('planSvg');
+  svg.style.transform=`translate(${tx}px,${ty}px) scale(${scale})`;
+  svg.style.transformOrigin='0 0';
+  updateTooltipPos();
+}
+
+function showTooltip(idx){
+  activePinIdx=idx;
+  const p=pins[idx];
+  const tip=document.getElementById('pinTooltip');
+  const statusLabel=p.status==='overdue'?' · Überfällig':p.status==='due'?' · Aktuell':'';
+  tip.textContent=`${p.emoji} ${p.name}${statusLabel}`;
+  tip.style.display='block';
+  updateTooltipPos();
+}
+function hideTooltip(){activePinIdx=null;document.getElementById('pinTooltip').style.display='none';}
+function updateTooltipPos(){
+  if(activePinIdx===null)return;
+  const p=pins[activePinIdx];
+  const tip=document.getElementById('pinTooltip');
+  tip.style.left=(p.x*scale+tx)+'px';
+  tip.style.top=((p.y-16)*scale+ty)+'px';
+}
+
+function fitWidth(){
+  const area=document.getElementById('planArea');
+  scale=area.clientWidth/PLAN_W;tx=0;ty=(area.clientHeight-PLAN_H*scale)/2;applyTransform();
+}
+function fitHeight(){
+  const area=document.getElementById('planArea');
+  scale=area.clientHeight/PLAN_H;tx=(area.clientWidth-PLAN_W*scale)/2;ty=0;applyTransform();
+}
+
+const canvas=document.getElementById('planCanvas');
+canvas.addEventListener('mousedown',e=>{dragging=true;startX=e.clientX;startY=e.clientY;startTx=tx;startTy=ty;});
+window.addEventListener('mousemove',e=>{if(!dragging)return;tx=startTx+(e.clientX-startX);ty=startTy+(e.clientY-startY);applyTransform();});
+window.addEventListener('mouseup',()=>{dragging=false;});
+
+let chatOpen=false;
+function toggleChat(){chatOpen=!chatOpen;document.getElementById('chatPanel').classList.toggle('open',chatOpen);document.getElementById('chatBtn').classList.toggle('open',chatOpen);document.getElementById('badge').style.display=chatOpen?'none':'block';if(chatOpen)setTimeout(()=>document.getElementById('inp').focus(),250);}
+function send(){const inp=document.getElementById('inp'),txt=inp.value.trim();if(!txt)return;const msgs=document.getElementById('msgs');msgs.innerHTML+=`<div class="msg user">${txt}</div>`;inp.value='';msgs.scrollTop=msgs.scrollHeight;setTimeout(()=>{msgs.innerHTML+=`<div class="msg bot">Gute Frage!</div>`;msgs.scrollTop=msgs.scrollHeight;},600);}
+
+buildSvg();
+setTimeout(fitHeight,50);
+</script>

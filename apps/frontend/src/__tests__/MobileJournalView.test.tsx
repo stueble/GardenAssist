@@ -231,14 +231,14 @@ describe("MobileJournalView", () => {
     it("new-entry sheet starts closed", () => {
       renderView();
       const sheet = screen.getByTestId("mobile-journal-new-sheet");
-      expect(sheet.style.height).toBe("0px");
+      expect(sheet.style.maxHeight).toBe("0px");
     });
 
     it("opens when + is clicked", async () => {
       renderView();
       fireEvent.click(screen.getByTestId("mobile-journal-add-btn"));
       await waitFor(() => {
-        expect(screen.getByTestId("mobile-journal-new-sheet").style.height).toBe("220px");
+        expect(screen.getByTestId("mobile-journal-new-sheet").style.maxHeight).toBe("70vh");
       });
     });
 
@@ -246,11 +246,11 @@ describe("MobileJournalView", () => {
       renderView();
       fireEvent.click(screen.getByTestId("mobile-journal-add-btn"));
       await waitFor(() => {
-        expect(screen.getByTestId("mobile-journal-new-sheet").style.height).toBe("220px");
+        expect(screen.getByTestId("mobile-journal-new-sheet").style.maxHeight).toBe("70vh");
       });
       fireEvent.click(screen.getByTestId("mobile-journal-add-btn"));
       await waitFor(() => {
-        expect(screen.getByTestId("mobile-journal-new-sheet").style.height).toBe("0px");
+        expect(screen.getByTestId("mobile-journal-new-sheet").style.maxHeight).toBe("0px");
       });
     });
 
@@ -265,7 +265,7 @@ describe("MobileJournalView", () => {
       fireEvent.click(screen.getByTestId("mobile-journal-add-btn"));
       await waitFor(() => {
         expect(screen.getByTestId("mobile-chat-panel").style.height).toBe("0px");
-        expect(screen.getByTestId("mobile-journal-new-sheet").style.height).toBe("220px");
+        expect(screen.getByTestId("mobile-journal-new-sheet").style.maxHeight).toBe("70vh");
       });
     });
 
@@ -274,10 +274,11 @@ describe("MobileJournalView", () => {
       fireEvent.click(screen.getByTestId("mobile-journal-add-btn"));
       expect(screen.getByTestId("mobile-journal-type-select")).toBeDefined();
       expect(screen.getByTestId("mobile-journal-type-done")).toBeDefined();
+      expect(screen.getByTestId("mobile-journal-type-skipped")).toBeDefined();
       expect(screen.getByTestId("mobile-journal-type-observation")).toBeDefined();
       expect(screen.getByTestId("mobile-journal-type-problem")).toBeDefined();
       expect(screen.getByTestId("mobile-journal-type-irrigation")).toBeDefined();
-      expect(screen.getByTestId("mobile-journal-type-manual")).toBeDefined();
+      // "manual" is derived (done + no schedule), not a selectable type
     });
 
     it("save calls createJournalEntry", async () => {
@@ -313,11 +314,11 @@ describe("MobileJournalView", () => {
       renderView();
       fireEvent.click(screen.getByTestId("mobile-journal-add-btn"));
       await waitFor(() => {
-        expect(screen.getByTestId("mobile-journal-new-sheet").style.height).toBe("220px");
+        expect(screen.getByTestId("mobile-journal-new-sheet").style.maxHeight).toBe("70vh");
       });
       fireEvent.click(screen.getByTestId("mobile-journal-chat-btn"));
       await waitFor(() => {
-        expect(screen.getByTestId("mobile-journal-new-sheet").style.height).toBe("0px");
+        expect(screen.getByTestId("mobile-journal-new-sheet").style.maxHeight).toBe("0px");
         expect(screen.getByTestId("mobile-chat-panel").style.height).toBe("210px");
       });
     });

@@ -1,16 +1,16 @@
 ---
 id: TASK-086
 title: Mobile – Journal View
-status: In Review
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-15 15:47'
-updated_date: '2026-05-15 18:19'
+updated_date: '2026-05-15 21:55'
 labels: []
 dependencies: []
 references:
   - ui-mockups/mobile/journal/mobile_journal.html
-ordinal: 84000
+ordinal: 83000
 ---
 
 ## Description

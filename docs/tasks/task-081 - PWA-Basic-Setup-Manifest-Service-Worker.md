@@ -1,11 +1,11 @@
 ---
 id: TASK-081
 title: PWA Basic Setup (Manifest + Service Worker)
-status: In Review
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-15 13:31'
-updated_date: '2026-05-15 14:42'
+updated_date: '2026-05-15 16:14'
 labels: []
 dependencies: []
 ordinal: 79000

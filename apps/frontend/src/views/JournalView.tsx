@@ -391,7 +391,6 @@ function EntryCard({ entry, plant, attachmentMap, onEdit }: EntryCardProps) {
   const [expanded, setExpanded] = useState(false);
 
   const colors = TYPE_COLOR[entry.entry_type] ?? TYPE_COLOR.manual;
-  const hasContent = entry.notes || entry.attachment_ids.length > 0;
 
   return (
     <div
@@ -410,7 +409,7 @@ function EntryCard({ entry, plant, attachmentMap, onEdit }: EntryCardProps) {
         zIndex:       1,
       }} />
 
-      {/* Card */}
+      {/* Card — always expandable */}
       <div
         data-testid="journal-entry"
         style={{
@@ -420,9 +419,9 @@ function EntryCard({ entry, plant, attachmentMap, onEdit }: EntryCardProps) {
           borderRadius:     "10px",
           overflow:         "hidden",
           transition:       "box-shadow .15s",
-          cursor:           hasContent ? "pointer" : "default",
+          cursor:           "pointer",
         }}
-        onClick={() => hasContent && setExpanded((p) => !p)}
+        onClick={() => setExpanded((p) => !p)}
       >
         {/* Header row */}
         <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", flexWrap: "wrap" }}>
@@ -501,41 +500,24 @@ function EntryCard({ entry, plant, attachmentMap, onEdit }: EntryCardProps) {
             {formatDate(entry.date)}
           </span>
 
-          {/* Edit button */}
-          {onEdit && (
-            <button
-              type="button"
-              data-testid="entry-edit-btn"
-              onClick={(e) => { e.stopPropagation(); onEdit(entry); }}
-              style={{
-                background: "none", border: "none", cursor: "pointer",
-                color: "var(--text-light)", fontSize: "13px", padding: "0 2px",
-                flexShrink: 0,
-              }}
-              className="hover:text-green-deep"
-              title={t("overview.edit_title")}
-            >
-              ✏️
-            </button>
-          )}
-
-          {/* Chevron */}
-          {hasContent && (
-            <span style={{
-              fontSize:    "12px",
-              color:       "var(--text-light)",
-              transition:  "transform .2s",
-              transform:   expanded ? "rotate(180deg)" : "none",
-              flexShrink:  0,
-            }}>
-              ▾
-            </span>
-          )}
+          {/* Chevron — always shown */}
+          <span style={{
+            fontSize:    "12px",
+            color:       "var(--text-light)",
+            transition:  "transform .2s",
+            transform:   expanded ? "rotate(180deg)" : "none",
+            flexShrink:  0,
+          }}>
+            ▾
+          </span>
         </div>
 
-        {/* Expanded content */}
-        {expanded && hasContent && (
-          <div style={{ padding: "0 14px 14px", borderTop: "1px solid var(--border)" }}>
+        {/* Expanded content — always available */}
+        {expanded && (
+          <div
+            style={{ padding: "0 14px 14px", borderTop: "1px solid var(--border)" }}
+            onClick={(e) => e.stopPropagation()}
+          >
             {entry.notes && (
               <p style={{ fontSize: "12.5px", color: "var(--text-mid)", lineHeight: 1.6, padding: "10px 0 0", margin: 0 }}>
                 {entry.notes}
@@ -576,6 +558,33 @@ function EntryCard({ entry, plant, attachmentMap, onEdit }: EntryCardProps) {
                     </div>
                   );
                 })}
+              </div>
+            )}
+
+            {/* Edit button — moved here from header */}
+            {onEdit && (
+              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "10px" }}>
+                <button
+                  type="button"
+                  data-testid="entry-edit-btn"
+                  onClick={() => onEdit(entry)}
+                  style={{
+                    display:      "flex",
+                    alignItems:   "center",
+                    gap:          "5px",
+                    background:   "none",
+                    border:       "1px solid var(--border)",
+                    borderRadius: "20px",
+                    cursor:       "pointer",
+                    color:        "var(--text-light)",
+                    fontSize:     "12px",
+                    padding:      "4px 12px",
+                    fontFamily:   "var(--font-body)",
+                  }}
+                  title={t("overview.edit_title")}
+                >
+                  ✏️ {t("overview.edit_title")}
+                </button>
               </div>
             )}
           </div>
@@ -1028,36 +1037,25 @@ function EntryPanel({ entry, plants, irrigationZones, onClose, onSaved, onDelete
           </div>
         )}
 
-        {/* Date */}
-        <div>
-          <div style={labelStyle}>{t("fields.date")}</div>
-          <div style={{ position: "relative" }}>
-            {aiMarked.date && (
-              <span aria-hidden="true" style={{ position: "absolute", left: "9px", top: "50%", transform: "translateY(-50%)", fontSize: "11px", color: "#e07b00", zIndex: 1, pointerEvents: "none" }}>✦</span>
-            )}
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => { setAiMarked((p) => { const n={...p}; delete n.date; return n; }); setDate(e.target.value); }}
-              data-testid="panel-date"
-              style={aiMarked.date ? aiFieldStyle : fieldStyle}
-            />
-            {aiMarked.date && (
-              <button
-                type="button"
-                data-testid="ai-revert-date"
-                onClick={() => revertAiField("date")}
-                style={{ position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#e07b00", fontSize: "13px", lineHeight: 1, padding: "2px" }}
-                title={t("overview.ai_revert_title")}
-              >×</button>
-            )}
-          </div>
-        </div>
-
-        {/* Irrigation-specific fields: Zone + Amount (replaces Title + Notes) */}
+        {/* Irrigation-specific fields: Amount + Zones + Date (replaces Title + Notes) */}
         {entryType === "irrigation" ? (
           <>
-            {/* Irrigation zone selector — checkboxes for multi-zone support */}
+            {/* Irrigation amount in mm — first */}
+            <div>
+              <div style={labelStyle}>{t("fields.irrigation_amount")}</div>
+              <input
+                type="number"
+                min="0"
+                step="0.1"
+                value={irrigationAmount}
+                onChange={(e) => setIrrigationAmount(e.target.value)}
+                placeholder={t("fields.irrigation_amount_placeholder")}
+                data-testid="panel-irrigation-amount"
+                style={fieldStyle}
+              />
+            </div>
+
+            {/* Irrigation zone selector — 2-per-row grid */}
             <div>
               <div style={labelStyle}>{t("fields.irrigation_zones")}</div>
               {irrigationZones.length === 0 ? (
@@ -1065,7 +1063,7 @@ function EntryPanel({ entry, plants, irrigationZones, onClose, onSaved, onDelete
                   {t("fields.irrigation_zones_empty")}
                 </div>
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
                   {irrigationZones.map((z) => {
                     const checked = selectedZones.has(z);
                     return (
@@ -1109,23 +1107,60 @@ function EntryPanel({ entry, plants, irrigationZones, onClose, onSaved, onDelete
               )}
             </div>
 
-            {/* Irrigation amount in mm */}
+            {/* Date — last for irrigation */}
             <div>
-              <div style={labelStyle}>{t("fields.irrigation_amount")}</div>
-              <input
-                type="number"
-                min="0"
-                step="0.1"
-                value={irrigationAmount}
-                onChange={(e) => setIrrigationAmount(e.target.value)}
-                placeholder={t("fields.irrigation_amount_placeholder")}
-                data-testid="panel-irrigation-amount"
-                style={fieldStyle}
-              />
+              <div style={labelStyle}>{t("fields.date")}</div>
+              <div style={{ position: "relative" }}>
+                {aiMarked.date && (
+                  <span aria-hidden="true" style={{ position: "absolute", left: "9px", top: "50%", transform: "translateY(-50%)", fontSize: "11px", color: "#e07b00", zIndex: 1, pointerEvents: "none" }}>✦</span>
+                )}
+                <input
+                  type="date"
+                  value={date}
+                  onChange={(e) => { setAiMarked((p) => { const n={...p}; delete n.date; return n; }); setDate(e.target.value); }}
+                  data-testid="panel-date"
+                  style={aiMarked.date ? aiFieldStyle : fieldStyle}
+                />
+                {aiMarked.date && (
+                  <button
+                    type="button"
+                    data-testid="ai-revert-date"
+                    onClick={() => revertAiField("date")}
+                    style={{ position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#e07b00", fontSize: "13px", lineHeight: 1, padding: "2px" }}
+                    title={t("overview.ai_revert_title")}
+                  >×</button>
+                )}
+              </div>
             </div>
           </>
         ) : (
           <>
+            {/* Date — for non-irrigation entries */}
+            <div>
+              <div style={labelStyle}>{t("fields.date")}</div>
+              <div style={{ position: "relative" }}>
+                {aiMarked.date && (
+                  <span aria-hidden="true" style={{ position: "absolute", left: "9px", top: "50%", transform: "translateY(-50%)", fontSize: "11px", color: "#e07b00", zIndex: 1, pointerEvents: "none" }}>✦</span>
+                )}
+                <input
+                  type="date"
+                  value={date}
+                  onChange={(e) => { setAiMarked((p) => { const n={...p}; delete n.date; return n; }); setDate(e.target.value); }}
+                  data-testid="panel-date"
+                  style={aiMarked.date ? aiFieldStyle : fieldStyle}
+                />
+                {aiMarked.date && (
+                  <button
+                    type="button"
+                    data-testid="ai-revert-date"
+                    onClick={() => revertAiField("date")}
+                    style={{ position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#e07b00", fontSize: "13px", lineHeight: 1, padding: "2px" }}
+                    title={t("overview.ai_revert_title")}
+                  >×</button>
+                )}
+              </div>
+            </div>
+
             {/* Title */}
             <div>
               <div style={labelStyle}>{t("fields.title")}</div>

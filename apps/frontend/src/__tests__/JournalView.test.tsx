@@ -336,6 +336,9 @@ describe("JournalView — close panel (story-036 AC #1)", () => {
 describe("JournalView — edit existing entry (story-036 AC #7)", () => {
   it("edit button opens panel in edit mode", async () => {
     renderJournal();
+    // Expand the first card to reveal the edit button
+    await waitFor(() => screen.getAllByTestId("journal-entry"));
+    fireEvent.click(screen.getAllByTestId("journal-entry")[0]);
     await waitFor(() => screen.getAllByTestId("entry-edit-btn"));
     fireEvent.click(screen.getAllByTestId("entry-edit-btn")[0]);
     await waitFor(() =>
@@ -346,6 +349,9 @@ describe("JournalView — edit existing entry (story-036 AC #7)", () => {
   it("saving edit calls updateJournalEntry (AC #7)", async () => {
     const { apiClient } = await import("../api/client");
     renderJournal();
+    // Expand the first card to reveal the edit button
+    await waitFor(() => screen.getAllByTestId("journal-entry"));
+    fireEvent.click(screen.getAllByTestId("journal-entry")[0]);
     await waitFor(() => screen.getAllByTestId("entry-edit-btn"));
     fireEvent.click(screen.getAllByTestId("entry-edit-btn")[0]);
     await waitFor(() => screen.getByTestId("panel-save"));
