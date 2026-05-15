@@ -194,6 +194,21 @@
     "calendar": "Calendar",
     "calendar_no_entry": "No entry for this category",
     "calendar_range": "{{from}} (W{{w1}}) – {{to}} (W{{w2}})",
-    "calendar_range_same": "{{month}} (W{{w1}}–W{{w2}})"
+    "calendar_range_same": "{{month}} (W{{w1}}–W{{w2}})",
+    "journal": "Journal",
+    "journal_search_placeholder": "Search entries …",
+    "journal_new_entry": "New entry",
+    "journal_save": "✓ Save",
+    "journal_cancel": "Cancel",
+    "journal_type_done": "✅ Done",
+    "journal_type_observation": "👁 Observation",
+    "journal_type_problem": "⚠️ Problem",
+    "journal_type_irrigation": "💧 Irrigation",
+    "journal_type_manual": "📝 Manual",
+    "journal_garden_general": "🌿 Garden (general)",
+    "journal_title_placeholder": "Title …",
+    "journal_plant_placeholder": "Select plant …",
+    "journal_notes_placeholder": "Notes …",
+    "journal_empty": "No entries yet."
   }
 }

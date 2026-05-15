@@ -194,6 +194,21 @@
     "calendar": "Kalender",
     "calendar_no_entry": "Kein Eintrag für diese Kategorie",
     "calendar_range": "{{from}} (W{{w1}}) – {{to}} (W{{w2}})",
-    "calendar_range_same": "{{month}} (W{{w1}}–W{{w2}})"
+    "calendar_range_same": "{{month}} (W{{w1}}–W{{w2}})",
+    "journal": "Tagebuch",
+    "journal_search_placeholder": "Einträge durchsuchen …",
+    "journal_new_entry": "Neuer Eintrag",
+    "journal_save": "✓ Speichern",
+    "journal_cancel": "Abbrechen",
+    "journal_type_done": "✅ Erledigt",
+    "journal_type_observation": "👁 Beobachtung",
+    "journal_type_problem": "⚠️ Problem",
+    "journal_type_irrigation": "💧 Bewässerung",
+    "journal_type_manual": "📝 Manuell",
+    "journal_garden_general": "🌿 Garten (allgemein)",
+    "journal_title_placeholder": "Titel …",
+    "journal_plant_placeholder": "Pflanze wählen …",
+    "journal_notes_placeholder": "Notizen …",
+    "journal_empty": "Keine Einträge vorhanden."
   }
 }
