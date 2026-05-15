@@ -320,11 +320,6 @@ function PlantListItem({ plant, statusLabel }: { plant: Plant; statusLabel: stri
         <div style={{ fontSize: "11px", fontWeight: 500, color: "#1e2e1e", lineHeight: 1.3 }}>
           {plant.name_common}
         </div>
-        {plant.name_botanical && (
-          <div style={{ fontSize: "9px", color: "#8a9e8a", fontStyle: "italic" }}>
-            {plant.name_botanical}
-          </div>
-        )}
         <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "3px", flexWrap: "wrap" }}>
           {plant.location && (
             <span style={{ fontSize: "9px", color: "#4a5e4a", display: "flex", alignItems: "center", gap: "2px" }}>
