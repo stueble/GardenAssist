@@ -16,7 +16,7 @@ import { useNavigate } from "react-router-dom";
 import {
   Menu, MessageCircle, Search, ChevronDown,
   MapPin, Send, Check, Sprout, Calendar,
-  Notebook, Map,
+  Notebook, Map, Plus,
 } from "lucide-react";
 import type { Garden } from "@api/garden";
 import type { Plant } from "@api/plant";
@@ -172,6 +172,15 @@ function TopBar({
         {t("mobile.tasks")}
       </div>
 
+      {/* + button (new task — placeholder, task 083 scope excludes new-task sheet) */}
+      <button
+        data-testid="mobile-add-btn"
+        aria-label="Neue Aufgabe"
+        style={{ ...topBtnStyle, background: "rgba(255,255,255,.15)" }}
+      >
+        <Plus size={20} strokeWidth={1.5} />
+      </button>
+
       {/* Chat icon */}
       <button
         data-testid="mobile-chat-btn"
@@ -201,6 +210,8 @@ function TopBar({
   );
 }
 
+// Base style for top-bar icon buttons — no background (Material/Android default
+// for navigation icon buttons). Action buttons (+ and chat) override background.
 const topBtnStyle: React.CSSProperties = {
   width:          "34px",
   height:         "34px",
@@ -209,7 +220,7 @@ const topBtnStyle: React.CSSProperties = {
   justifyContent: "center",
   cursor:         "pointer",
   borderRadius:   "8px",
-  background:     "rgba(255,255,255,.15)",
+  background:     "none",
   border:         "none",
   color:          "#c8dfc0",
   flexShrink:     0,
