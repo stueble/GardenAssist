@@ -184,14 +184,16 @@ export function segBorderRadius(active: boolean[], i: number): string {
 /**
  * Build lane data for mobile rendering.
  * Returns one entry per lane, each with:
- *   - the merged segment array (OR of all schedules in that lane)
- *   - the color (from the first schedule in that lane — best-effort)
- *   - all schedule ids in this lane (for tooltip / detail)
+ *   - segmentColors: 48 entries, null = inactive, hex string = the color of
+ *     the schedule that owns that segment. Non-overlapping schedules in the
+ *     same lane each contribute their own color to their own segments, so
+ *     e.g. three foliage schedules with green/dark-green/orange are all
+ *     rendered in one row with three distinct colors.
+ *   - scheduleIds: all schedule ids in this lane (for tooltip)
  */
 export interface MobileLane {
-  segments:    boolean[];
-  color:       string;
-  scheduleIds: string[];
+  segmentColors: Array<string | null>;  // 48 entries; null = inactive
+  scheduleIds:   string[];
 }
 
 export function buildMobileLanes(
@@ -202,21 +204,17 @@ export function buildMobileLanes(
   const { laneMap, totalLanes } = assignLanes(schedules);
 
   const lanes: MobileLane[] = Array.from({ length: totalLanes }, () => ({
-    segments:    new Array<boolean>(TOTAL_SEGS).fill(false),
-    color:       "#4a7c4a",
-    scheduleIds: [] as string[],
+    segmentColors: new Array<string | null>(TOTAL_SEGS).fill(null),
+    scheduleIds:   [] as string[],
   }));
 
   for (const s of schedules) {
-    const lane = laneMap.get(s.id) ?? 0;
-    const segs = buildSegmentArray(s);
-    // Merge into lane's segment array
+    const lane  = laneMap.get(s.id) ?? 0;
+    const segs  = buildSegmentArray(s);
+    const color = s.color ?? "#4a7c4a";
+    // Write this schedule's color into its own segments only
     for (let i = 0; i < TOTAL_SEGS; i++) {
-      if (segs[i]) lanes[lane].segments[i] = true;
-    }
-    // Use first schedule's color for this lane
-    if (lanes[lane].scheduleIds.length === 0 && s.color) {
-      lanes[lane].color = s.color;
+      if (segs[i]) lanes[lane].segmentColors[i] = color;
     }
     lanes[lane].scheduleIds.push(s.id);
   }

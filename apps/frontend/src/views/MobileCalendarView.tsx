@@ -15,7 +15,7 @@
 
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Menu, MessageCircle } from "lucide-react";
+import { Menu, MessageCircle, MapPin } from "lucide-react";
 import type { Garden } from "@api/garden";
 import type { Plant } from "@api/plant";
 import type { Schedule } from "@api/schedule";
@@ -23,7 +23,6 @@ import {
   currentISOWeek,
   weekToSeg,
   TOTAL_SEGS,
-  segBorderRadius,
   buildMobileLanes,
   buildSegmentArray,
   type MobileLane,
@@ -205,7 +204,7 @@ function MonthHeader() {
       zIndex:       5,
       borderBottom: "1px solid #dde8d8",
     }}>
-      <div style={{ width: "72px", flexShrink: 0 }} />
+      <div style={{ width: "100px", flexShrink: 0 }} />
       <div style={{ flex: 1, display: "flex" }}>
         {monthsShort.map((m, mi) => {
           const isCurrent = mi === currentMonthIdx;
@@ -252,19 +251,29 @@ function MonthHeader() {
   );
 }
 
-// Single lane bar row — renders one lane's merged segment array
+/** Border-radius for a segment based on whether its neighbours are also active. */
+function segRadius(colors: Array<string | null>, i: number): string {
+  const prev = i > 0             && colors[i - 1] !== null;
+  const next = i < TOTAL_SEGS - 1 && colors[i + 1] !== null;
+  if (!prev && !next) return "4px";
+  if (!prev && next)  return "4px 1px 1px 4px";
+  if (prev  && !next) return "1px 4px 4px 1px";
+  return "1px";
+}
+
+// Single lane bar row — renders one lane with per-segment colors
 function LaneBarRow({ lane }: { lane: MobileLane }) {
-  const { segments, color } = lane;
+  const { segmentColors } = lane;
   return (
     <div style={{ display: "flex", width: "100%", height: "10px", gap: "1px" }}>
-      {segments.map((active, i) => (
+      {segmentColors.map((color, i) => (
         <div
           key={i}
           style={{
             flex:         1,
             height:       "10px",
-            borderRadius: active ? segBorderRadius(segments, i) : "1px",
-            background:   active ? color : "#f8f4ee",
+            borderRadius: color !== null ? segRadius(segmentColors, i) : "1px",
+            background:   color ?? "#f8f4ee",
           }}
         />
       ))}
@@ -307,14 +316,15 @@ function PlantRow({
         transition:  "background .12s",
       }}
     >
-      {/* Plant name column — 72px */}
-      <div style={{ width: "72px", flexShrink: 0, paddingTop: "2px" }}>
-        <div style={{ fontSize: "10px", fontWeight: 500, color: "#1e2e1e", lineHeight: 1.2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+      {/* Plant name column — 100px */}
+      <div style={{ width: "100px", flexShrink: 0, paddingTop: "2px" }}>
+        <div style={{ fontSize: "10px", fontWeight: 500, color: "#1e2e1e", lineHeight: 1.2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={plant.name_common}>
           {plant.name_common}
         </div>
-        {plant.name_botanical && (
-          <div style={{ fontSize: "8px", color: "#8a9e8a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {plant.name_botanical}
+        {plant.location && (
+          <div style={{ fontSize: "8px", color: "#8a9e8a", display: "flex", alignItems: "center", gap: "2px", overflow: "hidden", whiteSpace: "nowrap" }}>
+            <MapPin size={7} strokeWidth={1.5} style={{ flexShrink: 0 }} />
+            <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{plant.location}</span>
           </div>
         )}
       </div>
@@ -340,10 +350,10 @@ function PlantRow({
             <LaneBarRow key={i} lane={lane} />
           ))
         ) : (
-          // Empty row for visual consistency
+          // One empty row for visual consistency when no data in this category
           <div style={{ display: "flex", width: "100%", height: "10px", gap: "1px" }}>
-            {Array.from({ length: TOTAL_SEGS }, (_, i) => (
-              <div key={i} style={{ flex: 1, height: "10px", borderRadius: "1px", background: "#f8f4ee" }} />
+            {Array.from({ length: TOTAL_SEGS }, (_, si) => (
+              <div key={si} style={{ flex: 1, height: "10px", borderRadius: "1px", background: "#ebe6df" }} />
             ))}
           </div>
         )}
