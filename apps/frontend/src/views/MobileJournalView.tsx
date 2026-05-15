@@ -15,6 +15,7 @@ import type { Garden } from "@api/garden";
 import type { JournalEntry, JournalEntryType } from "@api/journal-entry";
 import type { Plant } from "@api/plant";
 import { apiClient } from "@/api/client";
+import { useAssistantSettings } from "@/hooks/useAssistantSettings";
 import { topBtnStyle, BottomNav, LeftDrawer, ChatPanel } from "@/components/mobile/MobileParts";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -451,24 +452,44 @@ function MonthGroup({
 }
 
 // New-entry sheet — AC #9
+const fieldStyle: React.CSSProperties = {
+  width:        "100%",
+  fontSize:     "11px",
+  padding:      "7px 10px",
+  border:       "1.5px solid #dde8d8",
+  borderRadius: "8px",
+  outline:      "none",
+  fontFamily:   "var(--font-body)",
+  color:        "#1e2e1e",
+  boxSizing:    "border-box",
+};
+
 function NewEntrySheet({
   open,
   onClose,
   plants,
+  irrigationZones,
   onSaved,
 }: {
-  open:    boolean;
-  onClose: () => void;
-  plants:  Plant[];
-  onSaved: () => void;
+  open:            boolean;
+  onClose:         () => void;
+  plants:          Plant[];
+  irrigationZones: string[];
+  onSaved:         () => void;
 }) {
   const { t } = useTranslation("common");
+  const { t: tj } = useTranslation("journal");
 
-  const [entryType, setEntryType] = useState<JournalEntryType>("done");
-  const [title,     setTitle]     = useState("");
-  const [plantId,   setPlantId]   = useState<string | null>(null);
-  const [notes,     setNotes]     = useState("");
-  const [saving,    setSaving]    = useState(false);
+  const [entryType,      setEntryType]      = useState<JournalEntryType>("done");
+  const [title,          setTitle]          = useState("");
+  const [plantId,        setPlantId]        = useState<string | null>(null);
+  const [notes,          setNotes]          = useState("");
+  const [date,           setDate]           = useState(today());
+  const [selectedZones,  setSelectedZones]  = useState<Set<string>>(new Set());
+  const [irrigAmount,    setIrrigAmount]    = useState("");
+  const [saving,         setSaving]         = useState(false);
+
+  const isIrrigation = entryType === "irrigation";
 
   const NEW_ENTRY_TYPES: Array<{ type: JournalEntryType; labelKey: string }> = [
     { type: "done",        labelKey: "journal_type_done"        },
@@ -482,17 +503,57 @@ function NewEntrySheet({
     if (saving) return;
     setSaving(true);
     try {
-      await apiClient.createJournalEntry({
-        plant_id:       plantId,
-        schedule_id:    null,
-        week:           null,
-        entry_type:     entryType,
-        date:           today(),
-        title:          title.trim() || null,
-        notes:          notes.trim() || null,
-        attachment_ids: [],
-      });
+      if (isIrrigation) {
+        // Irrigation: one entry per zone (same as desktop), or one combined entry
+        // if no zones configured. title = zone name, notes = amount in mm.
+        const zones = selectedZones.size > 0
+          ? [...selectedZones]
+          : (irrigationZones.length > 0 ? [] : [""]);
+
+        if (zones.length === 0 && irrigationZones.length > 0) {
+          // No zone selected — skip save (validation)
+          setSaving(false);
+          return;
+        }
+
+        if (zones.length === 0) {
+          // No zones configured — save single general entry
+          await apiClient.createJournalEntry({
+            plant_id: null, schedule_id: null, week: null,
+            entry_type:     "irrigation",
+            date,
+            title:          null,
+            notes:          irrigAmount.trim() || null,
+            attachment_ids: [],
+          });
+        } else {
+          // One entry per selected zone (mirrors desktop behaviour)
+          for (const zone of zones) {
+            await apiClient.createJournalEntry({
+              plant_id: null, schedule_id: null, week: null,
+              entry_type:     "irrigation",
+              date,
+              title:          zone,
+              notes:          irrigAmount.trim() || null,
+              attachment_ids: [],
+            });
+          }
+        }
+      } else {
+        await apiClient.createJournalEntry({
+          plant_id:       plantId,
+          schedule_id:    null,
+          week:           null,
+          entry_type:     entryType,
+          date,
+          title:          title.trim() || null,
+          notes:          notes.trim() || null,
+          attachment_ids: [],
+        });
+      }
+      // Reset form
       setTitle(""); setNotes(""); setPlantId(null); setEntryType("done");
+      setDate(today()); setSelectedZones(new Set()); setIrrigAmount("");
       onSaved();
       onClose();
     } catch {
@@ -507,7 +568,7 @@ function NewEntrySheet({
       data-testid="mobile-journal-new-sheet"
       style={{
         flexShrink:    0,
-        height:        open ? "220px" : "0",
+        height:        open ? (isIrrigation ? "270px" : "220px") : "0",
         overflow:      "hidden",
         transition:    "height .25s ease",
         background:    "#fff",
@@ -565,69 +626,108 @@ function NewEntrySheet({
           ))}
         </div>
 
-        {/* Title */}
+        {/* Date — always shown */}
         <input
-          data-testid="mobile-journal-title-input"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder={t("mobile.journal_title_placeholder")}
-          style={{
-            width:        "100%",
-            fontSize:     "11px",
-            padding:      "7px 10px",
-            border:       "1.5px solid #dde8d8",
-            borderRadius: "8px",
-            outline:      "none",
-            fontFamily:   "var(--font-body)",
-            color:        "#1e2e1e",
-            boxSizing:    "border-box",
-          }}
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          style={fieldStyle}
         />
 
-        {/* Plant picker */}
-        <select
-          data-testid="mobile-journal-plant-select"
-          value={plantId ?? ""}
-          onChange={(e) => setPlantId(e.target.value || null)}
-          style={{
-            width:        "100%",
-            fontSize:     "11px",
-            padding:      "7px 10px",
-            border:       "1.5px solid #dde8d8",
-            borderRadius: "8px",
-            outline:      "none",
-            fontFamily:   "var(--font-body)",
-            color:        "#1e2e1e",
-            background:   "#fff",
-            boxSizing:    "border-box",
-          }}
-        >
-          <option value="">{t("mobile.journal_garden_general")}</option>
-          {plants.map((p) => (
-            <option key={p.id} value={p.id}>{p.name_common}</option>
-          ))}
-        </select>
+        {isIrrigation ? (
+          <>
+            {/* Irrigation zones — checkboxes */}
+            {irrigationZones.length === 0 ? (
+              <div style={{ fontSize: "11px", color: "#8a9e8a" }}>
+                {tj("fields.irrigation_zones_empty")}
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                {irrigationZones.map((z) => {
+                  const checked = selectedZones.has(z);
+                  return (
+                    <label
+                      key={z}
+                      data-testid={`mobile-journal-zone-${z}`}
+                      style={{
+                        display:      "flex",
+                        alignItems:   "center",
+                        gap:          "8px",
+                        cursor:       "pointer",
+                        padding:      "5px 8px",
+                        borderRadius: "8px",
+                        border:       `1.5px solid ${checked ? "#1d9e75" : "#dde8d8"}`,
+                        background:   checked ? "#e1f5ee" : "#fff",
+                        fontSize:     "11px",
+                        color:        checked ? "#0f6e56" : "#1e2e1e",
+                        transition:   "all .15s",
+                        fontFamily:   "var(--font-body)",
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => setSelectedZones((prev) => {
+                          const next = new Set(prev);
+                          if (next.has(z)) next.delete(z); else next.add(z);
+                          return next;
+                        })}
+                        style={{ accentColor: "#1d9e75", width: "13px", height: "13px", flexShrink: 0 }}
+                      />
+                      {z}
+                    </label>
+                  );
+                })}
+              </div>
+            )}
 
-        {/* Notes */}
-        <textarea
-          data-testid="mobile-journal-notes-input"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder={t("mobile.journal_notes_placeholder")}
-          rows={2}
-          style={{
-            width:        "100%",
-            fontSize:     "11px",
-            padding:      "7px 10px",
-            border:       "1.5px solid #dde8d8",
-            borderRadius: "8px",
-            outline:      "none",
-            fontFamily:   "var(--font-body)",
-            color:        "#1e2e1e",
-            resize:       "none",
-            boxSizing:    "border-box",
-          }}
-        />
+            {/* Irrigation amount in mm */}
+            <input
+              data-testid="mobile-journal-irrig-amount"
+              type="number"
+              min="0"
+              step="0.1"
+              value={irrigAmount}
+              onChange={(e) => setIrrigAmount(e.target.value)}
+              placeholder={tj("fields.irrigation_amount_placeholder")}
+              style={fieldStyle}
+            />
+          </>
+        ) : (
+          <>
+            {/* Title */}
+            <input
+              data-testid="mobile-journal-title-input"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder={t("mobile.journal_title_placeholder")}
+              style={fieldStyle}
+            />
+
+            {/* Plant picker */}
+            <select
+              data-testid="mobile-journal-plant-select"
+              value={plantId ?? ""}
+              onChange={(e) => setPlantId(e.target.value || null)}
+              style={{ ...fieldStyle, background: "#fff" }}
+            >
+              <option value="">{t("mobile.journal_garden_general")}</option>
+              {plants.map((p) => (
+                <option key={p.id} value={p.id}>{p.name_common}</option>
+              ))}
+            </select>
+
+            {/* Notes */}
+            <textarea
+              data-testid="mobile-journal-notes-input"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder={t("mobile.journal_notes_placeholder")}
+              rows={2}
+              style={{ ...fieldStyle, resize: "none" }}
+            />
+          </>
+        )}
       </div>
 
       {/* Footer */}
@@ -667,6 +767,8 @@ export interface MobileJournalViewProps {
 }
 
 export function MobileJournalView({ garden, loading, invalidateGarden }: MobileJournalViewProps) {
+  const assistantSettings = useAssistantSettings();
+  const irrigationZones   = assistantSettings?.irrigation_zones ?? [];
   const { t, i18n } = useTranslation("common");
 
   const [search,       setSearch]      = useState("");
@@ -796,6 +898,7 @@ export function MobileJournalView({ garden, loading, invalidateGarden }: MobileJ
         open={newOpen}
         onClose={() => setNewOpen(false)}
         plants={plants}
+        irrigationZones={irrigationZones}
         onSaved={invalidateGarden}
       />
 
