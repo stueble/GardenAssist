@@ -158,10 +158,11 @@ export function MobilePlanView({ garden }: MobilePlanViewProps) {
         onChatClick={() => setChatOpen((v) => !v)}
       />
 
-      {/* Plan area — fills all space between TopBar and ChatPanel/BottomNav (AC #2) */}
+      {/* Plan area — fills all space between TopBar and ChatPanel/BottomNav (AC #2).
+          display:flex is required so the widget's own flex:1 takes effect. */}
       <div
         data-testid="mobile-plan-area"
-        style={{ flex: 1, minHeight: 0, position: "relative", overflow: "hidden" }}
+        style={{ flex: 1, minHeight: 0, display: "flex", overflow: "hidden" }}
       >
         <GardenPlanWidget
           planUrl={garden?.plan_url ?? null}
