@@ -7,20 +7,38 @@ import { PlantsView }            from "@/views/PlantsView";
 import { CalendarView }          from "@/views/CalendarView";
 import { JournalView }           from "@/views/JournalView";
 import { SettingsView }          from "@/views/SettingsView";
+import { MobileTaskView }        from "@/views/MobileTaskView";
 import { useAssistantContext }   from "@/hooks/useAssistantContext";
 import { useGarden, invalidateGarden } from "@/hooks/useGarden";
+import { useIsMobile }           from "@/hooks/useIsMobile";
 
 export function App() {
-  // Single shared AssistantContext updated by whichever view is currently active.
-  // AiPanel is rendered once here so messages and input state survive navigation.
   const assistantContext = useAssistantContext();
-
-  // Single garden fetch for the entire app — shared across all views.
-  // Views receive garden + loading as props and call invalidateGarden() after mutations.
   const { garden, loading } = useGarden();
+  const isMobile = useIsMobile();
 
   const sharedGardenProps = { garden, loading, invalidateGarden };
 
+  // ── Mobile layout ────────────────────────────────────────────────────────────
+  // On narrow viewports (≤ 768 px) the entire shell is replaced by the mobile
+  // task view which includes its own top bar, bottom nav and in-flow chat panel.
+  // Other routes on mobile still use the desktop views — subsequent tasks will
+  // add dedicated mobile views for those screens.
+  if (isMobile) {
+    return (
+      <div style={{ height: "100dvh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <Routes>
+          <Route path="/"         element={<MobileTaskView {...sharedGardenProps} />} />
+          <Route path="/plants"   element={<PlantsView    {...sharedGardenProps} />} />
+          <Route path="/calendar" element={<CalendarView  {...sharedGardenProps} />} />
+          <Route path="/journal"  element={<JournalView   {...sharedGardenProps} />} />
+          <Route path="/settings" element={<SettingsView  {...sharedGardenProps} />} />
+        </Routes>
+      </div>
+    );
+  }
+
+  // ── Desktop layout ───────────────────────────────────────────────────────────
   return (
     <div className="flex flex-col h-screen bg-warm-white">
       <NavBar />

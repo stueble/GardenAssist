@@ -1323,3 +1323,39 @@ function MonthTooltip({ monthName, groups }: MonthTooltipProps) {
     </div>
   );
 }
+
+// ── Shared weather/soil subscription hooks for mobile view ───────────────────
+
+/**
+ * Subscribe to the singleton weather state.
+ * Starts polling if not already running; safe to call from multiple components.
+ */
+export function useWeatherState(onLoaded?: (data: import("@api/weather").WeatherData | null) => void) {
+  const [state, setState] = useState<WeatherState>(_weatherState);
+  useEffect(() => {
+    _weatherListeners.add(setState);
+    startWeatherPolling(onLoaded ?? (() => {}));
+    if (_weatherState.status === "ok") onLoaded?.(_weatherState.data);
+    else if (_weatherState.status === "no_location") onLoaded?.(null);
+    return () => { _weatherListeners.delete(setState); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return state;
+}
+
+/**
+ * Subscribe to the singleton soil moisture state.
+ * Starts polling if not already running; safe to call from multiple components.
+ */
+export function useSoilState() {
+  const [state, setState] = useState<SoilState>(_soilState);
+  useEffect(() => {
+    _soilListeners.add(setState);
+    startSoilPolling();
+    return () => { _soilListeners.delete(setState); };
+  }, []);
+  return state;
+}
+
+/** Re-export types for mobile consumers */
+export type { WeatherState, SoilState };

@@ -161,5 +161,26 @@
   },
   "plants_view": {
     "load_error": "⚠️ Pflanzen konnten nicht geladen werden."
+  },
+  "mobile": {
+    "tasks": "Aufgaben",
+    "search_placeholder": "Aufgaben suchen …",
+    "drawer_settings": "Einstellungen",
+    "drawer_about": "Über GardenAssist",
+    "tab_tasks": "Aufgaben",
+    "tab_plants": "Pflanzen",
+    "tab_calendar": "Kalender",
+    "tab_journal": "Tagebuch",
+    "tab_plan": "Plan",
+    "section_overdue": "Überfällig",
+    "section_this_week": "Diese Woche",
+    "section_upcoming": "Demnächst",
+    "task_skip": "→ Skip",
+    "frost_pill": "❄ Frost",
+    "moisture_pill": "💧 trocken",
+    "moisture_title": "Bodenfeuchtigkeit · 14 Tage",
+    "assistant_title": "Garten-Assistent",
+    "assistant_close": "✕",
+    "assistant_placeholder": "Frage oder Anweisung …"
   }
 }

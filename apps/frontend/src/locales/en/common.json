@@ -161,5 +161,26 @@
   },
   "plants_view": {
     "load_error": "⚠️ Plants could not be loaded."
+  },
+  "mobile": {
+    "tasks": "Tasks",
+    "search_placeholder": "Search tasks …",
+    "drawer_settings": "Settings",
+    "drawer_about": "About GardenAssist",
+    "tab_tasks": "Tasks",
+    "tab_plants": "Plants",
+    "tab_calendar": "Calendar",
+    "tab_journal": "Journal",
+    "tab_plan": "Plan",
+    "section_overdue": "Overdue",
+    "section_this_week": "This Week",
+    "section_upcoming": "Upcoming",
+    "task_skip": "→ Skip",
+    "frost_pill": "❄ Frost",
+    "moisture_pill": "💧 dry",
+    "moisture_title": "Soil moisture · 14 days",
+    "assistant_title": "Garden Assistant",
+    "assistant_close": "✕",
+    "assistant_placeholder": "Question or instruction …"
   }
 }
