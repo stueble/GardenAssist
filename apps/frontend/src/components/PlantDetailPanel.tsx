@@ -151,18 +151,16 @@ function CollapsibleSection({ label, children }: { label: string; children: Reac
   );
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
+// ── PlantDetailContent (shared body — AC #1) ─────────────────────────────────
 
-export interface PlantDetailPanelProps {
-  plant:      Plant;
-  onClose:    () => void;
-  onEdit?:    (plant: Plant) => void;
-  onDelete?:  () => void;   // called after successful deletion (AC #6)
+export interface PlantDetailContentProps {
+  plant:     Plant;
+  onEdit?:   (plant: Plant) => void;
+  onDelete?: () => void;
 }
 
-export function PlantDetailPanel({ plant, onClose, onEdit, onDelete }: PlantDetailPanelProps) {
+export function PlantDetailContent({ plant, onEdit, onDelete }: PlantDetailContentProps) {
   const { t } = useTranslation("plants");
-  const { t: tc } = useTranslation("common");
 
   const [confirmOpen,  setConfirmOpen]  = useState(false);
   const [deleting,     setDeleting]     = useState(false);
@@ -177,8 +175,6 @@ export function PlantDetailPanel({ plant, onClose, onEdit, onDelete }: PlantDeta
     .filter((s) => TASK_TYPES.includes(s.schedule_type))
     .sort((a, b) => a.start_week - b.start_week);
 
-  // IDs of task schedules whose notes are currently COLLAPSED.
-  // Default is expanded — so this set starts empty.
   const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
 
   function toggleNotes(id: string) {
@@ -198,36 +194,6 @@ export function PlantDetailPanel({ plant, onClose, onEdit, onDelete }: PlantDeta
 
   return (
     <>
-      {/* Header — AC #1, #8 */}
-      <div
-        style={{
-          padding: "16px 18px 12px",
-          borderBottom: "1px solid var(--border)",
-          display: "flex", alignItems: "flex-start",
-          justifyContent: "space-between", flexShrink: 0,
-        }}
-      >
-        <div>
-          <div style={{ fontFamily: "var(--font-display)", fontSize: "18px", color: "var(--green-deep)", fontWeight: 600, lineHeight: 1.2 }}>
-            {plant.name_common}
-          </div>
-          {plant.name_botanical && (
-            <div style={{ fontSize: "12px", color: "var(--text-light)", fontStyle: "italic", marginTop: "2px" }}>
-              {plant.name_botanical}
-            </div>
-          )}
-        </div>
-        <button
-          type="button"
-          onClick={onClose}
-          style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-light)", fontSize: "16px", padding: "2px", flexShrink: 0 }}
-          aria-label={tc("actions.cancel")}
-          data-testid="detail-close"
-        >
-          ✕
-        </button>
-      </div>
-
       {/* Body */}
       <div style={{ flex: 1, overflowY: "auto", padding: "16px 18px", display: "flex", flexDirection: "column", gap: "16px" }}>
 
@@ -612,6 +578,55 @@ export function PlantDetailPanel({ plant, onClose, onEdit, onDelete }: PlantDeta
           </div>
         )}
       </div>
+    </>
+  );
+}
+
+// ── PlantDetailPanel (desktop wrapper — AC #2) ────────────────────────────────
+
+export interface PlantDetailPanelProps {
+  plant:      Plant;
+  onClose:    () => void;
+  onEdit?:    (plant: Plant) => void;
+  onDelete?:  () => void;
+}
+
+export function PlantDetailPanel({ plant, onClose, onEdit, onDelete }: PlantDetailPanelProps) {
+  const { t: tc } = useTranslation("common");
+
+  return (
+    <>
+      {/* Header */}
+      <div
+        style={{
+          padding: "16px 18px 12px",
+          borderBottom: "1px solid var(--border)",
+          display: "flex", alignItems: "flex-start",
+          justifyContent: "space-between", flexShrink: 0,
+        }}
+      >
+        <div>
+          <div style={{ fontFamily: "var(--font-display)", fontSize: "18px", color: "var(--green-deep)", fontWeight: 600, lineHeight: 1.2 }}>
+            {plant.name_common}
+          </div>
+          {plant.name_botanical && (
+            <div style={{ fontSize: "12px", color: "var(--text-light)", fontStyle: "italic", marginTop: "2px" }}>
+              {plant.name_botanical}
+            </div>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-light)", fontSize: "16px", padding: "2px", flexShrink: 0 }}
+          aria-label={tc("actions.cancel")}
+          data-testid="detail-close"
+        >
+          ✕
+        </button>
+      </div>
+
+      <PlantDetailContent plant={plant} onEdit={onEdit} onDelete={onDelete} />
     </>
   );
 }

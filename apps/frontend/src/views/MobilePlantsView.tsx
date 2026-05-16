@@ -13,6 +13,7 @@
  */
 
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   Menu, MessageCircle, Search, Plus,
@@ -318,7 +319,7 @@ function StatusBadge({ status, label }: { status: PlantStatus; label: string }) 
 }
 
 // List row — AC #3
-function PlantListItem({ plant, statusLabel }: { plant: Plant; statusLabel: string }) {
+function PlantListItem({ plant, statusLabel, onClick }: { plant: Plant; statusLabel: string; onClick: () => void }) {
   const { t } = useTranslation("common");
   const status   = derivePlantStatus(plant);
   const careTask = nextCareTask(plant);
@@ -329,6 +330,7 @@ function PlantListItem({ plant, statusLabel }: { plant: Plant; statusLabel: stri
   return (
     <div
       data-testid="mobile-plant-row"
+      onClick={onClick}
       style={{
         display:     "flex",
         alignItems:  "flex-start",
@@ -401,13 +403,14 @@ function PlantListItem({ plant, statusLabel }: { plant: Plant; statusLabel: stri
 }
 
 // Card — AC #5
-function PlantCard({ plant }: { plant: Plant }) {
+function PlantCard({ plant, onClick }: { plant: Plant; onClick: () => void }) {
   const status = derivePlantStatus(plant);
   const thumb  = plant.attachments.find((a) => a.attachment_type === "image");
 
   return (
     <div
       data-testid="mobile-plant-card"
+      onClick={onClick}
       style={{
         background:   "#fff",
         borderRadius: "12px",
@@ -484,6 +487,7 @@ export interface MobilePlantsViewProps {
 
 export function MobilePlantsView({ garden, loading }: MobilePlantsViewProps) {
   const { t } = useTranslation("common");
+  const navigate = useNavigate();
 
   // View mode — initialised from module-level singleton (survives navigation)
   const [viewMode,    setViewMode]    = useState<ViewMode>(_plantsViewMode);
@@ -558,6 +562,7 @@ export function MobilePlantsView({ garden, loading }: MobilePlantsViewProps) {
                 key={plant.id}
                 plant={plant}
                 statusLabel={statusLabel(derivePlantStatus(plant))}
+                onClick={() => navigate(`/plants/${plant.id}`)}
               />
             ))}
           </div>
@@ -574,7 +579,7 @@ export function MobilePlantsView({ garden, loading }: MobilePlantsViewProps) {
             }}
           >
             {filtered.map((plant) => (
-              <PlantCard key={plant.id} plant={plant} />
+              <PlantCard key={plant.id} plant={plant} onClick={() => navigate(`/plants/${plant.id}`)} />
             ))}
           </div>
         )}

@@ -11,8 +11,9 @@ import { MobileTaskView }        from "@/views/MobileTaskView";
 import { MobilePlantsView }      from "@/views/MobilePlantsView";
 import { MobileCalendarView }    from "@/views/MobileCalendarView";
 import { MobileJournalView }     from "@/views/MobileJournalView";
-import { MobilePlanView }        from "@/views/MobilePlanView";
-import { MobileSettingsView }    from "@/views/MobileSettingsView";
+import { MobilePlanView }           from "@/views/MobilePlanView";
+import { MobileSettingsView }       from "@/views/MobileSettingsView";
+import { MobilePlantDetailView }    from "@/views/MobilePlantDetailView";
 import { useAssistantContext }   from "@/hooks/useAssistantContext";
 import { useGarden, invalidateGarden } from "@/hooks/useGarden";
 import { useIsMobile }           from "@/hooks/useIsMobile";
@@ -44,7 +45,8 @@ export function App() {
       }}>
         <Routes>
           <Route path="/"         element={<MobileTaskView {...sharedGardenProps} />} />
-          <Route path="/plants"   element={<MobilePlantsView {...sharedGardenProps} />} />
+          <Route path="/plants"   element={<MobilePlantsView    {...sharedGardenProps} />} />
+          <Route path="/plants/:id" element={<MobilePlantDetailView {...sharedGardenProps} />} />
           <Route path="/calendar" element={<MobileCalendarView {...sharedGardenProps} />} />
           <Route path="/journal"  element={<MobileJournalView {...sharedGardenProps} />} />
           <Route path="/plan"     element={<MobilePlanView   {...sharedGardenProps} />} />
