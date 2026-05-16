@@ -247,7 +247,7 @@ export function ChatPanel({
         height:        open ? "210px" : "0",
         overflow:      "hidden",
         transition:    "height .25s ease",
-        background:    "#fff",
+        background:    "#eef4eb",
         borderTop:     open ? "2px solid #2d4a2d" : "none",
         display:       "flex",
         flexDirection: "column",
@@ -304,7 +304,7 @@ export function ChatPanel({
               lineHeight:  1.45,
               padding:     "6px 9px",
               borderRadius:"4px 10px 10px 10px",
-              background:  "#eef4eb",
+              background:  "#fff",
               color:       "#1e2e1e",
               alignSelf:   "flex-start",
             }}>
