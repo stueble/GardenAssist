@@ -291,14 +291,15 @@ describe("DashboardView — pin click opens detail panel (AC #5)", () => {
     );
   });
 
-  it("clicking the same pin again closes the detail panel", async () => {
+  it("clicking the same pin again keeps the detail panel open", async () => {
     renderDashboard();
     await waitFor(() => screen.getByTestId("plan-pin-0"));
     fireEvent.click(screen.getByTestId("plan-pin-0"));
     await waitFor(() => screen.getByTestId("detail-close"));
     fireEvent.click(screen.getByTestId("plan-pin-0"));
+    // Panel stays open — second click does not deselect
     await waitFor(() =>
-      expect(screen.queryByTestId("detail-close")).not.toBeInTheDocument()
+      expect(screen.getByTestId("detail-close")).toBeInTheDocument()
     );
   });
 

@@ -269,11 +269,11 @@ describe("MobilePlanView", () => {
       expect(screen.queryByTestId("pin-chip")).toBeNull();
     });
 
-    it("tapping the plan area (outside chip) dismisses chip", () => {
+    it("tapping the backdrop (outside chip) dismisses chip", () => {
       renderView();
       fireEvent.click(screen.getByTestId("plan-pin-0"));
       expect(screen.getByTestId("pin-chip")).toBeInTheDocument();
-      fireEvent.click(screen.getByTestId("mobile-plan-area"));
+      fireEvent.click(screen.getByTestId("chip-backdrop"));
       expect(screen.queryByTestId("pin-chip")).toBeNull();
     });
   });

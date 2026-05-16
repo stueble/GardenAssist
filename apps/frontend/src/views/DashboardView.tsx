@@ -187,7 +187,7 @@ export function DashboardView({ garden, loading, invalidateGarden }: DashboardVi
 
   function handlePinClick(_pin: PlanPin, idx: number) {
     const { plant } = pins[idx];
-    setSelected((prev) => prev?.id === plant.id ? null : plant);
+    setSelected(plant);
   }
 
   function handleDetailClose() {

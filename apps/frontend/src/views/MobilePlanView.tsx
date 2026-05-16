@@ -307,10 +307,9 @@ export function MobilePlanView({ garden }: MobilePlanViewProps) {
 
       {/* Plan area — fills all space between TopBar and ChatPanel/BottomNav.
           display:flex is required so the widget's own flex:1 takes effect.
-          onClick on the area dismisses the chip (AC #3). */}
+          Chip dismiss on background tap is handled by the chip's backdrop overlay. */}
       <div
         data-testid="mobile-plan-area"
-        onClick={() => setChip(null)}
         style={{ flex: 1, minHeight: 0, display: "flex", overflow: "hidden" }}
       >
         <GardenPlanWidget
