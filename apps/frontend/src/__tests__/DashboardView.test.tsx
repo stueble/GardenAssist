@@ -15,6 +15,7 @@ import { I18nextProvider } from "react-i18next";
 import i18n from "../i18n/index";
 import { DashboardView, computeFrostWarnings, resetSoilState, setSoilStateForTesting } from "../views/DashboardView";
 import { resetAiPanelState } from "../hooks/useAiPanelState";
+import { resetAssistantSettings } from "../hooks/useAssistantSettings";
 import type { Plant } from "@api/plant";
 import type { Garden } from "@api/garden";
 import type { WeatherDay, SoilMoistureData } from "@api/weather";
@@ -133,6 +134,7 @@ beforeEach(async () => {
   await i18n.changeLanguage("de");
   vi.clearAllMocks();
   resetAiPanelState();
+  resetAssistantSettings();
 });
 
 const MOCK_GARDEN: Garden = {
@@ -561,7 +563,7 @@ function renderWithSoilMoisture(soilData: SoilMoistureData | null, irrigationZon
 }
 
 describe("WeatherWidgetCompact — soil moisture (AC #5: hidden when no zones)", () => {
-  afterEach(() => { vi.clearAllMocks(); resetAiPanelState(); resetSoilState(); });
+  afterEach(() => { vi.clearAllMocks(); resetAiPanelState(); resetSoilState(); resetAssistantSettings(); });
 
   it("moisture summary not shown in collapsed row when no zones configured", async () => {
     renderWithSoilMoisture(null, []);
@@ -572,7 +574,7 @@ describe("WeatherWidgetCompact — soil moisture (AC #5: hidden when no zones)",
 });
 
 describe("WeatherWidgetCompact — soil moisture (AC #1/#2/#3/#4: zone data in expanded view)", () => {
-  afterEach(() => { vi.clearAllMocks(); resetAiPanelState(); resetSoilState(); });
+  afterEach(() => { vi.clearAllMocks(); resetAiPanelState(); resetSoilState(); resetAssistantSettings(); });
 
   it("shows moisture summary pill in collapsed row when zones have data (AC #1)", async () => {
     const soilData = makeSoilData([

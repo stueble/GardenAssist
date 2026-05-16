@@ -4,7 +4,7 @@ import { SettingsSection } from "@/components/SettingsSection";
 import { SaveBar } from "@/components/SaveBar";
 import { useSettings } from "@/hooks/useSettings";
 import { useGardenPlan } from "@/hooks/useGardenPlan";
-import { useAssistantSettings } from "@/hooks/useAssistantSettings";
+import { useAssistantSettings, invalidateAssistantSettings } from "@/hooks/useAssistantSettings";
 import { setAssistantContext } from "@/hooks/useAssistantContext";
 import type { Garden } from "@api/garden";
 import { LocationSection }    from "@/components/settings/LocationSection";
@@ -16,6 +16,7 @@ import { GardenPlanSection }    from "@/components/settings/GardenPlanSection";
 import { ColorPresetsSection }  from "@/components/settings/ColorPresetsSection";
 import { LanguageSection }      from "@/components/settings/LanguageSection";
 import { apiClient }          from "@/api/client";
+import { resetSoilState }     from "@/views/DashboardView";
 
 interface SettingsViewProps {
   garden:           Garden | null;
@@ -60,6 +61,12 @@ export function SettingsView({ garden, invalidateGarden, hideTitle = false, comp
     ]);
     // Notify App.tsx so DashboardView picks up the new plan_url
     if (plan.dirty) invalidateGarden();
+    // Re-fetch assistant settings so zone lists and moisture thresholds update
+    // immediately in DashboardView without requiring a page reload.
+    invalidateAssistantSettings();
+    // Reset soil moisture singleton so the widget re-fetches with the new
+    // threshold and warning status updates instantly.
+    resetSoilState();
   }
 
   function discard() {

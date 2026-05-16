@@ -568,7 +568,7 @@ function setSoilState(s: SoilState) {
   _soilListeners.forEach((fn) => fn(s));
 }
 
-/** Reset singleton for testing — do not call in production code. */
+/** Reset singleton and restart polling — call after settings save to reflect new thresholds immediately. */
 export function resetSoilState() {
   _soilState = { status: "loading" };
   if (_soilInterval !== null) { clearInterval(_soilInterval); _soilInterval = null; }
