@@ -295,7 +295,7 @@ export function AiPanel({ assistantContext }: AiPanelProps) {
           flexShrink:    0,
           border:        "none",
           borderLeft:    "1px solid rgba(255,255,255,.15)",
-          padding:       "24px 0",
+          padding:       "13px 0",
           fontFamily:    "var(--font-body)",
           fontSize:      "14px",
           fontWeight:    500,
@@ -364,6 +364,7 @@ export function AiPanel({ assistantContext }: AiPanelProps) {
               gap:        "8px",
             }}
           >
+            <span style={{ fontSize: "20px", lineHeight: 1 }} aria-hidden="true">💬</span>
             {t("ai.panel_title")}
           </span>
           {/* Close: › chevron (doc-011 § 5.5) */}
