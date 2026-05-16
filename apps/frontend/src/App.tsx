@@ -12,6 +12,7 @@ import { MobilePlantsView }      from "@/views/MobilePlantsView";
 import { MobileCalendarView }    from "@/views/MobileCalendarView";
 import { MobileJournalView }     from "@/views/MobileJournalView";
 import { MobilePlanView }        from "@/views/MobilePlanView";
+import { MobileSettingsView }    from "@/views/MobileSettingsView";
 import { useAssistantContext }   from "@/hooks/useAssistantContext";
 import { useGarden, invalidateGarden } from "@/hooks/useGarden";
 import { useIsMobile }           from "@/hooks/useIsMobile";
@@ -47,7 +48,7 @@ export function App() {
           <Route path="/calendar" element={<MobileCalendarView {...sharedGardenProps} />} />
           <Route path="/journal"  element={<MobileJournalView {...sharedGardenProps} />} />
           <Route path="/plan"     element={<MobilePlanView   {...sharedGardenProps} />} />
-          <Route path="/settings" element={<SettingsView    {...sharedGardenProps} />} />
+          <Route path="/settings" element={<MobileSettingsView {...sharedGardenProps} />} />
         </Routes>
       </div>
     );

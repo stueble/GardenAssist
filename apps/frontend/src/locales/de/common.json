@@ -219,6 +219,8 @@
     "journal_plant_placeholder": "Pflanze wählen …",
     "journal_notes_placeholder": "Notizen …",
     "journal_empty": "Keine Einträge vorhanden.",
-    "plan": "Gartenplan"
+    "plan": "Gartenplan",
+    "settings": "Einstellungen",
+    "settings_back": "Zurück"
   }
 }
