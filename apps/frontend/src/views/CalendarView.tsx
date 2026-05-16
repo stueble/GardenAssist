@@ -14,6 +14,7 @@ import { useTranslation } from "react-i18next";
 import { setAssistantContext } from "@/hooks/useAssistantContext";
 import { PlantDetailPanel } from "@/components/PlantDetailPanel";
 import { useAssistantSettings } from "@/hooks/useAssistantSettings";
+import { textColorForBackground } from "@/lib/utils";
 import { invalidateGarden }     from "@/hooks/useGarden";
 import { getPlantEditHandler }   from "@/hooks/usePlantEditContext";
 import type { Plant }            from "@api/plant";
@@ -449,6 +450,7 @@ function PlantRow({ plant, activeType, currentMonth, selected, onClick }: PlantR
               const barH      = geo.barHeight;
               const showLabel = barH >= LABEL_MIN_BAR_HEIGHT;
 
+              const textColor = textColorForBackground(color);
               const barStyle = (
                 left: number,
                 width: number,
@@ -468,12 +470,12 @@ function PlantRow({ plant, activeType, currentMonth, selected, onClick }: PlantR
                 padding:     "0 8px",
                 fontSize:    "10px",
                 fontWeight:  600,
-                color:       "white",
+                color:       textColor,
                 boxShadow:   "0 1px 4px rgba(0,0,0,.15)",
                 overflow:    "hidden",
                 whiteSpace:  "nowrap",
                 textOverflow:"ellipsis",
-                textShadow:  "0 1px 2px rgba(0,0,0,.2)",
+                textShadow:  textColor === "white" ? "0 1px 2px rgba(0,0,0,.2)" : "none",
                 cursor:      "pointer",
                 zIndex:      10,
                 ...extraRadius,

@@ -16,6 +16,7 @@
 import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronDown, Check, Thermometer } from "lucide-react";
+import { textColorForBackground } from "@/lib/utils";
 import type { Garden } from "@api/garden";
 import type { Plant } from "@api/plant";
 import type { Task } from "@api/task";
@@ -484,7 +485,7 @@ export function TaskRow({
               fontWeight:   500,
               border:       "1px solid rgba(0,0,0,.08)",
               background:   bloomColor,
-              color:        "#1e2e1e",
+              color:        textColorForBackground(bloomColor),
             }}>
               {bloomName}
             </span>
