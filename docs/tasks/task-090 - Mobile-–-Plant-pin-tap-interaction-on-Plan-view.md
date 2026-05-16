@@ -1,14 +1,14 @@
 ---
 id: TASK-090
 title: Mobile – Plant pin tap interaction on Plan view
-status: In Review
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-16 14:41'
-updated_date: '2026-05-16 17:08'
+updated_date: '2026-05-16 18:48'
 labels: []
 dependencies: []
-ordinal: 87000
+ordinal: 90000
 ---
 
 ## Description
