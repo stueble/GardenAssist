@@ -132,19 +132,6 @@ function PinChip({
 
   return (
     <>
-      {/* Transparent backdrop — tap outside chip dismisses it */}
-      <div
-        data-testid="chip-backdrop"
-        onClick={onDismiss}
-        style={{
-          position:      "fixed",
-          inset:         0,
-          zIndex:        9998,
-          background:    "transparent",
-          pointerEvents: "auto",
-        }}
-      />
-
       {/* Chip itself */}
       <div
         data-testid="pin-chip"
@@ -307,9 +294,11 @@ export function MobilePlanView({ garden }: MobilePlanViewProps) {
 
       {/* Plan area — fills all space between TopBar and ChatPanel/BottomNav.
           display:flex is required so the widget's own flex:1 takes effect.
-          Chip dismiss on background tap is handled by the chip's backdrop overlay. */}
+          Background tap dismisses the chip; pin onClick uses stopPropagation
+          so it never bubbles here, keeping the two-tap chip→navigate flow intact. */}
       <div
         data-testid="mobile-plan-area"
+        onClick={() => setChip(null)}
         style={{ flex: 1, minHeight: 0, display: "flex", overflow: "hidden" }}
       >
         <GardenPlanWidget

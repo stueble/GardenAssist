@@ -261,19 +261,11 @@ describe("MobilePlanView", () => {
   });
 
   describe("story-090 AC #3 — background tap dismisses chip", () => {
-    it("tapping the backdrop hides the chip", () => {
+    it("tapping the plan area outside the chip dismisses it", () => {
       renderView();
       fireEvent.click(screen.getByTestId("plan-pin-0"));
       expect(screen.getByTestId("pin-chip")).toBeInTheDocument();
-      fireEvent.click(screen.getByTestId("chip-backdrop"));
-      expect(screen.queryByTestId("pin-chip")).toBeNull();
-    });
-
-    it("tapping the backdrop (outside chip) dismisses chip", () => {
-      renderView();
-      fireEvent.click(screen.getByTestId("plan-pin-0"));
-      expect(screen.getByTestId("pin-chip")).toBeInTheDocument();
-      fireEvent.click(screen.getByTestId("chip-backdrop"));
+      fireEvent.click(screen.getByTestId("mobile-plan-area"));
       expect(screen.queryByTestId("pin-chip")).toBeNull();
     });
   });
