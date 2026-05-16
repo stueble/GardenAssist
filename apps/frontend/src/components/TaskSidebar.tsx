@@ -395,6 +395,7 @@ export function TaskRow({
 }) {
   const { t } = useTranslation("common");
   const [checked, setChecked] = useState(false);
+  const [hovered, setHovered] = useState(false);
 
   const checkColor =
     todo.status === "overdue" ? "#c0392b" :
@@ -407,6 +408,10 @@ export function TaskRow({
   const bloomSchedule = todo.plant.schedules.find((s) => s.schedule_type === "bloom");
   const bloomColor    = bloomSchedule?.color ?? null;
   const bloomName     = bloomSchedule?.label ?? null;
+
+  // Ghost checkmark opacity: 25% default → 60% hover → 100% checked
+  const checkOpacity = checked ? 1 : hovered ? 0.6 : 0.25;
+  const checkIconColor = checked ? "#fff" : checkColor;
 
   return (
     <div
@@ -424,29 +429,32 @@ export function TaskRow({
         transition:   "opacity .2s",
       }}
     >
-      {/* Circular checkbox */}
+      {/* Rounded-square checkbox with ghost checkmark */}
       <button
         data-testid="mobile-task-checkbox"
         aria-label={t("dashboard.task_done")}
         onClick={() => { setChecked(true); setTimeout(() => onDone(todo), 200); }}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
         style={{
-          width:          "18px",
-          height:         "18px",
-          borderRadius:   "50%",
+          width:          "20px",
+          height:         "20px",
+          borderRadius:   "5px",
           border:         `2px solid ${checked ? "#4a7c4a" : checkColor}`,
           background:     checked ? "#4a7c4a" : "none",
-          color:          "#fff",
           display:        "flex",
           alignItems:     "center",
           justifyContent: "center",
           cursor:         "pointer",
           flexShrink:     0,
           marginTop:      "1px",
-          fontSize:       "11px",
+          padding:        0,
           transition:     "all .15s",
         }}
       >
-        {checked ? <Check size={10} strokeWidth={2.5} /> : null}
+        <span style={{ opacity: checkOpacity, transition: "opacity .15s", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Check size={12} strokeWidth={2.5} color={checkIconColor} />
+        </span>
       </button>
 
       {/* Body */}

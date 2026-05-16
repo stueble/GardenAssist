@@ -153,8 +153,9 @@ export function LeftDrawer({
         }}
       >
         <div style={{ background: "#2d4a2d", padding: "16px 16px 12px", flexShrink: 0 }}>
-          <div style={{ fontFamily: "var(--font-display)", fontSize: "20px", color: "#c8dfc0", fontWeight: 600 }}>
-            🌿 GardenAssist
+          <div style={{ fontFamily: "var(--font-display)", fontSize: "20px", color: "#c8dfc0", fontWeight: 600, display: "flex", alignItems: "center", gap: "8px" }}>
+            <img src="/favicon.svg" alt="" aria-hidden="true" style={{ width: "25px", height: "25px" }} />
+            GardenAssist
           </div>
         </div>
 
