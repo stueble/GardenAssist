@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { cn } from "@/lib/utils";
 
 interface SettingsSectionProps {
@@ -19,9 +19,22 @@ export function SettingsSection({
   children,
 }: SettingsSectionProps) {
   const [open, setOpen] = useState(defaultOpen);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  function toggle() {
+    const opening = !open;
+    setOpen(opening);
+    if (opening) {
+      // Wait one frame for the body to render, then scroll into view
+      setTimeout(() => {
+        containerRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }, 50);
+    }
+  }
 
   return (
     <div
+      ref={containerRef}
       className="bg-warm-white border-[1.5px] border-border rounded-[12px] mb-4 overflow-hidden"
       data-testid="settings-section"
     >
@@ -29,8 +42,8 @@ export function SettingsSection({
       <div
         role="button"
         tabIndex={0}
-        onClick={() => setOpen((o) => !o)}
-        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setOpen((o) => !o)}
+        onClick={toggle}
+        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && toggle()}
         className="flex items-center gap-3 px-5 py-[14px] cursor-pointer select-none transition-colors hover:bg-green-mist"
         aria-expanded={open}
         data-testid={testId ? `${testId}-toggle` : undefined}
