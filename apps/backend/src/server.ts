@@ -6,9 +6,34 @@ import { seed } from "./db/seed.js";
 
 const PORT = Number(process.env.PORT ?? 3000);
 
-// Run migrations then seed before accepting traffic.
-// seed() is idempotent — safe to call on every startup.
-migrate(db, { migrationsFolder: "./drizzle" });
+// ── Migrations ────────────────────────────────────────────────────────────────
+
+/** Count rows in __drizzle_migrations; returns 0 if the table doesn't exist yet. */
+function countAppliedMigrations(): number {
+  try {
+    const row = db.prepare("SELECT COUNT(*) as n FROM __drizzle_migrations").get() as { n: number };
+    return row.n;
+  } catch {
+    return 0;
+  }
+}
+
+try {
+  const before = countAppliedMigrations();
+  migrate(db, { migrationsFolder: "./drizzle" });
+  const after   = countAppliedMigrations();
+  const applied = after - before;
+
+  if (applied > 0) {
+    console.log(`Migrations: ${applied} applied (${after} total)`);
+  } else {
+    console.log(`Migrations: 0 applied (${after} total) — already up to date`);
+  }
+} catch (err) {
+  console.error("Migration failed:", err);
+  process.exit(1);
+}
+
 await seed();
 
 serve({ fetch: app.fetch, port: PORT }, () => {

@@ -145,6 +145,26 @@ The SQLite DB file (`gardenassist.db`) is created in `apps/backend/` on first ru
 
 ---
 
+## Database Migrations
+
+When the Drizzle schema (`apps/backend/src/db/schema.ts`) changes, generate a new migration:
+
+```bash
+pnpm --filter backend db:generate   # creates a new SQL file + updates _journal.json
+pnpm --filter backend db:migrate    # applies pending migrations to the local DB
+```
+
+**Rules:**
+- Run `db:generate` with the correct system time. The `when` timestamp in `_journal.json`
+  is set automatically by drizzle-kit — **never edit it manually**.
+- Commit the generated `.sql` file **and** the updated `_journal.json` before pushing.
+- If `_journal.json` timestamps are wrong (e.g. hardcoded or lower than earlier entries),
+  Drizzle silently skips migrations — the backend starts but crashes on the first DB query.
+- AC #4 (task-091): `db:generate` was intentionally skipped because the schema is unchanged
+  since migration 0006. Running it on an unchanged schema produces no output.
+
+---
+
 ## Implementation Guidelines
 
 ### Before starting
