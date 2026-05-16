@@ -1,14 +1,14 @@
 ---
 id: TASK-089
 title: Mobile – Plant Detail View (shared PlantDetailContent)
-status: In Review
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-16 14:36'
-updated_date: '2026-05-16 15:09'
+updated_date: '2026-05-16 16:48'
 labels: []
 dependencies: []
-ordinal: 86000
+ordinal: 87000
 ---
 
 ## Description

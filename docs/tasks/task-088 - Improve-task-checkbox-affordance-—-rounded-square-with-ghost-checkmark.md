@@ -1,14 +1,14 @@
 ---
 id: TASK-088
 title: Improve task checkbox affordance — rounded square with ghost checkmark
-status: In Review
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-16 13:42'
-updated_date: '2026-05-16 13:46'
+updated_date: '2026-05-16 16:48'
 labels: []
 dependencies: []
-ordinal: 85000
+ordinal: 88000
 ---
 
 ## Description

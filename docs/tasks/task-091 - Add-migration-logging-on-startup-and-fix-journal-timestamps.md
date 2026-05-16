@@ -1,14 +1,14 @@
 ---
 id: TASK-091
 title: Add migration logging on startup and fix journal timestamps
-status: In Review
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-16 16:07'
-updated_date: '2026-05-16 16:12'
+updated_date: '2026-05-16 16:48'
 labels: []
 dependencies: []
-ordinal: 88000
+ordinal: 86000
 ---
 
 ## Description
