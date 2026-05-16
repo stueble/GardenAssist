@@ -184,7 +184,7 @@ export function SettingsView({ garden, invalidateGarden, hideTitle = false, comp
 
             {/* Gartenplan */}
             <SettingsSection
-              icon="🗺️"
+              icon="🏡"
               title={t("sections.garden_plan")}
               subtitle={t("section_subtitles.garden_plan")}
               defaultOpen={false}
@@ -234,7 +234,7 @@ export function SettingsView({ garden, invalidateGarden, hideTitle = false, comp
 
             {/* KI-Assistent */}
             <SettingsSection
-              icon="🤖"
+              icon="💬"
               title={t("sections.ai")}
               subtitle={t("section_subtitles.ai")}
               defaultOpen={false}
