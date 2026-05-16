@@ -170,10 +170,10 @@ describe("MobilePlantsView", () => {
       expect(badge.style.background).toBe("rgb(253, 240, 238)"); // #fdf0ee
     });
 
-    it("ok badge has green background", () => {
+    it("ok plants show no status badge (next schedule shown instead)", () => {
       renderView();
-      const badge = screen.getByTestId("mobile-plant-badge-ok");
-      expect(badge.style.background).toBe("rgb(238, 244, 235)"); // #eef4eb
+      // "ok" status badge is no longer rendered — replaced by next schedule info or nothing
+      expect(document.querySelector("[data-testid='mobile-plant-badge-ok']")).toBeNull();
     });
   });
 

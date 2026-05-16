@@ -29,6 +29,28 @@ import {
 import type { PlantStatus } from "@/lib/plantStatus";
 import { topBtnStyle, BottomNav, LeftDrawer, ChatPanel } from "@/components/mobile/MobileParts";
 
+// ── Helpers ────────────────────────────────────────────────────────────────────
+
+const CARE_SCHEDULE_TYPES = new Set(["pruning", "fertilization", "misc"]);
+
+function currentWeek(): number {
+  const now = new Date();
+  const jan4 = new Date(now.getFullYear(), 0, 4);
+  const diff = now.getTime() - jan4.getTime();
+  return Math.ceil((diff / 86400000 + jan4.getDay() + 1) / 7);
+}
+
+/** For an "ok" plant (no open tasks), find the next upcoming care schedule. */
+function nextScheduleForOkPlant(plant: Plant): { label: string; weeksAway: number } | null {
+  const cw = currentWeek();
+  const care = plant.schedules
+    .filter((s) => CARE_SCHEDULE_TYPES.has(s.schedule_type) && s.start_week > cw)
+    .sort((a, b) => a.start_week - b.start_week);
+  if (care.length === 0) return null;
+  const s = care[0];
+  return { label: s.label ?? s.schedule_type, weeksAway: Math.max(1, s.start_week - cw) };
+}
+
 // ── View-mode singleton — preserved across navigation within the session ──────
 
 type ViewMode = "list" | "card";
@@ -255,14 +277,14 @@ function PlantThumb({ plant }: { plant: Plant }) {
   const thumb = plant.attachments.find((a) => a.attachment_type === "image");
   return (
     <div style={{
-      width:          "40px",
-      height:         "40px",
+      width:          "44px",
+      height:         "44px",
       borderRadius:   "8px",
       background:     "#eef4eb",
       display:        "flex",
       alignItems:     "center",
       justifyContent: "center",
-      fontSize:       "20px",
+      fontSize:       "22px",
       flexShrink:     0,
       border:         "1px solid #dde8d8",
       overflow:       "hidden",
@@ -297,8 +319,12 @@ function StatusBadge({ status, label }: { status: PlantStatus; label: string }) 
 
 // List row — AC #3
 function PlantListItem({ plant, statusLabel }: { plant: Plant; statusLabel: string }) {
+  const { t } = useTranslation("common");
   const status   = derivePlantStatus(plant);
   const careTask = nextCareTask(plant);
+
+  // For "ok" plants: find next upcoming care schedule
+  const nextSchedule = status === "ok" ? nextScheduleForOkPlant(plant) : null;
 
   return (
     <div
@@ -334,14 +360,41 @@ function PlantListItem({ plant, statusLabel }: { plant: Plant; statusLabel: stri
         </div>
       </div>
 
-      {/* Task status — right-aligned */}
+      {/* Task status — right-aligned, uniform two-row layout */}
       <div style={{ flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "3px", paddingTop: "1px" }}>
-        <StatusBadge status={status} label={statusLabel} />
-        {careTask && (
-          <span style={{ fontSize: "9px", color: "#8a9e8a", maxWidth: "80px", textAlign: "right", lineHeight: 1.3 }}>
-            {careTask.schedule.label ?? careTask.schedule.schedule_type}
-          </span>
-        )}
+        {status !== "ok" ? (
+          /* overdue / due / upcoming: coloured pill + task name */
+          <>
+            <StatusBadge status={status} label={statusLabel} />
+            {careTask && (
+              <span style={{ fontSize: "10px", color: "#8a9e8a", maxWidth: "90px", textAlign: "right", lineHeight: 1.3 }}>
+                {careTask.schedule.label ?? careTask.schedule.schedule_type}
+              </span>
+            )}
+          </>
+        ) : nextSchedule ? (
+          /* ok with a future schedule: light-green pill + schedule name */
+          <>
+            <span
+              data-testid="mobile-plant-badge-ok-next"
+              style={{
+                fontSize:     "9px",
+                padding:      "2px 6px",
+                borderRadius: "20px",
+                fontWeight:   500,
+                whiteSpace:   "nowrap",
+                background:   "#edfaf3",
+                color:        "#27ae60",
+              }}
+            >
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              {(t as any)("dashboard.task_in_other", { count: nextSchedule.weeksAway })}
+            </span>
+            <span style={{ fontSize: "10px", color: "#8a9e8a", whiteSpace: "nowrap", lineHeight: 1.3 }}>
+              {nextSchedule.label}
+            </span>
+          </>
+        ) : null}
       </div>
     </div>
   );

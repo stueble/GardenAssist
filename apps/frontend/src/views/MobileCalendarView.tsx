@@ -205,43 +205,65 @@ function MonthHeader() {
       borderBottom: "1px solid #dde8d8",
     }}>
       <div style={{ width: "100px", flexShrink: 0 }} />
-      <div style={{ flex: 1, display: "flex" }}>
+      {/*
+        CSS grid with 48 columns + column-gap:1px — identical structure to LaneBarRow.
+        Row 1: month letters, each spanning 4 columns → perfectly centred.
+        Row 2: week dots, one per column.
+      */}
+      <div style={{
+        flex:                1,
+        display:             "grid",
+        gridTemplateColumns: `repeat(${TOTAL_SEGS}, 1fr)`,
+        gridTemplateRows:    "auto auto",
+        columnGap:           "1px",
+        paddingBottom:       "4px",
+        alignItems:          "end",
+      }}>
+        {/* Row 1: month letters — each spans 4 grid columns */}
         {monthsShort.map((m, mi) => {
           const isCurrent = mi === currentMonthIdx;
+          const colStart  = mi * 4 + 1;          // CSS grid is 1-based
           return (
             <div
               key={mi}
               data-testid={`mobile-calendar-month-${mi}`}
               style={{
-                flex:          1,
-                display:       "flex",
-                flexDirection: "column",
-                alignItems:    "center",
-                borderLeft:    mi > 0 ? "1px solid #eef4eb" : "none",
-                paddingBottom: "4px",
+                gridColumn:    `${colStart} / ${colStart + 4}`,
+                gridRow:       1,
+                textAlign:     "center",
+                fontSize:      "11px",
+                color:         isCurrent ? "#2d4a2d" : "#8a9e8a",
+                fontWeight:    isCurrent ? 700 : 600,
+                marginBottom:  "2px",
+                overflow:      "visible",
+                whiteSpace:    "nowrap",
+              }}
+            >
+              {m[0]}
+            </div>
+          );
+        })}
+        {/* Row 2: week dots — one per column */}
+        {Array.from({ length: TOTAL_SEGS }, (_, si) => {
+          const mi = Math.floor(si / 4);
+          const wi = si % 4;
+          const isCurrent = mi === currentMonthIdx;
+          return (
+            <div
+              key={si}
+              style={{
+                gridColumn:     si + 1,
+                gridRow:        2,
+                display:        "flex",
+                justifyContent: "center",
               }}
             >
               <div style={{
-                fontSize:   "11px",
-                color:      isCurrent ? "#2d4a2d" : "#8a9e8a",
-                fontWeight: isCurrent ? 700 : 600,
-                marginBottom: "2px",
-              }}>
-                {m[0]}
-              </div>
-              <div style={{ display: "flex", gap: "1px" }}>
-                {[0, 1, 2, 3].map((wi) => (
-                  <div
-                    key={wi}
-                    style={{
-                      width:        "4px",
-                      height:       "4px",
-                      borderRadius: "50%",
-                      background:   (isCurrent && wi === currentWeekInMonth) ? "#4a7c4a" : "#eef4eb",
-                    }}
-                  />
-                ))}
-              </div>
+                width:        "4px",
+                height:       "4px",
+                borderRadius: "50%",
+                background:   (isCurrent && wi === currentWeekInMonth) ? "#4a7c4a" : "#eef4eb",
+              }} />
             </div>
           );
         })}

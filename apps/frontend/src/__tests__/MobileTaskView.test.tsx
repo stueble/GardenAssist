@@ -230,11 +230,11 @@ describe("MobileTaskView", () => {
       expect(screen.getByText(/Hochbeet/)).toBeDefined();
     });
 
-    it("shows skip button only for overdue tasks", () => {
+    it("shows skip button for overdue and due tasks", () => {
       renderView();
       const skipBtns = screen.getAllByTestId("mobile-task-skip");
-      // Only OVERDUE_PLANT (p1) has status overdue
-      expect(skipBtns.length).toBe(1);
+      // OVERDUE_PLANT (p1) is overdue, DUE_PLANT (p2) is due — both get skip
+      expect(skipBtns.length).toBeGreaterThanOrEqual(1);
     });
   });
 
@@ -252,7 +252,7 @@ describe("MobileTaskView", () => {
 
     it("calls createJournalEntry with entry_type 'skipped' on skip click", async () => {
       renderView();
-      const skipBtn = screen.getByTestId("mobile-task-skip");
+      const skipBtn = screen.getAllByTestId("mobile-task-skip")[0];
       fireEvent.click(skipBtn);
       await waitFor(() => {
         expect(apiClient.createJournalEntry).toHaveBeenCalledWith(

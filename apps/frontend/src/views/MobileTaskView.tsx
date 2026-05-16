@@ -13,7 +13,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Menu, MessageCircle, Search, ChevronDown,
-  Check, Plus,
+  Check, Plus, Thermometer,
 } from "lucide-react";
 import type { Garden } from "@api/garden";
 import type { Plant } from "@api/plant";
@@ -250,33 +250,21 @@ function WeatherWidgetMobile({ zones }: { zones: string[] }) {
   const icon  = weatherState.status === "ok" ? tw(`weather.weather_icon.${codeKey}`) : "🌤️";
   const label = weatherState.status === "ok" ? tw(`weather.weather_code.${codeKey}`) : "";
 
-  // Compute warning pills from soil data
-  const moistureWarnings: string[] = [];
-  if (soilState.status === "ok") {
-    for (const z of soilState.data.zones) {
-      if (z.status === "dry") {
-        moistureWarnings.push(z.zone);
-      }
-    }
-  }
+  // Soil: dry zones + min/max moisture across configured zones
+  const soilZones = soilState.status === "ok"
+    ? soilState.data.zones.filter((z) => zones.includes(z.zone))
+    : [];
+  const dryZones = soilZones.filter((z) => z.status === "dry");
+  const hasDry = dryZones.length > 0;
+  const soilValues = soilZones.map((z) => z.current);
+  const soilMax = soilValues.length > 0 ? Math.max(...soilValues) : null;
+  const soilMin = soilValues.length > 0 ? Math.min(...soilValues) : null;
 
-  // Frost pill: any forecast day temp_min < 0
-  const hasFrost =
-    weatherState.status === "ok" &&
-    weatherState.data.forecast.some((d) => d.temp_min < 0);
-
-  const firstFrostDay =
-    weatherState.status === "ok"
-      ? weatherState.data.forecast.find((d) => d.temp_min < 0)
-      : undefined;
-
-  const frostLabel = firstFrostDay
-    ? (() => {
-        const d = new Date(firstFrostDay.date + "T12:00:00");
-        const wd = d.toLocaleDateString(i18n.language === "de" ? "de-DE" : "en-GB", { weekday: "short" });
-        return `❄ ${wd} ${firstFrostDay.temp_min}°C`;
-      })()
-    : t("mobile.frost_pill");
+  // Temperature: min/max across 5-day forecast
+  const forecast = weatherState.status === "ok" ? weatherState.data.forecast : [];
+  const tempMax = forecast.length > 0 ? Math.max(...forecast.map((d) => d.temp_max)) : null;
+  const tempMin = forecast.length > 0 ? Math.min(...forecast.map((d) => d.temp_min)) : null;
+  const hasFrost = tempMin !== null && tempMin < 0;
 
   return (
     <div
@@ -324,16 +312,18 @@ function WeatherWidgetMobile({ zones }: { zones: string[] }) {
           </div>
         </div>
 
-        {/* Warning pills */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "3px", alignItems: "flex-end", flexShrink: 0 }}>
-          {hasFrost && (
-            <span style={{ fontSize: "10px", borderRadius: "20px", padding: "2px 7px", fontWeight: 500, whiteSpace: "nowrap", background: "#fdf0ee", color: "#c0392b", border: "1px solid #f5c6c2" }}>
-              {frostLabel}
+        {/* Summary: temp range + moisture range */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "2px", alignItems: "flex-end", flexShrink: 0 }}>
+          {tempMax !== null && tempMin !== null && (
+            <span style={{ display: "flex", alignItems: "center", gap: "3px", fontSize: "11px", fontWeight: 500, whiteSpace: "nowrap", color: hasFrost ? "#c0392b" : "#1e2e1e" }}>
+              <Thermometer size={12} strokeWidth={1.5} color={hasFrost ? "#c0392b" : "#e07b00"} />
+              {tempMax}°/{tempMin}°
             </span>
           )}
-          {moistureWarnings.length > 0 && (
-            <span style={{ fontSize: "10px", borderRadius: "20px", padding: "2px 7px", fontWeight: 500, whiteSpace: "nowrap", background: "#e8f0fb", color: "#185fa5", border: "1px solid #b5d4f4" }}>
-              {t("mobile.moisture_pill")}
+          {soilMax !== null && soilMin !== null && (
+            <span style={{ display: "flex", alignItems: "center", gap: "3px", fontSize: "11px", fontWeight: 500, whiteSpace: "nowrap", color: hasDry ? "#c0392b" : "#4a7c4a" }}>
+              <span style={{ fontSize: "12px", lineHeight: 1 }}>💧</span>
+              {soilMax}%/{soilMin}%
             </span>
           )}
         </div>
@@ -550,43 +540,43 @@ function TaskRow({
 
       {/* Body */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: "12px", fontWeight: 500, color: "#1e2e1e", lineHeight: 1.3 }}>
-          {todo.taskLabel}
+        {/* Row 1: title + relative date */}
+        <div style={{ display: "flex", alignItems: "baseline", gap: "6px", lineHeight: 1.3 }}>
+          <span style={{ fontSize: "12px", fontWeight: 500, color: "#1e2e1e", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {todo.taskLabel}
+          </span>
+          <span style={{ fontSize: "10px", color: dateColor, flexShrink: 0, whiteSpace: "nowrap" }}>
+            {todo.taskDate}
+          </span>
         </div>
+        {/* Row 2: plant pill, location, bloom — 10% larger than before */}
         <div style={{ display: "flex", gap: "4px", marginTop: "3px", flexWrap: "wrap", alignItems: "center" }}>
-          {/* Plant tag */}
-          <span style={{ fontSize: "10px", color: "#4a5e4a", background: "#eef4eb", borderRadius: "20px", padding: "1px 6px" }}>
+          <span style={{ fontSize: "11px", color: "#4a5e4a", background: "#eef4eb", borderRadius: "20px", padding: "1px 6px" }}>
             {todo.plant.icon ?? "🌿"} {todo.plant.name_common}
           </span>
-          {/* Location */}
           {todo.plant.location && (
-            <span style={{ fontSize: "10px", color: "#8a9e8a" }}>
+            <span style={{ fontSize: "11px", color: "#8a9e8a" }}>
               {todo.plant.location}
             </span>
           )}
-          {/* Bloom color pill */}
           {bloomColor && bloomName && (
             <span style={{
-              fontSize: "10px",
-              borderRadius:"20px",
-              padding:     "1px 7px",
-              fontWeight:  500,
-              border:      "1px solid rgba(0,0,0,.08)",
-              background:  bloomColor,
-              color:       "#1e2e1e",
+              fontSize:     "11px",
+              borderRadius: "20px",
+              padding:      "1px 7px",
+              fontWeight:   500,
+              border:       "1px solid rgba(0,0,0,.08)",
+              background:   bloomColor,
+              color:        "#1e2e1e",
             }}>
               {bloomName}
             </span>
           )}
-          {/* Relative date */}
-          <span style={{ fontSize: "10px", color: dateColor }}>
-            {todo.taskDate}
-          </span>
         </div>
       </div>
 
-      {/* Skip button — only for overdue */}
-      {todo.status === "overdue" && (
+      {/* Skip button — for overdue and due tasks */}
+      {(todo.status === "overdue" || todo.status === "due") && (
         <button
           data-testid="mobile-task-skip"
           onClick={(e) => { e.stopPropagation(); onSkip(todo); }}
