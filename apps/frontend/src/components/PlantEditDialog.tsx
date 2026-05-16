@@ -294,6 +294,10 @@ export type PlantEditDialogHandle = {
   isOpen: () => boolean;
   /** Push AI-suggested fields into the dialog; marks them visually. */
   applyAiFields: (fields: PlantEditFields) => void;
+  /** Trigger save programmatically (used by mobile top bar). */
+  save: () => void;
+  /** Returns true if there are unsaved changes. */
+  isDirty: () => boolean;
 };
 
 // ── Props ─────────────────────────────────────────────────────────────────────
@@ -316,6 +320,12 @@ export interface PlantEditDialogProps {
    * so the assistant knows what it has already suggested.
    */
   onPendingChange?:    (pending: PendingPlantEdit | null) => void;
+  /** Hide the built-in header (title + ✕). Mobile uses its own top bar. */
+  hideHeader?:         boolean;
+  /** Hide the built-in footer (Cancel + Save). Mobile uses its own top bar. */
+  hideFooter?:         boolean;
+  /** Hide the pick-mode toggle button in the Positionen section. */
+  hidePickMode?:       boolean;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -326,6 +336,9 @@ function PlantEditDialog({
   positions, onPositionsChange, initialPositions,
   pickMode, onPickModeChange,
   onPendingChange,
+  hideHeader = false,
+  hideFooter = false,
+  hidePickMode = false,
 }: PlantEditDialogProps, ref) {
   const { t } = useTranslation("plants");
   const { t: tc } = useTranslation("common");
@@ -397,7 +410,9 @@ function PlantEditDialog({
 
   // Imperative handle for AiPanel / PlantEditContext
   useImperativeHandle(ref, () => ({
-    isOpen: () => true,
+    isOpen:   () => true,
+    isDirty:  () => dirty,
+    save:     () => { void handleSave(); },
     applyAiFields: (fields: PlantEditFields) => {
       // ── Scalar fields ──────────────────────────────────────────────────────
       const suggestable: Partial<EditForm> = {};
@@ -611,41 +626,43 @@ function PlantEditDialog({
   return (
     <>
       {/* ── Header ── */}
-      <div
-        style={{
-          padding:        "13px 16px 10px",
-          borderBottom:   "1px solid var(--border)",
-          display:        "flex",
-          alignItems:     "center",
-          justifyContent: "space-between",
-          flexShrink:     0,
-          background:     "var(--warm-white)",
-        }}
-      >
+      {!hideHeader && (
         <div
           style={{
-            fontFamily: "var(--font-display)",
-            fontSize:   "15px",
-            color:      "var(--green-deep)",
-            fontWeight: 600,
-            display:    "flex",
-            alignItems: "center",
-            gap:        "8px",
+            padding:        "13px 16px 10px",
+            borderBottom:   "1px solid var(--border)",
+            display:        "flex",
+            alignItems:     "center",
+            justifyContent: "space-between",
+            flexShrink:     0,
+            background:     "var(--warm-white)",
           }}
         >
-          {title}
+          <div
+            style={{
+              fontFamily: "var(--font-display)",
+              fontSize:   "15px",
+              color:      "var(--green-deep)",
+              fontWeight: 600,
+              display:    "flex",
+              alignItems: "center",
+              gap:        "8px",
+            }}
+          >
+            {title}
+          </div>
+          <button
+            type="button"
+            onClick={handleClose}
+            style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-light)", fontSize: "16px", lineHeight: 1, transition: "color .15s" }}
+            className="hover:text-text-dark"
+            aria-label={t("edit.ai_suggestions.close_dialog")}
+            data-testid="edit-close"
+          >
+            ✕
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={handleClose}
-          style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-light)", fontSize: "16px", lineHeight: 1, transition: "color .15s" }}
-          className="hover:text-text-dark"
-          aria-label={t("edit.ai_suggestions.close_dialog")}
-          data-testid="edit-close"
-        >
-          ✕
-        </button>
-      </div>
+      )}
 
       {/* ── Body ── */}
       <div style={{ flex: 1, overflowY: "auto" }}>
@@ -709,6 +726,7 @@ function PlantEditDialog({
             pickMode={pickMode}
             onPickModeChange={onPickModeChange}
             onPositionsChange={onPositionsChange}
+            hidePickMode={hidePickMode}
             t={t}
           />
         </EditSection>
@@ -773,36 +791,38 @@ function PlantEditDialog({
       )}
 
       {/* ── Actions ── */}
-      <div
-        style={{
-          display:    "flex",
-          gap:        "8px",
-          padding:    "10px 12px",
-          borderTop:  "1px solid var(--border)",
-          flexShrink: 0,
-          alignItems: "center",
-          background: "var(--warm-white)",
-        }}
-      >
-        <button
-          type="button"
-          onClick={handleClose}
-          disabled={saving}
-          style={actionBtnStyle}
-          data-testid="edit-cancel"
+      {!hideFooter && (
+        <div
+          style={{
+            display:    "flex",
+            gap:        "8px",
+            padding:    "10px 12px",
+            borderTop:  "1px solid var(--border)",
+            flexShrink: 0,
+            alignItems: "center",
+            background: "var(--warm-white)",
+          }}
         >
-          <span>✕</span>{t("edit.btn_cancel")}
-        </button>
-        <button
-          type="button"
-          onClick={() => void handleSave()}
-          disabled={saving}
-          style={{ ...actionBtnStyle, background: "var(--green-deep)", color: "white", borderColor: "var(--green-deep)" }}
-          data-testid="edit-save"
-        >
-          {saving ? <><span>⏳</span>…</> : <><span>✓</span>{t("edit.btn_save")}</>}
-        </button>
-      </div>
+          <button
+            type="button"
+            onClick={handleClose}
+            disabled={saving}
+            style={actionBtnStyle}
+            data-testid="edit-cancel"
+          >
+            <span>✕</span>{t("edit.btn_cancel")}
+          </button>
+          <button
+            type="button"
+            onClick={() => void handleSave()}
+            disabled={saving}
+            style={{ ...actionBtnStyle, background: "var(--green-deep)", color: "white", borderColor: "var(--green-deep)" }}
+            data-testid="edit-save"
+          >
+            {saving ? <><span>⏳</span>…</> : <><span>✓</span>{t("edit.btn_save")}</>}
+          </button>
+        </div>
+      )}
     </>
   );
 });
@@ -1351,10 +1371,11 @@ interface PositionenSectionProps {
   pickMode:           boolean;
   onPickModeChange:   (active: boolean) => void;
   onPositionsChange:  (rows: PositionRow[]) => void;
+  hidePickMode?:      boolean;
   t:                  TFunction<"plants">;
 }
 
-function PositionenSection({ positions, pickMode, onPickModeChange, onPositionsChange, t }: PositionenSectionProps) {
+function PositionenSection({ positions, pickMode, onPickModeChange, onPositionsChange, hidePickMode = false, t }: PositionenSectionProps) {
   function updateRow(idx: number, field: "x" | "y", raw: string) {
     const v = parseFloat(raw);
     if (isNaN(v)) return;
@@ -1377,8 +1398,8 @@ function PositionenSection({ positions, pickMode, onPickModeChange, onPositionsC
         {t("edit.positions.hint")}
       </div>
 
-      {/* Pick-mode toggle */}
-      <button
+      {/* Pick-mode toggle — hidden on mobile */}
+      {!hidePickMode && <button
         type="button"
         data-testid="positions-pick-mode-btn"
         onClick={() => onPickModeChange(!pickMode)}
@@ -1402,7 +1423,7 @@ function PositionenSection({ positions, pickMode, onPickModeChange, onPositionsC
         }}
       >
         {pickMode ? t("edit.positions.pick_btn_active") : t("edit.positions.pick_btn_idle")}
-      </button>
+      </button>}
 
       {/* Position rows */}
       {positions.length > 0 && (

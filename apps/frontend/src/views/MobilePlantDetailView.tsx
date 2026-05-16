@@ -21,12 +21,14 @@ function TopBar({
   nameCommon,
   nameBotanical,
   onBack,
+  onEdit,
   onChatClick,
   chatOpen,
 }: {
   nameCommon:    string;
   nameBotanical: string | null;
   onBack:        () => void;
+  onEdit:        () => void;
   onChatClick:   () => void;
   chatOpen:      boolean;
 }) {
@@ -85,10 +87,11 @@ function TopBar({
         )}
       </div>
 
-      {/* Edit — stub (AC #3, full wiring in future task) */}
+      {/* Edit */}
       <button
         data-testid="mobile-plant-detail-edit"
         aria-label={t("detail.btn_edit")}
+        onClick={onEdit}
         style={{ ...topBtnStyle, background: "rgba(255,255,255,.15)", fontSize: "16px" }}
       >
         ✏️
@@ -174,6 +177,7 @@ export function MobilePlantDetailView({ garden }: MobilePlantDetailViewProps) {
         nameCommon={plant.name_common}
         nameBotanical={plant.name_botanical}
         onBack={() => navigate("/plants")}
+        onEdit={() => navigate(`/plants/${plant.id}/edit`)}
         onChatClick={() => setChatOpen((v) => !v)}
         chatOpen={chatOpen}
       />

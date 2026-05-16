@@ -88,12 +88,14 @@ function TopBar({
   viewMode,
   onViewChange,
   onMenuClick,
+  onAddClick,
   onChatClick,
   chatOpen,
 }: {
   viewMode:     ViewMode;
   onViewChange: (m: ViewMode) => void;
   onMenuClick:  () => void;
+  onAddClick:   () => void;
   onChatClick:  () => void;
   chatOpen:     boolean;
 }) {
@@ -193,6 +195,7 @@ function TopBar({
       <button
         data-testid="mobile-plants-add-btn"
         aria-label="Neue Pflanze"
+        onClick={onAddClick}
         style={{ ...topBtnStyle, background: "rgba(255,255,255,.15)" }}
       >
         <Plus size={20} strokeWidth={1.5} />
@@ -532,6 +535,7 @@ export function MobilePlantsView({ garden, loading }: MobilePlantsViewProps) {
         viewMode={viewMode}
         onViewChange={handleViewChange}
         onMenuClick={() => setDrawerOpen(true)}
+        onAddClick={() => navigate("/plants/new")}
         onChatClick={() => setChatOpen((v) => !v)}
         chatOpen={chatOpen}
       />
