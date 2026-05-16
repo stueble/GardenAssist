@@ -1,21 +1,30 @@
 /**
  * MobileSettingsView — mobile wrapper around SettingsView.
  *
- * Adds a top bar with a back button (← navigates to "/") and a title,
- * matching the pattern used by other mobile views (MobilePlanView, etc.).
- * The existing SettingsView is rendered below, scrollable.
+ * Top bar: ← back button, title, chat button (MessageCircle).
+ * ChatPanel slides in from below (same pattern as MobileTaskView),
+ * shrinking the SettingsView scroll area.
  */
 
+import { useState }        from "react";
 import { useNavigate }     from "react-router-dom";
 import { useTranslation }  from "react-i18next";
-import { ArrowLeft }       from "lucide-react";
+import { ArrowLeft, MessageCircle } from "lucide-react";
 import { SettingsView }    from "@/views/SettingsView";
-import { topBtnStyle }     from "@/components/mobile/MobileParts";
+import { topBtnStyle, ChatPanel } from "@/components/mobile/MobileParts";
 import type { Garden }     from "@api/garden";
 
 // ── TopBar ────────────────────────────────────────────────────────────────────
 
-function TopBar({ onBack }: { onBack: () => void }) {
+function TopBar({
+  onBack,
+  onChatClick,
+  chatOpen,
+}: {
+  onBack:      () => void;
+  onChatClick: () => void;
+  chatOpen:    boolean;
+}) {
   const { t } = useTranslation("common");
   return (
     <div
@@ -49,6 +58,31 @@ function TopBar({ onBack }: { onBack: () => void }) {
       }}>
         {t("mobile.settings")}
       </div>
+
+      <button
+        data-testid="mobile-settings-chat-btn"
+        aria-label={t("ai.panel_label")}
+        onClick={onChatClick}
+        style={{
+          ...topBtnStyle,
+          background: chatOpen ? "rgba(255,255,255,.30)" : "rgba(255,255,255,.15)",
+          position:   "relative",
+        }}
+      >
+        <MessageCircle size={20} strokeWidth={1.5} />
+        {!chatOpen && (
+          <span style={{
+            position:     "absolute",
+            top:          "5px",
+            right:        "5px",
+            width:        "7px",
+            height:       "7px",
+            borderRadius: "50%",
+            background:   "#7aab6a",
+            border:       "1.5px solid #2d4a2d",
+          }} />
+        )}
+      </button>
     </div>
   );
 }
@@ -63,11 +97,17 @@ export interface MobileSettingsViewProps {
 
 export function MobileSettingsView(props: MobileSettingsViewProps) {
   const navigate = useNavigate();
+  const [chatOpen, setChatOpen] = useState(false);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, overflow: "hidden" }}>
-      <TopBar onBack={() => navigate("/")} />
+      <TopBar
+        onBack={() => navigate("/")}
+        onChatClick={() => setChatOpen((v) => !v)}
+        chatOpen={chatOpen}
+      />
       <SettingsView {...props} hideTitle compactPadding />
+      <ChatPanel open={chatOpen} onClose={() => setChatOpen(false)} />
     </div>
   );
 }
