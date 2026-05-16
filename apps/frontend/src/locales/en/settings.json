@@ -15,7 +15,7 @@
   "section_subtitles": {
     "garden_plan": "Upload a floor plan image used as background for the interactive plan",
     "location": "For weather data and frost warnings",
-    "irrigation_zones": "Define the zones of your irrigation system",
+    "irrigation_zones": "Define the zones of your irrigation system and the dry threshold for warnings",
     "plant_categories": "Available categories in the plant dialog (dropdown)",
     "color_presets": "Preset colors for bloom periods, foliage and miscellaneous",
     "ai": "API key and model configuration",
@@ -32,6 +32,7 @@
     "location_zip": "Postal Code",
     "irrigation_zones": "Irrigation Zones",
     "plant_categories": "Plant Categories",
+    "soil_moisture_dry_threshold_pct": "Dry threshold (%)",
     "task_lookback_weeks": "Lookback (weeks)",
     "task_lookahead_weeks": "Lookahead (weeks)",
     "attachment_size_limit_mb": "Max. file size (MB)",

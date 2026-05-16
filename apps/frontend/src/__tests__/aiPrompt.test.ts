@@ -234,6 +234,7 @@ const MOCK_SETTINGS: AssistantSettings = {
     { schedule_type: "bloom", name: "Dunkelrot", color: "#8B0000" },
   ],
   gardener_profile: null,
+  soil_moisture_dry_threshold_pct: 40,
 };
 
 describe("buildSystemBlocks — block structure (TASK-056 AC #1, #2)", () => {

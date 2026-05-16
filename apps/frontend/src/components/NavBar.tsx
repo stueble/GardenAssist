@@ -24,7 +24,7 @@ export function NavBar() {
         className="flex items-center shrink-0 px-5 h-full border-r border-white/10 font-display leading-none text-green-pale tracking-[0.5px] select-none"
         style={{ gap: "8px", width: "var(--width-nav-logo)", fontSize: "var(--font-size-logo)" }}
       >
-        <span aria-hidden="true">🌿</span>{t("app_name")}
+        <img src="/favicon.svg" alt="" aria-hidden="true" style={{ width: "25px", height: "25px" }} />{t("app_name")}
       </span>
 
       {/* Main tabs */}

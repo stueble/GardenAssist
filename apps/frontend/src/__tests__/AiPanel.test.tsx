@@ -24,6 +24,7 @@ import type { Plant } from "@api/plant";
 const MOCK_SETTINGS_UNCONFIGURED: Settings = {
   language: "de", location_city: null, location_zip: null,
   irrigation_zones: [], plant_categories: [], color_presets: [],
+  soil_moisture_dry_threshold_pct: 40,
   task_lookback_weeks: 2, task_lookahead_weeks: 4,
   attachment_size_limit_mb: 10,
   ai_provider: null, ai_model: null, ai_api_key: null,

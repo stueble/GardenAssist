@@ -42,7 +42,6 @@ const FIELD_CAPACITY_FALLBACK = 0.30;
 
 // ── Status thresholds (fraction of field capacity) ────────────────────────────
 
-const DRY_THRESHOLD = 0.35;
 const WET_THRESHOLD = 0.75;
 
 // ── Open-Meteo response types ─────────────────────────────────────────────────
@@ -128,8 +127,8 @@ export function fieldCapacityForZone(
 }
 
 /** Derive SoilMoistureStatus from moisture fraction (0–1). */
-export function moistureStatus(fraction: number): SoilMoistureStatus {
-  if (fraction < DRY_THRESHOLD) return "dry";
+export function moistureStatus(fraction: number, dryThreshold = 0.35): SoilMoistureStatus {
+  if (fraction < dryThreshold) return "dry";
   if (fraction > WET_THRESHOLD) return "wet";
   return "ok";
 }
@@ -322,8 +321,9 @@ export async function fetchSoilMoisture(db: Db, lat: number, lon: number): Promi
       history.push({ date, moisture: pct });
     }
 
-    const current = history[history.length - 1]?.moisture ?? 0;
-    const status  = moistureStatus(current / 100);
+    const current      = history[history.length - 1]?.moisture ?? 0;
+    const dryThreshold = (settings.soil_moisture_dry_threshold_pct / 100);
+    const status       = moistureStatus(current / 100, dryThreshold);
 
     return {
       zone:           zoneName,

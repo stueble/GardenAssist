@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { ListEntry, AddRowButton, FieldHint } from "./FieldInput";
+import { FieldLabel, FieldInput, ListEntry, AddRowButton, FieldHint } from "./FieldInput";
 import type { Settings } from "@api/settings";
 
 interface Props {
@@ -25,6 +25,13 @@ export function ZonesSection({ form, onChange }: Props) {
     onChange({ irrigation_zones: [...form.irrigation_zones, ""] });
   }
 
+  function handleThreshold(e: React.ChangeEvent<HTMLInputElement>) {
+    const val = parseInt(e.target.value, 10);
+    if (!isNaN(val) && val >= 1 && val <= 99) {
+      onChange({ soil_moisture_dry_threshold_pct: val });
+    }
+  }
+
   return (
     <div>
       <div className="flex flex-col gap-[6px] mb-[10px]">
@@ -39,7 +46,22 @@ export function ZonesSection({ form, onChange }: Props) {
         ))}
       </div>
       <AddRowButton onClick={addZone}>{t("zones_section.add_btn")}</AddRowButton>
-      <FieldHint>{t("zones_section.hint")}</FieldHint>
+
+      <div className="mt-[14px]">
+        <FieldLabel htmlFor="soil_moisture_dry_threshold_pct">
+          {t("fields.soil_moisture_dry_threshold_pct")}
+        </FieldLabel>
+        <FieldInput
+          id="soil_moisture_dry_threshold_pct"
+          type="number"
+          min={1}
+          max={99}
+          value={form.soil_moisture_dry_threshold_pct}
+          onChange={handleThreshold}
+          className="w-24"
+        />
+        <FieldHint>{t("zones_section.hint")}</FieldHint>
+      </div>
     </div>
   );
 }

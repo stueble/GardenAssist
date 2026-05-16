@@ -116,6 +116,7 @@ export const SettingsSchema = z.object({
   irrigation_zones:         z.array(z.string()),
   plant_categories:         z.array(z.string()),
   color_presets:            z.array(ColorPresetSchema),
+  soil_moisture_dry_threshold_pct: z.number().int().min(1).max(99),
   task_lookback_weeks:      z.number().int().positive(),
   task_lookahead_weeks:     z.number().int().positive(),
   attachment_size_limit_mb: z.number().int().positive(),

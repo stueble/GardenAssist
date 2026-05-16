@@ -34,6 +34,7 @@ vi.mock("../api/client", () => ({
         irrigation_zones:         [],
         plant_categories:         [],
         color_presets:            [],
+        soil_moisture_dry_threshold_pct: 40,
         task_lookback_weeks:      8,
         task_lookahead_weeks:     4,
         attachment_size_limit_mb: 10,

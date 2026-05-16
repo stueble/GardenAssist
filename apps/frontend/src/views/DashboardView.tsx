@@ -20,6 +20,7 @@ import { useAssistantSettings } from "@/hooks/useAssistantSettings";
 import { setAssistantContext } from "@/hooks/useAssistantContext";
 import { GardenPlanWidget, type PlanPin } from "@/components/GardenPlanWidget";
 import { PlantDetailPanel } from "@/components/PlantDetailPanel";
+import { TaskSidebar } from "@/components/TaskSidebar";
 import { apiClient, getWeather, getSoilMoisture } from "@/api/client";
 import type { WeatherData, SoilMoistureData, SoilMoistureZone } from "@api/weather";
 import { getPlantEditHandler } from "@/hooks/usePlantEditContext";
@@ -306,41 +307,27 @@ export function DashboardView({ garden, loading, invalidateGarden }: DashboardVi
         style={{
           width:         "320px",
           flexShrink:    0,
-          background:    "var(--warm-white)",
           borderRight:   "1px solid var(--border)",
           display:       "flex",
           flexDirection: "column",
           overflow:      "hidden",
         }}
       >
-        {/* Weather widget */}
-        <WeatherWidget
-          onWeatherLoaded={setWeather}
-          zones={assistantSettings?.irrigation_zones ?? []}
-        />
-
-        <div style={{ height: "1px", background: "var(--border)", flexShrink: 0 }} />
-
-        {/* Frost warnings — computed from weather forecast × plant frost limits */}
-        {frostWarnings.length > 0 && (
-          <WarningsSection
-            warnings={frostWarnings}
-            onPlantSelect={(plantId) => {
-              const plant = garden?.plants.find((p) => p.id === plantId);
-              if (plant) setSelected((prev) => prev?.id === plantId ? null : plant);
-            }}
+        {selected ? (
+          /* Plant detail panel replaces task sidebar when a pin is selected */
+          <PlantDetailPanel
+            plant={selected}
+            onClose={handleDetailClose}
+            onEdit={(p) => getPlantEditHandler()?.editPlant(p.id, {})}
+            onDelete={() => { invalidateGarden(); setSelected(null); }}
+          />
+        ) : (
+          <TaskSidebar
+            garden={garden}
+            loading={loading}
+            invalidateGarden={invalidateGarden}
           />
         )}
-
-        {/* Todo list always in left column */}
-        <TodoList
-          garden={garden}
-          loading={loading}
-          onTaskResolved={invalidateGarden}
-          onPlantSelect={(plant) => {
-            setSelected((prev) => prev?.id === plant.id ? null : plant);
-          }}
-        />
       </div>
 
       {/* ── Center: garden plan + monthly band ── */}
@@ -364,34 +351,6 @@ export function DashboardView({ garden, loading, invalidateGarden }: DashboardVi
 
         {/* Monthly band */}
         <MonthBand monthData={monthData} currentMonthIdx={weekToMonthIdx(cw)} />
-      </div>
-
-      {/* ── Right panel: Detail view ── */}
-      <div
-        data-testid="dashboard-detail-panel"
-        style={{
-          width:         selected ? "360px" : "0",
-          minWidth:      selected ? "360px" : "0",
-          overflow:      "hidden",
-          background:    "var(--warm-white)",
-          borderLeft:    selected ? "1px solid var(--border)" : "none",
-          display:       "flex",
-          flexDirection: "column",
-          transition:    "width .3s ease, min-width .3s ease",
-          flexShrink:    0,
-        }}
-      >
-        {selected && (
-          <PlantDetailPanel
-            plant={selected}
-            onClose={handleDetailClose}
-            onEdit={(p) => getPlantEditHandler()?.editPlant(p.id, {})}
-            onDelete={() => {
-              invalidateGarden();
-              setSelected(null);
-            }}
-          />
-        )}
       </div>
 
       {/* AiPanel is rendered once in App.tsx — not here */}

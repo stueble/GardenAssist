@@ -10,7 +10,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import { I18nextProvider } from "react-i18next";
 import i18n from "../i18n/index";
 import { DashboardView, computeFrostWarnings, resetSoilState, setSoilStateForTesting } from "../views/DashboardView";
@@ -202,9 +202,9 @@ describe("DashboardView — layout", () => {
     expect(screen.getByTestId("dashboard-sidebar")).toBeInTheDocument();
   });
 
-  it("renders the weather widget stub", () => {
+  it("renders the weather widget", () => {
     renderDashboard();
-    expect(screen.getByTestId("weather-widget")).toBeInTheDocument();
+    expect(screen.getByTestId("mobile-weather")).toBeInTheDocument();
   });
 
   it("renders the monthly band", async () => {
@@ -532,6 +532,7 @@ function renderWithSoilMoisture(soilData: SoilMoistureData | null, irrigationZon
   (apiClient.getSettings as ReturnType<typeof vi.fn>).mockResolvedValue({
     language: "de", location_city: "Berlin", location_zip: null,
     irrigation_zones: irrigationZones, plant_categories: [], color_presets: [],
+    soil_moisture_dry_threshold_pct: 40,
     task_lookback_weeks: 2, task_lookahead_weeks: 4,
     attachment_size_limit_mb: 10,
     ai_provider: null, ai_model: null, ai_api_key: null,
@@ -547,87 +548,91 @@ function renderWithSoilMoisture(soilData: SoilMoistureData | null, irrigationZon
     </I18nextProvider>
   );
 
-  // Directly inject soil state — bypasses async polling so tests are deterministic
-  if (soilData !== null) {
-    setSoilStateForTesting({ status: "ok", data: soilData });
-  } else {
-    setSoilStateForTesting({ status: "no_location" });
-  }
+  // Directly inject soil state inside act() so React processes the state update
+  act(() => {
+    if (soilData !== null) {
+      setSoilStateForTesting({ status: "ok", data: soilData });
+    } else {
+      setSoilStateForTesting({ status: "no_location" });
+    }
+  });
 
   return result;
 }
 
-describe("SoilMoistureSection — AC #5: hidden when no zones configured", () => {
+describe("WeatherWidgetCompact — soil moisture (AC #5: hidden when no zones)", () => {
   afterEach(() => { vi.clearAllMocks(); resetAiPanelState(); resetSoilState(); });
 
-  it("does not render soil-moisture-section when irrigation_zones is empty", async () => {
+  it("moisture summary not shown in collapsed row when no zones configured", async () => {
     renderWithSoilMoisture(null, []);
-    // Give effects time to run — section must never appear
-    await waitFor(() => {
-      expect(screen.queryByTestId("soil-moisture-section")).not.toBeInTheDocument();
-    });
+    await waitFor(() => screen.getByTestId("mobile-weather"));
+    // No soil summary pill visible (no zones → soilMax/soilMin is null)
+    expect(screen.queryByText(/💧/)).not.toBeInTheDocument();
   });
 });
 
-describe("SoilMoistureSection — AC #1/#2/#3/#4: renders zones with sparklines and status dots", () => {
+describe("WeatherWidgetCompact — soil moisture (AC #1/#2/#3/#4: zone data in expanded view)", () => {
   afterEach(() => { vi.clearAllMocks(); resetAiPanelState(); resetSoilState(); });
 
-  it("renders one row per irrigation zone (AC #1)", async () => {
-    renderWithSoilMoisture(makeSoilData([
-      { zone: "Hochbeet", status: "ok" },
-      { zone: "Terrasse", status: "dry" },
-    ]));
+  it("shows moisture summary pill in collapsed row when zones have data (AC #1)", async () => {
+    const soilData = makeSoilData([
+      { zone: "Hochbeet", status: "ok", current: 55 },
+      { zone: "Terrasse", status: "dry", current: 20 },
+    ]);
+    renderWithSoilMoisture(soilData);
+    // Wait for useAssistantSettings to resolve (zones become non-empty), then re-inject
+    await waitFor(() => screen.getByTestId("mobile-weather-toggle"));
+    act(() => { setSoilStateForTesting({ status: "ok", data: soilData }); });
     await waitFor(() => {
-      expect(screen.getByTestId("soil-zone-Hochbeet")).toBeInTheDocument();
-      expect(screen.getByTestId("soil-zone-Terrasse")).toBeInTheDocument();
-    });
+      expect(screen.getByTestId("mobile-weather")).toHaveTextContent("💧");
+    }, { timeout: 3000 });
   });
 
-  it("renders sparkline as SVG polyline for each zone (AC #3)", async () => {
-    renderWithSoilMoisture(makeSoilData([
-      { zone: "Hochbeet", status: "ok" },
-    ]));
-    await waitFor(() => {
-      const sparkline = screen.getByTestId("soil-sparkline-Hochbeet");
-      expect(sparkline.tagName.toLowerCase()).toBe("svg");
-      const polyline = sparkline.querySelector("polyline");
-      expect(polyline).not.toBeNull();
-      expect(polyline!.getAttribute("points")).toBeTruthy();
-    });
-  });
-
-  it("status dot is present for each zone (AC #2/#4)", async () => {
-    renderWithSoilMoisture(makeSoilData([
-      { zone: "Hochbeet", status: "ok" },
-    ]));
-    await waitFor(() => {
-      expect(screen.getByTestId("soil-dot-Hochbeet")).toBeInTheDocument();
-    });
-  });
-
-  it("section is hidden when soil moisture returns null (no location)", async () => {
-    renderWithSoilMoisture(null);
-    // With zones configured but no data yet, section is not shown
-    await waitFor(() => {
-      expect(screen.queryByTestId("soil-moisture-section")).not.toBeInTheDocument();
-    });
-  });
-
-  it("section heading shows i18n title", async () => {
-    renderWithSoilMoisture(makeSoilData([
-      { zone: "Hochbeet", status: "ok" },
-    ]));
-    await waitFor(() => {
-      expect(screen.getByTestId("soil-moisture-section")).toHaveTextContent("Bodenfeuchtigkeit");
-    });
-  });
-
-  it("current moisture percentage is displayed (AC #2)", async () => {
+  it("expanded view shows zone names and moisture % (AC #2)", async () => {
     renderWithSoilMoisture(makeSoilData([
       { zone: "Hochbeet", status: "ok", current: 67 },
     ]));
+    // Wait for settings + re-inject soil state after zones are known
+    await waitFor(() => screen.getByTestId("mobile-weather-toggle"));
+    // Re-inject so WeatherWidgetCompact sees the data with zones now loaded
+    act(() => { setSoilStateForTesting({ status: "ok", data: makeSoilData([{ zone: "Hochbeet", status: "ok", current: 67 }]) }); });
+    fireEvent.click(screen.getByTestId("mobile-weather-toggle"));
     await waitFor(() => {
-      expect(screen.getByTestId("soil-zone-Hochbeet")).toHaveTextContent("67%");
+      const expanded = screen.getByTestId("mobile-weather-expanded");
+      expect(expanded).toHaveTextContent("Hochbeet");
+      expect(expanded).toHaveTextContent("67 %");
+    }, { timeout: 3000 });
+  });
+
+  it("expanded view shows sparkline SVG per zone (AC #3)", async () => {
+    renderWithSoilMoisture(makeSoilData([
+      { zone: "Hochbeet", status: "ok" },
+    ]));
+    await waitFor(() => screen.getByTestId("mobile-weather-toggle"));
+    act(() => { setSoilStateForTesting({ status: "ok", data: makeSoilData([{ zone: "Hochbeet", status: "ok" }]) }); });
+    fireEvent.click(screen.getByTestId("mobile-weather-toggle"));
+    await waitFor(() => {
+      const expanded = screen.getByTestId("mobile-weather-expanded");
+      const svg = expanded.querySelector("svg");
+      expect(svg).not.toBeNull();
+    }, { timeout: 3000 });
+  });
+
+  it("no soil data shown when soil state is no_location", async () => {
+    renderWithSoilMoisture(null);
+    await waitFor(() => screen.getByTestId("mobile-weather"));
+    expect(screen.queryByText(/💧/)).not.toBeInTheDocument();
+  });
+
+  it("expanded view shows section heading (AC #4)", async () => {
+    renderWithSoilMoisture(makeSoilData([
+      { zone: "Hochbeet", status: "ok" },
+    ]));
+    await waitFor(() => screen.getByTestId("mobile-weather-toggle"));
+    act(() => { setSoilStateForTesting({ status: "ok", data: makeSoilData([{ zone: "Hochbeet", status: "ok" }]) }); });
+    fireEvent.click(screen.getByTestId("mobile-weather-toggle"));
+    await waitFor(() => {
+      expect(screen.getByTestId("mobile-weather-expanded")).toHaveTextContent("Bodenfeuchtigkeit");
     });
   });
 });

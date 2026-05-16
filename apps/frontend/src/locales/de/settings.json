@@ -15,7 +15,7 @@
   "section_subtitles": {
     "garden_plan": "Grundriss-Bild hochladen, das als Hintergrund des interaktiven Plans dient",
     "location": "Für Wetterdaten und Frostwarnungen",
-    "irrigation_zones": "Definiere die Zonen deiner Bewässerungsanlage",
+    "irrigation_zones": "Definiere die Zonen deiner Bewässerungsanlage und die Trockenheitsschwelle für Warnungen",
     "plant_categories": "Verfügbare Kategorien im Pflanzendialog (Dropdown)",
     "color_presets": "Vorauswahl der Farben in Blütezeiten, Blätter und Sonstiges",
     "ai": "API-Schlüssel und Modell-Konfiguration",
@@ -32,6 +32,7 @@
     "location_zip": "Postleitzahl",
     "irrigation_zones": "Bewässerungszonen",
     "plant_categories": "Pflanzenkategorien",
+    "soil_moisture_dry_threshold_pct": "Trockenheitsschwelle (%)",
     "task_lookback_weeks": "Rückblick (Wochen)",
     "task_lookahead_weeks": "Vorschau (Wochen)",
     "attachment_size_limit_mb": "Max. Dateigröße (MB)",

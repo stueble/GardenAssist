@@ -204,7 +204,7 @@ function MonthHeader() {
       zIndex:       5,
       borderBottom: "1px solid #dde8d8",
     }}>
-      <div style={{ width: "100px", flexShrink: 0 }} />
+      <div style={{ width: "110px", flexShrink: 0 }} />
       {/*
         CSS grid with 48 columns + column-gap:1px — identical structure to LaneBarRow.
         Row 1: month letters, each spanning 4 columns → perfectly centred.
@@ -338,7 +338,7 @@ function PlantRow({
       }}
     >
       {/* Plant name column — 100px */}
-      <div style={{ width: "100px", flexShrink: 0, paddingTop: "2px" }}>
+      <div style={{ width: "110px", flexShrink: 0, paddingTop: "2px" }}>
         <div style={{ fontSize: "12px", fontWeight: 500, color: "#1e2e1e", lineHeight: 1.2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={plant.name_common}>
           {plant.name_common}
         </div>

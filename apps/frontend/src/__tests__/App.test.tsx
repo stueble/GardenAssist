@@ -27,7 +27,7 @@ global.ResizeObserver = class {
 vi.mock("../api/client", () => ({
   apiClient: {
     getGarden:    vi.fn().mockResolvedValue({ plan_url:null, plan_name:null, plants:[], attachments:[], journal_entries:[], warnings:[] }),
-    getSettings:  vi.fn().mockResolvedValue({ language:"de", location_city:null, location_zip:null, irrigation_zones:[], plant_categories:[], color_presets:[], task_lookback_weeks:2, task_lookahead_weeks:4, attachment_size_limit_mb:10, ai_provider:"anthropic", ai_model:"claude-sonnet-4-6", ai_api_key:"sk-test" }),
+    getSettings:  vi.fn().mockResolvedValue({ language:"de", location_city:null, location_zip:null, irrigation_zones:[], plant_categories:[], color_presets:[], soil_moisture_dry_threshold_pct:40, task_lookback_weeks:2, task_lookahead_weeks:4, attachment_size_limit_mb:10, ai_provider:"anthropic", ai_model:"claude-sonnet-4-6", ai_api_key:"sk-test" }),
     updateSettings: vi.fn().mockImplementation((s) => Promise.resolve(s)),
     exportJson:   vi.fn().mockResolvedValue(new Blob()),
     exportPlantsCsv: vi.fn().mockResolvedValue(new Blob()),
@@ -35,8 +35,9 @@ vi.mock("../api/client", () => ({
     uploadGardenPlan: vi.fn(),
     deleteGardenPlan: vi.fn(),
   },
-  chatWithAi:  vi.fn().mockResolvedValue({ content: "Antwort vom Assistenten" }),
-  getWeather:  vi.fn().mockResolvedValue(null),
+  chatWithAi:      vi.fn().mockResolvedValue({ content: "Antwort vom Assistenten" }),
+  getWeather:      vi.fn().mockResolvedValue(null),
+  getSoilMoisture: vi.fn().mockResolvedValue(null),
 }));
 
 beforeEach(async () => {

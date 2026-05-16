@@ -108,6 +108,7 @@ export function mockSettings(): Settings {
       { schedule_type: "fertilization", name: "Blau",  color: "#2980b9" },
       { schedule_type: "bloom",         name: "Rot",   color: "#c0392b" },
     ],
+    soil_moisture_dry_threshold_pct: 40,
     task_lookback_weeks:      2,
     task_lookahead_weeks:     4,
     attachment_size_limit_mb: 10,

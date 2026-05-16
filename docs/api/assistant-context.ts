@@ -33,6 +33,8 @@ export type AssistantSettings = {
   color_presets:    ColorPreset[];
   /** null falls back to "engaged" (standard seasonal care). */
   gardener_profile: GardenerProfile | null;
+  /** Dry threshold for soil moisture warnings, as % of field capacity. Default: 40. */
+  soil_moisture_dry_threshold_pct: number;
 };
 
 /**

@@ -101,6 +101,16 @@ export type Settings = {
    */
   color_presets: ColorPreset[];
 
+  // ── Soil Moisture ──────────────────────────────────────────────────────────
+
+  /**
+   * Dry threshold for soil moisture warnings, expressed as a percentage of
+   * field capacity (0–100). Zones below this value are marked as "dry" and
+   * shown with an orange warning in the weather widget.
+   * Default: 40
+   */
+  soil_moisture_dry_threshold_pct: number;
+
   // ── Task Generation ────────────────────────────────────────────────────────
 
   /**

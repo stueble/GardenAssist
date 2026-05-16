@@ -27,6 +27,7 @@ function makeSettings(presets: ColorPreset[] = []): Settings {
     irrigation_zones: [],
     plant_categories: [],
     color_presets: presets,
+    soil_moisture_dry_threshold_pct: 40,
     task_lookback_weeks: 2,
     task_lookahead_weeks: 4,
     attachment_size_limit_mb: 10,

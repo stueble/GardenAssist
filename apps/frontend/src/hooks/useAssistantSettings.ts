@@ -21,6 +21,7 @@ export function useAssistantSettings(): AssistantSettings | undefined {
         plant_categories: s.plant_categories,
         color_presets:    s.color_presets,
         gardener_profile: s.gardener_profile,
+        soil_moisture_dry_threshold_pct: s.soil_moisture_dry_threshold_pct,
       });
     }).catch(() => {
       // Non-critical — assistant works without settings block

@@ -135,9 +135,9 @@ export function computeLaneGeometry(totalLanes: number): LaneGeometry {
 
 export const TOTAL_SEGS = 48; // 12 months × 4
 
-/** Convert ISO week (1–52) to segment index (0–47). */
+/** Convert ISO week (1–48) to segment index (0–47). Weeks 49–52 clamp to 47. */
 export function weekToSeg(week: number): number {
-  return Math.min(TOTAL_SEGS - 1, Math.floor((week - 1) / TOTAL_WEEKS * TOTAL_SEGS));
+  return Math.min(TOTAL_SEGS - 1, week - 1);
 }
 
 /**
