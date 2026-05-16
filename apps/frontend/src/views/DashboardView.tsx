@@ -34,7 +34,8 @@ import {
   STATUS_TEXT,
   STATUS_ICON,
 } from "@/lib/plantStatus";
-import { weekRangeLabel, SCHEDULE_ICON } from "@/components/PlantDetailPanel";
+import { SCHEDULE_ICON } from "@/components/PlantDetailPanel";
+import { plantToPin } from "@/lib/plantToPin";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -76,34 +77,6 @@ function relativeTaskSub(task: Task, t: TFn): string {
   const weeksLeft = end_week - cw;
   if (weeksLeft <= 0) return t("dashboard.task_current");
   return t("dashboard.task_within_other", { count: weeksLeft });
-}
-
-/** Build a PlanPin from a plant position for the Dashboard. */
-function plantToPin(plant: Plant, posIdx: number, selectedId: string | null): PlanPin {
-  const pos    = plant.positions[posIdx];
-  const status = derivePlantStatus(plant);
-  const task   = nextCareTask(plant);
-
-  const taskStr = task
-    ? `${SCHEDULE_ICON[task.schedule.schedule_type] ?? "📌"} ${task.schedule.label ?? ""} (${weekRangeLabel(task.schedule.start_week, task.schedule.end_week)})`
-    : undefined;
-
-  const statusLabel = status; // translated in useMemo below using tPlants("status.<status>")
-
-  const firstPhoto = plant.attachments.find((a) => a.attachment_type === "image");
-
-  return {
-    x:        pos.x_percent,
-    y:        pos.y_percent,
-    emoji:    plant.icon ?? "🌿",
-    photoUrl: firstPhoto?.url,
-    name:     plant.name_common,
-    color:      "rgba(255,255,255,.15)",
-    taskStatus:  (status === "overdue" || status === "due") ? status : undefined,
-    protected:   plant.temperature_protected || undefined,
-    selected:    selectedId === plant.id,
-    tooltip:     { status: statusLabel, nextTask: taskStr },
-  };
 }
 
 // ── Frost warnings ────────────────────────────────────────────────────────────
@@ -313,21 +286,11 @@ export function DashboardView({ garden, loading, invalidateGarden }: DashboardVi
           overflow:      "hidden",
         }}
       >
-        {selected ? (
-          /* Plant detail panel replaces task sidebar when a pin is selected */
-          <PlantDetailPanel
-            plant={selected}
-            onClose={handleDetailClose}
-            onEdit={(p) => getPlantEditHandler()?.editPlant(p.id, {})}
-            onDelete={() => { invalidateGarden(); setSelected(null); }}
-          />
-        ) : (
-          <TaskSidebar
-            garden={garden}
-            loading={loading}
-            invalidateGarden={invalidateGarden}
-          />
-        )}
+        <TaskSidebar
+          garden={garden}
+          loading={loading}
+          invalidateGarden={invalidateGarden}
+        />
       </div>
 
       {/* ── Center: garden plan + monthly band ── */}
@@ -352,6 +315,28 @@ export function DashboardView({ garden, loading, invalidateGarden }: DashboardVi
         {/* Monthly band */}
         <MonthBand monthData={monthData} currentMonthIdx={weekToMonthIdx(cw)} />
       </div>
+
+      {/* ── Plant detail panel — slides in to the right of the garden plan, left of AiPanel ── */}
+      {selected && (
+        <div
+          data-testid="dashboard-plant-detail"
+          style={{
+            width:         "320px",
+            flexShrink:    0,
+            borderLeft:    "1px solid var(--border)",
+            display:       "flex",
+            flexDirection: "column",
+            overflow:      "hidden",
+          }}
+        >
+          <PlantDetailPanel
+            plant={selected}
+            onClose={handleDetailClose}
+            onEdit={(p) => getPlantEditHandler()?.editPlant(p.id, {})}
+            onDelete={() => { invalidateGarden(); setSelected(null); }}
+          />
+        </div>
+      )}
 
       {/* AiPanel is rendered once in App.tsx — not here */}
     </div>

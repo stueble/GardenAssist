@@ -1,11 +1,11 @@
 ---
 id: TASK-074
 title: Dashboard – Soil Moisture Sparklines per Irrigation Zone
-status: In Review
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-11 16:25'
-updated_date: '2026-05-12 23:02'
+updated_date: '2026-05-16 13:43'
 labels:
   - frontend
   - weather
@@ -13,7 +13,7 @@ labels:
 dependencies:
   - TASK-073
 priority: low
-ordinal: 72000
+ordinal: 85000
 ---
 
 ## Description

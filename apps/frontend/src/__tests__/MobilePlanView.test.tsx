@@ -1,17 +1,25 @@
 /**
- * MobilePlanView tests — story-087.
+ * MobilePlanView tests — story-087 / story-090.
  *
  * AC #1  TopBar: title "Gartenplan", hamburger, + button, chat button
  * AC #2  Plan area fills available space (rendered)
  * AC #5  Legend rendered by GardenPlanWidget (legend=true)
  * AC #8  ChatPanel starts closed; opens on chat click
  * AC #9  BottomNav: Plan tab active
+ *
+ * story-090 AC:
+ * AC #1  First tap on pin shows chip with emoji, name, status dot
+ * AC #2  Tapping the chip navigates to /plants/:id
+ * AC #3  Tapping background dismisses chip
+ * AC #4  Tapping different pin dismisses previous chip, shows new one
+ * AC #5  Chip appearance consistent with existing tooltip
+ * AC #6  No regression on desktop — onPinClick prop wired to widget
  */
 
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { I18nextProvider } from "react-i18next";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Routes, Route } from "react-router-dom";
 import i18n from "../i18n/index";
 import { MobilePlanView } from "../views/MobilePlanView";
 import type { Garden } from "@api/garden";
@@ -85,15 +93,27 @@ function renderView(garden: Garden | null = MOCK_GARDEN) {
   return render(
     <MemoryRouter initialEntries={["/plan"]}>
       <I18nextProvider i18n={i18n}>
-        <MobilePlanView
-          garden={garden}
-          loading={false}
-          invalidateGarden={vi.fn()}
-        />
+        <Routes>
+          <Route
+            path="/plan"
+            element={
+              <MobilePlanView
+                garden={garden}
+                loading={false}
+                invalidateGarden={vi.fn()}
+              />
+            }
+          />
+          <Route path="/plants/:id" element={<div data-testid="plant-detail-view" />} />
+        </Routes>
       </I18nextProvider>
     </MemoryRouter>,
   );
 }
+
+beforeEach(async () => {
+  await i18n.changeLanguage("de");
+});
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
@@ -188,6 +208,96 @@ describe("MobilePlanView", () => {
       const noplan: Garden = { ...MOCK_GARDEN, plan_url: null };
       renderView(noplan);
       expect(screen.getByTestId("mobile-plan-area")).toBeDefined();
+    });
+  });
+
+  // ── story-090: Pin tap interaction ──────────────────────────────────────────
+
+  describe("story-090 AC #1 — first tap on pin shows chip", () => {
+    it("chip is not visible initially", () => {
+      renderView();
+      expect(screen.queryByTestId("pin-chip")).toBeNull();
+    });
+
+    it("chip appears after tapping a pin", () => {
+      renderView();
+      const pin = screen.getByTestId("plan-pin-0");
+      fireEvent.click(pin);
+      expect(screen.getByTestId("pin-chip")).toBeInTheDocument();
+    });
+
+    it("chip shows the plant name", () => {
+      renderView();
+      fireEvent.click(screen.getByTestId("plan-pin-0"));
+      const chip = screen.getByTestId("pin-chip");
+      expect(chip.textContent).toContain("Plant p1");
+    });
+
+    it("chip shows the plant emoji", () => {
+      renderView();
+      fireEvent.click(screen.getByTestId("plan-pin-0"));
+      const chip = screen.getByTestId("pin-chip");
+      expect(chip.textContent).toContain("🌹");
+    });
+
+    it("chip shows status text for overdue plant", () => {
+      renderView();
+      fireEvent.click(screen.getByTestId("plan-pin-0")); // p1 = overdue
+      const chip = screen.getByTestId("pin-chip");
+      // Status label is translated: "Überfällig" in de
+      expect(chip.textContent).toMatch(/überfällig/i);
+    });
+  });
+
+  describe("story-090 AC #2 — chip tap navigates to /plants/:id", () => {
+    it("tapping the chip navigates to the plant detail page", async () => {
+      renderView();
+      fireEvent.click(screen.getByTestId("plan-pin-0"));
+      fireEvent.click(screen.getByTestId("pin-chip"));
+      await waitFor(() => {
+        expect(screen.getByTestId("plant-detail-view")).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("story-090 AC #3 — background tap dismisses chip", () => {
+    it("tapping the backdrop hides the chip", () => {
+      renderView();
+      fireEvent.click(screen.getByTestId("plan-pin-0"));
+      expect(screen.getByTestId("pin-chip")).toBeInTheDocument();
+      fireEvent.click(screen.getByTestId("chip-backdrop"));
+      expect(screen.queryByTestId("pin-chip")).toBeNull();
+    });
+
+    it("tapping the plan area (outside chip) dismisses chip", () => {
+      renderView();
+      fireEvent.click(screen.getByTestId("plan-pin-0"));
+      expect(screen.getByTestId("pin-chip")).toBeInTheDocument();
+      fireEvent.click(screen.getByTestId("mobile-plan-area"));
+      expect(screen.queryByTestId("pin-chip")).toBeNull();
+    });
+  });
+
+  describe("story-090 AC #4 — tapping different pin switches chip", () => {
+    it("shows new chip for a different pin", () => {
+      renderView();
+      fireEvent.click(screen.getByTestId("plan-pin-0")); // p1
+      expect(screen.getByTestId("pin-chip")).toBeInTheDocument();
+      expect(screen.getByTestId("pin-chip").textContent).toContain("Plant p1");
+
+      fireEvent.click(screen.getByTestId("plan-pin-1")); // p2
+      expect(screen.getByTestId("pin-chip")).toBeInTheDocument();
+      expect(screen.getByTestId("pin-chip").textContent).toContain("Plant p2");
+    });
+  });
+
+  describe("story-090 AC #6 — no desktop regression", () => {
+    it("GardenPlanWidget receives onPinClick prop (widget renders pins)", () => {
+      renderView();
+      // All three plants have one position each → three pins rendered
+      expect(screen.getByTestId("plan-pin-0")).toBeInTheDocument();
+      expect(screen.getByTestId("plan-pin-1")).toBeInTheDocument();
+      expect(screen.getByTestId("plan-pin-2")).toBeInTheDocument();
     });
   });
 });

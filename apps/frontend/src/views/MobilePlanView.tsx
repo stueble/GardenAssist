@@ -1,47 +1,46 @@
 /**
- * MobilePlanView — story-087.
+ * MobilePlanView — story-087 / story-090.
  *
  * Fullscreen interactive garden plan for mobile.
  * Reuses GardenPlanWidget (pan, pinch-zoom, pins, zoom buttons, legend)
  * and MobileParts (TopBar primitives, BottomNav, LeftDrawer, ChatPanel).
+ *
+ * Pin interaction (story-090):
+ *   First tap  → confirmation chip above pin (emoji + name + status + next task)
+ *   Chip tap   → navigate to MobilePlantDetailView (/plants/:id)
+ *   Same pin   → navigate directly (chip already shown)
+ *   Background → dismiss chip
+ *   Other pin  → dismiss previous chip, show new chip
  *
  * Layout:
  *   TopBar → plan-area (flex 1, no padding) → ChatPanel (in-flow) → BottomNav
  */
 
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Menu, MessageCircle, Plus } from "lucide-react";
 import type { Garden } from "@api/garden";
 import type { Plant } from "@api/plant";
 import { GardenPlanWidget, type PlanPin } from "@/components/GardenPlanWidget";
-import { derivePlantStatus } from "@/lib/plantStatus";
+import { plantToPin } from "@/lib/plantToPin";
 import { topBtnStyle, BottomNav, LeftDrawer, ChatPanel } from "@/components/mobile/MobileParts";
 
-// ── Pin color per task status (AC #3) ─────────────────────────────────────────
+// ── Types ─────────────────────────────────────────────────────────────────────
 
-function pinColor(status: ReturnType<typeof derivePlantStatus>): string {
-  if (status === "overdue") return "#c0392b";
-  if (status === "due")     return "#d4850a";
-  return "rgba(30,46,30,0.55)";  // semi-transparent dark green
+interface PinEntry {
+  pin:   PlanPin;
+  plant: Plant;
 }
 
-/** Build a PlanPin for mobile — simplified vs. desktop (no tooltip content). */
-function buildPin(plant: Plant, posIdx: number): PlanPin {
-  const pos    = plant.positions[posIdx];
-  const status = derivePlantStatus(plant);
-  return {
-    x:          pos.x_percent,
-    y:          pos.y_percent,
-    emoji:      plant.icon ?? "🌿",
-    name:       plant.name_common,
-    color:      pinColor(status),
-    taskStatus: (status === "overdue" || status === "due") ? status : undefined,
-    selected:   false,
-    tooltip:    {
-      status: status === "overdue" ? "Überfällig" : status === "due" ? "Aktuell" : "",
-    },
-  };
+interface ChipState {
+  pinIdx:  number;
+  plant:   Plant;
+  pin:     PlanPin;
+  /** Viewport clientX of the pin element centre — used to position the chip */
+  x:       number;
+  /** Viewport clientY of the pin element top — chip appears above this */
+  y:       number;
 }
 
 // ── TopBar — AC #1 ─────────────────────────────────────────────────────────────
@@ -84,7 +83,7 @@ function TopBar({
         {t("mobile.plan")}
       </div>
 
-      {/* + button — gap before chat icon (AC #1) */}
+      {/* + button — gap before chat icon */}
       <button
         data-testid="mobile-plan-add-btn"
         aria-label="Neue Pflanze"
@@ -117,6 +116,122 @@ function TopBar({
   );
 }
 
+// ── Pin chip — shown above tapped pin before navigation ───────────────────────
+
+function PinChip({
+  chip,
+  onNavigate,
+  onDismiss,
+}: {
+  chip:       ChipState;
+  onNavigate: () => void;
+  onDismiss:  () => void;
+}) {
+  const { pin } = chip;
+  const hasTask = !!pin.tooltip?.nextTask;
+
+  return (
+    <>
+      {/* Transparent backdrop — tap outside chip dismisses it */}
+      <div
+        data-testid="chip-backdrop"
+        onClick={onDismiss}
+        style={{
+          position:      "fixed",
+          inset:         0,
+          zIndex:        9998,
+          background:    "transparent",
+          pointerEvents: "auto",
+        }}
+      />
+
+      {/* Chip itself */}
+      <div
+        data-testid="pin-chip"
+        onClick={(e) => { e.stopPropagation(); onNavigate(); }}
+        style={{
+          position:      "fixed",
+          left:          chip.x,
+          top:           chip.y - 10,
+          transform:     "translate(-50%, -100%)",
+          zIndex:        9999,
+          background:    "var(--green-deep)",
+          color:         "white",
+          borderRadius:  "20px",
+          padding:       "7px 12px",
+          cursor:        "pointer",
+          pointerEvents: "auto",
+          whiteSpace:    "nowrap",
+          boxShadow:     "0 4px 16px rgba(0,0,0,.3)",
+          display:       "flex",
+          flexDirection: "column",
+          alignItems:    "center",
+          gap:           "3px",
+          minWidth:      "120px",
+          maxWidth:      "240px",
+        }}
+      >
+        {/* Top row: emoji + name + optional status dot */}
+        <div style={{
+          display:    "flex",
+          alignItems: "center",
+          gap:        "6px",
+          fontWeight: 600,
+          fontSize:   "13px",
+          lineHeight: 1.2,
+        }}>
+          <span>{pin.emoji}</span>
+          <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{pin.name}</span>
+          {pin.taskStatus && (
+            <span style={{
+              width:        "8px",
+              height:       "8px",
+              borderRadius: "50%",
+              flexShrink:   0,
+              background:   pin.taskStatus === "overdue" ? "var(--red-warn)" : "var(--yellow-warn)",
+              border:       "1.5px solid rgba(255,255,255,.5)",
+            }} />
+          )}
+        </div>
+
+        {/* Status label */}
+        {pin.tooltip?.status && (
+          <div style={{
+            fontSize:  "11px",
+            color:     "rgba(255,255,255,.75)",
+            alignSelf: "flex-start",
+          }}>
+            {pin.tooltip.status}
+          </div>
+        )}
+
+        {/* Next task */}
+        {hasTask && (
+          <div style={{
+            fontSize:  "11px",
+            color:     "#f5c0b8",
+            fontWeight: 500,
+            alignSelf: "flex-start",
+          }}>
+            {pin.tooltip!.nextTask}
+          </div>
+        )}
+
+        {/* Arrow pointing down */}
+        <div style={{
+          position:           "absolute",
+          top:                "100%",
+          left:               "50%",
+          transform:          "translateX(-50%)",
+          border:             "5px solid transparent",
+          borderTopColor:     "var(--green-deep)",
+          borderBottom:       "none",
+        }} />
+      </div>
+    </>
+  );
+}
+
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export interface MobilePlanViewProps {
@@ -128,18 +243,50 @@ export interface MobilePlanViewProps {
 export function MobilePlanView({ garden }: MobilePlanViewProps) {
   const [chatOpen,   setChatOpen]   = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [chip,       setChip]       = useState<ChipState | null>(null);
 
-  // Build pins from all plant positions
-  const pins: PlanPin[] = useMemo(() => {
+  const navigate         = useNavigate();
+  const { t: tPlants }   = useTranslation("plants");
+
+  // Build pins — same logic as DashboardView (plantToPin) so rendering is identical:
+  // halftransparent background, photo override, task-status dot, nextTask tooltip.
+  const pinEntries: PinEntry[] = useMemo(() => {
     if (!garden) return [];
-    const result: PlanPin[] = [];
+    const result: PinEntry[] = [];
     for (const plant of garden.plants) {
       for (let i = 0; i < plant.positions.length; i++) {
-        result.push(buildPin(plant, i));
+        const pin = plantToPin(plant, i, null);
+        // Translate raw status key → display label (same pattern as DashboardView)
+        if (pin.tooltip?.status) {
+          pin.tooltip.status = tPlants(`status.${pin.tooltip.status}` as any);
+        }
+        result.push({ pin, plant });
       }
     }
     return result;
-  }, [garden]);
+  }, [garden, tPlants]);
+
+  // ── Pin interaction (AC #1–#4) ──────────────────────────────────────────────
+
+  function handlePinClick(_pin: PlanPin, idx: number) {
+    const entry = pinEntries[idx];
+    if (!entry) return;
+
+    // Same pin tapped again while chip is visible → navigate immediately (AC #2)
+    if (chip?.pinIdx === idx) {
+      navigate(`/plants/${entry.plant.id}`);
+      return;
+    }
+
+    // Get viewport position of the pin element for chip placement
+    const pinEl = document.querySelector<HTMLElement>(`[data-testid="plan-pin-${idx}"]`);
+    const rect  = pinEl?.getBoundingClientRect();
+    const x     = rect ? rect.left + rect.width  / 2 : window.innerWidth  / 2;
+    const y     = rect ? rect.top                    : window.innerHeight  / 2;
+
+    // First tap (or different pin) → show chip (AC #1, #4)
+    setChip({ pinIdx: idx, plant: entry.plant, pin: entry.pin, x, y });
+  }
 
   return (
     <div
@@ -158,20 +305,32 @@ export function MobilePlanView({ garden }: MobilePlanViewProps) {
         onChatClick={() => setChatOpen((v) => !v)}
       />
 
-      {/* Plan area — fills all space between TopBar and ChatPanel/BottomNav (AC #2).
-          display:flex is required so the widget's own flex:1 takes effect. */}
+      {/* Plan area — fills all space between TopBar and ChatPanel/BottomNav.
+          display:flex is required so the widget's own flex:1 takes effect.
+          onClick on the area dismisses the chip (AC #3). */}
       <div
         data-testid="mobile-plan-area"
+        onClick={() => setChip(null)}
         style={{ flex: 1, minHeight: 0, display: "flex", overflow: "hidden" }}
       >
         <GardenPlanWidget
           planUrl={garden?.plan_url ?? null}
-          pins={pins}
+          pins={pinEntries.map((e) => e.pin)}
           legend={true}
+          onPinClick={handlePinClick}
         />
       </div>
 
-      {/* In-flow chat panel — AC #8 */}
+      {/* Confirmation chip — position:fixed so it escapes overflow:hidden (AC #1) */}
+      {chip && (
+        <PinChip
+          chip={chip}
+          onNavigate={() => navigate(`/plants/${chip.plant.id}`)}
+          onDismiss={() => setChip(null)}
+        />
+      )}
+
+      {/* In-flow chat panel */}
       <ChatPanel open={chatOpen} onClose={() => setChatOpen(false)} />
 
       <BottomNav activePath="/plan" />
