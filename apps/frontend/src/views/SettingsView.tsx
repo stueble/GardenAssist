@@ -21,9 +21,11 @@ interface SettingsViewProps {
   garden:           Garden | null;
   loading:          boolean;
   invalidateGarden: () => void;
+  hideTitle?:       boolean;
+  compactPadding?:  boolean;
 }
 
-export function SettingsView({ garden, invalidateGarden }: SettingsViewProps) {
+export function SettingsView({ garden, invalidateGarden, hideTitle = false, compactPadding = false }: SettingsViewProps) {
   const { t, i18n } = useTranslation("settings");
   const { form, dirty: settingsDirty, status, loading, error, updateForm, save: saveSettings, discard: discardSettings, onSaveRef } = useSettings();
   const plan = useGardenPlan();
@@ -143,7 +145,7 @@ export function SettingsView({ garden, invalidateGarden }: SettingsViewProps) {
       {/* ── Main content ── */}
       <div className="flex flex-col flex-1 min-w-0">
 
-        <div className="flex-1 overflow-y-auto" style={{ padding: "28px 32px" }}>
+        <div className="flex-1 overflow-y-auto" style={{ padding: compactPadding ? "20px 16px" : "28px 32px" }}>
           <div style={{ maxWidth: "860px" }}>
 
             {/* Backend error banner */}
@@ -153,16 +155,20 @@ export function SettingsView({ garden, invalidateGarden }: SettingsViewProps) {
               </div>
             )}
 
-            {/* Page title */}
-            <div
-              className="text-green-deep mb-[6px]"
-              style={{ fontFamily: "var(--font-display)", fontSize: "24px", fontWeight: 600 }}
-            >
-              ⚙️ {t("title")}
-            </div>
-            <div className="text-[13px] text-text-light mb-7">
-              {t("subtitle")}
-            </div>
+            {/* Page title — hidden on mobile (top bar already shows the title) */}
+            {!hideTitle && (
+              <>
+                <div
+                  className="text-green-deep mb-[6px]"
+                  style={{ fontFamily: "var(--font-display)", fontSize: "24px", fontWeight: 600 }}
+                >
+                  ⚙️ {t("title")}
+                </div>
+                <div className="text-[13px] text-text-light mb-7">
+                  {t("subtitle")}
+                </div>
+              </>
+            )}
 
             {/* Gartenplan */}
             <SettingsSection

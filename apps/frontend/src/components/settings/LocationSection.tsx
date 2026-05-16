@@ -32,9 +32,11 @@ export function LocationSection({ form, onChange }: Props) {
           placeholder={t("location_section.zip_placeholder")}
         />
       </div>
-      <FieldHint>
-        {t("location_section.hint")}
-      </FieldHint>
+      <div className="col-span-2">
+        <FieldHint>
+          {t("location_section.hint")}
+        </FieldHint>
+      </div>
     </div>
   );
 }
