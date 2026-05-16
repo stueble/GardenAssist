@@ -1,13 +1,19 @@
 import { useTranslation } from "react-i18next";
 import { FieldHint } from "./FieldInput";
 
-interface Props {
-  onExportBackup:    () => void;
-  onImportBackup:    () => void;
-  onExportCsv:       () => void;
+interface BackupProps {
+  onExportBackup: () => void;
+  onImportBackup: () => void;
+  onExportCsv:    () => void;
+}
+
+interface ResetProps {
   onDeleteAll:       () => void;
   onInstallDefaults: () => void;
 }
+
+/** @deprecated Use DataBackupSection + DataResetSection instead */
+export interface DataSectionProps extends BackupProps, ResetProps {}
 
 function SectionGroupLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -37,7 +43,7 @@ function ActionBtn({ onClick, children, danger }: { onClick: () => void; childre
   );
 }
 
-export function DataSection({ onExportBackup, onImportBackup, onExportCsv, onDeleteAll, onInstallDefaults }: Props) {
+export function DataBackupSection({ onExportBackup, onImportBackup, onExportCsv }: BackupProps) {
   const { t } = useTranslation("settings");
 
   return (
@@ -55,9 +61,15 @@ export function DataSection({ onExportBackup, onImportBackup, onExportCsv, onDel
       <div className="flex gap-2">
         <ActionBtn onClick={onExportCsv}>{t("data.export_csv")}</ActionBtn>
       </div>
+    </div>
+  );
+}
 
-      <Divider />
+export function DataResetSection({ onDeleteAll, onInstallDefaults }: ResetProps) {
+  const { t } = useTranslation("settings");
 
+  return (
+    <div>
       <SectionGroupLabel>{t("data.reset_group")}</SectionGroupLabel>
       <div className="flex gap-2">
         <ActionBtn onClick={onDeleteAll} danger>{t("data.delete_all")}</ActionBtn>
@@ -66,5 +78,16 @@ export function DataSection({ onExportBackup, onImportBackup, onExportCsv, onDel
       <FieldHint>{t("data.delete_all_hint")}</FieldHint>
       <FieldHint>{t("data.install_defaults_hint")}</FieldHint>
     </div>
+  );
+}
+
+/** @deprecated kept for backwards compat — use DataBackupSection + DataResetSection */
+export function DataSection({ onExportBackup, onImportBackup, onExportCsv, onDeleteAll, onInstallDefaults }: DataSectionProps) {
+  return (
+    <>
+      <DataBackupSection onExportBackup={onExportBackup} onImportBackup={onImportBackup} onExportCsv={onExportCsv} />
+      <div className="h-px bg-border my-4" />
+      <DataResetSection onDeleteAll={onDeleteAll} onInstallDefaults={onInstallDefaults} />
+    </>
   );
 }

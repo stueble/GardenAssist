@@ -10,7 +10,8 @@
     "color_presets": "Farb-Presets",
     "ai": "KI-Assistent",
     "language": "Sprache",
-    "data": "Daten & Backup"
+    "data": "Daten & Backup",
+    "reset": "Zurücksetzen"
   },
   "section_subtitles": {
     "garden_plan": "Grundriss-Bild hochladen, das als Hintergrund des interaktiven Plans dient",
@@ -20,7 +21,8 @@
     "color_presets": "Vorauswahl der Farben in Blütezeiten, Blätter und Sonstiges",
     "ai": "API-Schlüssel und Modell-Konfiguration",
     "language": "Anzeigesprache der Benutzeroberfläche",
-    "data": "Gartendaten exportieren, importieren oder zurücksetzen"
+    "data": "Gartendaten exportieren und importieren",
+    "reset": "Alle Daten löschen oder Standarddaten installieren"
   },
   "language": {
     "de": "Deutsch",

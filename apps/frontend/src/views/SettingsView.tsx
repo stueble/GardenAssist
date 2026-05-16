@@ -11,7 +11,7 @@ import { LocationSection }    from "@/components/settings/LocationSection";
 import { ZonesSection }       from "@/components/settings/ZonesSection";
 import { CategoriesSection }  from "@/components/settings/CategoriesSection";
 import { AiSection }            from "@/components/settings/AiSection";
-import { DataSection }          from "@/components/settings/DataSection";
+import { DataBackupSection, DataResetSection } from "@/components/settings/DataSection";
 import { GardenPlanSection }    from "@/components/settings/GardenPlanSection";
 import { ColorPresetsSection }  from "@/components/settings/ColorPresetsSection";
 import { LanguageSection }      from "@/components/settings/LanguageSection";
@@ -157,18 +157,30 @@ export function SettingsView({ garden, invalidateGarden, hideTitle = false, comp
 
             {/* Page title — hidden on mobile (top bar already shows the title) */}
             {!hideTitle && (
-              <>
-                <div
-                  className="text-green-deep mb-[6px]"
-                  style={{ fontFamily: "var(--font-display)", fontSize: "24px", fontWeight: 600 }}
-                >
-                  ⚙️ {t("title")}
-                </div>
-                <div className="text-[13px] text-text-light mb-7">
-                  {t("subtitle")}
-                </div>
-              </>
+              <div
+                className="text-green-deep mb-[6px]"
+                style={{ fontFamily: "var(--font-display)", fontSize: "24px", fontWeight: 600 }}
+              >
+                ⚙️ {t("title")}
+              </div>
             )}
+            <div className="text-[13px] text-text-light mb-7">
+              {t("subtitle")}
+            </div>
+
+            {/* Daten & Backup */}
+            <SettingsSection
+              icon="💾"
+              title={t("sections.data")}
+              subtitle={t("section_subtitles.data")}
+              defaultOpen={false}
+            >
+              <DataBackupSection
+                onExportBackup={handleExportBackup}
+                onImportBackup={handleImportBackup}
+                onExportCsv={handleExportCsv}
+              />
+            </SettingsSection>
 
             {/* Gartenplan */}
             <SettingsSection
@@ -188,22 +200,6 @@ export function SettingsView({ garden, invalidateGarden, hideTitle = false, comp
               defaultOpen={true}
             >
               {form && <LocationSection form={form} onChange={updateForm} />}
-            </SettingsSection>
-
-            {/* Daten & Backup */}
-            <SettingsSection
-              icon="💾"
-              title={t("sections.data")}
-              subtitle={t("section_subtitles.data")}
-              defaultOpen={false}
-            >
-              <DataSection
-                onExportBackup={handleExportBackup}
-                onImportBackup={handleImportBackup}
-                onExportCsv={handleExportCsv}
-                onDeleteAll={handleDeleteAll}
-                onInstallDefaults={handleInstallDefaults}
-              />
             </SettingsSection>
 
             {/* Bewässerungszonen */}
@@ -255,6 +251,19 @@ export function SettingsView({ garden, invalidateGarden, hideTitle = false, comp
               testId="language-section"
             >
               {form && <LanguageSection form={form} onChange={updateForm} />}
+            </SettingsSection>
+
+            {/* Zurücksetzen */}
+            <SettingsSection
+              icon="⚠️"
+              title={t("sections.reset")}
+              subtitle={t("section_subtitles.reset")}
+              defaultOpen={false}
+            >
+              <DataResetSection
+                onDeleteAll={handleDeleteAll}
+                onInstallDefaults={handleInstallDefaults}
+              />
             </SettingsSection>
 
           </div>
