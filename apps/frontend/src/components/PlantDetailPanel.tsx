@@ -155,11 +155,10 @@ function CollapsibleSection({ label, children }: { label: string; children: Reac
 
 export interface PlantDetailContentProps {
   plant:     Plant;
-  onEdit?:   (plant: Plant) => void;
   onDelete?: () => void;
 }
 
-export function PlantDetailContent({ plant, onEdit, onDelete }: PlantDetailContentProps) {
+export function PlantDetailContent({ plant, onDelete }: PlantDetailContentProps) {
   const { t } = useTranslation("plants");
 
   const [confirmOpen,  setConfirmOpen]  = useState(false);
@@ -489,80 +488,69 @@ export function PlantDetailContent({ plant, onEdit, onDelete }: PlantDetailConte
            );
          })()}
 
-      </div>
-
-      {/* Actions + Delete — confirm replaces the edit button entirely */}
-      <div style={{ padding: "12px 18px 14px", borderTop: "1px solid var(--border)", flexShrink: 0 }}>
-        {deleteError && (
-          <div
-            data-testid="detail-delete-error"
-            style={{ fontSize: "11px", color: "var(--red-warn)", marginBottom: "8px",
-                     background: "var(--red-soft)", borderRadius: "6px", padding: "6px 10px" }}
-          >
-            {deleteError}
-          </div>
-        )}
-        {confirmOpen ? (
-          <div
-            data-testid="detail-delete-confirm"
-            style={{
-              background: "var(--red-soft)", border: "1px solid var(--red-warn)",
-              borderRadius: "8px", padding: "10px 12px", display: "flex",
-              flexDirection: "column", gap: "8px",
-            }}
-          >
-            <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--red-warn)" }}>
-              {t("detail.delete_confirm_title")}
-            </div>
-            <div style={{ fontSize: "11px", color: "var(--text-mid)" }}>
-              {t("detail.delete_confirm_body")}
-            </div>
-            <div style={{ display: "flex", gap: "8px" }}>
-              <button
-                type="button"
-                data-testid="detail-delete-cancel"
-                onClick={() => setConfirmOpen(false)}
-                disabled={deleting}
-                style={{ ...detailBtnStyle, flex: 1 }}
-              >
-                {t("detail.delete_confirm_cancel")}
-              </button>
-              <button
-                type="button"
-                data-testid="detail-delete-ok"
-                onClick={async () => {
-                  setDeleting(true);
-                  setDeleteError(null);
-                  try {
-                    await apiClient.deletePlant(plant.id);
-                    onDelete?.();
-                  } catch {
-                    setDeleteError(t("detail.delete_error"));
-                    setConfirmOpen(false);
-                  } finally {
-                    setDeleting(false);
-                  }
-                }}
-                disabled={deleting}
-                style={{
-                  ...detailBtnStyle, flex: 1,
-                  background: "var(--red-warn)", color: "white", borderColor: "var(--red-warn)",
-                }}
-              >
-                {deleting ? "…" : t("detail.delete_confirm_ok")}
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            <button
-              type="button"
-              style={{ ...detailBtnStyle, background: "var(--green-deep)", color: "white", borderColor: "var(--green-deep)" }}
-              onClick={() => onEdit?.(plant)}
-              data-testid="detail-btn-edit"
+        {/* Delete — at the very bottom of the scroll area */}
+        <div style={{ borderTop: "1px solid var(--border)", marginTop: "8px", paddingTop: "16px", paddingBottom: "8px" }}>
+          {deleteError && (
+            <div
+              data-testid="detail-delete-error"
+              style={{ fontSize: "11px", color: "var(--red-warn)", marginBottom: "8px",
+                       background: "var(--red-soft)", borderRadius: "6px", padding: "6px 10px" }}
             >
-              {t("detail.btn_edit")}
-            </button>
+              {deleteError}
+            </div>
+          )}
+          {confirmOpen ? (
+            <div
+              data-testid="detail-delete-confirm"
+              style={{
+                background: "var(--red-soft)", border: "1px solid var(--red-warn)",
+                borderRadius: "8px", padding: "10px 12px", display: "flex",
+                flexDirection: "column", gap: "8px",
+              }}
+            >
+              <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--red-warn)" }}>
+                {t("detail.delete_confirm_title")}
+              </div>
+              <div style={{ fontSize: "11px", color: "var(--text-mid)" }}>
+                {t("detail.delete_confirm_body")}
+              </div>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button
+                  type="button"
+                  data-testid="detail-delete-cancel"
+                  onClick={() => setConfirmOpen(false)}
+                  disabled={deleting}
+                  style={{ ...detailBtnStyle, flex: 1 }}
+                >
+                  {t("detail.delete_confirm_cancel")}
+                </button>
+                <button
+                  type="button"
+                  data-testid="detail-delete-ok"
+                  onClick={async () => {
+                    setDeleting(true);
+                    setDeleteError(null);
+                    try {
+                      await apiClient.deletePlant(plant.id);
+                      onDelete?.();
+                    } catch {
+                      setDeleteError(t("detail.delete_error"));
+                      setConfirmOpen(false);
+                    } finally {
+                      setDeleting(false);
+                    }
+                  }}
+                  disabled={deleting}
+                  style={{
+                    ...detailBtnStyle, flex: 1,
+                    background: "var(--red-warn)", color: "white", borderColor: "var(--red-warn)",
+                  }}
+                >
+                  {deleting ? "…" : t("detail.delete_confirm_ok")}
+                </button>
+              </div>
+            </div>
+          ) : (
             <button
               type="button"
               data-testid="detail-btn-delete"
@@ -570,13 +558,14 @@ export function PlantDetailContent({ plant, onEdit, onDelete }: PlantDetailConte
               style={{
                 background: "none", border: "none", cursor: "pointer", padding: 0,
                 fontSize: "12px", color: "var(--red-warn)", fontFamily: "var(--font-body)",
-                textDecoration: "underline", textUnderlineOffset: "2px", alignSelf: "flex-start",
+                textDecoration: "underline", textUnderlineOffset: "2px",
               }}
             >
               {t("detail.btn_delete")}
             </button>
-          </div>
-        )}
+          )}
+        </div>
+
       </div>
     </>
   );
@@ -592,6 +581,7 @@ export interface PlantDetailPanelProps {
 }
 
 export function PlantDetailPanel({ plant, onClose, onEdit, onDelete }: PlantDetailPanelProps) {
+  const { t }     = useTranslation("plants");
   const { t: tc } = useTranslation("common");
 
   return (
@@ -626,7 +616,19 @@ export function PlantDetailPanel({ plant, onClose, onEdit, onDelete }: PlantDeta
         </button>
       </div>
 
-      <PlantDetailContent plant={plant} onEdit={onEdit} onDelete={onDelete} />
+      <PlantDetailContent plant={plant} onDelete={onDelete} />
+
+      {/* Desktop-only edit button — pinned below the scroll area */}
+      <div style={{ padding: "10px 18px 12px", borderTop: "1px solid var(--border)", flexShrink: 0 }}>
+        <button
+          type="button"
+          style={{ ...detailBtnStyle, background: "var(--green-deep)", color: "white", borderColor: "var(--green-deep)", width: "100%" }}
+          onClick={() => onEdit?.(plant)}
+          data-testid="detail-btn-edit"
+        >
+          {t("detail.btn_edit")}
+        </button>
+      </div>
     </>
   );
 }

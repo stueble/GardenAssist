@@ -125,9 +125,14 @@ describe("MobilePlantDetailView", () => {
       expect(screen.getByText("Eine schöne Rose.")).toBeInTheDocument();
     });
 
-    it("renders the edit button from PlantDetailContent", () => {
+    it("renders the delete link in the scroll area", () => {
       renderAt("p1");
-      expect(screen.getByTestId("detail-btn-edit")).toBeInTheDocument();
+      expect(screen.getByTestId("detail-btn-delete")).toBeInTheDocument();
+    });
+
+    it("does not render a pinned edit button (edit is in the top bar on mobile)", () => {
+      renderAt("p1");
+      expect(screen.queryByTestId("detail-btn-edit")).not.toBeInTheDocument();
     });
   });
 
