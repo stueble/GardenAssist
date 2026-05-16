@@ -69,6 +69,8 @@ describe("SettingsView — API integration", () => {
   it("populates location fields from API (AC #1)", async () => {
     renderSettings();
     await waitFor(() => expect(screen.queryByText(/werden geladen/i)).not.toBeInTheDocument());
+    // Sections are collapsed by default — open Location first
+    fireEvent.click(screen.getByRole("button", { name: /Standort/i }));
     expect(screen.getByDisplayValue(MOCK_SETTINGS_CITY)).toBeInTheDocument();
     expect(screen.getByDisplayValue("80331")).toBeInTheDocument();
   });
@@ -76,6 +78,8 @@ describe("SettingsView — API integration", () => {
   it("shows irrigation zones from API", async () => {
     renderSettings();
     await waitFor(() => expect(screen.queryByText(/werden geladen/i)).not.toBeInTheDocument());
+    // Sections are collapsed by default — open Irrigation Zones first
+    fireEvent.click(screen.getByRole("button", { name: /Bewässerungszonen/i }));
     expect(screen.getByDisplayValue("Zone A")).toBeInTheDocument();
     expect(screen.getByDisplayValue("Terrasse")).toBeInTheDocument();
   });
@@ -90,6 +94,7 @@ describe("SettingsView — API integration", () => {
   it("marks dirty when a field is changed (AC #2 prerequisite)", async () => {
     renderSettings();
     await waitFor(() => expect(screen.queryByText(/werden geladen/i)).not.toBeInTheDocument());
+    fireEvent.click(screen.getByRole("button", { name: /Standort/i }));
     fireEvent.change(screen.getByDisplayValue(MOCK_SETTINGS_CITY), { target: { value: "Berlin" } });
     expect(screen.getByText(/Ungespeicherte Änderungen vorhanden/i)).toBeInTheDocument();
     expect(screen.getByTestId("save-bar-save")).not.toBeDisabled();
@@ -99,6 +104,7 @@ describe("SettingsView — API integration", () => {
     const { apiClient } = await import("../api/client");
     renderSettings();
     await waitFor(() => expect(screen.queryByText(/werden geladen/i)).not.toBeInTheDocument());
+    fireEvent.click(screen.getByRole("button", { name: /Standort/i }));
     fireEvent.change(screen.getByDisplayValue(MOCK_SETTINGS_CITY), { target: { value: "Berlin" } });
     fireEvent.click(screen.getByTestId("save-bar-save"));
     await waitFor(() => expect(apiClient.updateSettings).toHaveBeenCalledOnce());
@@ -109,6 +115,7 @@ describe("SettingsView — API integration", () => {
   it("resets form on discard (AC #3)", async () => {
     renderSettings();
     await waitFor(() => expect(screen.queryByText(/werden geladen/i)).not.toBeInTheDocument());
+    fireEvent.click(screen.getByRole("button", { name: /Standort/i }));
     fireEvent.change(screen.getByDisplayValue(MOCK_SETTINGS_CITY), { target: { value: "Berlin" } });
     expect(screen.getByTestId("save-bar-discard")).not.toBeDisabled();
     fireEvent.click(screen.getByTestId("save-bar-discard"));
@@ -119,6 +126,7 @@ describe("SettingsView — API integration", () => {
   it("shows success feedback after save (AC #4)", async () => {
     renderSettings();
     await waitFor(() => expect(screen.queryByText(/werden geladen/i)).not.toBeInTheDocument());
+    fireEvent.click(screen.getByRole("button", { name: /Standort/i }));
     fireEvent.change(screen.getByDisplayValue(MOCK_SETTINGS_CITY), { target: { value: "Berlin" } });
     fireEvent.click(screen.getByTestId("save-bar-save"));
     await waitFor(() => expect(screen.getByText(/Einstellungen gespeichert/i)).toBeInTheDocument());

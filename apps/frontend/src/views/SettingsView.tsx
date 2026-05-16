@@ -187,7 +187,7 @@ export function SettingsView({ garden, invalidateGarden, hideTitle = false, comp
               icon="🗺️"
               title={t("sections.garden_plan")}
               subtitle={t("section_subtitles.garden_plan")}
-              defaultOpen={true}
+              defaultOpen={false}
             >
               <GardenPlanSection plan={plan} />
             </SettingsSection>
@@ -197,7 +197,7 @@ export function SettingsView({ garden, invalidateGarden, hideTitle = false, comp
               icon="📍"
               title={t("sections.location")}
               subtitle={t("section_subtitles.location")}
-              defaultOpen={true}
+              defaultOpen={false}
             >
               {form && <LocationSection form={form} onChange={updateForm} />}
             </SettingsSection>
@@ -207,7 +207,7 @@ export function SettingsView({ garden, invalidateGarden, hideTitle = false, comp
               icon="💧"
               title={t("sections.irrigation_zones")}
               subtitle={t("section_subtitles.irrigation_zones")}
-              defaultOpen={true}
+              defaultOpen={false}
             >
               {form && <ZonesSection form={form} onChange={updateForm} />}
             </SettingsSection>
@@ -217,7 +217,7 @@ export function SettingsView({ garden, invalidateGarden, hideTitle = false, comp
               icon="📂"
               title={t("sections.plant_categories")}
               subtitle={t("section_subtitles.plant_categories")}
-              defaultOpen={true}
+              defaultOpen={false}
             >
               {form && <CategoriesSection form={form} onChange={updateForm} />}
             </SettingsSection>
@@ -227,7 +227,7 @@ export function SettingsView({ garden, invalidateGarden, hideTitle = false, comp
               icon="🎨"
               title={t("sections.color_presets")}
               subtitle={t("section_subtitles.color_presets")}
-              defaultOpen={true}
+              defaultOpen={false}
             >
               {form && <ColorPresetsSection form={form} onChange={updateForm} />}
             </SettingsSection>

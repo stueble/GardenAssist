@@ -67,9 +67,7 @@ export function MobileSettingsView(props: MobileSettingsViewProps) {
   return (
     <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, overflow: "hidden" }}>
       <TopBar onBack={() => navigate("/")} />
-      <div style={{ flex: 1, overflowY: "auto" }}>
-        <SettingsView {...props} hideTitle compactPadding />
-      </div>
+      <SettingsView {...props} hideTitle compactPadding />
     </div>
   );
 }
