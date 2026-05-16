@@ -1,7 +1,7 @@
 import { serve } from "@hono/node-server";
 import { migrate } from "drizzle-orm/better-sqlite3/migrator";
 import app from "./index.js";
-import { db } from "./db/index.js";
+import { db, client } from "./db/index.js";
 import { seed } from "./db/seed.js";
 
 const PORT = Number(process.env.PORT ?? 3000);
@@ -11,7 +11,7 @@ const PORT = Number(process.env.PORT ?? 3000);
 /** Count rows in __drizzle_migrations; returns 0 if the table doesn't exist yet. */
 function countAppliedMigrations(): number {
   try {
-    const row = db.prepare("SELECT COUNT(*) as n FROM __drizzle_migrations").get() as { n: number };
+    const row = client.prepare("SELECT COUNT(*) as n FROM __drizzle_migrations").get() as { n: number };
     return row.n;
   } catch {
     return 0;

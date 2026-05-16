@@ -24,19 +24,25 @@ async function createDb() {
 
 // Synchronous SQLite instance used at module level.
 // For PostgreSQL, call createDb() and await the result.
-function createSQLiteDb(): BetterSQLite3Database<typeof schema> {
+function createSQLiteDb(): { db: BetterSQLite3Database<typeof schema>; client: InstanceType<typeof Database> } {
   const path = DATABASE_URL.startsWith("file:")
     ? DATABASE_URL.slice("file:".length)
     : "./gardenassist.db";
   const sqlite = new Database(path);
   sqlite.pragma("journal_mode = WAL");
   sqlite.pragma("foreign_keys = ON");
-  return drizzleSQLite(sqlite, { schema });
+  return { db: drizzleSQLite(sqlite, { schema }), client: sqlite };
 }
 
-export const db = DATABASE_URL.startsWith("file:")
+const _sqlite = DATABASE_URL.startsWith("file:")
   ? createSQLiteDb()
   : (() => { throw new Error("For PostgreSQL use createDb() (async)"); })();
+
+/** Drizzle ORM instance — use this for all queries. */
+export const db = _sqlite.db;
+
+/** Raw better-sqlite3 client — use only where Drizzle does not expose the needed API (e.g. prepare()). */
+export const client = _sqlite.client;
 
 export { createDb };
 export type Db = BetterSQLite3Database<typeof schema>;
