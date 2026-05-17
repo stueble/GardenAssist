@@ -100,6 +100,6 @@ describe("index.html — PWA meta tags", () => {
 
   it("has apple-touch-icon link", () => {
     expect(html).toContain('rel="apple-touch-icon"');
-    expect(html).toContain("icon-192.png");
+    expect(html).toContain("apple-touch-icon.png");
   });
 });
