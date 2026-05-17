@@ -49,7 +49,9 @@ interface SheetState {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const EXPANDED_HEIGHT = "85vh";
+// When ChatPanel is open (--mobile-chat-height = 210px), the expanded sheet
+// shrinks by the same amount so the map strip above remains always visible.
+const EXPANDED_HEIGHT = "calc(85vh - var(--mobile-chat-height, 0px))";
 /** Minimum swipe distance (px) to trigger a mode transition */
 const SWIPE_THRESHOLD = 50;
 
