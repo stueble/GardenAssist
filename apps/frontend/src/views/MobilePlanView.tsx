@@ -30,7 +30,7 @@ import type { Plant } from "@api/plant";
 import { GardenPlanWidget, type PlanPin } from "@/components/GardenPlanWidget";
 import { PlantDetailContent } from "@/components/PlantDetailPanel";
 import { plantToPin } from "@/lib/plantToPin";
-import { topBtnStyle, BottomNav, LeftDrawer, ChatPanel } from "@/components/mobile/MobileParts";
+import { topBtnStyle, BottomNav, LeftDrawer, ChatPanel, MOBILE_CHAT_HEIGHT } from "@/components/mobile/MobileParts";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -344,6 +344,23 @@ export function MobilePlanView({ garden, invalidateGarden }: MobilePlanViewProps
   const navigate       = useNavigate();
   const { t: tPlants } = useTranslation("plants");
 
+  // Compute how much the plan area needs to shrink when the ChatPanel opens.
+  // ChatPanel is position:fixed and overlaps BottomNav (which stays in-flow).
+  // The plan should only shrink by the portion of the ChatPanel that sticks
+  // out above the BottomNav: max(0, chatHeight - navHeight).
+  useEffect(() => {
+    const navEl = document.querySelector<HTMLElement>('[data-testid="mobile-bottom-nav"]');
+    const navH  = navEl ? navEl.getBoundingClientRect().height : 56;
+    const offset = chatOpen ? Math.max(0, MOBILE_CHAT_HEIGHT - navH) : 0;
+    document.documentElement.style.setProperty(
+      "--mobile-chat-plan-offset",
+      `${offset}px`,
+    );
+    return () => {
+      document.documentElement.style.setProperty("--mobile-chat-plan-offset", "0px");
+    };
+  }, [chatOpen]);
+
   // Build pins — same logic as DashboardView (plantToPin): halftransparent
   // background, photo override, task-status dot, nextTask tooltip.
   const pinEntries: PinEntry[] = useMemo(() => {
@@ -393,16 +410,23 @@ export function MobilePlanView({ garden, invalidateGarden }: MobilePlanViewProps
         onChatClick={() => setChatOpen((v) => !v)}
       />
 
-      {/* Plan area — tapping here (outside the sheet) dismisses it.
-          Pin clicks call e.stopPropagation() inside GardenPlanWidget so they
-          never bubble here, allowing the sheet to open cleanly on pin tap.
-          No paddingBottom needed: the plan is not scrollable, ChatPanel
-          is position:fixed and the user can pan past the overlap. */}
+      {/* Plan area — outer wrapper shrinks by the portion of ChatPanel that
+          sticks above BottomNav (var(--mobile-chat-plan-offset)).
+          No overflow:hidden on outer so paddingBottom takes effect.
+          Inner div holds overflow:hidden for GardenPlanWidget.
+          Tapping outer area dismisses the snap-sheet. */}
       <div
         data-testid="mobile-plan-area"
         onClick={() => setSheet(null)}
-        style={{ flex: 1, minHeight: 0, display: "flex", overflow: "hidden" }}
+        style={{
+          flex:           1,
+          minHeight:      0,
+          display:        "flex",
+          flexDirection:  "column",
+          paddingBottom:  "var(--mobile-chat-plan-offset, 0px)",
+        }}
       >
+        <div style={{ flex: 1, minHeight: 0, display: "flex", overflow: "hidden" }}>
         <GardenPlanWidget
           planUrl={garden?.plan_url ?? null}
           pins={pinEntries.map((e) => e.pin)}
@@ -427,6 +451,7 @@ export function MobilePlanView({ garden, invalidateGarden }: MobilePlanViewProps
                 }
             : null}
         />
+        </div>
       </div>
 
       {/* Snap-sheet — position:fixed so it floats above the plan area */}
