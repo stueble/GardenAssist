@@ -300,13 +300,6 @@ describe("MobilePlanView", () => {
   });
 
   describe("story-094 AC #4 — tapping backdrop dismisses sheet", () => {
-    it("tapping sheet-backdrop dismisses the sheet", () => {
-      renderView();
-      fireEvent.click(screen.getByTestId("plan-pin-0"));
-      expect(screen.getByTestId("plan-snap-sheet")).toBeInTheDocument();
-      fireEvent.click(screen.getByTestId("sheet-backdrop"));
-      expect(screen.queryByTestId("plan-snap-sheet")).toBeNull();
-    });
 
     it("tapping mobile-plan-area dismisses the sheet", () => {
       renderView();

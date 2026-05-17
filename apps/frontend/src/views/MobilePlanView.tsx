@@ -21,7 +21,7 @@
  *   PlanSnapSheet rendered as position:fixed overlay (escapes overflow:hidden)
  */
 
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Menu, MessageCircle, Plus, Pencil, X } from "lucide-react";
@@ -151,6 +151,13 @@ function PlanSnapSheet({
 }) {
   const { plant, pin, mode } = sheet;
 
+  // ── Slide-in animation: start off-screen, animate to visible after mount ──
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setVisible(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+
   // ── Swipe gesture via pointer events on the drag handle ───────────────────
   const dragStartY = useRef<number | null>(null);
 
@@ -177,20 +184,9 @@ function PlanSnapSheet({
 
   return (
     <>
-      {/* Invisible full-screen tap target — tapping outside sheet dismisses it.
-          pointerEvents only on areas outside the sheet itself (sheet has its own stopPropagation). */}
-      <div
-        data-testid="sheet-backdrop"
-        onClick={onDismiss}
-        style={{
-          position:      "fixed",
-          inset:         0,
-          zIndex:        90,
-          background:    "transparent",
-        }}
-      />
-
-      {/* Sheet */}
+      {/* Sheet — no backdrop div so pin clicks (stopPropagation in widget)
+          never get intercepted. Dismiss via X-button, swipe-down, or
+          mobile-plan-area onClick. */}
       <div
         data-testid="plan-snap-sheet"
         data-mode={mode}
@@ -201,7 +197,8 @@ function PlanSnapSheet({
           left:          0,
           right:         0,
           height:        mode === "peek" ? `${PEEK_HEIGHT_PX}px` : EXPANDED_HEIGHT,
-          transition:    "height .3s cubic-bezier(.4,0,.2,1)",
+          transform:     visible ? "translateY(0)" : "translateY(100%)",
+          transition:    "transform .3s cubic-bezier(.4,0,.2,1), height .3s cubic-bezier(.4,0,.2,1)",
           background:    "#fff",
           borderRadius:  "14px 14px 0 0",
           boxShadow:     "0 -4px 24px rgba(0,0,0,.18)",
