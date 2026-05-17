@@ -290,6 +290,34 @@ describe("MobileTaskView", () => {
         expect(screen.getByTestId("mobile-chat-panel").style.height).toBe("0px");
       });
     });
+
+    it("chat panel is position:fixed with zIndex 100 (AC #1)", () => {
+      renderView();
+      const panel = screen.getByTestId("mobile-chat-panel");
+      expect(panel.style.position).toBe("fixed");
+      expect(panel.style.zIndex).toBe("100");
+    });
+
+    it("--mobile-chat-height is set on <html> when panel opens (AC #2)", async () => {
+      renderView();
+      expect(document.documentElement.style.getPropertyValue("--mobile-chat-height")).toBe("0px");
+      fireEvent.click(screen.getByTestId("mobile-chat-btn"));
+      await waitFor(() => {
+        expect(document.documentElement.style.getPropertyValue("--mobile-chat-height")).toBe("210px");
+      });
+    });
+
+    it("--mobile-chat-height resets to 0px when panel closes (AC #4)", async () => {
+      renderView();
+      fireEvent.click(screen.getByTestId("mobile-chat-btn"));
+      await waitFor(() => {
+        expect(document.documentElement.style.getPropertyValue("--mobile-chat-height")).toBe("210px");
+      });
+      fireEvent.click(screen.getByTestId("mobile-chat-close"));
+      await waitFor(() => {
+        expect(document.documentElement.style.getPropertyValue("--mobile-chat-height")).toBe("0px");
+      });
+    });
   });
 
   describe("Loading state", () => {

@@ -616,8 +616,8 @@ export function TaskSidebar({ garden, loading, invalidateGarden }: TaskSidebarPr
         overflow:      "hidden",
       }}
     >
-      {/* Scrollable content */}
-      <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
+      {/* Scrollable content — paddingBottom avoids content hiding behind fixed ChatPanel */}
+      <div style={{ flex: 1, overflowY: "auto", minHeight: 0, paddingBottom: "var(--mobile-chat-height, 0px)" }}>
         <WeatherWidgetCompact zones={zones} dryThresholdPct={dryThresholdPct} />
 
         <WarningsBanner frostWarnings={frostWarnings} dryZones={dryZones} />

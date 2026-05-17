@@ -169,7 +169,7 @@ export function MobileTaskView({ garden, loading, invalidateGarden }: MobileTask
         />
       </div>
 
-      {/* In-flow chat panel — pushes scroll area up, not an overlay */}
+      {/* ChatPanel — position:fixed, slides up over BottomNav from viewport bottom */}
       <ChatPanel open={chatOpen} onClose={() => setChatOpen(false)} />
 
       <BottomNav activePath="/" />

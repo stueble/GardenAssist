@@ -1554,7 +1554,7 @@ export function MobileJournalView({ garden, loading, invalidateGarden }: MobileJ
       {/* Timeline */}
       <div
         data-testid="mobile-journal-timeline"
-        style={{ flex: 1, overflowY: "auto", minHeight: 0 }}
+        style={{ flex: 1, overflowY: "auto", minHeight: 0, paddingBottom: "var(--mobile-chat-height, 0px)" }}
       >
         {loading && (
           <div style={{ padding: "20px", textAlign: "center", fontSize: "13px", color: "#8a9e8a" }}>

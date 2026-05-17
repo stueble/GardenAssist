@@ -2,10 +2,15 @@
  * MobileParts — shared UI primitives for all mobile views.
  *
  * Exports:
- *   topBtnStyle   — CSSProperties for top-bar icon buttons (no background)
- *   BottomNav     — 5-tab bottom navigation bar
- *   LeftDrawer    — slide-in drawer (Settings / About)
- *   ChatPanel     — in-flow AI chat panel (height: 0 → 210px)
+ *   topBtnStyle        — CSSProperties for top-bar icon buttons (no background)
+ *   BottomNav          — 5-tab bottom navigation bar
+ *   LeftDrawer         — slide-in drawer (Settings / About)
+ *   ChatPanel          — position:fixed AI chat panel sliding up from bottom
+ *   MOBILE_CHAT_HEIGHT — panel height in px (210)
+ *
+ * CSS Custom Property --mobile-chat-height is set on <html> by ChatPanel
+ * whenever it opens/closes. Scrollable content areas in mobile views read
+ * this value as paddingBottom so content is never hidden behind the panel.
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -202,6 +207,12 @@ function DrawerItem({ icon, label, onClick }: { icon: string; label: string; onC
 
 // ── ChatPanel ─────────────────────────────────────────────────────────────────
 
+/** Height of the ChatPanel when open, in pixels. */
+export const MOBILE_CHAT_HEIGHT = 210;
+
+/** CSS custom property name used to communicate panel height to scroll areas. */
+const CHAT_HEIGHT_VAR = "--mobile-chat-height";
+
 export function ChatPanel({
   open,
   onClose,
@@ -216,6 +227,18 @@ export function ChatPanel({
   const [input,   setInput]   = useState("");
   const [sending, setSending] = useState(false);
   const msgsRef = useRef<HTMLDivElement>(null);
+
+  // Sync --mobile-chat-height on <html> so scrollable content areas can
+  // add paddingBottom and avoid being hidden behind the fixed panel.
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      CHAT_HEIGHT_VAR,
+      open ? `${MOBILE_CHAT_HEIGHT}px` : "0px",
+    );
+    return () => {
+      document.documentElement.style.setProperty(CHAT_HEIGHT_VAR, "0px");
+    };
+  }, [open]);
 
   const scrollToBottom = useCallback(() => {
     if (msgsRef.current) msgsRef.current.scrollTop = msgsRef.current.scrollHeight;
@@ -243,14 +266,18 @@ export function ChatPanel({
     <div
       data-testid="mobile-chat-panel"
       style={{
-        flexShrink:    0,
-        height:        open ? "210px" : "0",
+        position:      "fixed",
+        bottom:        0,
+        left:          0,
+        right:         0,
+        height:        open ? `${MOBILE_CHAT_HEIGHT}px` : "0",
         overflow:      "hidden",
         transition:    "height .25s ease",
         background:    "#eef4eb",
         borderTop:     open ? "2px solid #2d4a2d" : "none",
         display:       "flex",
         flexDirection: "column",
+        zIndex:        100,
       }}
     >
       {/* Header */}

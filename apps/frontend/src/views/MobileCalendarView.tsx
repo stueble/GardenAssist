@@ -520,7 +520,7 @@ export function MobileCalendarView({ garden, loading }: MobileCalendarViewProps)
       {/* Chart area */}
       <div
         data-testid="mobile-calendar-chart"
-        style={{ flex: 1, overflowY: "auto", overflowX: "hidden", minHeight: 0, background: "#f8f4ee" }}
+        style={{ flex: 1, overflowY: "auto", overflowX: "hidden", minHeight: 0, background: "#f8f4ee", paddingBottom: "var(--mobile-chat-height, 0px)" }}
       >
         <MonthHeader />
 

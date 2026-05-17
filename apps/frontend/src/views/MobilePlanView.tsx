@@ -193,16 +193,16 @@ function PlanSnapSheet({
         onClick={(e) => e.stopPropagation()}
         style={{
           position:      "fixed",
-          bottom:        0,
+          bottom:        "var(--mobile-chat-height, 0px)",
           left:          0,
           right:         0,
           height:        mode === "peek" ? `${PEEK_HEIGHT_PX}px` : EXPANDED_HEIGHT,
           transform:     visible ? "translateY(0)" : "translateY(100%)",
-          transition:    "transform .3s cubic-bezier(.4,0,.2,1), height .3s cubic-bezier(.4,0,.2,1)",
+          transition:    "transform .3s cubic-bezier(.4,0,.2,1), height .3s cubic-bezier(.4,0,.2,1), bottom .25s ease",
           background:    "var(--warm-white)",
           borderRadius:  "14px 14px 0 0",
           boxShadow:     "0 -4px 24px rgba(0,0,0,.18)",
-          zIndex:        91,
+          zIndex:        101,
           display:       "flex",
           flexDirection: "column",
           overflow:      "hidden",
@@ -395,11 +395,13 @@ export function MobilePlanView({ garden, invalidateGarden }: MobilePlanViewProps
 
       {/* Plan area — tapping here (outside the sheet) dismisses it.
           Pin clicks call e.stopPropagation() inside GardenPlanWidget so they
-          never bubble here, allowing the sheet to open cleanly on pin tap. */}
+          never bubble here, allowing the sheet to open cleanly on pin tap.
+          paddingBottom reserves space so the fixed ChatPanel never covers the
+          legend / zoom buttons at the bottom of the plan. */}
       <div
         data-testid="mobile-plan-area"
         onClick={() => setSheet(null)}
-        style={{ flex: 1, minHeight: 0, display: "flex", overflow: "hidden" }}
+        style={{ flex: 1, minHeight: 0, display: "flex", overflow: "hidden", paddingBottom: "var(--mobile-chat-height, 0px)" }}
       >
         <GardenPlanWidget
           planUrl={garden?.plan_url ?? null}

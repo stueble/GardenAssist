@@ -182,12 +182,12 @@ export function MobilePlantDetailView({ garden }: MobilePlantDetailViewProps) {
         chatOpen={chatOpen}
       />
 
-      {/* Scrollable content */}
-      <div style={{ flex: 1, minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column" }}>
+      {/* Scrollable content — paddingBottom avoids content hiding behind fixed ChatPanel */}
+      <div style={{ flex: 1, minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column", paddingBottom: "var(--mobile-chat-height, 0px)" }}>
         <PlantDetailContent plant={plant} />
       </div>
 
-      {/* In-flow chat panel — pushes content up */}
+      {/* ChatPanel — position:fixed, slides up over BottomNav from viewport bottom */}
       <ChatPanel open={chatOpen} onClose={() => setChatOpen(false)} />
 
       <BottomNav activePath="/plants" />

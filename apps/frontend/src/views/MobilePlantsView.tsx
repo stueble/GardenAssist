@@ -545,8 +545,8 @@ export function MobilePlantsView({ garden, loading }: MobilePlantsViewProps) {
       {/* Divider */}
       <div style={{ height: "1px", background: "#dde8d8", flexShrink: 0 }} />
 
-      {/* Scrollable plant list / grid */}
-      <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
+      {/* Scrollable plant list / grid — paddingBottom avoids content hiding behind fixed ChatPanel */}
+      <div style={{ flex: 1, overflowY: "auto", minHeight: 0, paddingBottom: "var(--mobile-chat-height, 0px)" }}>
         {loading && (
           <div style={{ padding: "20px", textAlign: "center", fontSize: "13px", color: "#8a9e8a" }}>
             {t("status.loading")}
