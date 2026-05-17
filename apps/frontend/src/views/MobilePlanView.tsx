@@ -396,12 +396,12 @@ export function MobilePlanView({ garden, invalidateGarden }: MobilePlanViewProps
       {/* Plan area — tapping here (outside the sheet) dismisses it.
           Pin clicks call e.stopPropagation() inside GardenPlanWidget so they
           never bubble here, allowing the sheet to open cleanly on pin tap.
-          paddingBottom reserves space so the fixed ChatPanel never covers the
-          legend / zoom buttons at the bottom of the plan. */}
+          No paddingBottom needed: the plan is not scrollable, ChatPanel
+          is position:fixed and the user can pan past the overlap. */}
       <div
         data-testid="mobile-plan-area"
         onClick={() => setSheet(null)}
-        style={{ flex: 1, minHeight: 0, display: "flex", overflow: "hidden", paddingBottom: "var(--mobile-chat-height, 0px)" }}
+        style={{ flex: 1, minHeight: 0, display: "flex", overflow: "hidden" }}
       >
         <GardenPlanWidget
           planUrl={garden?.plan_url ?? null}
