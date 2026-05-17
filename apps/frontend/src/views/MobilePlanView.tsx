@@ -439,11 +439,10 @@ export function MobilePlanView({ garden, invalidateGarden }: MobilePlanViewProps
               ? {
                   x:         sheet.pin.x,
                   y:         sheet.pin.y,
-                  // Expanded: sheet covers 85vh. Visible strip above ≈ 15vh.
-                  // Place pin at 60% down the visible strip (slightly below centre)
-                  // in widget coords (widget top = viewport top + 44px topbar).
-                  // targetYPx = (vh * 0.15 * 0.6) - 44  clamped to min 24px
-                  targetYPx: Math.max(24, window.innerHeight * 0.09 - 44),
+                  // Expanded: sheet covers 90vh. Visible strip above ≈ 10vh.
+                  // Centre of that strip in widget coords (widget top = viewport top + 44px topbar).
+                  // targetYPx = (vh * 0.10 / 2) - 44  clamped to min 24px
+                  targetYPx: Math.max(24, window.innerHeight * 0.05 - 44),
                 }
               : {
                   x:            sheet.pin.x,
