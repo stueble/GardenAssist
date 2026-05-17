@@ -8,7 +8,7 @@ services:
       - DATA_DIR=/data
       - PORT=3000
     volumes:
-      - ./data:/data
+      - ./docker_data:/data
     restart: unless-stopped
 
   frontend:

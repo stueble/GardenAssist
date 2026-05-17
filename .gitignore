@@ -35,6 +35,7 @@ apps/backend/data/garden/
 data/*
 !data/.gitkeep
 !data/.gitignore
+docker_data/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
