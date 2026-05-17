@@ -199,7 +199,7 @@ function PlanSnapSheet({
           height:        mode === "peek" ? `${PEEK_HEIGHT_PX}px` : EXPANDED_HEIGHT,
           transform:     visible ? "translateY(0)" : "translateY(100%)",
           transition:    "transform .3s cubic-bezier(.4,0,.2,1), height .3s cubic-bezier(.4,0,.2,1)",
-          background:    "#fff",
+          background:    "var(--warm-white)",
           borderRadius:  "14px 14px 0 0",
           boxShadow:     "0 -4px 24px rgba(0,0,0,.18)",
           zIndex:        91,
