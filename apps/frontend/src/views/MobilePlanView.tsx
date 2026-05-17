@@ -1,28 +1,34 @@
 /**
- * MobilePlanView — story-087 / story-090.
+ * MobilePlanView — story-087 / story-090 / story-094.
  *
  * Fullscreen interactive garden plan for mobile.
  * Reuses GardenPlanWidget (pan, pinch-zoom, pins, zoom buttons, legend)
  * and MobileParts (TopBar primitives, BottomNav, LeftDrawer, ChatPanel).
  *
- * Pin interaction (story-090):
- *   First tap  → confirmation chip above pin (emoji + name + status + next task)
- *   Chip tap   → navigate to MobilePlantDetailView (/plants/:id)
- *   Same pin   → navigate directly (chip already shown)
- *   Background → dismiss chip
- *   Other pin  → dismiss previous chip, show new chip
+ * Pin interaction (story-094 — replaces story-090 PinChip):
+ *   First tap on pin → peek snap-sheet from bottom (~25vh)
+ *     Sheet header: emoji + plant name + botanical name + edit button + close button
+ *     Sheet body:   PlantDetailContent (overflow:hidden — shows description + images)
+ *   Swipe up on sheet → expanded state (~85vh, PlantDetailContent fully scrollable)
+ *   Swipe down on expanded → back to peek
+ *   Swipe down on peek → dismiss
+ *   Tap map area (outside sheet) → dismiss
+ *   Tap different pin → dismiss current sheet, open new peek for new pin
+ *   Edit button → navigate to /plants/:id/edit
  *
  * Layout:
  *   TopBar → plan-area (flex 1, no padding) → ChatPanel (in-flow) → BottomNav
+ *   PlanSnapSheet rendered as position:fixed overlay (escapes overflow:hidden)
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Menu, MessageCircle, Plus } from "lucide-react";
+import { Menu, MessageCircle, Plus, Pencil, X } from "lucide-react";
 import type { Garden } from "@api/garden";
 import type { Plant } from "@api/plant";
 import { GardenPlanWidget, type PlanPin } from "@/components/GardenPlanWidget";
+import { PlantDetailContent } from "@/components/PlantDetailPanel";
 import { plantToPin } from "@/lib/plantToPin";
 import { topBtnStyle, BottomNav, LeftDrawer, ChatPanel } from "@/components/mobile/MobileParts";
 
@@ -33,17 +39,22 @@ interface PinEntry {
   plant: Plant;
 }
 
-interface ChipState {
-  pinIdx:  number;
-  plant:   Plant;
-  pin:     PlanPin;
-  /** Viewport clientX of the pin element centre — used to position the chip */
-  x:       number;
-  /** Viewport clientY of the pin element top — chip appears above this */
-  y:       number;
+type SheetMode = "peek" | "expanded";
+
+interface SheetState {
+  plant: Plant;
+  pin:   PlanPin;
+  mode:  SheetMode;
 }
 
-// ── TopBar — AC #1 ─────────────────────────────────────────────────────────────
+// ── Constants ─────────────────────────────────────────────────────────────────
+
+const PEEK_HEIGHT     = "28vh";
+const EXPANDED_HEIGHT = "85vh";
+/** Minimum swipe distance (px) to trigger a mode transition */
+const SWIPE_THRESHOLD = 50;
+
+// ── TopBar ────────────────────────────────────────────────────────────────────
 
 function TopBar({
   chatOpen,
@@ -83,7 +94,7 @@ function TopBar({
         {t("mobile.plan")}
       </div>
 
-      {/* + button — gap before chat icon */}
+      {/* + button */}
       <button
         data-testid="mobile-plan-add-btn"
         aria-label="Neue Pflanze"
@@ -116,110 +127,206 @@ function TopBar({
   );
 }
 
-// ── Pin chip — shown above tapped pin before navigation ───────────────────────
+// ── PlanSnapSheet ─────────────────────────────────────────────────────────────
 
-function PinChip({
-  chip,
-  onNavigate,
+function PlanSnapSheet({
+  sheet,
+  onExpand,
+  onPeek,
   onDismiss,
+  onEdit,
+  invalidateGarden,
 }: {
-  chip:       ChipState;
-  onNavigate: () => void;
-  onDismiss:  () => void;
+  sheet:            SheetState;
+  onExpand:         () => void;
+  onPeek:           () => void;
+  onDismiss:        () => void;
+  onEdit:           () => void;
+  invalidateGarden: () => void;
 }) {
-  const { pin } = chip;
-  const hasTask = !!pin.tooltip?.nextTask;
+  const { plant, pin, mode } = sheet;
+
+  // ── Swipe gesture via pointer events on the drag handle ───────────────────
+  const dragStartY = useRef<number | null>(null);
+
+  function handlePointerDown(e: React.PointerEvent) {
+    dragStartY.current = e.clientY;
+    // setPointerCapture keeps events flowing even if pointer leaves the element
+    try { (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); } catch { /* JSDOM stub */ }
+  }
+
+  function handlePointerUp(e: React.PointerEvent) {
+    if (dragStartY.current === null) return;
+    const delta = dragStartY.current - e.clientY; // positive = swipe up
+    dragStartY.current = null;
+
+    if (delta > SWIPE_THRESHOLD) {
+      // Swipe up
+      if (mode === "peek") onExpand();
+    } else if (delta < -SWIPE_THRESHOLD) {
+      // Swipe down
+      if (mode === "expanded") onPeek();
+      else onDismiss();
+    }
+  }
 
   return (
     <>
-      {/* Chip itself */}
+      {/* Invisible full-screen tap target — tapping outside sheet dismisses it.
+          pointerEvents only on areas outside the sheet itself (sheet has its own stopPropagation). */}
       <div
-        data-testid="pin-chip"
-        onClick={(e) => { e.stopPropagation(); onNavigate(); }}
+        data-testid="sheet-backdrop"
+        onClick={onDismiss}
         style={{
           position:      "fixed",
-          left:          chip.x,
-          top:           chip.y - 10,
-          transform:     "translate(-50%, -100%)",
-          zIndex:        9999,
-          background:    "var(--green-deep)",
-          color:         "white",
-          borderRadius:  "20px",
-          padding:       "7px 12px",
-          cursor:        "pointer",
-          pointerEvents: "auto",
-          whiteSpace:    "nowrap",
-          boxShadow:     "0 4px 16px rgba(0,0,0,.3)",
+          inset:         0,
+          zIndex:        90,
+          background:    "transparent",
+        }}
+      />
+
+      {/* Sheet */}
+      <div
+        data-testid="plan-snap-sheet"
+        data-mode={mode}
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          position:      "fixed",
+          bottom:        0,
+          left:          0,
+          right:         0,
+          height:        mode === "peek" ? PEEK_HEIGHT : EXPANDED_HEIGHT,
+          transition:    "height .3s cubic-bezier(.4,0,.2,1)",
+          background:    "#fff",
+          borderRadius:  "14px 14px 0 0",
+          boxShadow:     "0 -4px 24px rgba(0,0,0,.18)",
+          zIndex:        91,
           display:       "flex",
           flexDirection: "column",
-          alignItems:    "center",
-          gap:           "3px",
-          minWidth:      "120px",
-          maxWidth:      "240px",
+          overflow:      "hidden",
         }}
       >
-        {/* Top row: emoji + name + optional status dot */}
-        <div style={{
-          display:    "flex",
-          alignItems: "center",
-          gap:        "6px",
-          fontWeight: 600,
-          fontSize:   "13px",
-          lineHeight: 1.2,
-        }}>
-          <span>{pin.emoji}</span>
-          <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{pin.name}</span>
-          {pin.taskStatus && (
-            <span style={{
-              width:        "8px",
-              height:       "8px",
-              borderRadius: "50%",
-              flexShrink:   0,
-              background:   pin.taskStatus === "overdue" ? "var(--red-warn)" : "var(--yellow-warn)",
-              border:       "1.5px solid rgba(255,255,255,.5)",
-            }} />
-          )}
+        {/* Drag handle */}
+        <div
+          data-testid="sheet-drag-handle"
+          onPointerDown={handlePointerDown}
+          onPointerUp={handlePointerUp}
+          style={{
+            flexShrink:     0,
+            display:        "flex",
+            justifyContent: "center",
+            alignItems:     "center",
+            height:         "20px",
+            cursor:         "grab",
+            touchAction:    "none",
+          }}
+        >
+          <div style={{
+            width:        "36px",
+            height:       "4px",
+            borderRadius: "2px",
+            background:   "#d0d0d0",
+          }} />
         </div>
 
-        {/* Status label */}
-        {pin.tooltip?.status && (
-          <div style={{
-            fontSize:  "11px",
-            color:     "rgba(255,255,255,.75)",
-            alignSelf: "flex-start",
-          }}>
-            {pin.tooltip.status}
-          </div>
-        )}
+        {/* Sheet header: emoji + names + edit + close */}
+        <div
+          data-testid="sheet-header"
+          style={{
+            flexShrink:    0,
+            display:       "flex",
+            alignItems:    "flex-start",
+            gap:           "10px",
+            padding:       "0 14px 10px",
+            borderBottom:  "1px solid var(--border)",
+          }}
+        >
+          {/* Emoji */}
+          <span style={{ fontSize: "28px", lineHeight: 1, marginTop: "2px", flexShrink: 0 }}>
+            {pin.emoji}
+          </span>
 
-        {/* Next task */}
-        {hasTask && (
-          <div style={{
-            fontSize:  "11px",
-            color:     "#f5c0b8",
-            fontWeight: 500,
-            alignSelf: "flex-start",
-          }}>
-            {pin.tooltip!.nextTask}
+          {/* Names */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{
+              fontFamily:   "var(--font-display)",
+              fontSize:     "16px",
+              fontWeight:   600,
+              color:        "var(--text-dark)",
+              lineHeight:   1.2,
+              overflow:     "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace:   "nowrap",
+            }}>
+              {plant.name_common}
+            </div>
+            {plant.name_botanical && (
+              <div style={{
+                fontSize:     "12px",
+                color:        "var(--text-light)",
+                fontStyle:    "italic",
+                overflow:     "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace:   "nowrap",
+                marginTop:    "2px",
+              }}>
+                {plant.name_botanical}
+              </div>
+            )}
           </div>
-        )}
 
-        {/* Arrow pointing down */}
-        <div style={{
-          position:           "absolute",
-          top:                "100%",
-          left:               "50%",
-          transform:          "translateX(-50%)",
-          border:             "5px solid transparent",
-          borderTopColor:     "var(--green-deep)",
-          borderBottom:       "none",
-        }} />
+          {/* Edit button */}
+          <button
+            data-testid="sheet-edit-btn"
+            aria-label="Pflanze bearbeiten"
+            onClick={(e) => { e.stopPropagation(); onEdit(); }}
+            style={{
+              ...topBtnStyle,
+              color:      "var(--green-deep)",
+              flexShrink: 0,
+              marginTop:  "-2px",
+            }}
+          >
+            <Pencil size={17} strokeWidth={1.8} />
+          </button>
+
+          {/* Close button */}
+          <button
+            data-testid="sheet-close-btn"
+            aria-label="Schließen"
+            onClick={(e) => { e.stopPropagation(); onDismiss(); }}
+            style={{
+              ...topBtnStyle,
+              color:      "var(--text-light)",
+              flexShrink: 0,
+              marginTop:  "-2px",
+            }}
+          >
+            <X size={17} strokeWidth={1.8} />
+          </button>
+        </div>
+
+        {/* Plant detail content — overflow:hidden in peek (shows partial content),
+            overflow:auto in expanded (fully scrollable) */}
+        <div
+          data-testid="sheet-content"
+          style={{
+            flex:       1,
+            minHeight:  0,
+            overflowY:  mode === "expanded" ? "auto" : "hidden",
+          }}
+        >
+          <PlantDetailContent
+            plant={plant}
+            onDelete={() => { invalidateGarden(); onDismiss(); }}
+          />
+        </div>
       </div>
     </>
   );
 }
 
-// ── Main component ─────────────────────────────────────────────────────────────
+// ── Main component ────────────────────────────────────────────────────────────
 
 export interface MobilePlanViewProps {
   garden:           Garden | null;
@@ -227,23 +334,22 @@ export interface MobilePlanViewProps {
   invalidateGarden: () => void;
 }
 
-export function MobilePlanView({ garden }: MobilePlanViewProps) {
+export function MobilePlanView({ garden, invalidateGarden }: MobilePlanViewProps) {
   const [chatOpen,   setChatOpen]   = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [chip,       setChip]       = useState<ChipState | null>(null);
+  const [sheet,      setSheet]      = useState<SheetState | null>(null);
 
-  const navigate         = useNavigate();
-  const { t: tPlants }   = useTranslation("plants");
+  const navigate       = useNavigate();
+  const { t: tPlants } = useTranslation("plants");
 
-  // Build pins — same logic as DashboardView (plantToPin) so rendering is identical:
-  // halftransparent background, photo override, task-status dot, nextTask tooltip.
+  // Build pins — same logic as DashboardView (plantToPin): halftransparent
+  // background, photo override, task-status dot, nextTask tooltip.
   const pinEntries: PinEntry[] = useMemo(() => {
     if (!garden) return [];
     const result: PinEntry[] = [];
     for (const plant of garden.plants) {
       for (let i = 0; i < plant.positions.length; i++) {
         const pin = plantToPin(plant, i, null);
-        // Translate raw status key → display label (same pattern as DashboardView)
         if (pin.tooltip?.status) {
           pin.tooltip.status = tPlants(`status.${pin.tooltip.status}` as any);
         }
@@ -253,26 +359,13 @@ export function MobilePlanView({ garden }: MobilePlanViewProps) {
     return result;
   }, [garden, tPlants]);
 
-  // ── Pin interaction (AC #1–#4) ──────────────────────────────────────────────
+  // ── Pin interaction ──────────────────────────────────────────────────────────
 
   function handlePinClick(_pin: PlanPin, idx: number) {
     const entry = pinEntries[idx];
     if (!entry) return;
-
-    // Same pin tapped again while chip is visible → navigate immediately (AC #2)
-    if (chip?.pinIdx === idx) {
-      navigate(`/plants/${entry.plant.id}`);
-      return;
-    }
-
-    // Get viewport position of the pin element for chip placement
-    const pinEl = document.querySelector<HTMLElement>(`[data-testid="plan-pin-${idx}"]`);
-    const rect  = pinEl?.getBoundingClientRect();
-    const x     = rect ? rect.left + rect.width  / 2 : window.innerWidth  / 2;
-    const y     = rect ? rect.top                    : window.innerHeight  / 2;
-
-    // First tap (or different pin) → show chip (AC #1, #4)
-    setChip({ pinIdx: idx, plant: entry.plant, pin: entry.pin, x, y });
+    // Always open/switch to peek — different pin or first tap
+    setSheet({ plant: entry.plant, pin: entry.pin, mode: "peek" });
   }
 
   return (
@@ -292,13 +385,12 @@ export function MobilePlanView({ garden }: MobilePlanViewProps) {
         onChatClick={() => setChatOpen((v) => !v)}
       />
 
-      {/* Plan area — fills all space between TopBar and ChatPanel/BottomNav.
-          display:flex is required so the widget's own flex:1 takes effect.
-          Background tap dismisses the chip; pin onClick uses stopPropagation
-          so it never bubbles here, keeping the two-tap chip→navigate flow intact. */}
+      {/* Plan area — tapping here (outside the sheet) dismisses it.
+          Pin clicks call e.stopPropagation() inside GardenPlanWidget so they
+          never bubble here, allowing the sheet to open cleanly on pin tap. */}
       <div
         data-testid="mobile-plan-area"
-        onClick={() => setChip(null)}
+        onClick={() => setSheet(null)}
         style={{ flex: 1, minHeight: 0, display: "flex", overflow: "hidden" }}
       >
         <GardenPlanWidget
@@ -309,12 +401,15 @@ export function MobilePlanView({ garden }: MobilePlanViewProps) {
         />
       </div>
 
-      {/* Confirmation chip — position:fixed so it escapes overflow:hidden (AC #1) */}
-      {chip && (
-        <PinChip
-          chip={chip}
-          onNavigate={() => navigate(`/plants/${chip.plant.id}`)}
-          onDismiss={() => setChip(null)}
+      {/* Snap-sheet — position:fixed so it floats above the plan area */}
+      {sheet && (
+        <PlanSnapSheet
+          sheet={sheet}
+          onExpand={() => setSheet((s) => s ? { ...s, mode: "expanded" } : s)}
+          onPeek={()   => setSheet((s) => s ? { ...s, mode: "peek" } : s)}
+          onDismiss={() => setSheet(null)}
+          onEdit={() => navigate(`/plants/${sheet.plant.id}/edit`)}
+          invalidateGarden={invalidateGarden}
         />
       )}
 
