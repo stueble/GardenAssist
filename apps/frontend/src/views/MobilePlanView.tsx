@@ -317,7 +317,7 @@ function PlanSnapSheet({
           style={{
             flex:       1,
             minHeight:  0,
-            overflowY:  mode === "expanded" ? "auto" : "hidden",
+            overflowY:  "auto",
           }}
         >
           <PlantDetailContent
