@@ -44,6 +44,14 @@ export interface GardenPlanWidgetProps {
   onPinClick?: (pin: PlanPin, index: number) => void;
   /** Show status legend (overdue / current / ok) bottom-left */
   legend?:     boolean;
+  /**
+   * When set, the widget pans (animated) so that the pin at the given
+   * plan-image percentage coordinates (0–100) is visible at the given
+   * viewport-relative target position (0–1). Defaults to horizontal centre
+   * and 30% from the top so the pin appears above a bottom sheet.
+   * Change the value (new object reference) to trigger a re-pan.
+   */
+  centerOnPin?: { x: number; y: number; targetYRatio?: number } | null;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -55,6 +63,7 @@ export function GardenPlanWidget({
   onPick,
   onPinClick,
   legend = false,
+  centerOnPin,
 }: GardenPlanWidgetProps) {
   const { t } = useTranslation("common");
   const areaRef = useRef<HTMLDivElement>(null);
@@ -387,6 +396,32 @@ export function GardenPlanWidget({
     x: number;   // viewport x (clientX)
     y: number;   // viewport y (clientY — tooltip appears above this)
   } | null>(null);
+
+  // ── Pan to pin when centerOnPin changes ──────────────────────────────────────
+
+  useEffect(() => {
+    if (!centerOnPin) return;
+    const area = areaRef.current;
+    if (!area) return;
+    const s = stateRef.current;
+    if (s.imgW === 0 || s.imgH === 0) return; // image not yet loaded
+
+    const { w: areaW, h: areaH } = getAreaSize();
+    // Pin position in image-space pixels
+    const pinImgX = (centerOnPin.x / 100) * s.imgW;
+    const pinImgY = (centerOnPin.y / 100) * s.imgH;
+
+    // Target viewport position: horizontally centred, vertically at targetYRatio
+    const targetYRatio = centerOnPin.targetYRatio ?? 0.30;
+    const targetX = areaW * 0.5;
+    const targetY = areaH * targetYRatio;
+
+    // Compute tx/ty so that the pin lands at (targetX, targetY) in the viewport
+    s.tx = targetX - pinImgX * s.scale;
+    s.ty = targetY - pinImgY * s.scale;
+    applyT(true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [centerOnPin, applyT]);
 
   // ── render ────────────────────────────────────────────────────────────────────
 

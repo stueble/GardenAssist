@@ -49,10 +49,15 @@ interface SheetState {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const PEEK_HEIGHT     = "28vh";
 const EXPANDED_HEIGHT = "85vh";
 /** Minimum swipe distance (px) to trigger a mode transition */
 const SWIPE_THRESHOLD = 50;
+
+/**
+ * Peek height in px — tall enough to fully show description + image slots
+ * in PlantDetailContent without overflow.
+ */
+const PEEK_HEIGHT_PX = 420;
 
 // ── TopBar ────────────────────────────────────────────────────────────────────
 
@@ -195,7 +200,7 @@ function PlanSnapSheet({
           bottom:        0,
           left:          0,
           right:         0,
-          height:        mode === "peek" ? PEEK_HEIGHT : EXPANDED_HEIGHT,
+          height:        mode === "peek" ? `${PEEK_HEIGHT_PX}px` : EXPANDED_HEIGHT,
           transition:    "height .3s cubic-bezier(.4,0,.2,1)",
           background:    "#fff",
           borderRadius:  "14px 14px 0 0",
@@ -364,8 +369,14 @@ export function MobilePlanView({ garden, invalidateGarden }: MobilePlanViewProps
   function handlePinClick(_pin: PlanPin, idx: number) {
     const entry = pinEntries[idx];
     if (!entry) return;
-    // Always open/switch to peek — different pin or first tap
-    setSheet({ plant: entry.plant, pin: entry.pin, mode: "peek" });
+    setSheet((prev) => {
+      if (prev && prev.plant.id === entry.plant.id) {
+        // Same pin tapped again → expand the sheet
+        return { ...prev, mode: "expanded" };
+      }
+      // Different pin or first tap → open in peek mode
+      return { plant: entry.plant, pin: entry.pin, mode: "peek" };
+    });
   }
 
   return (
@@ -398,6 +409,15 @@ export function MobilePlanView({ garden, invalidateGarden }: MobilePlanViewProps
           pins={pinEntries.map((e) => e.pin)}
           legend={true}
           onPinClick={handlePinClick}
+          centerOnPin={sheet
+            ? {
+                x:            sheet.pin.x,
+                y:            sheet.pin.y,
+                // peek: pin visible in upper ~70% of plan strip
+                // expanded: pin visible in the narrow strip above the sheet
+                targetYRatio: sheet.mode === "expanded" ? 0.12 : 0.28,
+              }
+            : null}
         />
       </div>
 

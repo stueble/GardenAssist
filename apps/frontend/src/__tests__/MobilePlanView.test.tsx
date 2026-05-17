@@ -253,6 +253,26 @@ describe("MobilePlanView", () => {
     });
   });
 
+  describe("story-094 — second tap on same pin expands sheet", () => {
+    it("second tap on same pin switches mode to expanded", () => {
+      renderView();
+      fireEvent.click(screen.getByTestId("plan-pin-0")); // peek
+      expect(screen.getByTestId("plan-snap-sheet").dataset.mode).toBe("peek");
+      fireEvent.click(screen.getByTestId("plan-pin-0")); // expand
+      expect(screen.getByTestId("plan-snap-sheet").dataset.mode).toBe("expanded");
+    });
+
+    it("tapping a different pin after expand resets to peek for new plant", () => {
+      renderView();
+      fireEvent.click(screen.getByTestId("plan-pin-0"));
+      fireEvent.click(screen.getByTestId("plan-pin-0")); // expand
+      fireEvent.click(screen.getByTestId("plan-pin-1")); // different pin
+      const sheet = screen.getByTestId("plan-snap-sheet");
+      expect(sheet.dataset.mode).toBe("peek");
+      expect(sheet.textContent).toContain("Plant p2");
+    });
+  });
+
   describe("story-094 AC #2 — swipe up expands sheet", () => {
     it("swipe up on drag handle switches to expanded mode", () => {
       renderView();
