@@ -46,12 +46,14 @@ export interface GardenPlanWidgetProps {
   legend?:     boolean;
   /**
    * When set, the widget pans (animated) so that the pin at the given
-   * plan-image percentage coordinates (0–100) is visible at the given
-   * viewport-relative target position (0–1). Defaults to horizontal centre
-   * and 30% from the top so the pin appears above a bottom sheet.
-   * Change the value (new object reference) to trigger a re-pan.
+   * plan-image percentage coordinates (0–100) is visible at the target
+   * vertical position. Supply either:
+   *   targetYRatio  — fraction of widget height (0–1), default 0.30
+   *   targetYPx     — absolute px from widget top (takes precedence)
+   * Horizontal position is always centred.
+   * Change the object reference to trigger a re-pan.
    */
-  centerOnPin?: { x: number; y: number; targetYRatio?: number } | null;
+  centerOnPin?: { x: number; y: number; targetYRatio?: number; targetYPx?: number } | null;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -411,10 +413,11 @@ export function GardenPlanWidget({
     const pinImgX = (centerOnPin.x / 100) * s.imgW;
     const pinImgY = (centerOnPin.y / 100) * s.imgH;
 
-    // Target viewport position: horizontally centred, vertically at targetYRatio
-    const targetYRatio = centerOnPin.targetYRatio ?? 0.30;
+    // Target viewport position: horizontally centred, vertically at targetYPx or targetYRatio
     const targetX = areaW * 0.5;
-    const targetY = areaH * targetYRatio;
+    const targetY = centerOnPin.targetYPx !== undefined
+      ? centerOnPin.targetYPx
+      : areaH * (centerOnPin.targetYRatio ?? 0.30);
 
     // Compute tx/ty so that the pin lands at (targetX, targetY) in the viewport
     s.tx = targetX - pinImgX * s.scale;

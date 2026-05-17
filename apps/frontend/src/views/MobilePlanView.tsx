@@ -407,13 +407,21 @@ export function MobilePlanView({ garden, invalidateGarden }: MobilePlanViewProps
           legend={true}
           onPinClick={handlePinClick}
           centerOnPin={sheet
-            ? {
-                x:            sheet.pin.x,
-                y:            sheet.pin.y,
-                // peek: pin visible in upper ~70% of plan strip
-                // expanded: pin visible in the narrow strip above the sheet
-                targetYRatio: sheet.mode === "expanded" ? 0.12 : 0.28,
-              }
+            ? sheet.mode === "expanded"
+              ? {
+                  x:         sheet.pin.x,
+                  y:         sheet.pin.y,
+                  // Expanded: sheet covers 85vh. Visible strip above = 15vh.
+                  // Centre of that strip in widget coords (widget top = viewport top + 44px topbar).
+                  // targetYPx = (vh * 0.15 / 2) - 44  clamped to min 20px
+                  targetYPx: Math.max(20, window.innerHeight * 0.075 - 44),
+                }
+              : {
+                  x:            sheet.pin.x,
+                  y:            sheet.pin.y,
+                  // Peek: sheet covers ~420px from bottom; pin centred in upper plan strip
+                  targetYRatio: 0.28,
+                }
             : null}
         />
       </div>
