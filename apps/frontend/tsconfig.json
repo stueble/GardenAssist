@@ -10,7 +10,8 @@
     "paths": {
       "@api/*": ["../../docs/api/*"],
       "@/*":    ["./src/*"]
-    }
+    },
+    "types": ["vitest/globals"]
   },
   "include": ["src", "../../docs/api", "vite.config.ts"]
 }

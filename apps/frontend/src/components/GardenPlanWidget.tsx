@@ -392,6 +392,9 @@ export function GardenPlanWidget({
   };
 
   // ── Hover state for pin tooltips (position:fixed — avoids overflow:hidden clipping) ──
+  // On touch devices, hover is not available — suppress tooltip entirely to avoid
+  // the browser's synthetic mouseenter firing on tap and leaving the bubble stuck.
+  const isTouchDevice = typeof window !== "undefined" && window.matchMedia("(hover: none)").matches;
 
   const [hoveredPin, setHoveredPin] = useState<{
     pin: PlanPin;
@@ -467,13 +470,13 @@ export function GardenPlanWidget({
                 data-pin
                 data-testid={`plan-pin-${i}`}
                 onClick={(e) => { e.stopPropagation(); onPinClick?.(pin, i); }}
-                onMouseEnter={isDashboard && pin.tooltip ? (e: ReactMouseEvent) => {
+                onMouseEnter={!isTouchDevice && isDashboard && pin.tooltip ? (e: ReactMouseEvent) => {
                   setHoveredPin({ pin, x: e.clientX, y: e.clientY });
                 } : undefined}
-                onMouseMove={isDashboard && pin.tooltip ? (e: ReactMouseEvent) => {
+                onMouseMove={!isTouchDevice && isDashboard && pin.tooltip ? (e: ReactMouseEvent) => {
                   setHoveredPin((prev) => prev ? { ...prev, x: e.clientX, y: e.clientY } : prev);
                 } : undefined}
-                onMouseLeave={isDashboard && pin.tooltip ? () => setHoveredPin(null) : undefined}
+                onMouseLeave={!isTouchDevice && isDashboard && pin.tooltip ? () => setHoveredPin(null) : undefined}
                 style={{
                   position:  "absolute",
                   left:      `${pin.x}%`,
