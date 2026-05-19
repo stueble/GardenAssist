@@ -10,14 +10,16 @@
 
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Menu, MessageCircle, Plus, X, Search, ChevronDown, Pencil, Trash2, ImagePlus, Camera } from "lucide-react";
+import { Menu, MessageCircle, Plus, X, Search, ChevronDown, Pencil, SquarePen, Trash2, ImagePlus, Camera } from "lucide-react";
 import type { Garden } from "@api/garden";
 import type { JournalEntry, JournalEntryType } from "@api/journal-entry";
 import type { Plant } from "@api/plant";
 import type { Attachment } from "@api/attachment";
 import { apiClient } from "@/api/client";
 import { useAssistantSettings } from "@/hooks/useAssistantSettings";
-import { topBtnStyle, BottomNav, LeftDrawer, ChatPanel } from "@/components/mobile/MobileParts";
+import { setAssistantContext } from "@/hooks/useAssistantContext";
+import { useAiPanelState } from "@/hooks/useAiPanelState";
+import { topBtnStyle, BottomNav, LeftDrawer } from "@/components/mobile/MobileParts";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -611,7 +613,7 @@ function NewEntrySheet({
 
   // Schedules available for the selected plant (care types only)
   const CARE_SCHEDULE_TYPES = new Set(["pruning", "fertilization", "misc"]);
-  const SCHEDULE_TYPE_ICON: Record<string, string> = { pruning: "✂️", fertilization: "💧", misc: "📋" };
+  const SCHEDULE_TYPE_ICON: Record<string, string> = { pruning: "✂️", fertilization: "✨", misc: "📋" };
   const selectedPlant      = plantId ? plants.find((p) => p.id === plantId) ?? null : null;
   const availableSchedules = selectedPlant
     ? selectedPlant.schedules.filter((s) => CARE_SCHEDULE_TYPES.has(s.schedule_type))
@@ -757,7 +759,7 @@ function NewEntrySheet({
         gap:          "6px",
         flexShrink:   0,
       }}>
-        <span style={{ fontSize: "17px", color: "#8b6f47" }}>✏️</span>
+        <SquarePen size={17} strokeWidth={1.8} color="#8b6f47" />
         <div style={{ fontSize: "13px", fontWeight: 500, color: "#1e2e1e", flex: 1 }}>
           {t("mobile.journal_new_entry")}
         </div>
@@ -1185,7 +1187,7 @@ function EditEntrySheet({
           gap:          "6px",
           flexShrink:   0,
         }}>
-          <span style={{ fontSize: "17px", color: "#8b6f47" }}>✏️</span>
+          <SquarePen size={17} strokeWidth={1.8} color="#8b6f47" />
           <div style={{ fontSize: "13px", fontWeight: 500, color: "#1e2e1e", flex: 1 }}>
             {t("mobile.journal_edit")}
           </div>
@@ -1455,7 +1457,7 @@ export function MobileJournalView({ garden, loading, invalidateGarden }: MobileJ
   const [search,       setSearch]      = useState("");
   const [activeFilter, setActiveFilter] = useState<JournalEntryType | null>(null);
   const [newOpen,      setNewOpen]     = useState(false);
-  const [chatOpen,     setChatOpen]    = useState(false);
+  const { open: chatOpen, setOpen: setChatOpen } = useAiPanelState();
   const [drawerOpen,   setDrawerOpen]  = useState(false);
   const [editEntry,    setEditEntry]   = useState<JournalEntry | null>(null);
 
@@ -1466,8 +1468,14 @@ export function MobileJournalView({ garden, loading, invalidateGarden }: MobileJ
 
   function toggleChat() {
     if (newOpen) setNewOpen(false);
-    setChatOpen((v) => !v);
+    setChatOpen(!chatOpen);
   }
+
+  useEffect(() => {
+    setAssistantContext(
+      garden ? { view: "journal", garden, settings: assistantSettings } : undefined
+    );
+  }, [garden, assistantSettings]);
 
   const allEntries: JournalEntry[] = garden?.journal_entries ?? [];
   const plants: Plant[] = garden?.plants ?? [];
@@ -1554,7 +1562,7 @@ export function MobileJournalView({ garden, loading, invalidateGarden }: MobileJ
       {/* Timeline */}
       <div
         data-testid="mobile-journal-timeline"
-        style={{ flex: 1, overflowY: "auto", minHeight: 0, paddingBottom: "var(--mobile-chat-height, 0px)" }}
+        style={{ flex: 1, overflowY: "auto", minHeight: 0, paddingBottom: "max(0px, calc(var(--mobile-chat-height, 0px) - 56px))" }}
       >
         {loading && (
           <div style={{ padding: "20px", textAlign: "center", fontSize: "13px", color: "#8a9e8a" }}>
@@ -1593,7 +1601,7 @@ export function MobileJournalView({ garden, loading, invalidateGarden }: MobileJ
       />
 
       {/* Chat panel — in-flow */}
-      <ChatPanel open={chatOpen} onClose={() => setChatOpen(false)} />
+
 
       <BottomNav activePath="/journal" />
 

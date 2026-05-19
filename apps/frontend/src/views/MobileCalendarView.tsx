@@ -13,7 +13,7 @@
  * Reuses MobileParts for BottomNav, LeftDrawer, ChatPanel.
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Menu, MessageCircle } from "lucide-react";
 import type { Garden } from "@api/garden";
@@ -27,7 +27,10 @@ import {
   buildSegmentArray,
   type MobileLane,
 } from "@/lib/calendarUtils";
-import { topBtnStyle, BottomNav, LeftDrawer, ChatPanel } from "@/components/mobile/MobileParts";
+import { topBtnStyle, BottomNav, LeftDrawer } from "@/components/mobile/MobileParts";
+import { useAssistantSettings } from "@/hooks/useAssistantSettings";
+import { setAssistantContext } from "@/hooks/useAssistantContext";
+import { useAiPanelState } from "@/hooks/useAiPanelState";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -40,7 +43,7 @@ type FilterKey = Schedule["schedule_type"];
 /** Filter chips in the order specified by the mockup. */
 const FILTER_CHIPS: Array<{ key: FilterKey; icon: string }> = [
   { key: "bloom",         icon: "🌸" },
-  { key: "fertilization", icon: "💧" },
+  { key: "fertilization", icon: "✨" },
   { key: "pruning",       icon: "✂️" },
   { key: "misc",          icon: "·"  },
   { key: "foliage",       icon: "🍂" },
@@ -466,11 +469,19 @@ export interface MobileCalendarViewProps {
 
 export function MobileCalendarView({ garden, loading }: MobileCalendarViewProps) {
   const { t } = useTranslation("common");
+  const assistantSettings = useAssistantSettings();
 
   const [filterKey,  setFilterKey]  = useState<FilterKey>(_calendarFilter);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [chatOpen,   setChatOpen]   = useState(false);
+  const { open: chatOpen, setOpen: setChatOpen } = useAiPanelState();
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    const selectedPlant = garden?.plants.find((p) => p.id === selectedId) ?? undefined;
+    setAssistantContext(
+      garden ? { view: "calendar", garden, selectedPlant, settings: assistantSettings } : undefined
+    );
+  }, [garden, selectedId, assistantSettings]);
 
   function handleFilterChange(k: FilterKey) {
     _calendarFilter = k;
@@ -509,7 +520,7 @@ export function MobileCalendarView({ garden, loading }: MobileCalendarViewProps)
     >
       <TopBar
         onMenuClick={() => setDrawerOpen(true)}
-        onChatClick={() => setChatOpen((v) => !v)}
+        onChatClick={() => setChatOpen(!chatOpen)}
         chatOpen={chatOpen}
       />
 
@@ -520,7 +531,7 @@ export function MobileCalendarView({ garden, loading }: MobileCalendarViewProps)
       {/* Chart area */}
       <div
         data-testid="mobile-calendar-chart"
-        style={{ flex: 1, overflowY: "auto", overflowX: "hidden", minHeight: 0, background: "#f8f4ee", paddingBottom: "var(--mobile-chat-height, 0px)" }}
+        style={{ flex: 1, overflowY: "auto", overflowX: "hidden", minHeight: 0, background: "#f8f4ee", paddingBottom: "max(0px, calc(var(--mobile-chat-height, 0px) - 56px))" }}
       >
         <MonthHeader />
 
@@ -551,7 +562,7 @@ export function MobileCalendarView({ garden, loading }: MobileCalendarViewProps)
         <div style={{ height: "8px" }} />
       </div>
 
-      <ChatPanel open={chatOpen} onClose={() => setChatOpen(false)} />
+
 
       <BottomNav activePath="/calendar" />
 

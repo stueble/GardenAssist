@@ -40,7 +40,7 @@ const SCHEDULE_TYPES: Array<{ type: Schedule["schedule_type"]; icon: string; lab
   { type: "bloom",         icon: "🌸", labelKey: "bloom"         },
   { type: "growth",        icon: "🌿", labelKey: "growth"        },
   { type: "foliage",       icon: "🍃", labelKey: "foliage"       },
-  { type: "fertilization", icon: "💧", labelKey: "fertilization" },
+  { type: "fertilization", icon: "✨", labelKey: "fertilization" },
   { type: "pruning",       icon: "✂️", labelKey: "pruning"       },
   { type: "misc",          icon: "📋", labelKey: "misc"          },
 ];

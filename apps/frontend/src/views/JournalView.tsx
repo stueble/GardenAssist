@@ -40,7 +40,7 @@ const CARE_SCHEDULE_TYPES = new Set(["pruning", "fertilization", "misc"]);
 
 const SCHEDULE_TYPE_ICON: Record<string, string> = {
   pruning:       "✂️",
-  fertilization: "💧",
+  fertilization: "✨",
   misc:          "📋",
 };
 
