@@ -1,12 +1,11 @@
-import { useState, useRef, useEffect } from "react";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { apiClient }               from "@/api/client";
-import { chatWithAi }              from "@/api/client";
 import type { ChatMessage }        from "@/api/client";
 import { useAiPanelState }         from "@/hooks/useAiPanelState";
-import { buildSystemBlocks }       from "@/lib/aiPrompt";
+import { useAiChat }               from "@/hooks/useAiChat";
 import type { AssistantContext }   from "@api/assistant-context";
 import { getPlantEditHandler }      from "@/hooks/usePlantEditContext";
 import type { PlantEditFields }     from "@/hooks/usePlantEditContext";
@@ -148,118 +147,20 @@ function dispatchToolCall(
  * - Strip hover: green-mid → green-light, 0.2s (§ 5.6)
  */
 export function AiPanel({ assistantContext }: AiPanelProps) {
-  const { open, setOpen }         = useAiPanelState();
-  const { t, i18n }               = useTranslation("common");
-  const [configured, setConfigured] = useState<boolean | null>(null);
-  const [input,      setInput]      = useState("");
-  const [messages,   setMessages]   = useState<ChatMessage[]>([]);
-  const [loading,    setLoading]    = useState(false);
-  const [error,      setError]      = useState<string | null>(null);
+  const { open, setOpen } = useAiPanelState();
+  const { t }             = useTranslation("common");
 
-  const inputRef    = useRef<HTMLTextAreaElement>(null);
-  const messagesRef = useRef<HTMLDivElement>(null);
-
-  // Check AI configuration whenever the panel is open.
-  // Reset to null when closed so the next open always re-fetches.
-  useEffect(() => {
-    if (!open) {
-      setConfigured(null);
-      return;
-    }
-    apiClient.getSettings().then((s) => {
-      setConfigured(!!(s.ai_provider && s.ai_api_key));
-    }).catch(() => setConfigured(false));
-  }, [open]);
-
-  // Inject a context marker into the conversation history whenever the selected
-  // plant changes (or on first open). This prevents the model from confusing
-  // tool calls / mentions from a previous plant with the current one.
-  const prevPlantIdRef = useRef<string | undefined>(undefined);
-  useEffect(() => {
-    if (!open) return;
-    const plant = assistantContext?.selectedPlant;
-    const currentId = plant?.id;
-    if (currentId === prevPlantIdRef.current) return;
-    prevPlantIdRef.current = currentId;
-
-    const displayLabel = plant
-      ? `${plant.icon ?? "🌿"} ${plant.name_common}${plant.location ? ` · ${plant.location}` : ""}`
-      : assistantContext?.view
-        ? `📋 ${assistantContext.view}`
-        : t("ai.garden_context");
-
-    // The full content (sent to the model as an assistant message) includes the
-    // plant_id so the model uses the correct ID in subsequent tool calls.
-    const fullContent = plant
-      ? `${displayLabel} [plant_id: ${plant.id}]`
-      : displayLabel;
-
-    setMessages((prev) => [...prev, { role: "context", content: fullContent, display_content: displayLabel }]);
-  }, [open, assistantContext?.selectedPlant, assistantContext?.view]);
+  const {
+    messages, input, setInput, loading, error, configured,
+    sendMessage, messagesRef, inputRef,
+  } = useAiChat({ open, assistantContext });
 
   // Focus input when panel opens and AI is configured
   useEffect(() => {
     if (open && configured) {
-      setTimeout(() => inputRef.current?.focus(), 320); // after transition
+      setTimeout(() => (inputRef.current as HTMLTextAreaElement | null)?.focus(), 320);
     }
-  }, [open, configured]);
-
-  // Auto-scroll to bottom when messages or loading state changes
-  useEffect(() => {
-    const el = messagesRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
-  }, [messages, loading, error]);
-
-  async function sendMessage() {
-    const text = input.trim();
-    if (!text || loading) return;
-
-    const userMsg: ChatMessage = { role: "user", content: text };
-    const nextMessages = [...messages, userMsg];
-
-    setMessages(nextMessages);
-    setInput("");
-    // reset textarea height after clearing
-    if (inputRef.current) {
-      inputRef.current.style.height = "auto";
-    }
-    setLoading(true);
-    setError(null);
-
-    try {
-      const lang = (i18n.language?.startsWith("en") ? "en" : "de") as "de" | "en";
-      const systemBlocks = assistantContext
-        ? buildSystemBlocks(assistantContext, lang)
-        : undefined;
-      // Context markers are sent as "assistant" messages (with plant_id in content)
-      // so the model uses the correct plant ID in subsequent tool calls.
-      const apiMessages = nextMessages.map((m) =>
-        m.role === "context"
-          ? { role: "assistant" as const, content: m.content }
-          : m as { role: "user" | "assistant"; content: string }
-      );
-      const res = await chatWithAi(apiMessages, lang, undefined, systemBlocks);
-
-      // Parse tool calls from assistant response
-      const { toolCall, displayText, parseError } = parseToolCall(res.content);
-      let feedback = "";
-      if (toolCall) {
-        feedback = dispatchToolCall(toolCall, lang);
-      } else if (parseError) {
-        feedback = lang === "de"
-          ? "⚠️ Die Antwort war zu lang und wurde abgeschnitten. Bitte vereinfache die Anfrage – z.\u00a0B. weniger Zeitpläne oder kürzere Notizen."
-          : "⚠️ The response was too long and got cut off. Please simplify the request – e.g. fewer schedules or shorter notes.";
-      }
-
-      // Show the display text (tool block stripped) + any error feedback
-      const finalContent = [displayText, feedback].filter(Boolean).join("\n\n");
-      setMessages((prev) => [...prev, { role: "assistant", content: finalContent || res.content }]);
-    } catch {
-      setError(t("ai.error"));
-    } finally {
-      setLoading(false);
-    }
-  }
+  }, [open, configured, inputRef]);
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -419,7 +320,7 @@ export function AiPanel({ assistantContext }: AiPanelProps) {
           )}
 
           {/* Conversation history */}
-          {configured === true && messages.length === 0 && (
+          {configured === true && messages.every((m) => m.role === "context") && (
             <BotMessage>
               {t("ai.welcome")}
             </BotMessage>
@@ -471,7 +372,7 @@ export function AiPanel({ assistantContext }: AiPanelProps) {
           }}
         >
           <textarea
-            ref={inputRef}
+            ref={inputRef as React.RefObject<HTMLTextAreaElement>}
             value={input}
             rows={1}
             onChange={(e) => {

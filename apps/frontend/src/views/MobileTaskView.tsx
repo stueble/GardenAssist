@@ -12,12 +12,15 @@
  * TaskSidebar so the same component is reused in the desktop DashboardView.
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Menu, MessageCircle, Search, Plus } from "lucide-react";
 import type { Garden } from "@api/garden";
 import { TaskSidebar } from "@/components/TaskSidebar";
-import { topBtnStyle, BottomNav, LeftDrawer, ChatPanel } from "@/components/mobile/MobileParts";
+import { topBtnStyle, BottomNav, LeftDrawer } from "@/components/mobile/MobileParts";
+import { useAssistantSettings } from "@/hooks/useAssistantSettings";
+import { setAssistantContext } from "@/hooks/useAssistantContext";
+import { useAiPanelState } from "@/hooks/useAiPanelState";
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
@@ -134,8 +137,15 @@ export interface MobileTaskViewProps {
 }
 
 export function MobileTaskView({ garden, loading, invalidateGarden }: MobileTaskViewProps) {
-  const [chatOpen,   setChatOpen]   = useState(false);
+  const { open: chatOpen, setOpen: setChatOpen } = useAiPanelState();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const assistantSettings = useAssistantSettings();
+
+  useEffect(() => {
+    setAssistantContext(
+      garden ? { view: "dashboard", garden, settings: assistantSettings } : undefined
+    );
+  }, [garden, assistantSettings]);
 
   return (
     <div
@@ -151,7 +161,7 @@ export function MobileTaskView({ garden, loading, invalidateGarden }: MobileTask
     >
       <TopBar
         onMenuClick={() => setDrawerOpen(true)}
-        onChatClick={() => setChatOpen((v) => !v)}
+        onChatClick={() => setChatOpen(!chatOpen)}
         chatOpen={chatOpen}
       />
 
@@ -169,8 +179,7 @@ export function MobileTaskView({ garden, loading, invalidateGarden }: MobileTask
         />
       </div>
 
-      {/* ChatPanel — position:fixed, slides up over BottomNav from viewport bottom */}
-      <ChatPanel open={chatOpen} onClose={() => setChatOpen(false)} />
+
 
       <BottomNav activePath="/" />
 

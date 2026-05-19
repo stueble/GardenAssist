@@ -11,7 +11,8 @@ import { useNavigate }     from "react-router-dom";
 import { useTranslation }  from "react-i18next";
 import { ArrowLeft, MessageCircle } from "lucide-react";
 import { SettingsView }    from "@/views/SettingsView";
-import { topBtnStyle, ChatPanel } from "@/components/mobile/MobileParts";
+import { topBtnStyle } from "@/components/mobile/MobileParts";
+import { useAiPanelState } from "@/hooks/useAiPanelState";
 import type { Garden }     from "@api/garden";
 
 // ── TopBar ────────────────────────────────────────────────────────────────────
@@ -97,17 +98,17 @@ export interface MobileSettingsViewProps {
 
 export function MobileSettingsView(props: MobileSettingsViewProps) {
   const navigate = useNavigate();
-  const [chatOpen, setChatOpen] = useState(false);
+  const { open: chatOpen, setOpen: setChatOpen } = useAiPanelState();
 
   return (
     <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, overflow: "hidden" }}>
       <TopBar
         onBack={() => navigate("/")}
-        onChatClick={() => setChatOpen((v) => !v)}
+        onChatClick={() => setChatOpen(!chatOpen)}
         chatOpen={chatOpen}
       />
       <SettingsView {...props} hideTitle compactPadding />
-      <ChatPanel open={chatOpen} onClose={() => setChatOpen(false)} />
+
     </div>
   );
 }

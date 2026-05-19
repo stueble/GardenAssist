@@ -18,6 +18,8 @@ import { MemoryRouter } from "react-router-dom";
 import i18n from "../i18n/index";
 import { MobileTaskView } from "../views/MobileTaskView";
 import { apiClient } from "../api/client";
+import { resetAiPanelState } from "../hooks/useAiPanelState";
+import { ChatPanel } from "../components/mobile/MobileParts";
 import type { Plant } from "@api/plant";
 import type { Garden } from "@api/garden";
 
@@ -126,6 +128,7 @@ function renderView(garden: Garden | null = MOCK_GARDEN, loading = false) {
   return render(
     <MemoryRouter initialEntries={["/"]}>
       <I18nextProvider i18n={i18n}>
+        <ChatPanel />
         <MobileTaskView
           garden={garden}
           loading={loading}
@@ -140,6 +143,7 @@ function renderView(garden: Garden | null = MOCK_GARDEN, loading = false) {
 
 describe("MobileTaskView", () => {
   beforeEach(() => {
+    resetAiPanelState();
     vi.spyOn(apiClient, "createJournalEntry").mockResolvedValue({
       id: "je1", plant_id: "p1", schedule_id: "s1", week: "2026-W01",
       entry_type: "done", date: "2026-01-01", title: null, notes: null,

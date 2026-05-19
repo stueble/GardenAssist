@@ -7,13 +7,16 @@
  * Accessed via /plants/:id. Back arrow returns to /plants.
  */
 
-import { useState }        from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation }  from "react-i18next";
-import { ArrowLeft, MessageCircle } from "lucide-react";
+import { ArrowLeft, MessageCircle, SquarePen } from "lucide-react";
 import type { Garden }     from "@api/garden";
 import { PlantDetailContent } from "@/components/PlantDetailPanel";
-import { topBtnStyle, BottomNav, ChatPanel } from "@/components/mobile/MobileParts";
+import { topBtnStyle, BottomNav } from "@/components/mobile/MobileParts";
+import { useAssistantSettings } from "@/hooks/useAssistantSettings";
+import { setAssistantContext }  from "@/hooks/useAssistantContext";
+import { useAiPanelState }      from "@/hooks/useAiPanelState";
 
 // ── TopBar ────────────────────────────────────────────────────────────────────
 
@@ -92,9 +95,9 @@ function TopBar({
         data-testid="mobile-plant-detail-edit"
         aria-label={t("detail.btn_edit")}
         onClick={onEdit}
-        style={{ ...topBtnStyle, background: "rgba(255,255,255,.15)", fontSize: "16px" }}
+        style={{ ...topBtnStyle, background: "rgba(255,255,255,.15)" }}
       >
-        ✏️
+        <SquarePen size={18} strokeWidth={1.8} />
       </button>
 
       {/* Chat */}
@@ -136,10 +139,19 @@ export interface MobilePlantDetailViewProps {
 
 export function MobilePlantDetailView({ garden }: MobilePlantDetailViewProps) {
   const { id } = useParams<{ id: string }>();
-  const navigate  = useNavigate();
-  const [chatOpen, setChatOpen] = useState(false);
+  const navigate          = useNavigate();
+  const assistantSettings = useAssistantSettings();
+  const { open: chatOpen, setOpen: setChatOpen } = useAiPanelState();
 
   const plant = garden?.plants.find((p) => p.id === id) ?? null;
+
+  useEffect(() => {
+    setAssistantContext(
+      garden && plant
+        ? { view: "plants", garden, selectedPlant: plant, settings: assistantSettings }
+        : undefined
+    );
+  }, [garden, plant, assistantSettings]);
 
   // Plant not found (garden still loading or invalid id) — show minimal placeholder
   if (!plant) {
@@ -178,17 +190,16 @@ export function MobilePlantDetailView({ garden }: MobilePlantDetailViewProps) {
         nameBotanical={plant.name_botanical}
         onBack={() => navigate("/plants")}
         onEdit={() => navigate(`/plants/${plant.id}/edit`)}
-        onChatClick={() => setChatOpen((v) => !v)}
+        onChatClick={() => setChatOpen(!chatOpen)}
         chatOpen={chatOpen}
       />
 
       {/* Scrollable content — paddingBottom avoids content hiding behind fixed ChatPanel */}
-      <div style={{ flex: 1, minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column", paddingBottom: "var(--mobile-chat-height, 0px)" }}>
+      <div style={{ flex: 1, minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column", paddingBottom: "max(0px, calc(var(--mobile-chat-height, 0px) - 56px))" }}>
         <PlantDetailContent plant={plant} />
       </div>
 
-      {/* ChatPanel — position:fixed, slides up over BottomNav from viewport bottom */}
-      <ChatPanel open={chatOpen} onClose={() => setChatOpen(false)} />
+
 
       <BottomNav activePath="/plants" />
     </div>

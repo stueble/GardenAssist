@@ -26,6 +26,8 @@ import { I18nextProvider } from "react-i18next";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import i18n from "../i18n/index";
 import { MobilePlanView } from "../views/MobilePlanView";
+import { ChatPanel } from "../components/mobile/MobileParts";
+import { resetAiPanelState } from "../hooks/useAiPanelState";
 import type { Garden } from "@api/garden";
 import type { Plant } from "@api/plant";
 
@@ -40,11 +42,13 @@ if (!("ResizeObserver" in window)) {
   };
 }
 
-// Mock apiClient so PlantDetailContent's delete flow doesn't hit the network
+// Mock apiClient so PlantDetailContent's delete flow and useAiChat don't hit the network
 vi.mock("../api/client", () => ({
   apiClient: {
-    deletePlant: vi.fn().mockResolvedValue({}),
+    deletePlant:  vi.fn().mockResolvedValue({}),
+    getSettings:  vi.fn().mockResolvedValue({ ai_provider: null, ai_api_key: null }),
   },
+  chatWithAi: vi.fn().mockResolvedValue({ content: "" }),
 }));
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
@@ -106,6 +110,7 @@ function renderView(garden: Garden | null = MOCK_GARDEN) {
   const result = render(
     <MemoryRouter initialEntries={["/plan"]}>
       <I18nextProvider i18n={i18n}>
+        <ChatPanel />
         <Routes>
           <Route
             path="/plan"
@@ -133,6 +138,7 @@ function swipe(el: HTMLElement, startY: number, endY: number) {
 }
 
 beforeEach(async () => {
+  resetAiPanelState();
   await i18n.changeLanguage("de");
 });
 

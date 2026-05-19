@@ -14,6 +14,8 @@ import { I18nextProvider } from "react-i18next";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import i18n from "../i18n/index";
 import { MobilePlantDetailView } from "../views/MobilePlantDetailView";
+import { ChatPanel } from "../components/mobile/MobileParts";
+import { resetAiPanelState } from "../hooks/useAiPanelState";
 import type { Plant } from "@api/plant";
 import type { Garden } from "@api/garden";
 
@@ -21,8 +23,10 @@ import type { Garden } from "@api/garden";
 
 vi.mock("../api/client", () => ({
   apiClient: {
-    deletePlant: vi.fn().mockResolvedValue({}),
+    deletePlant:  vi.fn().mockResolvedValue({}),
+    getSettings:  vi.fn().mockResolvedValue({ ai_provider: null, ai_api_key: null }),
   },
+  chatWithAi: vi.fn().mockResolvedValue({ content: "" }),
 }));
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
@@ -68,6 +72,7 @@ function renderAt(plantId: string, garden: Garden | null = MOCK_GARDEN) {
   return render(
     <MemoryRouter initialEntries={[`/plants/${plantId}`]}>
       <I18nextProvider i18n={i18n}>
+        <ChatPanel />
         <Routes>
           <Route
             path="/plants/:id"
@@ -81,6 +86,7 @@ function renderAt(plantId: string, garden: Garden | null = MOCK_GARDEN) {
 }
 
 beforeEach(async () => {
+  resetAiPanelState();
   await i18n.changeLanguage("de");
 });
 

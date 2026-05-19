@@ -30,7 +30,10 @@ import type { Plant } from "@api/plant";
 import { GardenPlanWidget, type PlanPin } from "@/components/GardenPlanWidget";
 import { PlantDetailContent } from "@/components/PlantDetailPanel";
 import { plantToPin } from "@/lib/plantToPin";
-import { topBtnStyle, BottomNav, LeftDrawer, ChatPanel, MOBILE_CHAT_HEIGHT } from "@/components/mobile/MobileParts";
+import { topBtnStyle, BottomNav, LeftDrawer, MOBILE_CHAT_HEIGHT } from "@/components/mobile/MobileParts";
+import { useAssistantSettings } from "@/hooks/useAssistantSettings";
+import { setAssistantContext } from "@/hooks/useAssistantContext";
+import { useAiPanelState } from "@/hooks/useAiPanelState";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -339,12 +342,22 @@ export interface MobilePlanViewProps {
 }
 
 export function MobilePlanView({ garden, invalidateGarden }: MobilePlanViewProps) {
-  const [chatOpen,   setChatOpen]   = useState(false);
+  const { open: chatOpen, setOpen: setChatOpen } = useAiPanelState();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [sheet,      setSheet]      = useState<SheetState | null>(null);
 
-  const navigate       = useNavigate();
-  const { t: tPlants } = useTranslation("plants");
+  const navigate           = useNavigate();
+  const { t: tPlants }     = useTranslation("plants");
+  const assistantSettings  = useAssistantSettings();
+
+  // Publish assistant context — selected plant from the open snap-sheet
+  useEffect(() => {
+    setAssistantContext(
+      garden
+        ? { view: "dashboard", garden, selectedPlant: sheet?.plant ?? undefined, settings: assistantSettings }
+        : undefined
+    );
+  }, [garden, sheet?.plant, assistantSettings]);
 
   // Compute how much the plan area needs to shrink when the ChatPanel opens.
   // ChatPanel is position:fixed and overlaps BottomNav (which stays in-flow).
@@ -409,7 +422,7 @@ export function MobilePlanView({ garden, invalidateGarden }: MobilePlanViewProps
       <TopBar
         chatOpen={chatOpen}
         onMenuClick={() => setDrawerOpen(true)}
-        onChatClick={() => setChatOpen((v) => !v)}
+        onChatClick={() => setChatOpen(!chatOpen)}
       />
 
       {/* Plan area — outer wrapper shrinks by the portion of ChatPanel that
@@ -468,7 +481,7 @@ export function MobilePlanView({ garden, invalidateGarden }: MobilePlanViewProps
       )}
 
       {/* In-flow chat panel */}
-      <ChatPanel open={chatOpen} onClose={() => setChatOpen(false)} />
+
 
       <BottomNav activePath="/plan" />
 

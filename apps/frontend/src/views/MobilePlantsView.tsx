@@ -12,7 +12,7 @@
  * View-toggle state is preserved across navigations via a module-level variable.
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -28,7 +28,10 @@ import {
   STATUS_TEXT,
 } from "@/lib/plantStatus";
 import type { PlantStatus } from "@/lib/plantStatus";
-import { topBtnStyle, BottomNav, LeftDrawer, ChatPanel } from "@/components/mobile/MobileParts";
+import { topBtnStyle, BottomNav, LeftDrawer } from "@/components/mobile/MobileParts";
+import { useAssistantSettings } from "@/hooks/useAssistantSettings";
+import { setAssistantContext } from "@/hooks/useAssistantContext";
+import { useAiPanelState } from "@/hooks/useAiPanelState";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -491,12 +494,19 @@ export interface MobilePlantsViewProps {
 export function MobilePlantsView({ garden, loading }: MobilePlantsViewProps) {
   const { t } = useTranslation("common");
   const navigate = useNavigate();
+  const assistantSettings = useAssistantSettings();
 
   // View mode — initialised from module-level singleton (survives navigation)
   const [viewMode,    setViewMode]    = useState<ViewMode>(_plantsViewMode);
   const [search,      setSearch]      = useState("");
-  const [chatOpen,    setChatOpen]    = useState(false);
+  const { open: chatOpen, setOpen: setChatOpen } = useAiPanelState();
   const [drawerOpen,  setDrawerOpen]  = useState(false);
+
+  useEffect(() => {
+    setAssistantContext(
+      garden ? { view: "plants", garden, settings: assistantSettings } : undefined
+    );
+  }, [garden, assistantSettings]);
 
   // Persist view mode to module-level singleton so it survives navigation (AC #6)
   function handleViewChange(m: ViewMode) {
@@ -536,7 +546,7 @@ export function MobilePlantsView({ garden, loading }: MobilePlantsViewProps) {
         onViewChange={handleViewChange}
         onMenuClick={() => setDrawerOpen(true)}
         onAddClick={() => navigate("/plants/new")}
-        onChatClick={() => setChatOpen((v) => !v)}
+        onChatClick={() => setChatOpen(!chatOpen)}
         chatOpen={chatOpen}
       />
 
@@ -546,7 +556,7 @@ export function MobilePlantsView({ garden, loading }: MobilePlantsViewProps) {
       <div style={{ height: "1px", background: "#dde8d8", flexShrink: 0 }} />
 
       {/* Scrollable plant list / grid — paddingBottom avoids content hiding behind fixed ChatPanel */}
-      <div style={{ flex: 1, overflowY: "auto", minHeight: 0, paddingBottom: "var(--mobile-chat-height, 0px)" }}>
+      <div style={{ flex: 1, overflowY: "auto", minHeight: 0, paddingBottom: "max(0px, calc(var(--mobile-chat-height, 0px) - 56px))" }}>
         {loading && (
           <div style={{ padding: "20px", textAlign: "center", fontSize: "13px", color: "#8a9e8a" }}>
             {t("status.loading")}
@@ -592,7 +602,7 @@ export function MobilePlantsView({ garden, loading }: MobilePlantsViewProps) {
       </div>
 
       {/* In-flow chat panel */}
-      <ChatPanel open={chatOpen} onClose={() => setChatOpen(false)} />
+
 
       <BottomNav activePath="/plants" />
 

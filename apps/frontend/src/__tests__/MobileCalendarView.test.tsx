@@ -19,6 +19,8 @@ import { I18nextProvider } from "react-i18next";
 import { MemoryRouter } from "react-router-dom";
 import i18n from "../i18n/index";
 import { MobileCalendarView, _resetCalendarFilterForTest } from "../views/MobileCalendarView";
+import { ChatPanel } from "../components/mobile/MobileParts";
+import { resetAiPanelState } from "../hooks/useAiPanelState";
 import type { Plant } from "@api/plant";
 import type { Garden } from "@api/garden";
 
@@ -90,6 +92,7 @@ function renderView(garden: Garden | null = MOCK_GARDEN, loading = false) {
   return render(
     <MemoryRouter initialEntries={["/calendar"]}>
       <I18nextProvider i18n={i18n}>
+        <ChatPanel />
         <MobileCalendarView
           garden={garden}
           loading={loading}
@@ -105,6 +108,7 @@ function renderView(garden: Garden | null = MOCK_GARDEN, loading = false) {
 describe("MobileCalendarView", () => {
 
   beforeEach(() => {
+    resetAiPanelState();
     // Reset filter singleton so each test starts with bloom active
     _resetCalendarFilterForTest();
   });

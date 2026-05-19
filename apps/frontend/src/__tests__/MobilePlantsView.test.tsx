@@ -17,6 +17,8 @@ import { I18nextProvider } from "react-i18next";
 import { MemoryRouter } from "react-router-dom";
 import i18n from "../i18n/index";
 import { MobilePlantsView } from "../views/MobilePlantsView";
+import { ChatPanel } from "../components/mobile/MobileParts";
+import { resetAiPanelState } from "../hooks/useAiPanelState";
 import type { Plant } from "@api/plant";
 import type { Garden } from "@api/garden";
 
@@ -78,6 +80,7 @@ function renderView(garden: Garden | null = MOCK_GARDEN, loading = false) {
   return render(
     <MemoryRouter initialEntries={["/plants"]}>
       <I18nextProvider i18n={i18n}>
+        <ChatPanel />
         <MobilePlantsView
           garden={garden}
           loading={loading}
@@ -92,6 +95,7 @@ function renderView(garden: Garden | null = MOCK_GARDEN, loading = false) {
 
 describe("MobilePlantsView", () => {
   beforeEach(() => {
+    resetAiPanelState();
     // Reset view mode singleton to list before each test
     // (access via module re-import is not needed — the component defaults to list)
   });

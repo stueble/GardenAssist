@@ -13,7 +13,7 @@
  * this value as paddingBottom so content is never hidden behind the panel.
  */
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -21,8 +21,10 @@ import {
   Check, Sprout, Calendar, Notebook, Map,
   MessageCircle, Send,
 } from "lucide-react";
-import { chatWithAi } from "@/api/client";
 import type { ChatMessage } from "@/api/client";
+import { useAiChat } from "@/hooks/useAiChat";
+import { useAiPanelState } from "@/hooks/useAiPanelState";
+import { useAssistantContext } from "@/hooks/useAssistantContext";
 
 // ── topBtnStyle ───────────────────────────────────────────────────────────────
 
@@ -213,20 +215,15 @@ export const MOBILE_CHAT_HEIGHT = 210;
 /** CSS custom property name used to communicate panel height to scroll areas. */
 const CHAT_HEIGHT_VAR = "--mobile-chat-height";
 
-export function ChatPanel({
-  open,
-  onClose,
-}: {
-  open: boolean;
-  onClose: () => void;
-}) {
+export function ChatPanel() {
   const { t } = useTranslation("common");
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    { role: "assistant", content: t("ai.welcome") },
-  ]);
-  const [input,   setInput]   = useState("");
-  const [sending, setSending] = useState(false);
-  const msgsRef = useRef<HTMLDivElement>(null);
+  const { open, setOpen } = useAiPanelState();
+  const onClose = useCallback(() => setOpen(false), [setOpen]);
+  const assistantContext = useAssistantContext();
+
+  const {
+    messages, input, setInput, loading, configured, sendMessage, messagesRef, inputRef,
+  } = useAiChat({ open, assistantContext: assistantContext ?? undefined });
 
   // Sync --mobile-chat-height on <html> so scrollable content areas can
   // add paddingBottom and avoid being hidden behind the fixed panel.
@@ -239,28 +236,6 @@ export function ChatPanel({
       document.documentElement.style.setProperty(CHAT_HEIGHT_VAR, "0px");
     };
   }, [open]);
-
-  const scrollToBottom = useCallback(() => {
-    if (msgsRef.current) msgsRef.current.scrollTop = msgsRef.current.scrollHeight;
-  }, []);
-
-  useEffect(() => { scrollToBottom(); }, [messages, scrollToBottom]);
-
-  const send = useCallback(async () => {
-    const text = input.trim();
-    if (!text || sending) return;
-    setInput("");
-    setSending(true);
-    const userMsg: ChatMessage = { role: "user", content: text };
-    setMessages((prev) => [...prev, userMsg]);
-    try {
-      const { content: reply } = await chatWithAi([...messages, userMsg]);
-      setMessages((prev) => [...prev, { role: "assistant" as const, content: reply }]);
-    } catch {
-      setMessages((prev) => [...prev, { role: "assistant", content: t("ai.error") }]);
-    }
-    setSending(false);
-  }, [input, sending, messages, t]);
 
   return (
     <div
@@ -297,7 +272,7 @@ export function ChatPanel({
           data-testid="mobile-chat-close"
           onClick={onClose}
           style={{
-            fontSize: "10px",
+            fontSize:     "10px",
             color:        "#8a9e8a",
             padding:      "2px 7px",
             border:       "1px solid #dde8d8",
@@ -312,7 +287,7 @@ export function ChatPanel({
 
       {/* Messages */}
       <div
-        ref={msgsRef}
+        ref={messagesRef as React.RefObject<HTMLDivElement>}
         style={{
           flex:          1,
           overflowY:     "auto",
@@ -323,35 +298,60 @@ export function ChatPanel({
           minHeight:     0,
         }}
       >
+        {/* Not configured */}
+        {configured === false && (
+          <div style={{ fontSize: "11px", color: "#4a5e4a", background: "#fff", borderRadius: "4px 10px 10px 10px", padding: "6px 9px", maxWidth: "86%", alignSelf: "flex-start" }}>
+            {t("ai.not_configured")} <strong>{t("ai.not_configured_link")}</strong>{t("ai.not_configured_suffix") ? ` ${t("ai.not_configured_suffix")}` : ""}
+          </div>
+        )}
+        {/* Welcome */}
+        {configured === true && messages.filter((m) => m.role !== "context").length === 0 && (
+          <div style={{ fontSize: "11px", color: "#1e2e1e", background: "#fff", borderRadius: "4px 10px 10px 10px", padding: "6px 9px", maxWidth: "86%", alignSelf: "flex-start" }}>
+            {t("ai.welcome")}
+          </div>
+        )}
         {messages.map((msg, i) => (
-          msg.role === "assistant" ? (
+          msg.role === "user" ? (
             <div key={i} style={{
-              maxWidth:    "86%",
-              fontSize: "11px",
-              lineHeight:  1.45,
-              padding:     "6px 9px",
-              borderRadius:"4px 10px 10px 10px",
-              background:  "#fff",
-              color:       "#1e2e1e",
-              alignSelf:   "flex-start",
+              maxWidth:     "86%",
+              fontSize:     "11px",
+              lineHeight:   1.45,
+              padding:      "6px 9px",
+              borderRadius: "10px 4px 10px 10px",
+              background:   "#2d4a2d",
+              color:        "#fff",
+              alignSelf:    "flex-end",
             }}>
               {msg.content}
             </div>
+          ) : msg.role === "context" ? (
+            <div key={i} style={{
+              display: "flex", alignItems: "center", gap: "6px", margin: "2px 0",
+            }}>
+              <span style={{ flex: 1, height: "1px", background: "rgba(74,124,74,.2)" }} />
+              <span style={{ fontSize: "10px", fontWeight: 600, color: "#8a9e8a", letterSpacing: ".4px", whiteSpace: "nowrap" }}>
+                {(msg as ChatMessage & { display_content?: string }).display_content ?? msg.content}
+              </span>
+              <span style={{ flex: 1, height: "1px", background: "rgba(74,124,74,.2)" }} />
+            </div>
           ) : (
             <div key={i} style={{
-              maxWidth:    "86%",
-              fontSize: "11px",
-              lineHeight:  1.45,
-              padding:     "6px 9px",
-              borderRadius:"10px 4px 10px 10px",
-              background:  "#2d4a2d",
-              color:       "#fff",
-              alignSelf:   "flex-end",
+              maxWidth:     "86%",
+              fontSize:     "11px",
+              lineHeight:   1.45,
+              padding:      "6px 9px",
+              borderRadius: "4px 10px 10px 10px",
+              background:   "#fff",
+              color:        "#1e2e1e",
+              alignSelf:    "flex-start",
             }}>
               {msg.content}
             </div>
           )
         ))}
+        {loading && (
+          <div style={{ fontSize: "11px", color: "#8a9e8a", alignSelf: "flex-start", padding: "4px 0" }}>…</div>
+        )}
       </div>
 
       {/* Input */}
@@ -364,24 +364,26 @@ export function ChatPanel({
         flexShrink: 0,
       }}>
         <input
+          ref={inputRef as React.RefObject<HTMLInputElement>}
           data-testid="mobile-chat-input"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter") void send(); }}
+          onKeyDown={(e) => { if (e.key === "Enter") void sendMessage(); }}
           placeholder={t("mobile.assistant_placeholder")}
           style={{
             flex:         1,
-            fontSize: "12px",
+            fontSize:     "12px",
             padding:      "5px 10px",
             border:       "1.5px solid #dde8d8",
             borderRadius: "20px",
             outline:      "none",
             fontFamily:   "var(--font-body)",
+            background:   "#fff",
           }}
         />
         <button
-          onClick={() => void send()}
-          disabled={sending}
+          onClick={() => void sendMessage()}
+          disabled={loading}
           aria-label={t("ai.send_label")}
           style={{
             width:          "28px",
@@ -389,11 +391,11 @@ export function ChatPanel({
             borderRadius:   "50%",
             background:     "#4a7c4a",
             border:         "none",
-            cursor:         sending ? "default" : "pointer",
+            cursor:         loading ? "default" : "pointer",
             display:        "flex",
             alignItems:     "center",
             justifyContent: "center",
-            opacity:        sending ? 0.6 : 1,
+            opacity:        loading ? 0.6 : 1,
           }}
         >
           <Send size={14} strokeWidth={1.5} color="#fff" />

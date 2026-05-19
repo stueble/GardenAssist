@@ -463,8 +463,10 @@ describe("AiPanel — multi-turn history (AC #3)", () => {
     const secondCallMessages = (chatWithAi as ReturnType<typeof vi.fn>).mock.calls[1][0] as Array<{ role: string; content: string }>;
     // No "context" role should reach the API
     expect(secondCallMessages.every((m) => m.role !== "context")).toBe(true);
-    // Filter out the context-marker (assistant message containing plant_id) to check the real turns
-    const conversationMsgs = secondCallMessages.filter((m) => !m.content.includes("plant_id:"));
+    // Filter out context-marker messages (assistant messages that are not actual AI replies,
+    // i.e. they don't contain the expected reply content) to check the real turns
+    const KNOWN_CONTENT = new Set(["Erste Frage", "Zweite Frage", "Erste Antwort"]);
+    const conversationMsgs = secondCallMessages.filter((m) => KNOWN_CONTENT.has(m.content));
     expect(conversationMsgs).toHaveLength(3);
     expect(conversationMsgs[0]).toEqual({ role: "user",      content: "Erste Frage"   });
     expect(conversationMsgs[1]).toEqual({ role: "assistant", content: "Erste Antwort" });
