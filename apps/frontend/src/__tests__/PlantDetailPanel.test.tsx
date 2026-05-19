@@ -26,6 +26,21 @@ import i18n from "../i18n/index";
 import { PlantDetailPanel } from "../components/PlantDetailPanel";
 import type { Plant } from "@api/plant";
 
+const MOCK_SCHEDULES = {
+  pruning: {
+    id: "s1", schedule_type: "pruning" as const,
+    start_week: 9, end_week: 11,
+    color: "#27ae60", label: "Frühlingsschnitt",
+    notes: null, created_at: "", updated_at: "",
+  },
+  fertilization: {
+    id: "s2", schedule_type: "fertilization" as const,
+    start_week: 15, end_week: 20,
+    color: "#3498db", label: "Düngen",
+    notes: null, created_at: "", updated_at: "",
+  },
+};
+
 const MOCK_PLANT: Plant = {
   id:                      "p1",
   name_common:             "Rote Rose",
@@ -46,25 +61,15 @@ const MOCK_PLANT: Plant = {
   watering_zone:           "Beet West",
   purchase_date:           "2022-03-15",
   purchase_price:          null,
-  
+
   positions:               [],
   attachments:             [],
   journal_entries:         [],
-  schedules: [
-    {
-      id: "s1", schedule_type: "pruning",
-      start_week: 9, end_week: 11,
-      color: "#27ae60", label: "Frühlingsschnitt",
-      notes: null, created_at: "", updated_at: "",
-    },
-    {
-      id: "s2", schedule_type: "fertilization",
-      start_week: 15, end_week: 20,
-      color: "#3498db", label: "Düngen",
-      notes: null, created_at: "", updated_at: "",
-    },
+  schedules: [MOCK_SCHEDULES.pruning, MOCK_SCHEDULES.fertilization],
+  tasks: [
+    { schedule: MOCK_SCHEDULES.pruning,       week: "2026-W10", status: "overdue" },
+    { schedule: MOCK_SCHEDULES.fertilization, week: "2026-W17", status: "upcoming" },
   ],
-  tasks: [],
   created_at: "2022-04-01T00:00:00Z",
   updated_at: "2022-04-01T00:00:00Z",
 };
@@ -143,9 +148,9 @@ describe("PlantDetailPanel — facts (AC #3)", () => {
     expect(screen.getByText("-15°C")).toBeInTheDocument();
   });
 
-  it("shows watering zone in fact grid", () => {
+  it("shows watering zone as meta pill", () => {
     renderPanel();
-    expect(screen.getByText("Beet West")).toBeInTheDocument();
+    expect(screen.getByText(/Beet West/)).toBeInTheDocument();
   });
 });
 
@@ -179,23 +184,27 @@ describe("PlantDetailPanel — tasks (AC #5)", () => {
 // ── TASK-064: expandable task notes ──────────────────────────────────────────
 
 describe("PlantDetailPanel — expandable task notes (TASK-064)", () => {
+  const SCHED_NOTES = {
+    id: "s-notes", schedule_type: "pruning" as const,
+    start_week: 9, end_week: 11,
+    color: null, label: "Frühjahrsschnitt",
+    notes: "Fördert kräftiges Wachstum. Optional — einmaliges Auslassen schadet nicht.",
+    created_at: "", updated_at: "",
+  };
+  const SCHED_NONOTES = {
+    id: "s-nonotes", schedule_type: "fertilization" as const,
+    start_week: 13, end_week: 14,
+    color: null, label: "Düngen",
+    notes: null,
+    created_at: "", updated_at: "",
+  };
+
   const PLANT_WITH_NOTES: Plant = {
     ...MOCK_PLANT,
-    schedules: [
-      {
-        id: "s-notes", schedule_type: "pruning",
-        start_week: 9, end_week: 11,
-        color: null, label: "Frühjahrsschnitt",
-        notes: "Fördert kräftiges Wachstum. Optional — einmaliges Auslassen schadet nicht.",
-        created_at: "", updated_at: "",
-      },
-      {
-        id: "s-nonotes", schedule_type: "fertilization",
-        start_week: 13, end_week: 14,
-        color: null, label: "Düngen",
-        notes: null,
-        created_at: "", updated_at: "",
-      },
+    schedules: [SCHED_NOTES, SCHED_NONOTES],
+    tasks: [
+      { schedule: SCHED_NOTES,    week: "2026-W10", status: "overdue"  },
+      { schedule: SCHED_NONOTES,  week: "2026-W13", status: "upcoming" },
     ],
   };
 
@@ -212,10 +221,10 @@ describe("PlantDetailPanel — expandable task notes (TASK-064)", () => {
     );
   }
 
-  it("notes are visible by default (expanded)", () => {
+  it("notes are collapsed by default", () => {
     renderWithNotes();
-    expect(screen.getByTestId("task-notes-s-notes")).toBeInTheDocument();
-    expect(screen.getByText(/Fördert kräftiges Wachstum/)).toBeInTheDocument();
+    expect(screen.queryByTestId("task-notes-s-notes")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Fördert kräftiges Wachstum/)).not.toBeInTheDocument();
   });
 
   it("toggle button only appears for schedules that have notes", () => {
@@ -224,17 +233,18 @@ describe("PlantDetailPanel — expandable task notes (TASK-064)", () => {
     expect(screen.queryByTestId("task-toggle-s-nonotes")).not.toBeInTheDocument();
   });
 
-  it("clicking toggle collapses the notes", () => {
+  it("clicking toggle expands the notes", () => {
     renderWithNotes();
-    fireEvent.click(screen.getByTestId("task-row-s-notes"));
-    expect(screen.queryByTestId("task-notes-s-notes")).not.toBeInTheDocument();
-  });
-
-  it("clicking toggle again re-expands the notes", () => {
-    renderWithNotes();
-    fireEvent.click(screen.getByTestId("task-row-s-notes"));
     fireEvent.click(screen.getByTestId("task-row-s-notes"));
     expect(screen.getByTestId("task-notes-s-notes")).toBeInTheDocument();
+    expect(screen.getByText(/Fördert kräftiges Wachstum/)).toBeInTheDocument();
+  });
+
+  it("clicking toggle again collapses the notes", () => {
+    renderWithNotes();
+    fireEvent.click(screen.getByTestId("task-row-s-notes"));
+    fireEvent.click(screen.getByTestId("task-row-s-notes"));
+    expect(screen.queryByTestId("task-notes-s-notes")).not.toBeInTheDocument();
   });
 
   it("schedules without notes are not clickable (no role=button)", () => {
