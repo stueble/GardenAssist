@@ -4,7 +4,9 @@ title: 'Mobile View: Gant charts should show header test on touch'
 status: Ready
 assignee: []
 created_date: '2026-05-16 23:41'
-labels: []
+updated_date: '2026-05-19 19:59'
+labels:
+  - feature
 dependencies: []
 ordinal: 91000
 ---

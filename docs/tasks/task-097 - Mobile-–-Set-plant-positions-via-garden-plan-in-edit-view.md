@@ -4,7 +4,9 @@ title: Mobile – Set plant positions via garden plan in edit view
 status: Ready
 assignee: []
 created_date: '2026-05-17 00:50'
-labels: []
+updated_date: '2026-05-19 19:58'
+labels:
+  - feature
 dependencies: []
 ordinal: 95000
 ---

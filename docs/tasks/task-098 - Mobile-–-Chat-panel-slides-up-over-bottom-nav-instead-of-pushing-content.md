@@ -1,14 +1,14 @@
 ---
 id: TASK-098
 title: Mobile – Chat panel slides up over bottom nav instead of pushing content
-status: In Review
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-17 01:10'
-updated_date: '2026-05-17 01:22'
+updated_date: '2026-05-19 19:43'
 labels: []
 dependencies: []
-ordinal: 96000
+ordinal: 92000
 ---
 
 ## Description

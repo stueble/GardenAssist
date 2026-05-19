@@ -4,9 +4,9 @@ title: 'Feature Idea: Supplies Inventory (Lager)'
 status: Ready
 assignee: []
 created_date: '2026-05-17 00:31'
-updated_date: '2026-05-17 00:32'
+updated_date: '2026-05-19 19:57'
 labels:
-  - feature
+  - epic
 dependencies: []
 ordinal: 93000
 ---

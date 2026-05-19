@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PlantDetailPanel v5</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green-deep:  #2d4a2d; --green-mid:   #4a7c4a; --green-light: #7aab6a;
+    --green-pale:  #c8dfc0; --green-mist:  #eef4eb;
+    --cream:       #f8f4ee; --warm-white:  #fdfbf8;
+    --red-warn:    #c0392b; --red-soft:    #fdf0ee;
+    --yellow-warn: #d4850a; --yellow-soft: #fef9ee;
+    --blue-mid:    #4a78c0; --blue-soft:   #e8f0fb;
+    --text-dark:   #1e2e1e; --text-mid:    #4a5e4a; --text-light:  #8a9e8a;
+    --border:      #dde8d8;
+    --shadow:      0 4px 24px rgba(45,74,45,.13);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "DM Sans", sans-serif;
+    background: var(--cream);
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 40px 24px;
+  }
+
+  /* ── Panel ── */
+  .panel {
+    width: 360px;
+    max-height: 860px;
+    background: var(--warm-white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    font-size: 13px;
+    color: var(--text-dark);
+  }
+
+  /* ── Header: emoji links, name/latin rechts ── */
+  .panel-header {
+    padding: 16px 18px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    flex-shrink: 0;
+    gap: 12px;
+  }
+  .header-inner {
+    display: flex;
+    align-items: stretch;
+    gap: 12px;
+    flex: 1;
+  }
+  .header-emoji {
+    font-size: 34px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    padding-top: 2px;
+  }
+  .header-names {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .plant-name {
+    font-family: "Playfair Display", serif;
+    font-size: 19px; color: var(--green-deep);
+    font-weight: 600; line-height: 1.2;
+    display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
+  }
+  .health-badge {
+    font-family: "DM Sans", sans-serif;
+    font-size: 10px; font-weight: 600;
+    padding: 2px 8px; border-radius: 20px;
+    border: 1.5px solid #b6d9b6;
+    background: #e6f4e6; color: var(--green-mid);
+    white-space: nowrap; line-height: 1.4;
+  }
+  .health-badge.bad { background: var(--red-soft); border-color: #f0c0bc; color: var(--red-warn); }
+  .plant-latin {
+    font-size: 12px; color: var(--text-light);
+    font-style: italic; margin-top: 3px;
+  }
+  .close-btn {
+    background: none; border: none; cursor: pointer;
+    color: var(--text-light); font-size: 16px;
+    padding: 2px; flex-shrink: 0; line-height: 1;
+    align-self: flex-start;
+  }
+
+  /* ── Meta pills ── */
+  .meta-pills {
+    display: flex; flex-wrap: wrap; gap: 5px;
+    padding: 10px 18px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .mpill {
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 3px 9px; border-radius: 20px;
+    font-size: 11px; font-weight: 500;
+    border: 1.5px solid var(--border);
+    background: var(--green-mist); color: var(--text-mid);
+    white-space: nowrap;
+  }
+  .mpill.health-ok  { background: #e6f4e6; border-color: #b6d9b6; color: var(--green-mid); }
+  .mpill.health-bad { background: var(--red-soft); border-color: #f0c0bc; color: var(--red-warn); }
+
+  /* ── Bilder ── */
+  .img-row {
+    display: flex; gap: 8px;
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .img-box {
+    flex: 1; aspect-ratio: 1;
+    border-radius: 10px;
+    background: var(--green-mist); border: 1.5px solid var(--border);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 5px; font-size: 28px; cursor: pointer;
+    transition: border-color .15s;
+    position: relative; overflow: hidden;
+  }
+  .img-box:hover { border-color: var(--green-mid); }
+  .img-label { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--text-light); }
+  .img-overlay { position: absolute; inset: 0; background: rgba(45,74,45,0); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity .15s; font-size: 20px; }
+  .img-box:hover .img-overlay { opacity: 1; background: rgba(45,74,45,.35); }
+
+  /* ── Scrollable body ── */
+  .panel-body { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+  .panel-body::-webkit-scrollbar { width: 3px; }
+  .panel-body::-webkit-scrollbar-thumb { background: var(--green-light); border-radius: 4px; }
+
+  /* ── Section ── */
+  .section { padding: 13px 18px; border-bottom: 1px solid var(--border); }
+  .section-title { font-size: 10px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: var(--text-light); margin-bottom: 9px; }
+
+  /* ── Tasks ── */
+  .task {
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 6px;
+    overflow: hidden;
+    background: var(--warm-white);
+  }
+  .task:last-child { margin-bottom: 0; }
+
+  .task-header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 10px;
+    cursor: pointer;
+    background: var(--green-mist);
+    transition: background .12s;
+  }
+  .task-header:hover { background: #dff0d8; }
+
+  .task-icon { font-size: 15px; flex-shrink: 0; }
+  .task-body { flex: 1; min-width: 0; }
+  .task-label { font-size: 12.5px; font-weight: 500; color: var(--text-dark); }
+  .task-timing { font-size: 11px; color: var(--text-light); margin-top: 2px; }
+  .task-timing.overdue  { color: var(--red-warn); font-weight: 500; }
+  .task-timing.soon     { color: var(--yellow-warn); font-weight: 500; }
+  .task-timing.upcoming { color: var(--text-light); }
+
+  .task-chevron { font-size: 10px; color: var(--text-light); transition: transform .2s; flex-shrink: 0; }
+  .task-chevron.open { transform: rotate(180deg); }
+
+  .badge { font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 12px; flex-shrink: 0; }
+  .badge-red    { background: var(--red-soft);    color: var(--red-warn); }
+  .badge-yellow { background: var(--yellow-soft); color: var(--yellow-warn); }
+  .badge-blue   { background: var(--blue-soft);   color: var(--blue-mid); }
+
+  .task-desc {
+    padding: 0 10px;
+    max-height: 0; overflow: hidden;
+    transition: max-height .22s ease, padding .22s ease;
+    font-size: 12px; color: var(--text-mid); line-height: 1.55;
+    border-top: 0px solid var(--border);
+  }
+  .task-desc.open {
+    max-height: 120px;
+    padding: 9px 10px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ── Journal ── */
+  .jrow { display: flex; align-items: flex-start; gap: 8px; padding: 5px 0; border-bottom: .5px solid var(--border); }
+  .jrow:last-child { border-bottom: none; }
+  .jdot { width: 7px; height: 7px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+  .dot-done { background: var(--green-mid); }
+  .dot-skip { background: var(--text-light); }
+  .jtext { flex: 1; font-size: 12px; color: var(--text-mid); line-height: 1.4; }
+  .jdate { font-size: 11px; color: var(--text-light); flex-shrink: 0; }
+
+  /* ── Pflegehinweise ── */
+  .notes { background: var(--yellow-soft); border: 1px solid #f0d9a0; border-radius: 8px; padding: 10px 12px; font-size: 12px; color: var(--text-mid); line-height: 1.55; }
+
+  /* ── Steckbrief kompakt 2-spaltig ── */
+  .facts { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+  .fact { background: var(--green-mist); border-radius: 6px; padding: 5px 8px; }
+  .fact .fl { font-size: 8.5px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; color: var(--text-light); line-height: 1; margin-bottom: 2px; }
+  .fact .fv { font-size: 12px; font-weight: 500; color: var(--text-dark); line-height: 1.25; }
+  .wbar { display: flex; gap: 2px; margin-top: 3px; }
+  .wd { width: 8px; height: 8px; border-radius: 2px; background: var(--border); }
+  .wd.on { background: var(--green-mid); }
+
+  /* ── Beschreibung (immer offen) ── */
+  .desc-section { padding: 13px 18px; border-bottom: 1px solid var(--border); }
+  .desc-section p { font-size: 12px; color: var(--text-mid); line-height: 1.6; }
+
+  /* ── Anhänge ── */
+  .att-row { display: flex; align-items: center; gap: 9px; padding: 6px 0; border-bottom: .5px solid var(--border); }
+  .att-row:last-child { border-bottom: none; }
+  .att-icon { font-size: 17px; flex-shrink: 0; }
+  .att-body { flex: 1; }
+  .att-name { font-size: 12px; font-weight: 500; color: var(--text-dark); }
+  .att-meta { font-size: 10px; color: var(--text-light); margin-top: 1px; }
+  .att-btn { background: none; border: 1.5px solid var(--border); border-radius: 5px; padding: 2px 7px; font-size: 11px; color: var(--text-mid); cursor: pointer; font-family: "DM Sans", sans-serif; transition: all .15s; }
+  .att-btn:hover { border-color: var(--green-mid); color: var(--green-deep); }
+
+  /* ── Delete ── */
+  .delete-zone { padding: 13px 18px; display: flex; justify-content: center; }
+  .delete-link { background: none; border: none; cursor: pointer; font-size: 12px; font-family: "DM Sans", sans-serif; color: var(--red-warn); text-decoration: underline; text-underline-offset: 2px; }
+  .delete-link:hover { opacity: .75; }
+
+  /* ── Footer ── */
+  .panel-footer { padding: 11px 18px; border-top: 1px solid var(--border); flex-shrink: 0; }
+  .edit-btn {
+    width: 100%; height: 32px; padding: 0 12px;
+    border-radius: 8px; font-size: 12px; font-weight: 500;
+    font-family: "DM Sans", sans-serif; cursor: pointer;
+    border: 1.5px solid var(--green-deep);
+    background: var(--green-deep); color: white;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+    transition: background .15s;
+  }
+  .edit-btn:hover { background: var(--green-mid); border-color: var(--green-mid); }
+</style>
+</head>
+<body>
+
+<div class="panel">
+
+  <!-- Header -->
+  <div class="panel-header">
+    <div class="header-inner">
+      <div class="header-emoji">🌹</div>
+      <div class="header-names">
+        <div class="plant-name">Rose</div>
+        <div class="plant-latin">Rosa canina</div>
+      </div>
+    </div>
+    <button class="close-btn">✕</button>
+  </div>
+
+  <!-- Scrollable body -->
+  <div class="panel-body">
+
+    <!-- Meta-Pills -->
+    <div class="meta-pills" style="border-bottom:1px solid var(--border)">
+      <span class="mpill">📍 Westbeet</span>
+      <span class="mpill">💧 Zone A</span>
+      <span class="mpill">🌿 Strauch</span>
+      <span class="mpill health-ok">✓ Gesund</span>
+    </div>
+
+    <!-- Bilder -->
+    <div class="img-row" style="border-bottom:1px solid var(--border)">
+      <div class="img-box"><span>🌹</span><span class="img-label">Pflanze</span><div class="img-overlay">📷</div></div>
+      <div class="img-box"><span>🌸</span><span class="img-label">Blüte</span><div class="img-overlay">📷</div></div>
+      <div class="img-box"><span>🍃</span><span class="img-label">Blatt</span><div class="img-overlay">📷</div></div>
+    </div>
+
+    <!-- ① Aufgaben -->
+    <div class="section">
+      <div class="section-title">Offene Aufgaben</div>
+
+      <div class="task">
+        <div class="task-header" onclick="toggleTask('t1')">
+          <span class="task-icon">✂️</span>
+          <div class="task-body">
+            <div class="task-label">Frühlingsschnitt</div>
+            <div class="task-timing overdue">Seit 3 Wochen überfällig</div>
+          </div>
+          <span class="task-chevron" id="chev-t1">▾</span>
+        </div>
+        <div class="task-desc" id="t1">
+          Triebe auf 3–5 Augen zurückschneiden. Totes und krankes Holz vollständig entfernen. Schnitt fördert kräftigen Neuaustrieb und reichere Blüte.
+        </div>
+      </div>
+
+      <div class="task">
+        <div class="task-header" onclick="toggleTask('t2')">
+          <span class="task-icon">💧</span>
+          <div class="task-body">
+            <div class="task-label">Düngen</div>
+            <div class="task-timing soon">Innerhalb der nächsten 2 Wochen</div>
+          </div>
+          <span class="task-chevron" id="chev-t2">▾</span>
+        </div>
+        <div class="task-desc" id="t2">
+          Langzeitdünger mit hohem Kaliumanteil einarbeiten. Nicht bei starker Sonneneinstrahlung düngen, vorher wässern.
+        </div>
+      </div>
+
+      <div class="task">
+        <div class="task-header" onclick="toggleTask('t3')">
+          <span class="task-icon">🌿</span>
+          <div class="task-body">
+            <div class="task-label">Winterschutz entfernen</div>
+            <div class="task-timing upcoming">In 4 Wochen</div>
+          </div>
+          <span class="task-chevron" id="chev-t3">▾</span>
+        </div>
+        <div class="task-desc" id="t3">
+          Reisig und Vlies schrittweise entfernen, damit die Pflanze sich langsam an Licht und Temperaturen gewöhnen kann. Nicht bei Frostgefahr.
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ② Verlauf -->
+    <div class="section">
+      <div class="section-title">Zuletzt gemacht</div>
+      <div class="jrow"><div class="jdot dot-done"></div><div class="jtext">Winterschutz angelegt</div><div class="jdate">12. Nov</div></div>
+      <div class="jrow"><div class="jdot dot-done"></div><div class="jtext">Herbstdünger gegeben</div><div class="jdate">3. Okt</div></div>
+      <div class="jrow"><div class="jdot dot-skip"></div><div class="jtext">Sommerschnitt übersprungen</div><div class="jdate">22. Aug</div></div>
+    </div>
+
+    <!-- ③ Pflegehinweise -->
+    <div class="section">
+      <div class="section-title">Pflegehinweise</div>
+      <div class="notes">Schnitt im Frühjahr fördert kräftiges Wachstum. Bei Blattläusen frühzeitig mit Neem-Öl behandeln. Winterschutz ab November empfohlen.</div>
+    </div>
+
+    <!-- ④ Steckbrief -->
+    <div class="section">
+      <div class="section-title">Steckbrief</div>
+      <div class="facts">
+        <div class="fact"><div class="fl">Wasserbedarf</div><div class="wbar"><div class="wd on"></div><div class="wd on"></div><div class="wd on"></div><div class="wd"></div><div class="wd"></div></div></div>
+        <div class="fact"><div class="fl">Licht</div><div class="fv">☀️ Vollsonne</div></div>
+        <div class="fact"><div class="fl">Boden</div><div class="fv">Lehmig-humos</div></div>
+        <div class="fact"><div class="fl">Frosttoleranz</div><div class="fv">bis −15 °C</div></div>
+        <div class="fact"><div class="fl">Blütezeit</div><div class="fv">Mai – Sep</div></div>
+        <div class="fact"><div class="fl">Herkunft</div><div class="fv">Heimisch</div></div>
+        <div class="fact"><div class="fl">Lebenszyklus</div><div class="fv">Mehrjährig</div></div>
+        <div class="fact"><div class="fl">Kaufdatum</div><div class="fv">März 2022</div></div>
+      </div>
+    </div>
+
+    <!-- ⑤ Beschreibung (immer sichtbar) -->
+    <div class="desc-section">
+      <div class="section-title">Beschreibung</div>
+      <p>Die Hunds-Rose (Rosa canina) ist ein sommergrüner Strauch aus der Familie der Rosengewächse. Sie bildet bogig überhängende Zweige und blüht von Mai bis Juli in zartem Rosa. Im Herbst tragen die Äste leuchtend rote Hagebutten, die vitaminreich und für Tee geeignet sind.</p>
+    </div>
+
+    <!-- ⑥ Weitere Anhänge -->
+    <div class="section">
+      <div class="section-title">Weitere Anhänge</div>
+      <div class="att-row">
+        <span class="att-icon">📄</span>
+        <div class="att-body">
+          <div class="att-name">Kaufrechnung_Rose.pdf</div>
+          <div class="att-meta">Rechnung · 84 KB · Mai 2022</div>
+        </div>
+        <button class="att-btn">↗</button>
+      </div>
+      <div class="att-row">
+        <span class="att-icon">📸</span>
+        <div class="att-body">
+          <div class="att-name">Blattläuse_Juni.jpg</div>
+          <div class="att-meta">Problem · 1.2 MB · Jun 2024</div>
+        </div>
+        <button class="att-btn">↗</button>
+      </div>
+    </div>
+
+    <!-- ⑦ Löschen -->
+    <div class="delete-zone">
+      <button class="delete-link">Pflanze löschen</button>
+    </div>
+
+  </div><!-- /panel-body -->
+
+  <!-- Footer -->
+  <div class="panel-footer">
+    <button class="edit-btn">✏️ Bearbeiten</button>
+  </div>
+
+</div>
+
+<script>
+  function toggleTask(id) {
+    const desc = document.getElementById(id);
+    const chev = document.getElementById('chev-' + id);
+    desc.classList.toggle('open');
+    chev.classList.toggle('open');
+  }
+</script>
+</body>
+</html>

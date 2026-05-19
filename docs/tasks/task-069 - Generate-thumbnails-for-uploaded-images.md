@@ -4,9 +4,9 @@ title: Generate thumbnails for uploaded images
 status: Ready
 assignee: []
 created_date: '2026-05-10 21:39'
-updated_date: '2026-05-11 16:25'
+updated_date: '2026-05-19 21:34'
 labels:
-  - infrastructure
+  - improvement
 dependencies: []
 priority: low
 ordinal: 73000
@@ -20,12 +20,16 @@ Uploaded plant photos are currently stored and served at full resolution. When i
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 On image upload, the backend generates a thumbnail (longest edge: 200px, same format as original)
-- [ ] #2 The attachment API response includes a thumbnail_url field alongside the existing url field
-- [ ] #3 Thumbnails are stored in the same data directory as originals (DATA_DIR) and served via the existing /static/ route
-- [ ] #4 Existing attachments without a thumbnail fall back gracefully (thumbnail_url is null; frontend uses url)
-- [ ] #5 The Plant API type (docs/api/attachment.ts) is updated to include the optional thumbnail_url field
+- [ ] #1 The attachment API response includes a thumbnail_url field alongside the existing url field
+- [ ] #2 Thumbnails are stored in the same data directory as originals (DATA_DIR) and served via the existing /static/ route
+- [ ] #3 Existing attachments without a thumbnail fall back gracefully (thumbnail_url is null; frontend uses url)
+- [ ] #4 The Plant API type (docs/api/attachment.ts) is updated to include the optional thumbnail_url field
+- [ ] #5 On image upload, the backend generates a thumbnail (longest edge: 400 px) always encoded as progressive JPEG (quality 82) regardless of the original format
+- [ ] #6 All <img> tags that render thumbnail_url in table and list views carry loading="lazy"
+- [ ] #7 PNG uploads produce a progressive JPEG thumbnail (.jpg suffix); the thumbnail_url in the API response reflects the .jpg path
 <!-- AC:END -->
+
+
 
 ## Definition of Done
 <!-- DOD:BEGIN -->

@@ -4,7 +4,9 @@ title: Garden Plan – Edit mode for repositioning existing pins
 status: Ready
 assignee: []
 created_date: '2026-05-17 00:34'
-labels: []
+updated_date: '2026-05-19 19:58'
+labels:
+  - feature
 dependencies: []
 ordinal: 94000
 ---

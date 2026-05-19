@@ -1,14 +1,14 @@
 ---
 id: TASK-094
 title: Mobile – Plan View Snap-Sheet (Google-Maps-style pin preview)
-status: In Review
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-05-17 00:09'
-updated_date: '2026-05-17 00:33'
+updated_date: '2026-05-19 19:43'
 labels: []
 dependencies: []
-ordinal: 92000
+ordinal: 91000
 ---
 
 ## Description
