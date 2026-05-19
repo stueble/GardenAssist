@@ -12,10 +12,13 @@
  *   TopBar (✕ close | plant name | ✓ save) → PlantEditDialog body (scrollable)
  */
 
-import { useRef, useState }         from "react";
-import { useNavigate, useParams }   from "react-router-dom";
+import { useRef, useState, useEffect } from "react";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useTranslation }           from "react-i18next";
-import { X, Check }                 from "lucide-react";
+import { X, Check, MessageCircle }  from "lucide-react";
+import { useAiPanelState }          from "@/hooks/useAiPanelState";
+import { useAssistantSettings }     from "@/hooks/useAssistantSettings";
+import { setAssistantContext }      from "@/hooks/useAssistantContext";
 import type { Garden }              from "@api/garden";
 import type { Plant }               from "@api/plant";
 import {
@@ -23,19 +26,24 @@ import {
   type PlantEditDialogHandle,
 }                                   from "@/components/PlantEditDialog";
 import { topBtnStyle }              from "@/components/mobile/MobileParts";
+import type { PlantEditFields }     from "@/hooks/usePlantEditContext";
 
 // ── TopBar ────────────────────────────────────────────────────────────────────
 
 function TopBar({
   title,
   saving,
+  chatOpen,
   onClose,
+  onChatClick,
   onSave,
 }: {
-  title:   string;
-  saving:  boolean;
-  onClose: () => void;
-  onSave:  () => void;
+  title:       string;
+  saving:      boolean;
+  chatOpen:    boolean;
+  onClose:     () => void;
+  onChatClick: () => void;
+  onSave:      () => void;
 }) {
   const { t } = useTranslation("plants");
 
@@ -79,6 +87,19 @@ function TopBar({
         {title}
       </div>
 
+      {/* Chat */}
+      <button
+        data-testid="mobile-plant-edit-chat"
+        aria-label="Assistent"
+        onClick={onChatClick}
+        style={{
+          ...topBtnStyle,
+          background: chatOpen ? "rgba(255,255,255,.30)" : "rgba(255,255,255,.15)",
+        }}
+      >
+        <MessageCircle size={20} strokeWidth={1.5} />
+      </button>
+
       {/* Save */}
       <button
         data-testid="mobile-plant-edit-save"
@@ -108,12 +129,39 @@ export interface MobilePlantEditViewProps {
 export function MobilePlantEditView({ garden, invalidateGarden }: MobilePlantEditViewProps) {
   const { id }       = useParams<{ id?: string }>();
   const navigate     = useNavigate();
+  const location     = useLocation();
   const { t }        = useTranslation("plants");
   const dialogRef    = useRef<PlantEditDialogHandle>(null);
   const [saving, setSaving] = useState(false);
+  const { open: chatOpen, setOpen: setChatOpen } = useAiPanelState();
+  const assistantSettings = useAssistantSettings();
+
+  // Apply AI prefill fields passed via location.state from MobilePlantEditBridge.
+  // Uses a small delay (50 ms) to ensure PlantEditDialog has fully mounted —
+  // identical to the pattern in GlobalPlantEditOverlay on desktop.
+  // Apply AI prefill fields passed via location.state from MobilePlantEditBridge.
+  // Depends on location.key so it re-fires on every navigate() call — even when
+  // the path stays the same (same route, new AI fields from the assistant).
+  useEffect(() => {
+    const aiFields = (location.state as { aiFields?: PlantEditFields } | null)?.aiFields;
+    if (!aiFields || Object.keys(aiFields).length === 0) return;
+    const timer = setTimeout(() => {
+      dialogRef.current?.applyAiFields(aiFields);
+    }, 50);
+    return () => clearTimeout(timer);
+  }, [location.key]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Positions state — owned here (same pattern as GlobalPlantEditOverlay)
   const plant: Plant | null = id ? (garden?.plants.find((p) => p.id === id) ?? null) : null;
+
+  // Publish assistant context so the AI knows which plant is being edited
+  useEffect(() => {
+    setAssistantContext(
+      garden && plant
+        ? { view: "plants", garden, selectedPlant: plant, settings: assistantSettings }
+        : undefined
+    );
+  }, [garden, plant, assistantSettings]);
   const [positions,        setPositions]        = useState(() => plant?.positions.map((p) => ({ x: p.x_percent, y: p.y_percent })) ?? []);
   const [initialPositions] = useState(() => plant?.positions.map((p) => ({ x: p.x_percent, y: p.y_percent })) ?? []);
 
@@ -158,7 +206,9 @@ export function MobilePlantEditView({ garden, invalidateGarden }: MobilePlantEdi
       <TopBar
         title={title}
         saving={saving}
+        chatOpen={chatOpen}
         onClose={handleClose}
+        onChatClick={() => setChatOpen(!chatOpen)}
         onSave={handleSave}
       />
 
@@ -177,6 +227,7 @@ export function MobilePlantEditView({ garden, invalidateGarden }: MobilePlantEdi
           hideHeader
           hideFooter
           hidePickMode
+          scrollPaddingBottom="var(--mobile-chat-height, 0px)"
         />
       </div>
     </div>

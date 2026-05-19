@@ -326,6 +326,8 @@ export interface PlantEditDialogProps {
   hideFooter?:         boolean;
   /** Hide the pick-mode toggle button in the Positionen section. */
   hidePickMode?:       boolean;
+  /** Extra bottom padding on the scrollable body — use to avoid content being hidden behind a fixed panel (e.g. mobile ChatPanel). */
+  scrollPaddingBottom?: string | number;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -339,6 +341,7 @@ function PlantEditDialog({
   hideHeader = false,
   hideFooter = false,
   hidePickMode = false,
+  scrollPaddingBottom,
 }: PlantEditDialogProps, ref) {
   const { t } = useTranslation("plants");
   const { t: tc } = useTranslation("common");
@@ -347,6 +350,7 @@ function PlantEditDialog({
   const formRef = useRef<EditForm>(form);
   // Keep formRef in sync so applyAiFields always reads the latest form without closures.
   formRef.current = form;
+  const bodyRef = useRef<HTMLDivElement>(null);
   const [saving,        setSaving]        = useState(false);
   const [error,         setError]         = useState<string | null>(null);
   const [iconManual,    setIconManual]    = useState(!!plant?.icon);
@@ -429,6 +433,23 @@ function PlantEditDialog({
       setForm(nextForm);
       setAiMarked((m) => ({ ...m, ...nextMarked }));
       setAiPrev((p) => ({ ...p, ...prevValues }));
+
+      // ── Scroll to first changed element after React renders ───────────────
+      setTimeout(() => {
+        const body = bodyRef.current;
+        if (!body) return;
+        // Prefer first marked scalar field
+        const firstScalarKey = Object.keys(nextMarked).find(
+          (k) => nextMarked[k as AiSuggestableField]
+        );
+        if (firstScalarKey) {
+          const el = body.querySelector(`[data-testid="ai-field-${firstScalarKey}"]`);
+          if (el) { el.scrollIntoView({ behavior: "smooth", block: "nearest" }); return; }
+        }
+        // Fall back to first schedule row with an AI action
+        const schedEl = body.querySelector("[data-ai-action]");
+        schedEl?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }, 80);
 
       // ── Schedule operations ────────────────────────────────────────────────
       if (fields.schedules && fields.schedules.length > 0) {
@@ -665,7 +686,7 @@ function PlantEditDialog({
       )}
 
       {/* ── Body ── */}
-      <div style={{ flex: 1, overflowY: "auto" }}>
+      <div ref={bodyRef} style={{ flex: 1, overflowY: "auto", paddingBottom: scrollPaddingBottom }}>
 
         {/* Error banners */}
         {error && (

@@ -1,4 +1,4 @@
-import { Routes, Route }        from "react-router-dom";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import { NavBar }                from "@/components/NavBar";
 import { AiPanel }               from "@/components/AiPanel";
 import { GlobalPlantEditOverlay } from "@/components/GlobalPlantEditOverlay";
@@ -18,6 +18,26 @@ import { MobilePlantEditView }      from "@/views/MobilePlantEditView";
 import { useAssistantContext }   from "@/hooks/useAssistantContext";
 import { useGarden, invalidateGarden } from "@/hooks/useGarden";
 import { useIsMobile }           from "@/hooks/useIsMobile";
+import { usePlantEditHandler }   from "@/hooks/usePlantEditContext";
+import type { PlantEditFields }  from "@/hooks/usePlantEditContext";
+import { ChatPanel }             from "@/components/mobile/MobileParts";
+
+// ── MobilePlantEditBridge ─────────────────────────────────────────────────────
+// Always-mounted on mobile. Registers the global AI plant-edit handler so the
+// assistant can open the mobile edit route with optional AI prefill — mirroring
+// what GlobalPlantEditOverlay does on desktop.
+
+function MobilePlantEditBridge() {
+  const navigate = useNavigate();
+  usePlantEditHandler({
+    editPlant: (id: string | null, fields: PlantEditFields) => {
+      const path = id ? `/plants/${id}/edit` : "/plants/new";
+      // Pass AI prefill via location.state; MobilePlantEditView picks it up on mount.
+      navigate(path, { state: { aiFields: fields } });
+    },
+  });
+  return null;
+}
 
 export function App() {
   const assistantContext = useAssistantContext();
@@ -44,6 +64,8 @@ export function App() {
         paddingRight:    "env(safe-area-inset-right)",
         boxSizing:       "border-box",
       }}>
+        <MobilePlantEditBridge />
+        <ChatPanel />
         <Routes>
           <Route path="/"         element={<MobileTaskView {...sharedGardenProps} />} />
           <Route path="/plants"   element={<MobilePlantsView    {...sharedGardenProps} />} />
